@@ -1,0 +1,40 @@
+:root {
+  /* Paleta base (Figma: Neutral/0, Neutral/2, Neutral/7, Neutral/10) */
+  --c-white: #ffffff;
+  --c-ink: #1d1b20;
+  --c-ink-soft: #3d4550;
+  --c-primary: #486284;
+  --c-primary-dark: #354b68;
+  --c-muted: #8ca2c0;
+  --c-line: #dee5ed;
+
+  /* Superficies */
+  --c-surface: #f4f6f8;
+  --c-surface-2: #e8ebef;
+  --c-surface-3: #dfe3e8;
+
+  /* Tipografía */
+  --font-sans: 'DM Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-alt: 'Inter', 'DM Sans', system-ui, sans-serif;
+
+  --fs-display: clamp(2.5rem, 4.2vw, 3.5rem);
+  --fs-h1: clamp(2rem, 3vw, 2.75rem);
+  --fs-h2: clamp(1.6rem, 2.2vw, 2.25rem);
+  --fs-h3: clamp(1.25rem, 1.5vw, 1.5rem);
+  --fs-lead: clamp(1rem, 1.15vw, 1.25rem);
+  --fs-body: 1rem;
+  --fs-sm: 0.875rem;
+  --fs-xs: 0.8125rem;
+
+  /* Layout */
+  --container: 1280px;
+  --gutter: clamp(20px, 5vw, 80px);
+  --section-y: clamp(48px, 6vw, 80px);
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 38px;
+  --radius-pill: 999px;
+
+  --shadow-soft: 0 18px 60px rgba(29, 27, 32, 0.08);
+  --border: 1px solid var(--c-line);
+}
