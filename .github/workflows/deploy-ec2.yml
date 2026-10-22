@@ -106,10 +106,12 @@ jobs:
         id: ssm
         env:
           IMAGE_TAG: ${{ needs.build.outputs.tag }}
-          COMPOSE_URL: https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.yml
+          RAW_BASE: https://raw.githubusercontent.com/${{ github.repository }}/main
         run: |
-          PARAMS=$(printf '{"commands":["export AWS_REGION=%s ECR_REPO=%s IMAGE_TAG=%s COMPOSE_URL=%s; bash %s/deploy.sh"]}' \
-            "$AWS_REGION" "$ECR_REPOSITORY" "$IMAGE_TAG" "$COMPOSE_URL" "$APP_DIR")
+          COMPOSE_URL="$RAW_BASE/docker-compose.yml"
+          SCRIPT_URL="$RAW_BASE/deploy/deploy.sh"
+          COMANDO="export AWS_REGION=$AWS_REGION ECR_REPO=$ECR_REPOSITORY IMAGE_TAG=$IMAGE_TAG COMPOSE_URL=$COMPOSE_URL; curl -fsSL $SCRIPT_URL -o /tmp/gramalote-deploy.sh && bash /tmp/gramalote-deploy.sh"
+          PARAMS=$(printf '{"commands":["%s"]}' "$COMANDO")
 
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
