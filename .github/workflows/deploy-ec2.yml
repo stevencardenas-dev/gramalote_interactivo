@@ -22,6 +22,7 @@ env:
   ECR_REPOSITORY: gramalote-frontend
   INSTANCE_ID: i-007da8f731134e78d
   APP_DIR: /opt/gramalote
+  CLOUDFRONT_DISTRIBUTION_ID: E1P9GLTGDGI4RL
 
 jobs:
   build:
@@ -134,3 +135,16 @@ jobs:
             --instance-id "$INSTANCE_ID" \
             --query "{Status:Status,Salida:StandardOutputContent,Errores:StandardErrorContent}" \
             --output json
+
+      - name: Invalidar caché de CloudFront
+        run: |
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
+            --paths "/*" \
+            --query "Invalidation.Id" \
+            --output text)
+          echo "Invalidación $INVALIDATION_ID creada"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
+            --id "$INVALIDATION_ID"
+          echo "Caché propagada"
