@@ -1,0 +1,20 @@
+name: gramalote
+
+services:
+  web:
+    image: ${IMAGE:-706637772877.dkr.ecr.us-east-2.amazonaws.com/gramalote-frontend:latest}
+    container_name: gramalote-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
