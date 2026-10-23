@@ -48,7 +48,7 @@ Se corrigió el orden y se agregó la fila sin título. Ver commit `fb093c2` y
 | ID | Hallazgo | Evidencia | Impacto | Estado |
 | --- | --- | --- | --- | --- |
 | INC-07 | **No existía ningún esquema de base de datos.** `backend/` solo tenía un README que decía “pendiente de definir stack, modelo de datos y endpoints”. | `backend/README.md` (antes), `git log --all -- '*.sql'` | No había modelo para la API ni para el panel admin | **Corregido**: se creó el esquema MySQL propuesto |
-| INC-08 | El frontend depende de datos locales (`src/data/*.js`); no hay API ni persistencia. | `frontend/src/data/`, `backend/` | Los cambios de contenido no se guardan | **Pendiente**: implementar API |
+| INC-08 | El frontend depende de datos locales (`src/data/*.js`); la API de lectura ya existe, pero el frontend aún no la consume. | `frontend/src/data/`, `backend/src/` | Los cambios de contenido no se guardan | **Parcial**: integrar la API y migrar datos |
 | INC-09 | El despliegue actual solo publica el frontend; no hay servicio de MySQL ni migraciones. | `docker-compose.yml` raíz, `.github/workflows/deploy-ec2.yml` | La base no está integrada a CI/CD ni a la instancia | **Pendiente** |
 
 **Esquema creado:** `backend/database/schema.sql` (33 tablas + 3 vistas),

@@ -184,8 +184,9 @@ Vistas: `v_public_establishments`, `v_public_experiences`,
 
 ## 4. Pendientes para conectar la API
 
-1. **Definir stack del backend.** Sugerencia: Node 22 + Fastify/Express +
-   `mysql2` + Kysely o Prisma; el frontend ya es React/Vite.
+1. **API base creada:** Express 5 + `mysql2` en `backend/src`, con endpoints de
+   lectura para establecimientos, experiencias, curiosidades, historia,
+   información práctica, mapa y búsqueda. Ver `backend/README.md`.
 2. **Migrar el contenido actual** de `src/data` a SQL de importación o a un
    seed generado. El seed actual solo cubre catálogos.
 3. **Autenticación real** en `/acceder`: Argon2id/bcrypt, JWT de acceso corto +

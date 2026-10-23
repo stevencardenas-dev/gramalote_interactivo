@@ -5,7 +5,7 @@
 ```
 gramalote_interactivo/
 ├─ frontend/   React + Vite (SPA)
-├─ backend/    pendiente de definir
+├─ backend/    API Express + MySQL
 ├─ docs/       documentación del proyecto
 └─ DRIVE.md    acceso a la carpeta de entregas UX/UI
 ```
@@ -105,6 +105,8 @@ Las carpetas de Historia, Curiosidades y Funcionalidades siguen vacías en Drive
   evidenciados por la UI, con estado y archivo de referencia.
 - [`INCIDENCIAS.md`](./INCIDENCIAS.md): incongruencias detectadas, estado y
   prioridad.
+- [`../backend/README.md`](../backend/README.md): API de lectura y variables de
+  entorno.
 - [`../backend/database/README.md`](../backend/database/README.md): esquema
   MySQL propuesto, diagrama ER y mapeo desde el frontend.
 

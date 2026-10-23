@@ -112,7 +112,7 @@ Estados usados:
 | ID | Requisito | Evidencia | Estado | Notas |
 | --- | --- | --- | --- | --- |
 | RF-49 | Formulario de acceso de administración | `Acceder.jsx:12` | Parcial | `preventDefault()`; no autentica |
-| RF-50 | Persistencia y consumo de API | `backend/README.md` | **Pendiente** | Todo el contenido vive en `src/data/` |
+| RF-50 | Persistencia y consumo de API | `backend/README.md`, `backend/src/` | Parcial | API de lectura lista; el frontend aún usa `src/data/` |
 | RF-51 | CRUD de establecimientos, experiencias y curiosidades | No hay UI | **No evidenciado** | La carpeta 06 de Drive está vacía |
 | RF-52 | Roles/permisos de administración | No hay UI | **No evidenciado** | |
 
@@ -137,5 +137,5 @@ del usuario ni rutas de navegación paso a paso.
 1. Filtros, “Abierto hoy” y “Cargar más” (RF-21, RF-22, RF-23).
 2. Mapa real (RF-27, RF-43).
 3. Buscador ampliado y normalizado (RF-47, RF-48).
-4. Autenticación y backend (RF-49 a RF-52).
+4. Autenticación, integración del frontend y CRUD (RF-49 a RF-52).
 5. Assets reales (RF-57 y `docs/IMAGENES.md`).

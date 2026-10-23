@@ -5,7 +5,7 @@ Plataforma web de turismo, cultura y memoria histórica de Gramalote, Norte de S
 ## Estructura
 
 - `frontend/` — React + Vite (ver `docs/README.md`).
-- `backend/` — API y base de datos MySQL (ver `backend/database/README.md`).
+- `backend/` — API Express y base de datos MySQL (ver `backend/README.md`).
 - `docs/` — documentación técnica y mapeo de los diseños de Figma.
 - `DRIVE.md` — acceso a las entregas UX/UI en Google Drive.
 
@@ -16,6 +16,20 @@ cd frontend
 npm install
 npm run dev
 ```
+
+API y MySQL local:
+
+```bash
+cd backend
+Copy-Item .env.example .env
+docker compose up -d
+npm install
+npm run dev
+```
+
+- Frontend: <http://localhost:5173>
+- API: <http://127.0.0.1:4000/api>
+- MySQL: `127.0.0.1:3307`
 
 Variables de entorno y credenciales no se versionan.
 
