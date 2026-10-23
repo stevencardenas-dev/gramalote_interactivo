@@ -4,6 +4,88 @@ import Placeholder from '../components/ui/Placeholder.jsx'
 import Button from '../components/ui/Button.jsx'
 import { getCuriosity } from '../data/curiosities.js'
 
+function Paragraphs({ items }) {
+  return items.map((paragraph, index) => (
+    <p key={`paragraph-${index}`}>{paragraph}</p>
+  ))
+}
+
+function RowMedia({ count = 1 }) {
+  if (count > 1) {
+    return (
+      <div className="curiosity-detail__media-group">
+        {Array.from({ length: count }, (_, index) => (
+          <Placeholder key={`media-${index}`} />
+        ))}
+      </div>
+    )
+  }
+
+  return <Placeholder className="curiosity-detail__media" />
+}
+
+function ContentBlock({ block }) {
+  if (block.type === 'feature') {
+    return (
+      <article className="curiosity-feature">
+        <Placeholder className="curiosity-feature__media" />
+        <div className="curiosity-feature__body">
+          <h2>{block.title}</h2>
+          <Paragraphs items={block.paragraphs} />
+        </div>
+      </article>
+    )
+  }
+
+  if (block.type === 'featured') {
+    return (
+      <div className="curiosity-featured">
+        <div className="curiosity-featured__body">
+          <span className="eyebrow">{block.eyebrow}</span>
+          <h2>{block.title}</h2>
+          <p>{block.text}</p>
+        </div>
+        <Placeholder className="curiosity-featured__media" />
+      </div>
+    )
+  }
+
+  if (block.type === 'collection') {
+    return (
+      <section className="curiosity-collection">
+        <h2>{block.title}</h2>
+        <div
+          className="curiosity-collection__grid"
+          style={{ '--curiosity-columns': block.columns ?? 3 }}
+        >
+          {block.items.map((item) => (
+            <figure key={item.label} className="curiosity-collection__item">
+              <Placeholder />
+              <figcaption>{item.label}</figcaption>
+              {item.text ? <p>{item.text}</p> : null}
+            </figure>
+          ))}
+        </div>
+        <Paragraphs items={block.paragraphs} />
+      </section>
+    )
+  }
+
+  return (
+    <div
+      className={`curiosity-detail__row${
+        block.mediaSide === 'right' ? ' is-reverse' : ''
+      }`}
+    >
+      <RowMedia count={block.mediaCount} />
+      <div className="curiosity-detail__body">
+        {block.title ? <h2>{block.title}</h2> : null}
+        <Paragraphs items={block.paragraphs} />
+      </div>
+    </div>
+  )
+}
+
 export default function CuriosidadDetalle() {
   const { slug } = useParams()
   const item = getCuriosity(slug)
@@ -40,66 +122,18 @@ export default function CuriosidadDetalle() {
 
       <section className="section section--tight">
         <div className="container container--narrow">
-          {item.text ? (
-            <div className="curiosity-detail__row">
-              <Placeholder className="curiosity-detail__media" />
-              <div className="curiosity-detail__body">
-                <h2>{item.introTitle}</h2>
-                <p>{item.text}</p>
-                {item.extra ? <p>{item.extra}</p> : null}
-              </div>
-            </div>
-          ) : null}
-
-          {item.featured ? (
-            <div className="curiosity-featured">
-              <div className="curiosity-featured__body">
-                <span className="eyebrow">{item.featured.eyebrow}</span>
-                <h2>{item.featured.title}</h2>
-                <p>
-                  Una fecha que marcaba el comienzo de la temporada festiva.
-                </p>
-              </div>
-              <Placeholder className="curiosity-featured__media" />
-            </div>
-          ) : null}
-
-          {item.blocks.map((block, index) => (
-            <div
-              key={block.title}
-              className={`curiosity-detail__row${
-                item.layout === 'text-left' || index % 2 === 1 ? ' is-reverse' : ''
-              }`}
-            >
-              <Placeholder className="curiosity-detail__media" />
-              <div className="curiosity-detail__body">
-                <h2>{block.title}</h2>
-                {block.text.split('\n\n').map((paragraph, paragraphIndex) => (
-                  <p key={`${block.title}-${paragraphIndex}`}>{paragraph}</p>
-                ))}
-              </div>
-            </div>
+          {item.content.map((block, index) => (
+            <ContentBlock key={`${block.type}-${index}`} block={block} />
           ))}
 
-          {item.naturalItems ? (
-            <div className="curiosity-natural">
-              <h2>{item.naturalTitle}</h2>
-              <div className="curiosity-natural__grid">
-                {item.naturalItems.map((natural) => (
-                  <figure key={natural.title} className="curiosity-natural__item">
-                    <Placeholder />
-                    <figcaption>{natural.title}</figcaption>
-                  </figure>
-                ))}
-              </div>
-              <p>{item.naturalText}</p>
-            </div>
-          ) : null}
-
-          <div className="curiosity-closing">
+          <div
+            className={`curiosity-closing${
+              item.closingMediaSide === 'right' ? ' is-reverse' : ''
+            }`}
+          >
             <Placeholder className="curiosity-closing__media" />
             <div className="curiosity-closing__body">
-              <h2>{item.closingTitle}</h2>
+              {item.closingTitle ? <h2>{item.closingTitle}</h2> : null}
               {item.closingText.split('\n\n').map((paragraph, paragraphIndex) => (
                 <p key={`cierre-${paragraphIndex}`}>{paragraph}</p>
               ))}
