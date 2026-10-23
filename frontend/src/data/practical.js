@@ -25,11 +25,31 @@ export const transportOptions = [
 ]
 
 export const safetyTips = [
-  'Respeta las normas y recomendaciones de las autoridades.',
-  'Consulta las condiciones del camino antes de realizar caminatas.',
-  'Verifica si el lugar tiene restricciones o requiere guía.',
-  'Revisa las condiciones meteorológicas antes de salir.',
-  'Respeta la naturaleza y las indicaciones de cada lugar.',
+  {
+    title: 'Sigue las indicaciones locales',
+    text: 'Respeta las normas y recomendaciones de las autoridades.',
+    icon: 'shield',
+  },
+  {
+    title: 'Precaución en senderos',
+    text: 'Consulta las condiciones del camino antes de realizar caminatas.',
+    icon: 'route',
+  },
+  {
+    title: 'Zonas y acompañamiento',
+    text: 'Verifica si el lugar tiene restricciones o requiere guía.',
+    icon: 'user',
+  },
+  {
+    title: 'Consulta el clima',
+    text: 'Revisa las condiciones meteorológicas antes de salir.',
+    icon: 'info',
+  },
+  {
+    title: 'Cuida el entorno',
+    text: 'Respeta la naturaleza y las indicaciones de cada lugar.',
+    icon: 'shield',
+  },
 ]
 
 export const preparationTips = [

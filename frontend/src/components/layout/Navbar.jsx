@@ -24,7 +24,7 @@ function Brand() {
   )
 }
 
-function SearchForm({ onSubmitted }) {
+function SearchForm({ onSubmitted, inputId = 'site-search' }) {
   const navigate = useNavigate()
   const [value, setValue] = useState('')
 
@@ -40,11 +40,11 @@ function SearchForm({ onSubmitted }) {
   return (
     <form className="search-field" role="search" onSubmit={handleSubmit}>
       <Icon name="search" className="search-field__icon" />
-      <label className="visually-hidden" htmlFor="site-search">
+      <label className="visually-hidden" htmlFor={inputId}>
         Buscar en el sitio
       </label>
       <input
-        id="site-search"
+        id={inputId}
         type="search"
         placeholder="Buscar..."
         value={value}
@@ -100,7 +100,7 @@ export default function Navbar() {
             <Icon name="lock" />
             Acceder
           </Link>
-          <SearchForm />
+          <SearchForm inputId="site-search" />
           <button
             className="menu-toggle"
             type="button"
@@ -143,7 +143,7 @@ export default function Navbar() {
             </li>
           </ul>
         </nav>
-        <SearchForm onSubmitted={closeMenu} />
+        <SearchForm inputId="site-search-mobile" onSubmitted={closeMenu} />
       </div>
     </header>
   )

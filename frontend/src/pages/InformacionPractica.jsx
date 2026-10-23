@@ -25,7 +25,7 @@ export default function InformacionPractica() {
       <section className="section section--tight">
         <div className="container">
           <div className="section-head section-head--center">
-            <h2>Cómo llegar a Gramalote</h2>
+            <h2 id="como-llegar">Cómo llegar a Gramalote</h2>
             <p>Conoce las opciones de acceso y planifica tu recorrido.</p>
           </div>
 
@@ -35,7 +35,7 @@ export default function InformacionPractica() {
                 <Placeholder />
                 <h3>{route.title}</h3>
                 <p>{route.text}</p>
-                <Button to="/informacion-practica#contactos" icon="arrow" size="sm">
+                <Button to="/informacion-practica#contactos" variant="secondary" icon="arrow">
                   Consultar ruta
                 </Button>
               </article>
@@ -43,7 +43,7 @@ export default function InformacionPractica() {
           </div>
 
           <div className="section-head section-head--center">
-            <h2>Opciones de transporte</h2>
+            <h2 id="transporte">Opciones de transporte</h2>
           </div>
 
           <div className="transport-grid">
@@ -57,18 +57,21 @@ export default function InformacionPractica() {
           </div>
 
           <div className="section-head section-head--center">
-            <h2>Seguridad durante tu visita</h2>
+            <h2 id="seguridad">Seguridad durante tu visita</h2>
           </div>
 
           <div className="safety-block">
             <Placeholder className="safety-block__media" />
             <ul className="safety-list">
               {safetyTips.map((tip) => (
-                <li key={tip}>
+                <li key={tip.title}>
                   <span className="safety-list__icon">
-                    <Icon name="shield" size={18} />
+                    <Icon name={tip.icon} size={18} />
                   </span>
-                  {tip}
+                  <div className="safety-list__body">
+                    <h3>{tip.title}</h3>
+                    <p>{tip.text}</p>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -89,7 +92,7 @@ export default function InformacionPractica() {
             </div>
           </div>
 
-          <div className="preparation">
+          <div className="preparation" id="antes-de-salir">
             <p className="eyebrow">Antes de salir</p>
             <h2>Prepara tu visita a Gramalote</h2>
 
@@ -107,7 +110,7 @@ export default function InformacionPractica() {
           </div>
 
           <div className="section-head section-head--center">
-            <h2>Contactos útiles</h2>
+            <h2 id="contactos">Contactos útiles</h2>
             <p>
               Encuentra entidades y servicios de atención que pueden orientarte
               durante tu visita a Gramalote.
@@ -136,7 +139,7 @@ export default function InformacionPractica() {
             <span className="location-block__icon">
               <Icon name="pin" size={34} />
             </span>
-            <h2>Ubicación</h2>
+            <h2 id="ubicacion">Ubicación</h2>
             <p>Mapa o acceso a la ubicación de Gramalote.</p>
             <Button to="/mapa" icon="arrow">
               Ver ubicación en el mapa

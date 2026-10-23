@@ -103,6 +103,10 @@ Las carpetas de Historia, Curiosidades y Funcionalidades siguen vacías en Drive
   cada vista y brechas entre Drive y código.
 - [`REQUISITOS-FUNCIONALES.md`](./REQUISITOS-FUNCIONALES.md): requisitos
   evidenciados por la UI, con estado y archivo de referencia.
+- [`INCIDENCIAS.md`](./INCIDENCIAS.md): incongruencias detectadas, estado y
+  prioridad.
+- [`../backend/database/README.md`](../backend/database/README.md): esquema
+  MySQL propuesto, diagrama ER y mapeo desde el frontend.
 
 ## Pendientes / notas
 

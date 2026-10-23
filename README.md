@@ -5,7 +5,7 @@ Plataforma web de turismo, cultura y memoria histórica de Gramalote, Norte de S
 ## Estructura
 
 - `frontend/` — React + Vite (ver `docs/README.md`).
-- `backend/` — reservado para la API.
+- `backend/` — API y base de datos MySQL (ver `backend/database/README.md`).
 - `docs/` — documentación técnica y mapeo de los diseños de Figma.
 - `DRIVE.md` — acceso a las entregas UX/UI en Google Drive.
 

@@ -33,7 +33,7 @@ Estados usados:
 | RF-08 | Fallback cuando una ficha no existe | `Establecimiento.jsx:10`, `Experiencia.jsx:12`, `CuriosidadDetalle.jsx:69` | Implementado | Ofrece volver al listado |
 | RF-09 | Footer con CTA de Información práctica, navegación y redes | `Footer.jsx:30` | Implementado | El CTA se oculta en fichas y en Información práctica |
 | RF-10 | Diseño responsive con menú móvil y grids adaptables | `home.css:514`, `layout.css:190`, `pages.css:1600` | Implementado | Breakpoints 1024/720 px |
-| RF-11 | Anclas profundas a secciones de Información práctica (`#como-llegar`, `#seguridad`, `#contactos`, `#antes-de-salir`) | `site.js:34` | **Pendiente** | Las secciones de `InformacionPractica.jsx` no tienen `id`; el hash no desplaza |
+| RF-11 | Anclas profundas a secciones de Información práctica (`#como-llegar`, `#seguridad`, `#contactos`, `#antes-de-salir`) | `InformacionPractica.jsx:28`, `site.js:34` | Implementado | Las secciones ya tienen `id` y `scroll-margin-top` |
 | RF-12 | Metadatos SEO por ruta | `index.html:10` | Parcial | Solo hay `title` y `description` globales; no cambian por vista |
 
 ## 3. Inicio
@@ -79,7 +79,7 @@ Estados usados:
 | RF-34 | Vista Qué hacer con experiencia destacada, promo, collage, mapa e historia | `QueHacer.jsx:28` | Implementado | Contenido de ejemplo |
 | RF-35 | Carrusel de imágenes y dots | `QueHacer.jsx:33`, `QueHacer.jsx:112` | **Pendiente** | Botones y dots sin lógica |
 | RF-36 | Detalle de experiencia con datos, galería y recomendaciones | `Experiencia.jsx:24` | Implementado | |
-| RF-37 | Enlace desde el detalle a información de acceso | `Experiencia.jsx:70` | Parcial | Apunta a `#contactos`, pero el ancla no existe |
+| RF-37 | Enlace desde el detalle a información de acceso | `Experiencia.jsx:70` | Implementado | El ancla `#contactos` ya existe |
 
 ## 7. Curiosidades
 
@@ -96,7 +96,7 @@ Estados usados:
 | RF-41 | Cómo llegar, transporte, seguridad y recomendaciones | `InformacionPractica.jsx:25` | Implementado | Datos en `practical.js` |
 | RF-42 | Directorio de contactos útiles | `InformacionPractica.jsx:110` | Parcial | Teléfonos de ejemplo repetidos (`+57 7 123 4567`) |
 | RF-43 | Enlace a ubicación en el mapa | `InformacionPractica.jsx:140` | Parcial | Lleva al mapa visual, sin ubicación real |
-| RF-44 | Llegar a una sección concreta desde el footer | `site.js:34` | **Pendiente** | Ver RF-11 |
+| RF-44 | Llegar a una sección concreta desde el footer | `site.js:34` | Implementado | Ver RF-11 |
 
 ## 9. Buscador
 
@@ -135,8 +135,7 @@ del usuario ni rutas de navegación paso a paso.
 ## 13. Prioridad sugerida
 
 1. Filtros, “Abierto hoy” y “Cargar más” (RF-21, RF-22, RF-23).
-2. Anclas de Información práctica (RF-11, RF-44).
-3. Mapa real (RF-27, RF-43).
-4. Buscador ampliado y normalizado (RF-47, RF-48).
-5. Autenticación y backend (RF-49 a RF-52).
-6. Assets reales (RF-57 y `docs/IMAGENES.md`).
+2. Mapa real (RF-27, RF-43).
+3. Buscador ampliado y normalizado (RF-47, RF-48).
+4. Autenticación y backend (RF-49 a RF-52).
+5. Assets reales (RF-57 y `docs/IMAGENES.md`).
