@@ -111,7 +111,7 @@ Estados usados:
 
 | ID | Requisito | Evidencia | Estado | Notas |
 | --- | --- | --- | --- | --- |
-| RF-49 | Formulario de acceso de administración | `Acceder.jsx:12` | Parcial | `preventDefault()`; no autentica |
+| RF-49 | Formulario de acceso de administración | `Acceder.jsx`, `backend/src/routes/auth.js` | Implementado | Login real con JWT + refresh en cookie httpOnly; `/admin` protegido por sesión |
 | RF-50 | Persistencia y consumo de API | `backend/README.md`, `backend/src/` | Parcial | API de lectura lista; el frontend aún usa `src/data/` |
 | RF-51 | CRUD de establecimientos, experiencias y curiosidades | No hay UI | **No evidenciado** | La carpeta 06 de Drive está vacía |
 | RF-52 | Roles/permisos de administración | No hay UI | **No evidenciado** | |

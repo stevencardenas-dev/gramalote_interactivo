@@ -24,6 +24,8 @@ cd backend
 Copy-Item .env.example .env
 docker compose up -d
 npm install
+npm run seed:admin   # crea la cuenta admin definida en backend/.env
+npm run seed:content # carga el inventario y los textos del sitio
 npm run dev
 ```
 

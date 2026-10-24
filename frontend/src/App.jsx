@@ -15,6 +15,8 @@ import InformacionPractica from './pages/InformacionPractica.jsx'
 import Mapa from './pages/Mapa.jsx'
 import Buscar from './pages/Buscar.jsx'
 import Acceder from './pages/Acceder.jsx'
+import Admin from './pages/Admin.jsx'
+import RequireAdmin from './components/admin/RequireAdmin.jsx'
 import NoEncontrada from './pages/NoEncontrada.jsx'
 
 export default function App() {
@@ -39,6 +41,14 @@ export default function App() {
         <Route path="mapa" element={<Mapa />} />
         <Route path="buscar" element={<Buscar />} />
         <Route path="acceder" element={<Acceder />} />
+        <Route
+          path="admin"
+          element={
+            <RequireAdmin>
+              <Admin />
+            </RequireAdmin>
+          }
+        />
         <Route path="*" element={<NoEncontrada />} />
       </Route>
     </Routes>

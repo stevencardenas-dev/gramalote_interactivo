@@ -3,6 +3,7 @@ import express from 'express'
 import { config } from './config.js'
 import { ping } from './db.js'
 import { errorHandler, notFoundHandler } from './http.js'
+import authRouter from './routes/auth.js'
 import curiositiesRouter from './routes/curiosities.js'
 import establishmentsRouter from './routes/establishments.js'
 import experiencesRouter from './routes/experiences.js'
@@ -15,6 +16,11 @@ import searchRouter from './routes/search.js'
 const app = express()
 
 app.disable('x-powered-by')
+
+if (config.auth.trustProxy) {
+  app.set('trust proxy', 1)
+}
+
 app.use(
   cors({
     origin: config.corsOrigins.includes('*') ? true : config.corsOrigins,
@@ -28,6 +34,10 @@ app.get('/api', (_req, res) => {
     version: '0.1.0',
     endpoints: [
       'GET /api/health',
+      'POST /api/auth/login',
+      'POST /api/auth/refresh',
+      'POST /api/auth/logout',
+      'GET /api/auth/me',
       'GET /api/meta',
       'GET /api/site',
       'GET /api/settings/:key',
@@ -68,6 +78,7 @@ app.get('/api/health', async (_req, res) => {
 
 app.use(
   '/api',
+  authRouter,
   metaRouter,
   establishmentsRouter,
   experiencesRouter,

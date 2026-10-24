@@ -15,7 +15,7 @@ gramalote_interactivo/
 - **Stack:** React 19 + Vite 8 + React Router 7.
 - **Estilos:** CSS plano con variables (`src/styles/tokens.css`), sin framework.
 - **Tipografías:** DM Sans (principal) e Inter (apoyo), cargadas desde Google Fonts.
-- **Datos:** por ahora en `src/data/` con registros de ejemplo; se reemplazarán por la API del backend.
+- **Datos:** el inventario ya vive en MySQL (`backend/database/seed-content.sql`) y la API lo expone; el frontend todavía lee `src/data/` y se conectará a la API en la siguiente entrega. La base sigue siendo la fuente de verdad para el panel de administración.
 
 ```bash
 cd frontend
@@ -43,7 +43,8 @@ npm run lint     # oxlint
 | `/informacion-practica` | Información práctica | Implementada (frame INFORMACION PRACTICA) |
 | `/mapa` | Mapa interactivo | Placeholder visual (pendiente mapa real) |
 | `/buscar?q=` | Buscador | Implementada (búsqueda local) |
-| `/acceder` | Login administración | Formulario sin conexión |
+| `/acceder` | Login administración | Implementada (conectada a la API) |
+| `/admin` | Panel de administración | Implementada (base protegida por sesión) |
 | `*` | 404 | Implementada |
 
 ## Mapeo Figma → React

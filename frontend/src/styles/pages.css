@@ -1720,6 +1720,52 @@
   font-size: var(--fs-xs);
 }
 
+.auth-error {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border: 1px solid #e9b6b6;
+  border-radius: 12px;
+  background: #fdf4f4;
+  color: #8c2f2f;
+  font-size: var(--fs-sm);
+}
+
+.auth-card .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-card {
+  max-width: 560px;
+}
+
+.admin-modules {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.admin-module {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: var(--border);
+  border-radius: 12px;
+  background: var(--c-surface);
+}
+
+.admin-module__name {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+
+.admin-module__hint {
+  color: var(--c-muted);
+  font-size: var(--fs-xs);
+}
+
 .empty {
   padding: 48px 24px;
   text-align: center;

@@ -1,13 +1,18 @@
 # Base de datos — Gramalote Interactivo
 
 **Motor elegido:** MySQL 8.0+ (InnoDB, `utf8mb4`).
-**Estado:** esquema propuesto y validado en MySQL 8.4.11.
+**Estado:** esquema validado en MySQL 8.4.11 y contenido del sitio migrado.
 **Archivos:**
 
 - `schema.sql` — 33 tablas + 3 vistas. Crea desde cero y **elimina** las tablas
   existentes del esquema `gramalote`.
 - `seed.sql` — catálogos, navegación, configuración y las 4 secciones de
-  Curiosidades. No incluye todavía el inventario completo.
+  Curiosidades.
+- `seed-content.sql` — inventario completo migrado desde `frontend/src/data`:
+  19 establecimientos (18 publicados + Origen oculto), 3 experiencias con sus
+  consejos, 4 curiosidades con bloques y colecciones, información práctica,
+  textos de página y `search_documents`. Es idempotente y no toca
+  `admin_users` ni `media`. Se carga con `npm run seed:content`.
 - `../docker-compose.yml` — MySQL local en el puerto `3307`.
 - `../.env.example` — variables de conexión de ejemplo.
 
@@ -25,9 +30,15 @@ docker compose up -d
 docker compose ps
 ```
 
-La primera vez, MySQL ejecuta `schema.sql` y `seed.sql` automáticamente. El
-contenedor queda en `127.0.0.1:3307` (para no chocar con un MySQL local en
-3306).
+La primera vez, MySQL ejecuta `schema.sql`, `seed.sql` y `seed-content.sql`
+automáticamente, en ese orden. El contenedor queda en `127.0.0.1:3307` (para no
+chocar con un MySQL local en 3306).
+
+Si la base ya existía (el volumen no se recrea), carga el contenido con:
+
+```bash
+npm run seed:content
+```
 
 ```bash
 docker compose exec mysql mysql -ugramalote -p gramalote
@@ -45,6 +56,7 @@ docker compose up -d
 ```bash
 mysql -u root -p < database/schema.sql
 mysql -u root -p gramalote < database/seed.sql
+mysql -u root -p gramalote < database/seed-content.sql
 ```
 
 ### Conexión de la API
@@ -178,23 +190,32 @@ Vistas: `v_public_establishments`, `v_public_experiences`,
 | `safetyTips[]` | `safety_tips` |
 | `preparationTips[]` | `preparation_tips` |
 | `usefulContacts[]` | `useful_contacts` |
-| `site.nav`, `site.footer`, `site.practical` | `navigation_items` |
-| `site.social` | `site_settings` (`site.social`) |
+| `site.nav`, `site.footer` | `navigation_items` |
+| `site.social`, `site.practical`, `site.explore` | `site_settings` (`site.social`, `site.practical`, `site.explore`) |
+| `homeHighlights` (`inicio.js`) | `site_settings` (`home.highlights`) |
+| `experiences` (`experiences.js`, tarjetas del inicio) | `site_settings` (`home.experienceCards`) |
+| `categories` (`establishments.js`, textos de listado) | `site_settings` (`pages.categories`) |
 | Fotos de Drive | `media` + tablas de imágenes |
+
+El contenido que no tiene tabla propia (tarjetas del inicio, textos de las
+páginas de listado, menú “Explorar” y accesos del footer) vive como JSON en
+`site_settings`; `GET /api/site` ya lo devuelve. Así ninguna página necesita
+datos locales cuando el frontend se conecte a la API.
 
 ## 4. Pendientes para conectar la API
 
 1. **API base creada:** Express 5 + `mysql2` en `backend/src`, con endpoints de
    lectura para establecimientos, experiencias, curiosidades, historia,
    información práctica, mapa y búsqueda. Ver `backend/README.md`.
-2. **Migrar el contenido actual** de `src/data` a SQL de importación o a un
-   seed generado. El seed actual solo cubre catálogos.
+2. **Migración de contenido: hecha.** `seed-content.sql` cubre todo el
+   inventario actual; falta que el panel mantenga esas tablas al editar.
 3. **Autenticación real** en `/acceder`: Argon2id/bcrypt, JWT de acceso corto +
-   refresh token hasheado en `admin_refresh_tokens`.
+   refresh token hasheado en `admin_refresh_tokens`. *(Implementada.)*
 4. **CRUD del panel admin** para establecimientos, experiencias, curiosidades,
    historia e información práctica.
 5. **Mantener `search_documents`** desde los servicios de escritura
-   (transacción junto al guardado de la entidad).
+   (transacción junto al guardado de la entidad). Hoy lo puebla el seed de
+   contenido.
 6. **Cálculo de “Abierto hoy”** con `opening_hours` y
    `opening_hours_exceptions`; definir zona horaria `America/Bogota`.
 7. **Almacenamiento de imágenes**: decidir S3/CloudFront vs. disco del EC2;
@@ -214,6 +235,13 @@ USE gramalote;
 SHOW TABLES;
 SELECT * FROM v_public_establishments LIMIT 5;
 SELECT * FROM v_public_curiosities;
+
+-- Conteos esperados tras seed-content.sql
+SELECT COUNT(*) FROM establishments;      -- 19 (18 publicados)
+SELECT COUNT(*) FROM experiences;         -- 3
+SELECT COUNT(*) FROM curiosity_blocks;    -- 20
+SELECT COUNT(*) FROM opening_hours;       -- 72
+SELECT COUNT(*) FROM search_documents;    -- 29
 
 -- Búsqueda full-text
 SELECT title, url

@@ -1,6 +1,6 @@
 # Backend
 
-API de lectura de Gramalote Interactivo. **Node 20+ · Express 5 · MySQL 8.0+.**
+API de lectura de Gramalote Interactivo con autenticación de administración. **Node 20+ · Express 5 · MySQL 8.0+.**
 
 ## Inicio rápido
 
@@ -9,6 +9,8 @@ cd backend
 cp .env.example .env          # PowerShell: Copy-Item .env.example .env
 docker compose up -d          # MySQL en 127.0.0.1:3307
 npm install
+npm run seed:admin            # crea la cuenta definida en ADMIN_EMAIL/ADMIN_PASSWORD
+npm run seed:content          # inventario, curiosidades e información práctica
 npm run dev                   # API en http://127.0.0.1:4000/api
 ```
 
@@ -23,7 +25,11 @@ curl http://127.0.0.1:4000/api/meta
 
 - [`database/schema.sql`](./database/schema.sql): 33 tablas + 3 vistas.
 - [`database/seed.sql`](./database/seed.sql): catálogos, navegación y secciones
-  de Curiosidades. No incluye todavía el inventario completo.
+  de Curiosidades.
+- [`database/seed-content.sql`](./database/seed-content.sql): inventario completo
+  (19 establecimientos, 3 experiencias, 4 curiosidades, información práctica y
+  textos de página) y el índice `search_documents`. `npm run seed:content` lo
+  carga y es re-ejecutable: reemplaza el contenido sin tocar cuentas ni medios.
 - [`database/README.md`](./database/README.md): modelo, diagrama ER, mapeo desde
   el frontend y pendientes.
 - [`docker-compose.yml`](./docker-compose.yml): MySQL local en el puerto 3307.
@@ -37,6 +43,10 @@ listados añaden `meta` con `total`, `limit` y `offset`.
 | Método | Ruta | Descripción |
 | --- | --- | --- |
 | GET | `/api/health` | Estado de la API y de MySQL |
+| POST | `/api/auth/login` | Inicia sesión de administración |
+| POST | `/api/auth/refresh` | Renueva el access token con la cookie de refresh |
+| POST | `/api/auth/logout` | Revoca la sesión y borra la cookie |
+| GET | `/api/auth/me` | Cuenta autenticada (requiere `Authorization: Bearer`) |
 | GET | `/api/meta` | Categorías, tipos, zonas, servicios y pagos |
 | GET | `/api/site` | Navegación y configuración del sitio |
 | GET | `/api/establishments` | Listado de establecimientos |
@@ -79,6 +89,23 @@ listados añaden `meta` con `total`, `limit` y `offset`.
 `opening_hours_exceptions` en `America/Bogota`. No se guarda en la base porque
 cambia con el tiempo. Devuelve `null` si no hay horario estructurado.
 
+## Autenticación
+
+- `POST /api/auth/login` verifica la contraseña con bcrypt contra `admin_users` y
+devuelve un **access token JWT** (30 min por defecto) que el frontend guarda en
+memoria, más un **refresh token** en cookie `httpOnly` (7 días) cuyo hash
+SHA-256 vive en `admin_refresh_tokens`.
+- `POST /api/auth/refresh` rota el refresh token: invalida el anterior y emite uno
+nuevo. Reutilizar un token ya canjeado revoca el resto de sesiones de la cuenta.
+- `POST /api/auth/logout` revoca el refresh token y borra la cookie.
+- `requireAuth` (`src/auth.js`) protege las rutas privadas y deja la cuenta en
+`req.admin`; el rol viaja en el JWT y la cuenta se valida contra la base.
+- La cuenta se crea con `npm run seed:admin`, que lee `ADMIN_EMAIL`,
+`ADMIN_PASSWORD` y `ADMIN_NAME` de `backend/.env` (nunca se versionan). Si la
+cuenta ya existe, rota su contraseña y la reactiva.
+- En producción `JWT_SECRET` es obligatorio; en desarrollo, si falta, se genera
+uno efímero y las sesiones caducan al reiniciar la API.
+
 ## Variables de entorno
 
 ```ini
@@ -92,6 +119,15 @@ API_HOST=127.0.0.1
 API_PORT=4000
 CORS_ORIGIN=http://localhost:5173,http://localhost:4173
 DB_POOL_SIZE=10
+
+JWT_SECRET=              # openssl rand -hex 32; obligatorio en producción
+AUTH_ACCESS_TTL=30m
+AUTH_REFRESH_TTL_DAYS=7
+TRUST_PROXY=0            # 1 detrás de nginx/CloudFront
+
+ADMIN_EMAIL=admin@gramalote.example
+ADMIN_PASSWORD=cambie-esta-contrasena
+ADMIN_NAME=Administrador
 ```
 
 En producción usar un usuario MySQL con permisos mínimos, TLS, `API_HOST=0.0.0.0`
@@ -105,18 +141,23 @@ src/
   server.js           Arranque y cierre ordenado
   config.js           Variables de entorno y pool
   db.js               Helpers de consulta
+  auth.js             bcrypt, JWT, cookies de refresh y requireAuth
   http.js             Errores, paginación y middleware
   serializers.js      Respuestas camelCase y medios
   opening-hours.js    Cálculo de "Abierto hoy"
-  routes/             meta, site, establishments, experiences,
+  routes/             auth, meta, site, establishments, experiences,
                       curiosities, history, practical, map, search
+scripts/
+  seed-admin.js       Crea/actualiza la cuenta admin desde .env
+  seed-content.js     Carga database/seed-content.sql y valida los conteos
 ```
 
 ## Pendiente
 
-- Autenticación real y CRUD del panel de administración.
-- Migrar el inventario de `frontend/src/data` a MySQL.
-- Poblar `search_documents` al guardar contenido.
+- CRUD del panel de administración (la autenticación ya está implementada).
+- Que cada guardado del panel actualice `search_documents` en la misma
+  transacción (hoy se puebla con el seed de contenido).
+- Conectar el frontend a la API: todavía lee `frontend/src/data`.
 - Definir almacenamiento de imágenes (S3/CloudFront o disco) y proveedor de mapa.
 - Migraciones versionadas; `schema.sql` es el arranque local, no un sistema de
   migraciones.
