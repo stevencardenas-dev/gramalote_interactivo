@@ -5,4 +5,9 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   base: process.env.VITE_BASE || (process.env.GITHUB_ACTIONS ? '/gramalote_interactivo/' : '/'),
   plugins: [react()],
+  server: {
+    proxy: {
+      '/api': 'http://127.0.0.1:4000',
+    },
+  },
 })
