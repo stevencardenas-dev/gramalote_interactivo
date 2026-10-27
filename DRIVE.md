@@ -24,10 +24,10 @@ Drive hay que:
 # 2. descargarlos (tool google-drive_downloadFile, o REST:)
 #    GET https://www.googleapis.com/drive/v3/files/<id>?alt=media   (Bearer token)
 # 3. descomprimir
-Expand-Archive -LiteralPath .\entrega.zip -DestinationPath 'Nuevas vistas Figma\' -Force
+Expand-Archive -LiteralPath .\entrega.zip -DestinationPath 'referencia\entregas-drive\' -Force
 ```
 
-Destino local acordado: **`Nuevas vistas Figma/<entrega> - <fecha>/`**.
+Destino local acordado: **`referencia/entregas-drive/<entrega> - <fecha>/`**.
 No integrar nada en `frontend/public/` hasta tener el `.zip` descomprimido.
 
 ## Listado rápido (usar esto, no carpeta por carpeta)

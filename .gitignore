@@ -6,11 +6,13 @@ dist/
 .DS_Store
 
 .playwright-mcp/
+# Capturas sueltas en la raíz (las de referencia viven en referencia/)
 /*.png
 
-# --- Entregas de diseño pesadas (se descargan del Drive, no se versionan) ---
-/Nuevas vistas Figma/
-/Gramalote Interactivo/
+# --- Material de referencia para diseñar las vistas (NO se sirve en la web) ---
+# Entregas del Drive, frames de Figma y capturas del sitio. Pesan mucho y se
+# bajan del Drive; lo que sí se sirve vive en frontend/public/.
+/referencia/
 
 # --- Material sensible: nunca subir a GitHub ---
 AGENTS.md
