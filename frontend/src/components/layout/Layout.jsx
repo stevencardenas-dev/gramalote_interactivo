@@ -6,7 +6,9 @@ import Footer from './Footer.jsx'
 export default function Layout() {
   const { pathname } = useLocation()
   const overHero =
-    pathname === '/' || pathname.startsWith('/establecimiento/')
+    pathname === '/' ||
+    pathname.startsWith('/establecimiento/') ||
+    ['/donde-ir', '/donde-comer', '/donde-dormir', '/donde-comprar'].includes(pathname)
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })

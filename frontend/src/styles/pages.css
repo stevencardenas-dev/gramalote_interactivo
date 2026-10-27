@@ -2046,3 +2046,76 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ============ Fotos en listados (entrega 27 oct) ============ */
+.page-hero--image {
+  position: relative;
+  isolation: isolate;
+  padding-top: var(--header-h);
+  padding-bottom: clamp(48px, 7vw, 88px);
+  background: var(--hero-image) center / cover no-repeat;
+  color: var(--c-white);
+}
+
+.page-hero--image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(8, 12, 16, 0.55) 0%, rgba(8, 12, 16, 0.62) 100%);
+}
+
+.page-hero--image .breadcrumb,
+.page-hero--image .breadcrumb a,
+.page-hero--image .page-hero__intro,
+.page-hero--image h1 {
+  color: var(--c-white);
+}
+
+.page-hero--image .page-hero__intro {
+  font-weight: 500;
+}
+
+.listing-card-v .photo {
+  height: 200px;
+}
+
+.photo-collage .photo {
+  border-radius: var(--radius-md);
+  min-height: 140px;
+}
+
+.place-card--photo .place-card__body {
+  background: linear-gradient(0deg, rgba(8, 12, 16, 0.82) 0%, rgba(8, 12, 16, 0.55) 55%, rgba(8, 12, 16, 0) 100%);
+  color: var(--c-white);
+}
+
+.place-card--photo .place-card__body h3,
+.place-card--photo .place-card__body p,
+.place-card--photo .place-card__subtitle {
+  color: var(--c-white);
+}
+
+@media (max-width: 720px) {
+  .page-hero--image {
+    padding-bottom: 44px;
+  }
+
+  .page-hero--image h1 {
+    font-size: 1.75rem;
+  }
+
+  .page-hero__intro {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .listing-card-v .photo {
+    height: 220px;
+  }
+
+  .photo-collage {
+    gap: 10px;
+    min-height: 260px;
+  }
+}

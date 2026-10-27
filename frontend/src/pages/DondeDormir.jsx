@@ -15,6 +15,7 @@ export default function DondeDormir() {
   return (
     <>
       <PageHero
+        image="/img/ficha/hostal-luna-azul-hero.jpg"
         title={meta.label}
         intro={meta.intro}
         breadcrumb={[
@@ -58,6 +59,7 @@ export default function DondeDormir() {
                   title={item.name}
                   to={`/establecimiento/${item.slug}`}
                   summary={item.summary}
+                  photo={item.photo}
                 />
               ))}
             </div>

@@ -1,3 +1,5 @@
+import { establishmentPhotos } from './establishmentPhotos'
+
 export const categories = {
   comer: {
     label: 'Dónde comer',
@@ -57,7 +59,7 @@ export const towns = {
   viejo: 'Gramalote Viejo',
 }
 
-export const establishments = [
+const baseEstablishments = [
   {
     id: 'bambu',
     slug: 'bambu',
@@ -548,6 +550,11 @@ export const establishments = [
     related: ['creaciones-martina', 'artelu', 'maestros-de-la-madera'],
   },
 ]
+
+export const establishments = baseEstablishments.map((item) => ({
+  ...item,
+  ...establishmentPhotos[item.slug],
+}))
 
 export function getEstablishmentsByCategory(category) {
   return establishments.filter(

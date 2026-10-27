@@ -1,5 +1,5 @@
 import PageHero from '../components/ui/PageHero.jsx'
-import Placeholder from '../components/ui/Placeholder.jsx'
+import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
 import ListingCard from '../components/cards/ListingCard.jsx'
 import PlaceCard from '../components/cards/PlaceCard.jsx'
@@ -15,6 +15,7 @@ export default function DondeComer() {
   return (
     <>
       <PageHero
+        image="/img/ficha/bambu-hero.jpg"
         title={meta.label}
         intro={meta.intro}
         breadcrumb={[
@@ -61,6 +62,7 @@ export default function DondeComer() {
                   title={item.name}
                   to={`/establecimiento/${item.slug}`}
                   summary={item.summary}
+                  photo={item.photo}
                 />
               ))}
             </div>
@@ -84,7 +86,7 @@ export default function DondeComer() {
                 Ver más
               </Button>
             </div>
-            <Placeholder className="split-feature__media" />
+            <Photo src="/img/home/historia.jpg" alt="Calle de Gramalote" className="split-feature__media" />
           </div>
         </div>
       </section>

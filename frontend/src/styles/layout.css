@@ -352,6 +352,8 @@
   font-family: var(--font-serif);
   font-size: 0.875rem;
   text-align: center;
+  text-wrap: balance;
+  padding-inline: 20px;
 }
 
 @media (max-width: 900px) {

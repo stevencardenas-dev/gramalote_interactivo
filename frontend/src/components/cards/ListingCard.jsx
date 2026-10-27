@@ -1,10 +1,15 @@
 import Placeholder from '../ui/Placeholder.jsx'
+import Photo from '../ui/Photo.jsx'
 import Button from '../ui/Button.jsx'
 
 export default function ListingCard({ item }) {
   return (
     <article className="listing-card-v">
-      <Placeholder />
+      {item.photo ? (
+        <Photo src={item.photo} alt={item.name} className="listing-card-v__media" />
+      ) : (
+        <Placeholder />
+      )}
       <div className="listing-card-v__body">
         <span className="listing-card-v__type">{item.type}</span>
         <h3>{item.name}</h3>

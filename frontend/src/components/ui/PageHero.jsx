@@ -27,11 +27,15 @@ export default function PageHero({
   breadcrumb,
   children,
   className = '',
+  image,
 }) {
   const trail = breadcrumb ?? [{ label: 'Inicio', to: '/' }, { label: title }]
 
   return (
-    <section className={`page-hero${center ? ' page-hero--center' : ''} ${className}`.trim()}>
+    <section
+      className={`page-hero${center ? ' page-hero--center' : ''}${image ? ' page-hero--image' : ''} ${className}`.trim()}
+      style={image ? { '--hero-image': `url(${image})` } : undefined}
+    >
       <div className="container">
         <Breadcrumb items={trail} />
         <div className="page-hero__inner">

@@ -1,5 +1,5 @@
 import PageHero from '../components/ui/PageHero.jsx'
-import Placeholder from '../components/ui/Placeholder.jsx'
+import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
 import PlaceCard from '../components/cards/PlaceCard.jsx'
 import { MapExplorer } from '../components/ui/MapPanel.jsx'
@@ -12,6 +12,7 @@ export default function DondeIr() {
   return (
     <>
       <PageHero
+        image="/img/home/que-hacer.jpg"
         title="Dónde ir"
         breadcrumb={[
           { label: 'Inicio', to: '/' },
@@ -49,9 +50,9 @@ export default function DondeIr() {
               </Button>
             </div>
             <div className="photo-collage photo-collage--right">
-              <Placeholder className="photo-collage__tall" />
-              <Placeholder />
-              <Placeholder />
+              <Photo src="/img/ficha/la-sazon-de-la-tia-carnes.jpg" alt="Carnes a la plancha" className="photo-collage__tall" />
+              <Photo src="/img/ficha/fresas-con-crema-carvajal-fresas.jpg" alt="Fresas con crema" />
+              <Photo src="/img/ficha/la-comarca-helados.jpg" alt="Helados artesanales" />
             </div>
           </div>
 
@@ -67,6 +68,7 @@ export default function DondeIr() {
                 title={item.name}
                 to={`/establecimiento/${item.slug}`}
                 summary={item.summary}
+                photo={item.photo}
               />
             ))}
           </div>
@@ -84,6 +86,7 @@ export default function DondeIr() {
                   title={shops[0].name}
                   to={`/establecimiento/${shops[0].slug}`}
                   summary={shops[0].summary}
+                  photo={shops[0].photo}
                 />
               ) : null}
             </div>
@@ -107,6 +110,7 @@ export default function DondeIr() {
                   title={item.name}
                   to={`/establecimiento/${item.slug}`}
                   summary={item.summary}
+                  photo={item.photo}
                 />
               ))}
             </div>
