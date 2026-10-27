@@ -1,5 +1,9 @@
 name: gramalote
 
+# Stack de producción: nginx (SPA) + API Express + MySQL.
+# Las variables sensibles viven en /opt/gramalote/.env de la instancia y nunca
+# se versionan; el compose solo las interpola.
+
 services:
   web:
     image: ${IMAGE:-706637772877.dkr.ecr.us-east-2.amazonaws.com/gramalote-frontend:latest}
@@ -7,6 +11,9 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
       interval: 30s
@@ -18,3 +25,85 @@ services:
       options:
         max-size: "5m"
         max-file: "3"
+    networks:
+      - gramalote
+
+  api:
+    image: ${API_IMAGE:-706637772877.dkr.ecr.us-east-2.amazonaws.com/gramalote-api:latest}
+    container_name: gramalote-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_HOST: 0.0.0.0
+      API_PORT: "4000"
+      JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en /opt/gramalote/.env}
+      AUTH_ACCESS_TTL: ${AUTH_ACCESS_TTL:-30m}
+      AUTH_REFRESH_TTL_DAYS: ${AUTH_REFRESH_TTL_DAYS:-7}
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://d2nm90ise1l8de.cloudfront.net}
+      MYSQL_HOST: db
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-gramalote}
+      MYSQL_USER: ${MYSQL_USER:-gramalote}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Define MYSQL_PASSWORD en /opt/gramalote/.env}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-5}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+    networks:
+      - gramalote
+
+  db:
+    image: mysql:8.4
+    container_name: gramalote-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Define MYSQL_ROOT_PASSWORD en /opt/gramalote/.env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-gramalote}
+      MYSQL_USER: ${MYSQL_USER:-gramalote}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Define MYSQL_PASSWORD en /opt/gramalote/.env}
+      TZ: America/Bogota
+    # Ajustado a los 913 MB de la t3.micro: sin performance_schema y con un
+    # buffer pool pequeño, MySQL queda en ~250 MB.
+    command:
+      - --default-time-zone=-05:00
+      - --innodb-buffer-pool-size=96M
+      - --performance-schema=OFF
+      - --mysqlx=0
+      - --skip-name-resolve
+    volumes:
+      - gramalote_db:/var/lib/mysql
+      # Solo se ejecutan la primera vez que se crea el volumen.
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./database/seed-content.sql:/docker-entrypoint-initdb.d/03-seed-content.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+    networks:
+      - gramalote
+
+volumes:
+  gramalote_db:
+
+networks:
+  gramalote:

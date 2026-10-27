@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "frontend/**"
+      - "backend/**"
       - "docker-compose.yml"
       - "deploy/**"
       - ".github/workflows/deploy-ec2.yml"
@@ -20,6 +21,7 @@ concurrency:
 env:
   AWS_REGION: us-east-2
   ECR_REPOSITORY: gramalote-frontend
+  ECR_REPOSITORY_API: gramalote-api
   INSTANCE_ID: i-007da8f731134e78d
   APP_DIR: /opt/gramalote
   CLOUDFRONT_DISTRIBUTION_ID: E1P9GLTGDGI4RL
@@ -30,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.meta.outputs.image }}
+      api_image: ${{ steps.meta.outputs.api_image }}
       tag: ${{ steps.meta.outputs.tag }}
     steps:
       - name: Checkout
@@ -40,14 +43,24 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package-lock.json
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias (frontend)
         working-directory: frontend
         run: npm ci --no-audit --no-fund
 
-      - name: Lint
+      - name: Lint (frontend)
         working-directory: frontend
+        run: npm run lint
+
+      - name: Instalar dependencias (backend)
+        working-directory: backend
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint (backend)
+        working-directory: backend
         run: npm run lint
 
       - name: Credenciales AWS
@@ -61,6 +74,14 @@ jobs:
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Asegurar repositorio ECR de la API
+        run: |
+          aws ecr describe-repositories --repository-names "$ECR_REPOSITORY_API" >/dev/null 2>&1 \
+            || aws ecr create-repository \
+                 --repository-name "$ECR_REPOSITORY_API" \
+                 --image-scanning-configuration scanOnPush=true \
+                 --query "repository.repositoryName" --output text
+
       - name: Calcular tags
         id: meta
         run: |
@@ -68,11 +89,12 @@ jobs:
           TAG="sha-${GITHUB_SHA::7}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "image=${REGISTRY}/${ECR_REPOSITORY}:${TAG}" >> "$GITHUB_OUTPUT"
+          echo "api_image=${REGISTRY}/${ECR_REPOSITORY_API}:${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build y push
+      - name: Build y push (frontend)
         uses: docker/build-push-action@v6
         with:
           context: frontend
@@ -88,13 +110,28 @@ jobs:
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
 
+      - name: Build y push (API)
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.api_image }}
+            ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_API }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
   deploy:
     name: Desplegar en EC2 (SSM)
     runs-on: ubuntu-latest
     needs: build
     environment:
       name: production
-      url: http://3.129.15.147
+      url: https://d2nm90ise1l8de.cloudfront.net
     steps:
       - name: Credenciales AWS
         uses: aws-actions/configure-aws-credentials@v4
@@ -111,14 +148,14 @@ jobs:
         run: |
           COMPOSE_URL="$RAW_BASE/docker-compose.yml"
           SCRIPT_URL="$RAW_BASE/deploy/deploy.sh"
-          COMANDO="export AWS_REGION=$AWS_REGION ECR_REPO=$ECR_REPOSITORY IMAGE_TAG=$IMAGE_TAG COMPOSE_URL=$COMPOSE_URL; curl -fsSL $SCRIPT_URL -o /tmp/gramalote-deploy.sh && bash /tmp/gramalote-deploy.sh"
+          COMANDO="export AWS_REGION=$AWS_REGION ECR_REPO=$ECR_REPOSITORY ECR_REPO_API=$ECR_REPOSITORY_API IMAGE_TAG=$IMAGE_TAG COMPOSE_URL=$COMPOSE_URL; curl -fsSL $SCRIPT_URL -o /tmp/gramalote-deploy.sh && bash /tmp/gramalote-deploy.sh"
           PARAMS=$(printf '{"commands":["%s"]}' "$COMANDO")
 
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy ${IMAGE_TAG}" \
-            --timeout-seconds 600 \
+            --timeout-seconds 900 \
             --parameters "$PARAMS" \
             --query "Command.CommandId" \
             --output text)

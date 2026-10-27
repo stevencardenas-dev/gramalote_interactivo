@@ -6,15 +6,33 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-/opt/gramalote}"
 AWS_REGION="${AWS_REGION:-us-east-2}"
 ECR_REPO="${ECR_REPO:-gramalote-frontend}"
+ECR_REPO_API="${ECR_REPO_API:-gramalote-api}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 COMPOSE_URL="${COMPOSE_URL:-}"
 
 mkdir -p "$APP_DIR"
 cd "$APP_DIR"
 
+# Variables del entorno (JWT, MySQL, admin). Vive solo en la instancia.
+if [ -f "$APP_DIR/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$APP_DIR/.env"
+  set +a
+fi
+
 if [ -n "$COMPOSE_URL" ]; then
   echo "Actualizando docker-compose.yml desde el repositorio..."
   curl -fsSL "$COMPOSE_URL" -o docker-compose.yml
+
+  # Los .sql de MySQL solo se leen al crear el volumen; se refrescan igual
+  # para que un volumen nuevo arranque con el esquema del repositorio.
+  REPO_RAW="${COMPOSE_URL%/*}"
+  mkdir -p "$APP_DIR/database"
+  for file in schema.sql seed.sql seed-content.sql; do
+    curl -fsSL "$REPO_RAW/backend/database/$file" -o "$APP_DIR/database/$file" \
+      || echo "AVISO: no se pudo descargar $file"
+  done
 fi
 
 ACCOUNT_ID="${ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}"
@@ -25,24 +43,35 @@ aws ecr get-login-password --region "$AWS_REGION" \
   | docker login --username AWS --password-stdin "$REGISTRY" >/dev/null
 
 export IMAGE="${REGISTRY}/${ECR_REPO}:${IMAGE_TAG}"
-echo "Desplegando $IMAGE"
+export API_IMAGE="${REGISTRY}/${ECR_REPO_API}:${IMAGE_TAG}"
+echo "Desplegando $IMAGE y $API_IMAGE"
 
 docker compose pull --quiet
 docker compose up -d --remove-orphans
+
+# La cuenta de administración se crea o se rota desde ADMIN_* del .env.
+if [ -n "${ADMIN_EMAIL:-}" ] && [ -n "${ADMIN_PASSWORD:-}" ]; then
+  echo "Sembrando cuenta admin ($ADMIN_EMAIL)..."
+  docker compose run --rm --no-deps -e ADMIN_EMAIL -e ADMIN_PASSWORD -e ADMIN_NAME api \
+    node scripts/seed-admin.js || echo "AVISO: no se pudo sembrar la cuenta admin"
+fi
 
 # Limpieza de imágenes viejas (conserva la que está en uso).
 docker image prune -af --filter "until=168h" >/dev/null 2>&1 || true
 
 echo "Esperando al healthcheck..."
-for _ in $(seq 1 40); do
+for _ in $(seq 1 60); do
   if curl -fsS http://127.0.0.1/healthz >/dev/null 2>&1; then
-    echo "Despliegue OK"
-    docker compose ps
-    exit 0
+    if curl -fsS http://127.0.0.1/api/health >/dev/null 2>&1; then
+      echo "Despliegue OK"
+      docker compose ps
+      exit 0
+    fi
   fi
   sleep 2
 done
 
-echo "ERROR: el contenedor no respondió en 80s" >&2
+echo "ERROR: el sitio o la API no respondieron en 120s" >&2
+docker compose ps >&2 || true
 docker compose logs --tail 80 >&2 || true
 exit 1
