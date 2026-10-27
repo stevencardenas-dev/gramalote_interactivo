@@ -11,6 +11,24 @@ Servidor: `@piotr-agier/google-drive-mcp` (stdio), con scope `drive.readonly`.
 - `listFolder` con `folderId` para listar subcarpetas y archivos.
 - `search` con `rawQuery: true` y `'<folder-id>' in parents` para filtrar por carpeta.
 - `readGoogleDoc` para Docs, `getGoogleSheetContent` para Sheets, `readTextFile` para texto.
+- `downloadFile` para bajar cualquier binario (`.zip`, imágenes, PDF).
+
+## ⚠️ Los assets están en .zip — hay que descargarlos y descomprimirlos
+
+Los **SVG de Figma y las imágenes en alta resolución no se obtienen leyendo el
+Drive**: están dentro de archivos `.zip` en cada entrega. Por eso, al revisar el
+Drive hay que:
+
+```powershell
+# 1. localizar los .zip de la entrega (listFolder / search / REST)
+# 2. descargarlos (tool google-drive_downloadFile, o REST:)
+#    GET https://www.googleapis.com/drive/v3/files/<id>?alt=media   (Bearer token)
+# 3. descomprimir
+Expand-Archive -LiteralPath .\entrega.zip -DestinationPath 'Nuevas vistas Figma\' -Force
+```
+
+Destino local acordado: **`Nuevas vistas Figma/<entrega> - <fecha>/`**.
+No integrar nada en `frontend/public/` hasta tener el `.zip` descomprimido.
 
 ## Listado rápido (usar esto, no carpeta por carpeta)
 

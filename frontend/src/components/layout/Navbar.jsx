@@ -1,28 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { site } from '../../data/site.js'
 import Icon from '../ui/Icon.jsx'
-
-function Brand() {
-  return (
-    <Link className="brand" to="/" aria-label="Gramalote Interactivo, ir al inicio">
-      <span className="brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none">
-          <circle cx="5" cy="5" r="1.8" fill="currentColor" />
-          <circle cx="12" cy="5" r="1.8" fill="currentColor" />
-          <circle cx="19" cy="5" r="1.8" fill="currentColor" />
-          <circle cx="5" cy="12" r="1.8" fill="currentColor" />
-          <circle cx="12" cy="12" r="1.8" fill="currentColor" />
-          <circle cx="19" cy="12" r="1.8" fill="currentColor" />
-          <circle cx="5" cy="19" r="1.8" fill="currentColor" />
-          <circle cx="12" cy="19" r="1.8" fill="currentColor" />
-          <circle cx="19" cy="19" r="1.8" fill="currentColor" />
-        </svg>
-      </span>
-      <span className="visually-hidden">Gramalote</span>
-    </Link>
-  )
-}
+import Logo from '../ui/Logo.jsx'
 
 function SearchForm({ onSubmitted, inputId = 'site-search' }) {
   const navigate = useNavigate()
@@ -46,7 +26,7 @@ function SearchForm({ onSubmitted, inputId = 'site-search' }) {
       <input
         id={inputId}
         type="search"
-        placeholder="Buscar..."
+        placeholder="Search for..."
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
@@ -54,17 +34,41 @@ function SearchForm({ onSubmitted, inputId = 'site-search' }) {
   )
 }
 
-export default function Navbar() {
+export default function Navbar({ over = false }) {
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    if (!over) return undefined
+
+    function onScroll() {
+      setScrolled(window.scrollY > 30)
+    }
+
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [over])
 
   function closeMenu() {
     setOpen(false)
   }
 
+  const solid = !over || scrolled || open
+  const headerClass = [
+    'site-header',
+    over ? 'site-header--over' : '',
+    over && solid ? 'is-solid' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <header className="site-header">
-      <div className="site-header__inner container container--wide">
-        <Brand />
+    <header className={headerClass}>
+      <div className="site-header__inner container">
+        <Link className="brand" to="/" aria-label="Gramalote Interactivo, ir al inicio">
+          <Logo variant="cube" />
+        </Link>
 
         <nav className="site-nav" aria-label="Navegación principal">
           {site.nav.map((link) => (
@@ -116,10 +120,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <div
-        className={`mobile-panel${open ? ' is-open' : ''}`}
-        id="mobile-panel"
-      >
+      <div className={`mobile-panel${open ? ' is-open' : ''}`} id="mobile-panel">
         <nav aria-label="Navegación móvil">
           <ul className="mobile-panel__list">
             {site.nav.map((link) => (

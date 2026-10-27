@@ -106,6 +106,8 @@ Las carpetas de Historia, Curiosidades y Funcionalidades siguen vacías en Drive
   evidenciados por la UI, con estado y archivo de referencia.
 - [`INCIDENCIAS.md`](./INCIDENCIAS.md): incongruencias detectadas, estado y
   prioridad.
+- [`mobile-plan.md`](./mobile-plan.md): cómo se resuelve el diseño responsive de
+  Inicio y de las fichas, breakpoints y verificación.
 - [`../backend/README.md`](../backend/README.md): API de lectura y variables de
   entorno.
 - [`../backend/database/README.md`](../backend/database/README.md): esquema
@@ -113,9 +115,12 @@ Las carpetas de Historia, Curiosidades y Funcionalidades siguen vacías en Drive
 
 ## Pendientes / notas
 
-- Las imágenes siguen siendo placeholders CSS. Drive tiene 106 fotos de
-  restaurantes, hospedajes y artesanías, pero ninguna para Inicio, Qué hacer,
-  Información práctica, Curiosidades o Historia (ver `IMAGENES.md`).
+- Inicio y las fichas de establecimiento usan ya los recortes de los PNG de
+  Figma (`frontend/public/img/home`, `/ficha`, `/brand`). El resto de vistas
+  (Qué hacer, Donde ir, Curiosidades, Historia) sigue con placeholders CSS.
+  Drive tiene 106 fotos de restaurantes, hospedajes y artesanías, pero ninguna
+  para Inicio, Qué hacer, Información práctica, Curiosidades o Historia
+  (ver `IMAGENES.md`).
 - Faltan fichas para Lonchería Romero, ArteLu, Caliopes y Yawart, y hay tres
   fichas sin fotos (Aroma Twins, Dulce Paseo, Doña Claudia).
 - Los establecimientos y experiencias son datos de ejemplo basados en los nombres

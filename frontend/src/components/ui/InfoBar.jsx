@@ -1,4 +1,4 @@
-import Icon from './Icon.jsx'
+import IconMask from './IconMask.jsx'
 
 export default function InfoBar({ items = [], overlap = true }) {
   return (
@@ -6,7 +6,7 @@ export default function InfoBar({ items = [], overlap = true }) {
       {items.map((item) => (
         <div key={item.label} className="info-bar__item">
           <span className="info-bar__icon">
-            <Icon name={item.icon} size={22} />
+            {item.icon ? <IconMask icon={`icono-${item.icon}`} size={26} /> : null}
           </span>
           <div>
             <span className="info-bar__label">{item.label}</span>

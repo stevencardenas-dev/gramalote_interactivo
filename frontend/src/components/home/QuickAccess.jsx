@@ -1,19 +1,19 @@
 import { Link } from 'react-router-dom'
-import Placeholder from '../ui/Placeholder.jsx'
+import Photo from '../ui/Photo.jsx'
 
 const shortcuts = [
-  { label: 'Qué hacer', to: '/que-hacer' },
-  { label: 'Dónde comer', to: '/donde-comer' },
-  { label: 'Dónde dormir', to: '/donde-dormir' },
-  { label: 'Historia', to: '/historia' },
-  { label: 'Dónde comprar', to: '/donde-comprar' },
+  { label: 'Que hacer', to: '/que-hacer', photo: '/img/home/que-hacer.jpg' },
+  { label: 'Dónde comer', to: '/donde-comer', photo: '/img/home/comer.jpg' },
+  { label: 'Dónde dormir', to: '/donde-dormir', photo: '/img/home/dormir.jpg' },
+  { label: 'Su historia', to: '/historia', photo: '/img/home/historia.jpg' },
+  { label: 'Dónde comprar', to: '/donde-comprar', photo: '/img/home/comprar.jpg' },
 ]
 
 export default function QuickAccess() {
   return (
-    <section className="quick-access section" aria-labelledby="quick-title">
+    <section className="quick-access" aria-labelledby="quick-title">
       <div className="container">
-        <div className="quick-access__head">
+        <div className="section-head section-head--center">
           <h2 id="quick-title">Accede rápido</h2>
           <p>
             Explora Gramalote Nuevo y Gramalote Viejo en el mapa. Filtra por
@@ -25,8 +25,8 @@ export default function QuickAccess() {
         <div className="quick-grid">
           {shortcuts.map((item) => (
             <Link key={item.to} className="quick-card" to={item.to}>
-              <Placeholder />
-              <span className="quick-card__label">{item.label}</span>
+              <Photo src={item.photo} alt={item.label} />
+              <span>{item.label}</span>
             </Link>
           ))}
         </div>

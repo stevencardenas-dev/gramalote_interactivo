@@ -4,6 +4,7 @@ import QuickAccess from '../components/home/QuickAccess.jsx'
 import ExperiencesSection from '../components/home/ExperiencesSection.jsx'
 import OpenToday from '../components/home/OpenToday.jsx'
 import HistoryBlock from '../components/home/HistoryBlock.jsx'
+import PracticalInfo from '../components/home/PracticalInfo.jsx'
 
 export default function Inicio() {
   return (
@@ -14,6 +15,7 @@ export default function Inicio() {
       <ExperiencesSection />
       <OpenToday />
       <HistoryBlock />
+      <PracticalInfo />
     </>
   )
 }

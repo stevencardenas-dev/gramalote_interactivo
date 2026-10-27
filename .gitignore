@@ -8,6 +8,10 @@ dist/
 .playwright-mcp/
 /*.png
 
+# --- Entregas de diseño pesadas (se descargan del Drive, no se versionan) ---
+/Nuevas vistas Figma/
+/Gramalote Interactivo/
+
 # --- Material sensible: nunca subir a GitHub ---
 AGENTS.md
 *.local.md

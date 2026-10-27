@@ -11,6 +11,9 @@ export class AuthError extends Error {
 
 let accessToken = null
 let currentUser = null
+// Una sola renovación en vuelo: si dos efectos piden sesión a la vez, el
+// segundo reutilizaría el refresh token ya canjeado y la API revocaría todo.
+let refreshPromise = null
 
 async function request(path, { method = 'GET', body, auth = false } = {}) {
   const headers = {}
@@ -56,13 +59,21 @@ export async function login(email, password) {
 }
 
 export async function refreshSession() {
-  try {
-    const data = await request('/refresh', { method: 'POST' })
-    return applySession(data)
-  } catch {
-    applySession(null)
-    return null
-  }
+  if (refreshPromise) return refreshPromise
+
+  refreshPromise = (async () => {
+    try {
+      const data = await request('/refresh', { method: 'POST' })
+      return applySession(data)
+    } catch {
+      applySession(null)
+      return null
+    } finally {
+      refreshPromise = null
+    }
+  })()
+
+  return refreshPromise
 }
 
 export async function ensureSession() {

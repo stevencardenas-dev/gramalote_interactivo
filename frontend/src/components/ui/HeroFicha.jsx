@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import Placeholder from './Placeholder.jsx'
 import Icon from './Icon.jsx'
 
 function Breadcrumb({ items = [] }) {
@@ -21,49 +20,62 @@ function Breadcrumb({ items = [] }) {
 
 export default function HeroFicha({
   breadcrumb,
-  variant = 'split',
   eyebrow,
   title,
   summary,
-  social = [],
+  image,
+  imageAlt = '',
+  pillTone = 'olive',
+  social = ['instagram', 'share'],
   dots = true,
-  imageLabel,
-  children,
 }) {
+  const icons = Array.isArray(social) ? social : social ? ['instagram', 'share'] : []
+
   return (
-    <section className={`ficha-hero ficha-hero--${variant}`}>
-      <div className="container">
+    <section className="ficha-hero">
+      <div className="ficha-hero__bg">
+        {image ? <img src={image} alt={imageAlt} /> : null}
+      </div>
+
+      <div className="container ficha-hero__inner">
         <Breadcrumb items={breadcrumb} />
-        <div className="ficha-hero__grid">
-          {variant === 'split' ? (
-            <Placeholder className="ficha-hero__media" label={imageLabel} />
+
+        <div className="ficha-hero__center">
+          {icons.length ? (
+            <div className="ficha-hero__social">
+              {icons.includes('instagram') ? (
+                <a
+                  className="social-dot"
+                  href="https://www.instagram.com/"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Instagram"
+                >
+                  <Icon name="instagram" />
+                </a>
+              ) : null}
+              {icons.includes('share') ? (
+                <a className="social-dot" href="#compartir" aria-label="Compartir">
+                  <Icon name="share" />
+                </a>
+              ) : null}
+            </div>
           ) : null}
 
-          <div className="ficha-hero__body">
-            {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+          {eyebrow ? (
+            <span className={`ficha-hero__pill ficha-hero__pill--${pillTone}`}>{eyebrow}</span>
+          ) : null}
 
-            {social.length ? (
-              <div className="ficha-hero__social">
-                {social.map((network) => (
-                  <span key={network} className="social-dot" aria-hidden="true">
-                    <Icon name={network} size={16} />
-                  </span>
-                ))}
-              </div>
-            ) : null}
+          <h1>{title}</h1>
 
-            <h1>{title}</h1>
-            <p>{summary}</p>
+          {summary ? <p className="ficha-hero__summary">{summary}</p> : null}
 
-            {dots ? (
-              <div className="ficha-hero__dots" aria-hidden="true">
-                <span />
-                <span className="is-active" />
-              </div>
-            ) : null}
-
-            {children}
-          </div>
+          {dots ? (
+            <div className="ficha-hero__dots" aria-hidden="true">
+              <span className="is-active" />
+              <span />
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

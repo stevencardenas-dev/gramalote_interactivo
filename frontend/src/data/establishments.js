@@ -28,10 +28,9 @@ export const categories = {
     services: ['Desayuno', 'Parqueadero', 'Piscina', 'Wi-Fi'],
     mapTitle: 'Mapa de alojamientos en Gramalote',
     mapCta: 'Ver alojamientos en el mapa',
-    relationTitle: 'Dónde comprar',
+    relationTitle: 'Lugares relacionados',
     relationText:
-      'Descubre las creaciones de los artesanos de Gramalote y encuentra tejidos, bisutería, decoración y recuerdos elaborados a mano.',
-    relationCta: 'Ver artesanos',
+      'También puedes conocer otras opciones de alojamiento en Gramalote y elegir la que mejor se adapte a tu visita.',
   },
   comprar: {
     label: 'Dónde comprar',
@@ -47,6 +46,9 @@ export const categories = {
     prices: ['Hasta $50.000', '$50.000 - $150.000', 'Más de $150.000'],
     mapTitle: 'Mapa de artesanos y establecimientos',
     mapCta: 'Ver artesanos en el mapa',
+    relationTitle: 'Más artesanías de Gramalote',
+    relationText:
+      'Descubre otras creaciones locales y encuentra piezas únicas hechas por artesanos del municipio.',
   },
 }
 
@@ -63,38 +65,44 @@ export const establishments = [
     category: 'comer',
     type: 'Comidas rápidas',
     town: 'nuevo',
+    photo: '/img/ficha/bambu-1.jpg',
+    hero: '/img/ficha/bambu-hero.jpg',
     summary:
-      'Hamburguesas y comidas rápidas en un ambiente cálido y familiar.',
+      'En Bambú encontrarás un ambiente cálido y familiar, ideal para compartir una comida y pasar un rato agradable en Gramalote.',
     description:
-      'Restaurante familiar de gastronomía tradicional colombiana con ingredientes frescos y atención cálida. Descubre las diferentes opciones que Bambú tiene para ti, desde comidas rápidas hasta bebidas para disfrutar en un ambiente agradable, con precios que van desde $4.000 hasta $35.000.',
+      'Bambú cuenta con una carta de hamburguesas y comidas rápidas, acompañada de opciones de coctelería, bebidas y productos dulces. Su oferta incluye alternativas para comer y compartir, con precios que van desde $4.000 hasta $35.000 COP.',
     hours: 'Lunes a domingo, de 6:00 p. m. a 11:00 p. m.',
-    address: 'Manzana 84, lote 4, segundo piso.',
-    payment: 'Efectivo y transferencias.',
+    address: 'Vía Gramalote-Miraflores, finca Gratamira.',
+    payment: 'Efectivo y transferencia',
     phone: '322 464 4228',
     openNow: true,
     features: [
       {
         title: 'Hamburguesas',
         text: 'Variedad de hamburguesas para disfrutar.',
+        photo: '/img/ficha/bambu-1.jpg',
       },
       {
         title: 'Coctelería',
         text: 'Cócteles y bebidas para compartir.',
+        photo: '/img/ficha/bambu-2.jpg',
       },
       {
         title: 'Cafetería',
         text: 'Opciones de café y bebidas para acompañar tu visita.',
+        photo: '/img/ficha/bambu-3.jpg',
       },
     ],
-    related: ['la-sazon-de-la-tia', 'dulce-paseo', 'origen-cocina-de-autor'],
+    related: ['la-sazon-de-la-tia', 'dulce-paseo', 'la-comarca'],
   },
   {
     id: 'dulce-paseo',
     slug: 'dulce-paseo',
     name: 'Dulce Paseo',
     category: 'comer',
-    type: 'Cafetería',
+    type: 'Cafetería y dulces.',
     town: 'nuevo',
+    photo: '/img/ficha/rel-dulce.jpg',
     summary: 'Postres, jugos, helados, dulces y masato.',
     description:
       'Un espacio para disfrutar de postres, jugos naturales y dulces tradicionales mientras recorres el municipio.',
@@ -103,7 +111,7 @@ export const establishments = [
     payment: 'Efectivo y transferencias.',
     phone: 'Pendiente de confirmar',
     openNow: true,
-    related: ['bambu', 'la-sazon-de-la-tia', 'origen-cocina-de-autor'],
+    related: ['bambu', 'la-sazon-de-la-tia', 'la-comarca'],
   },
   {
     id: 'dona-claudia',
@@ -146,6 +154,7 @@ export const establishments = [
     category: 'comer',
     type: 'Heladería',
     town: 'nuevo',
+    photo: '/img/ficha/rel-comarca.jpg',
     summary: 'Helados artesanales con sabores como chocolate y yuca.',
     description:
       'Heladería artesanal con sabores de la región, elaborados con ingredientes locales.',
@@ -154,6 +163,23 @@ export const establishments = [
     payment: 'Efectivo.',
     phone: 'Pendiente de confirmar',
     openNow: true,
+    features: [
+      {
+        title: 'Helados artesanales',
+        text: 'Sabores de la región elaborados con ingredientes locales.',
+        photo: '/img/ficha/rel-comarca.jpg',
+      },
+      {
+        title: 'Chocolate y yuca',
+        text: 'Dos de los sabores más buscados de la heladería.',
+        photo: '/img/ficha/rel-comarca.jpg',
+      },
+      {
+        title: 'Para llevar',
+        text: 'Disfruta tus helados durante el recorrido por el municipio.',
+        photo: '/img/ficha/rel-comarca.jpg',
+      },
+    ],
     related: ['fresas-con-crema-carvajal', 'dulce-paseo', 'bambu'],
   },
   {
@@ -161,8 +187,9 @@ export const establishments = [
     slug: 'la-sazon-de-la-tia',
     name: 'La Sazón de la Tía',
     category: 'comer',
-    type: 'Comida típica',
+    type: 'Comida tradicional.',
     town: 'nuevo',
+    photo: '/img/ficha/rel-sazon.jpg',
     summary:
       'Comida tradicional colombiana, ajíaco gramalotero y platos especiales.',
     description:
@@ -172,7 +199,24 @@ export const establishments = [
     payment: 'Efectivo y transferencias.',
     phone: 'Pendiente de confirmar',
     openNow: true,
-    related: ['bambu', 'dona-claudia', 'origen-cocina-de-autor'],
+    features: [
+      {
+        title: 'Ajíaco gramalotero',
+        text: 'El plato insignia de la casa, preparado con receta tradicional.',
+        photo: '/img/ficha/rel-sazon.jpg',
+      },
+      {
+        title: 'Comida tradicional',
+        text: 'Platos colombianos con ingredientes de la región.',
+        photo: '/img/ficha/rel-sazon.jpg',
+      },
+      {
+        title: 'Atención cercana',
+        text: 'Un espacio para compartir en familia.',
+        photo: '/img/ficha/rel-sazon.jpg',
+      },
+    ],
+    related: ['bambu', 'dona-claudia', 'dulce-paseo'],
   },
   {
     id: 'origen-cocina-de-autor',
@@ -197,8 +241,9 @@ export const establishments = [
     slug: 'glamping-vista-antigua',
     name: 'Glamping Vista Antigua',
     category: 'dormir',
-    type: 'Glamping · Vereda Vallestana',
+    type: 'Glamping',
     town: 'viejo',
+    photo: '/img/ficha/rel-antigua.jpg',
     summary:
       'Alojamiento rural con privacidad, confort y vistas a las montañas.',
     description:
@@ -208,45 +253,33 @@ export const establishments = [
     priceRange: '$180.000 - $320.000',
     phone: 'Pendiente de confirmar',
     openNow: true,
+    gallery: ['/img/ficha/rel-antigua.jpg'],
     related: ['cabanas-el-penon', 'hostal-campestre-camino-real', 'verdeser-glampings'],
   },
   {
     id: 'verdeser-glampings',
     slug: 'verdeser-glampings',
-    name: 'VerdeSer Glampings',
+    name: 'Verdeser Glampings',
     category: 'dormir',
-    type: 'Glamping · Vereda Miraflores',
+    type: 'Glamping',
     town: 'nuevo',
+    photo: '/img/ficha/verdeser-1.jpg',
+    hero: '/img/ficha/verdeser-hero.jpg',
     summary:
-      'Descanso en la naturaleza con desayuno, domicilios y parqueadero.',
+      'Disfruta de una estada en un entorno natural con alojamientos para parejas y familias, espacios para compartir y comodidades para descansar.',
     description:
-      'Descansa y conecta con la naturaleza. Disfruta de sus alojamientos, desayuno, servicio de domicilios, salón social para eventos y parqueadero.',
-    checkin: '4:00 p. m. / 1:00 p. m.',
-    address: 'Finca Gratamira, vereda Miraflores, Gramalote.',
-    priceRange: '$200.000 - $500.000',
-    phone: '320 223 0392',
+      'Verdeser Glampings dispone de un chalet familiar con capacidad registrada para seis personas y tres chalets para parejas. Sus instalaciones incluyen Wi-Fi, cocina disponible, parqueadero, zonas verdes y jacuzzis climatizados. También ofrece desayuno incluido, servicio de domicilios y salón social para eventos. Se registra admisión de mascotas bajo condiciones del establecimiento.',
+    checkin: '4:00 p. m. - 1:00 p. m.',
+    address: 'Vía Gramalote-Miraflores, finca Gratamira.',
+    priceRange: '$200.000 - $500.000 COP',
+    phone: '320 2230392 - 322 2488407',
     openNow: true,
-    features: [
-      {
-        title: 'Alojamiento',
-        text: 'Espacios rodeados de naturaleza para descansar en pareja o en familia.',
-      },
-      {
-        title: 'Desayuno',
-        text: 'Desayuno incluido para comenzar el día con energía.',
-      },
-      {
-        title: 'Salón social',
-        text: 'Espacio para eventos y reuniones familiares.',
-      },
-      {
-        title: 'Parqueadero',
-        text: 'Parqueadero privado dentro de la finca.',
-      },
-      {
-        title: 'Domicilios',
-        text: 'Servicio de domicilios para mayor comodidad durante la estadía.',
-      },
+    gallery: [
+      '/img/ficha/verdeser-1.jpg',
+      '/img/ficha/verdeser-2.jpg',
+      '/img/ficha/verdeser-3.jpg',
+      '/img/ficha/verdeser-4.jpg',
+      '/img/ficha/verdeser-5.jpg',
     ],
     related: ['glamping-vista-antigua', 'cabanas-el-penon', 'hostal-campestre-camino-real'],
   },
@@ -255,8 +288,9 @@ export const establishments = [
     slug: 'hostal-campestre-camino-real',
     name: 'Hostal Campestre Camino Real',
     category: 'dormir',
-    type: 'Hostal campestre',
+    type: 'Hostal',
     town: 'nuevo',
+    photo: '/img/ficha/rel-camino.jpg',
     summary:
       'Zonas verdes, parqueadero privado, salón de eventos y área de fogatas.',
     description:
@@ -266,6 +300,7 @@ export const establishments = [
     priceRange: '$120.000 - $250.000',
     phone: 'Pendiente de confirmar',
     openNow: true,
+    gallery: ['/img/ficha/rel-camino.jpg'],
     related: ['glamping-vista-antigua', 'cabanas-el-penon', 'verdeser-glampings'],
   },
   {
@@ -292,6 +327,7 @@ export const establishments = [
     category: 'dormir',
     type: 'Hotel boutique · Barrio Santa Anita',
     town: 'nuevo',
+    photo: '/img/home/est-5.jpg',
     summary:
       'Espacios acogedores con agua caliente, Wi-Fi, televisión y desayuno incluido.',
     description:
@@ -301,6 +337,7 @@ export const establishments = [
     priceRange: '$220.000 - $380.000',
     phone: 'Pendiente de confirmar',
     openNow: true,
+    gallery: ['/img/home/est-5.jpg'],
     related: ['hostal-luna-azul', 'glamping-vista-antigua', 'cabanas-el-penon'],
   },
   {
@@ -308,8 +345,9 @@ export const establishments = [
     slug: 'cabanas-el-penon',
     name: 'Cabañas El Peñón',
     category: 'dormir',
-    type: 'Cabañas · Vereda Valderrama',
+    type: 'Cabañas',
     town: 'viejo',
+    photo: '/img/ficha/rel-penon.jpg',
     summary:
       'Cabañas con piscina, zona de pool y mirador para descansar en familia.',
     description:
@@ -319,7 +357,35 @@ export const establishments = [
     priceRange: '$160.000 - $300.000',
     phone: 'Pendiente de confirmar',
     openNow: true,
+    gallery: ['/img/ficha/rel-penon.jpg'],
     related: ['glamping-vista-antigua', 'hostal-campestre-camino-real', 'verdeser-glampings'],
+  },
+  {
+    id: 'artelu',
+    slug: 'artelu',
+    name: 'ArteLu',
+    category: 'comprar',
+    type: 'Figuras y regalos personalizados',
+    town: 'nuevo',
+    photo: '/img/ficha/artelu-1.jpg',
+    hero: '/img/ficha/artelu-hero.jpg',
+    summary:
+      'En nuestro emprendimiento realizamos diferentes productos artesanales y detalles personalizados. Trabajamos en creaciones decorativas y regalos para quienes buscan una pieza especial.',
+    description:
+      'Elaboramos amigurumis, figuras en porcelana fría, velas aromatizadas, llaveros y figuras en resina. También realizamos trabajos personalizados.',
+    hours: '7:00 a. m.–7:00 p. m.',
+    address: 'Los Santos.',
+    priceRange: 'Desde $22.000.',
+    payment: 'Efectivo y transferencias.',
+    phone: '320 2947005',
+    openNow: true,
+    products: [
+      { name: 'Amigurumi zorro', photo: '/img/ficha/artelu-1.jpg' },
+      { name: 'Virgen en crochet', photo: '/img/ficha/artelu-2.jpg' },
+      { name: 'Muñeca en crochet', photo: '/img/ficha/artelu-3.jpg' },
+      { name: 'Figura en crochet', photo: '/img/ficha/artelu-4.jpg' },
+    ],
+    related: ['maestros-de-la-madera', 'caliopes', 'sombreros-techa'],
   },
   {
     id: 'chelinarte',
@@ -338,7 +404,7 @@ export const establishments = [
     phone: 'Pendiente de confirmar',
     openNow: true,
     products: ['Mochilas', 'Llaveros', 'Aretes', 'Bolsos'],
-    related: ['glamping-vista-antigua', 'cabanas-el-penon', 'hostal-campestre-camino-real'],
+    related: ['artelu', 'maestros-de-la-madera', 'mi-hermoso-eden'],
   },
   {
     id: 'aroma-twins',
@@ -356,7 +422,7 @@ export const establishments = [
     phone: 'Pendiente de confirmar',
     openNow: true,
     products: ['Perfumes', 'Aromas para auto', 'Aromas para baño', 'Recargas'],
-    related: ['glamping-vista-antigua', 'cabanas-el-penon', 'hostal-campestre-camino-real'],
+    related: ['creaciones-martina', 'artelu', 'maestros-de-la-madera'],
   },
   {
     id: 'creaciones-martina',
@@ -374,13 +440,8 @@ export const establishments = [
     payment: 'Efectivo o acuerdo previo.',
     phone: '312 385 6999',
     openNow: true,
-    products: [
-      'Amigurumis',
-      'Velas artesanales',
-      'Jabones',
-      'Figuras decorativas',
-    ],
-    related: ['glamping-vista-antigua', 'cabanas-el-penon', 'hostal-campestre-camino-real'],
+    products: ['Amigurumis', 'Velas artesanales', 'Jabones', 'Figuras decorativas'],
+    related: ['artelu', 'mi-gordita-bella', 'mi-hermoso-eden'],
   },
   {
     id: 'mi-hermoso-eden',
@@ -389,8 +450,7 @@ export const establishments = [
     category: 'comprar',
     type: 'Decoración para el hogar',
     town: 'nuevo',
-    summary:
-      'Macetas, alhajeros y decoraciones elaboradas en cemento y yeso.',
+    summary: 'Macetas, alhajeros y decoraciones elaboradas en cemento y yeso.',
     description:
       'Decoración para el hogar: macetas, alhajeros y piezas elaboradas en cemento y yeso.',
     hours: 'Lunes a sábado, de 9:00 a. m. a 5:00 p. m.',
@@ -399,7 +459,7 @@ export const establishments = [
     phone: 'Pendiente de confirmar',
     openNow: true,
     products: ['Macetas', 'Alhajeros', 'Decoración en yeso', 'Piezas en cemento'],
-    related: ['glamping-vista-antigua', 'cabanas-el-penon', 'hostal-campestre-camino-real'],
+    related: ['caliopes', 'maestros-de-la-madera', 'artelu'],
   },
   {
     id: 'maestros-de-la-madera',
@@ -408,6 +468,7 @@ export const establishments = [
     category: 'comprar',
     type: 'Artesanías en madera',
     town: 'nuevo',
+    photo: '/img/ficha/rel-madera.jpg',
     summary: 'Artesanías elaboradas en madera.',
     description:
       'Taller de artesanías en madera con piezas utilitarias y decorativas hechas a mano.',
@@ -416,8 +477,57 @@ export const establishments = [
     payment: 'Efectivo y transferencias.',
     phone: 'Pendiente de confirmar',
     openNow: true,
-    products: ['Llaveros', 'Imanes', 'Letreros', 'Adornos'],
-    related: ['glamping-vista-antigua', 'cabanas-el-penon', 'hostal-campestre-camino-real'],
+    products: [
+      { name: 'Llaveros', photo: '/img/ficha/rel-madera.jpg' },
+      { name: 'Imanes', photo: '/img/ficha/rel-madera.jpg' },
+      { name: 'Letreros', photo: '/img/ficha/rel-madera.jpg' },
+      { name: 'Adornos', photo: '/img/ficha/rel-madera.jpg' },
+    ],
+    related: ['artelu', 'sombreros-techa', 'caliopes'],
+  },
+  {
+    id: 'caliopes',
+    slug: 'caliopes',
+    name: 'Caliopes',
+    category: 'comprar',
+    type: 'Macetas y plantas',
+    town: 'nuevo',
+    photo: '/img/ficha/rel-caliopes.jpg',
+    summary: 'Macetas y plantas para decorar el hogar.',
+    description:
+      'Macetas y plantas para llevar un pedazo de la naturaleza de Gramalote a casa.',
+    hours: 'Pendiente de confirmar',
+    address: 'Gramalote Nuevo.',
+    payment: 'Efectivo.',
+    phone: 'Pendiente de confirmar',
+    openNow: true,
+    products: [
+      { name: 'Macetas', photo: '/img/ficha/rel-caliopes.jpg' },
+      { name: 'Plantas', photo: '/img/ficha/rel-caliopes.jpg' },
+    ],
+    related: ['artelu', 'maestros-de-la-madera', 'sombreros-techa'],
+  },
+  {
+    id: 'sombreros-techa',
+    slug: 'sombreros-techa',
+    name: 'Sombreros Techa',
+    category: 'comprar',
+    type: 'Sombreros y productos textiles',
+    town: 'nuevo',
+    photo: '/img/ficha/rel-techa.jpg',
+    summary: 'Sombreros y productos textiles hechos a mano.',
+    description:
+      'Sombreros y productos textiles con acabados hechos a mano por artesanos de la región.',
+    hours: 'Pendiente de confirmar',
+    address: 'Gramalote Nuevo.',
+    payment: 'Efectivo.',
+    phone: 'Pendiente de confirmar',
+    openNow: true,
+    products: [
+      { name: 'Sombreros', photo: '/img/ficha/rel-techa.jpg' },
+      { name: 'Productos textiles', photo: '/img/ficha/rel-techa.jpg' },
+    ],
+    related: ['artelu', 'maestros-de-la-madera', 'caliopes'],
   },
   {
     id: 'mi-gordita-bella',
@@ -426,8 +536,7 @@ export const establishments = [
     category: 'comprar',
     type: 'Detalles y accesorios artesanales',
     town: 'nuevo',
-    summary:
-      'Flores en foamy, llaveros, escapularios y muñecas de trapo.',
+    summary: 'Flores en foamy, llaveros, escapularios y muñecas de trapo.',
     description:
       'Detalles y accesorios artesanales: flores en foamy, llaveros, escapularios y muñecas de trapo.',
     hours: 'Lunes a sábado, de 9:00 a. m. a 5:00 p. m.',
@@ -436,7 +545,7 @@ export const establishments = [
     phone: 'Pendiente de confirmar',
     openNow: true,
     products: ['Flores en foamy', 'Llaveros', 'Escapularios', 'Muñecas de trapo'],
-    related: ['glamping-vista-antigua', 'cabanas-el-penon', 'hostal-campestre-camino-real'],
+    related: ['creaciones-martina', 'artelu', 'maestros-de-la-madera'],
   },
 ]
 

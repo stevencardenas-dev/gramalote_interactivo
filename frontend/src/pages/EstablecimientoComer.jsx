@@ -1,30 +1,36 @@
 import HeroFicha from '../components/ui/HeroFicha.jsx'
 import InfoBar from '../components/ui/InfoBar.jsx'
-import Placeholder from '../components/ui/Placeholder.jsx'
+import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
 import RelatedPlaces from '../components/cards/RelatedPlaces.jsx'
+import { categories } from '../data/establishments.js'
+
+const info = categories.comer
 
 export default function EstablecimientoComer({ item }) {
   const features = item.features ?? [
-    { title: item.type, text: item.summary },
+    { title: item.type, text: item.summary, photo: item.photo },
     {
       title: 'Atención cercana',
       text: 'Un espacio pensado para visitantes y habitantes de Gramalote.',
+      photo: item.photo,
     },
     {
       title: 'Sabores locales',
       text: 'Preparaciones que rescatan los ingredientes y las costumbres de la región.',
+      photo: item.photo,
     },
   ]
 
   return (
     <>
       <HeroFicha
-        variant="split"
         eyebrow={item.type}
         title={item.name}
         summary={item.summary}
-        social={['instagram', 'facebook']}
+        image={item.hero ?? '/img/home/hero.jpg'}
+        imageAlt={item.name}
+        social={['instagram', 'share']}
         breadcrumb={[
           { label: 'Inicio', to: '/' },
           { label: 'Dónde ir', to: '/donde-ir' },
@@ -33,26 +39,28 @@ export default function EstablecimientoComer({ item }) {
         ]}
       />
 
-      <div className="container container--narrow">
+      <div className="container">
         <InfoBar
           items={[
-            { icon: 'clock', label: 'Horario', value: item.hours },
-            { icon: 'pin', label: 'Dirección', value: item.address },
-            { icon: 'lock', label: 'Métodos de pago', value: item.payment },
-            { icon: 'phone', label: 'Teléfono', value: item.phone },
+            { icon: 'horario', label: 'Horario', value: item.hours },
+            { icon: 'ubicacion', label: 'Ubicación', value: item.address },
+            { icon: 'billetera', label: 'Métodos de pago', value: item.payment },
+            { icon: 'telefono', label: 'Teléfono', value: item.phone },
           ]}
         />
+      </div>
 
-        <section className="offer">
+      <section className="ficha-section ficha-section--comer">
+        <div className="container">
           <div className="section-head section-head--center">
             <h2>Nuestra oferta</h2>
             <p>{item.description}</p>
           </div>
 
-          <div className="offer__grid">
+          <div className="offer-grid">
             {features.map((feature) => (
               <article key={feature.title} className="offer-card">
-                <Placeholder />
+                <Photo src={feature.photo ?? item.photo} alt={feature.title} />
                 <h3>{feature.title}</h3>
                 <p>{feature.text}</p>
               </article>
@@ -64,13 +72,13 @@ export default function EstablecimientoComer({ item }) {
               Ver ubicación en el mapa
             </Button>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
       <RelatedPlaces
         slugs={item.related}
-        title="También puedes disfrutar en Gramalote"
-        text="Explora otras opciones gastronómicas del municipio y descubre lugares donde disfrutar de sabores locales y diferentes propuestas para compartir."
+        title={info.relationTitle}
+        text={info.relationText}
       />
     </>
   )

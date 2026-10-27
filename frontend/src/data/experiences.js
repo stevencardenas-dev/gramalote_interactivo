@@ -5,7 +5,8 @@ export const experiences = [
     title: 'Cascadas escondidas entre la niebla',
     category: 'Naturaleza',
     description:
-      'El sonido del agua te guía por el sendero. Al final, la recompensa es un arcoíris entre la niebla.',
+      'El sonido del agua te guía por el sendero. Al final, la recompensa es fría y transparente.',
+    photo: '/img/home/exp-1.jpg',
     to: '/que-hacer/cascadas-arco-iris',
   },
   {
@@ -14,7 +15,8 @@ export const experiences = [
     title: 'Sabores de Gramalote',
     category: 'Gastronomía',
     description:
-      'Descubre los platos y sabores que reúnen historias, tradiciones y memoria del municipio.',
+      'Descubre la gastronomía local y los sabores tradicionales del municipio.',
+    photo: '/img/home/exp-2b.jpg',
     to: '/donde-comer',
   },
   {
@@ -23,7 +25,8 @@ export const experiences = [
     title: 'Artesanías con identidad local',
     category: 'Cultura',
     description:
-      'Conoce los productos y las creaciones de los artesanos de Gramalote, piezas que guardan su historia.',
+      'Conoce los productos y las creaciones de los artesanos de Gramalote.',
+    photo: '/img/home/exp-3b.jpg',
     to: '/donde-comprar',
   },
 ]

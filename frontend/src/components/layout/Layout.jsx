@@ -5,6 +5,8 @@ import Footer from './Footer.jsx'
 
 export default function Layout() {
   const { pathname } = useLocation()
+  const overHero =
+    pathname === '/' || pathname.startsWith('/establecimiento/')
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -15,8 +17,8 @@ export default function Layout() {
       <a className="skip-link" href="#contenido">
         Saltar al contenido
       </a>
-      <Navbar />
-      <main id="contenido">
+      <Navbar over={overHero} />
+      <main id="contenido" className={overHero ? 'main--over-hero' : undefined}>
         <Outlet />
       </main>
       <Footer />

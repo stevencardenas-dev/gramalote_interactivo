@@ -146,3 +146,52 @@ de ficha), por eso el total de slots no equivale al total de fotos necesarias.
 - Mantener un fallback `Placeholder` para fichas sin foto y evitar imágenes
   rotas.
 - Registrar créditos/licencia de cada foto si se van a publicar.
+
+## 6. Entrega del 27 de octubre de 2026 (assets en alta)
+
+Los archivos llegaron en `.zip` dentro de Drive y se descomprimieron en
+`Nuevas vistas Figma/` (ver la regla en `AGENTS.md`). Ya están integrados en
+`frontend/public/` con las dimensiones de uso real.
+
+### 6.1 Imágenes (`Imagenes alta resolucion - 27 octubre`)
+
+| Original | Destino | Salida |
+|---|---|---|
+| `gramalote-hero-inicio.png` (8064×4536, 57 MB) | `img/home/hero.jpg` | 2200×1237 · 522 KB |
+| `gramalote-nuevo-mapa.png` (6000×4000, 33 MB) | `img/home/explora.jpg` | 1600×1067 · 398 KB |
+| `historia-gramalote-pasado-presente.png` | `img/home/historia-banner.jpg` | 1533×1026 · 212 KB |
+| `categoria-que-hacer.jpg` | `img/home/que-hacer.jpg` | 800×1200 |
+| `categoria-donde-comer.jpg` | `img/home/comer.jpg` | 800×1200 |
+| `categoria-donde-dormir.jpg` | `img/home/dormir.jpg` | 900×600 |
+| `categoria-donde-comprar.jpg` | `img/home/comprar.jpg` | 900×725 |
+| `categoria-historia.jpg` | `img/home/historia.jpg` | 900×600 |
+| `establecimiento-cafe-marqueteria.png` | `img/home/est-1.jpg` (Café Marquetalia) | 1000×1000 |
+| `establecimiento-la-comarca.jpeg` | `img/home/est-2.jpg` (La Comarca) | 1000×667 |
+| `establecimiento-verdeser-glampings.jpg` | `img/home/est-3.jpg` (Verdeser) | 750×1000 |
+| `establecimiento-restaurante-el-gran-sazon.png` | `img/home/est-4.jpg` (El Gran Sazón) | 750×1000 |
+| `establecimiento-casa-hiedra.png` | `img/home/est-5.jpg` (Casa Hiedra) | 800×1000 |
+| `establecimiento-cascadas-arco-iris.png` | `img/home/est-6.jpg` (Cascadas) | 900×900 |
+| `experiencia-cascadas-gramalote.jpeg` | `img/home/exp-1.jpg` | 938×1250 |
+| `experiencia-gastronomia-local.jpg` | `img/home/exp-2b.jpg` | 833×1250 |
+| `experiencia-artesanias-locales.jpg` | `img/home/exp-3b.jpg` | 831×1250 |
+| `horizontal.png` (4625×1111) | `img/brand/alcaldia.png` | 700×168 · PNG |
+
+Todas las fotos se recomprimieron a JPEG calidad 80–85 con escalado bicúbico:
+el hero pasa de 57 MB a 522 KB y el resto queda entre 90 y 400 KB. El hero
+lleva `fetchPriority="high"`; el resto usa `loading="lazy"` desde `Photo.jsx`.
+
+### 6.2 Iconos (`Iconos redes sociales - 27 octubre`)
+
+Copiados tal cual a `public/brand/social/` y renderizados con `SocialIcon.jsx`
+(máscara CSS, heredan `currentColor`):
+
+`instagram`, `facebook`, `tiktok`, `youtube`, `x`, `whatsapp`, `email`, `linktree`.
+
+El footer usa las cinco primeras. `whatsapp.svg`, `email.svg` y `linktree.svg`
+están listos pero sin enlace real todavía (ver TODO en `data/site.js`).
+
+### 6.3 Iconos y logos (`Iconos y logros gramalote - 27 octubre`)
+
+Los 33 SVG (isotipo, logos cuadrados y rectangulares, 29 iconos y la paleta) son
+idénticos a los de `public/brand/`; no requirieron cambios.
+

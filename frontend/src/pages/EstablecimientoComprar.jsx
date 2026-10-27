@@ -1,18 +1,25 @@
 import HeroFicha from '../components/ui/HeroFicha.jsx'
 import InfoBar from '../components/ui/InfoBar.jsx'
-import Placeholder from '../components/ui/Placeholder.jsx'
+import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
 import RelatedPlaces from '../components/cards/RelatedPlaces.jsx'
+import { categories } from '../data/establishments.js'
+
+const info = categories.comprar
 
 export default function EstablecimientoComprar({ item }) {
+  const products = item.products ?? []
+
   return (
     <>
       <HeroFicha
-        variant="split"
         eyebrow={item.type}
         title={item.name}
-        summary={item.description}
-        social={['instagram', 'facebook']}
+        summary={item.summary}
+        image={item.hero ?? '/img/home/hero.jpg'}
+        imageAlt={item.name}
+        pillTone="gold"
+        social={['instagram']}
         dots={false}
         breadcrumb={[
           { label: 'Inicio', to: '/' },
@@ -22,32 +29,30 @@ export default function EstablecimientoComprar({ item }) {
         ]}
       />
 
-      <div className="container container--narrow">
+      <div className="container">
         <InfoBar
           items={[
-            { icon: 'clock', label: 'Horario', value: item.hours },
-            { icon: 'pin', label: 'Dirección', value: item.address },
-            { icon: 'lock', label: 'Métodos de pago', value: item.payment },
-            { icon: 'phone', label: 'Teléfono', value: item.phone },
+            { icon: 'horario', label: 'Horario', value: item.hours },
+            { icon: 'ubicacion', label: 'Ubicación', value: item.address },
+            { icon: 'billetera', label: 'Precios', value: item.priceRange },
+            { icon: 'telefono', label: 'Teléfono', value: item.phone },
           ]}
         />
+      </div>
 
-        <section className="offer">
+      <section className="ficha-section ficha-section--comprar">
+        <div className="container">
           <div className="section-head section-head--center">
-            <h2>Productos</h2>
-            <p>
-              Descubre detalles hechos a mano, desde amigurumis y velas
-              artesanales hasta jabones, llaveros y regalos personalizados.
-            </p>
+            <h2>Nuestras creaciones</h2>
+            <p>{item.description}</p>
           </div>
 
           <div className="product-grid">
-            {item.products.map((product) => (
-              <figure key={product} className="product-card">
-                <Placeholder />
-                <figcaption>{product}</figcaption>
-              </figure>
-            ))}
+            {products.map((product, index) => {
+              const src = typeof product === 'string' ? item.photo : product.photo
+              const alt = typeof product === 'string' ? product : product.name
+              return <Photo key={`${alt}-${index}`} src={src ?? item.photo} alt={alt} />
+            })}
           </div>
 
           <div className="center-action">
@@ -55,10 +60,14 @@ export default function EstablecimientoComprar({ item }) {
               Ver ubicación en el mapa
             </Button>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
-      <RelatedPlaces slugs={item.related} />
+      <RelatedPlaces
+        slugs={item.related}
+        title={info.relationTitle}
+        text={info.relationText}
+      />
     </>
   )
 }

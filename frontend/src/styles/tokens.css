@@ -1,40 +1,52 @@
 :root {
-  /* Paleta base (Figma: Neutral/0, Neutral/2, Neutral/7, Neutral/10) */
+  /* Paleta de marca (PALETA DE COLORES.svg) */
+  --c-cream: #fff2e3;
+  --c-cream-deep: #ebdccf;
+  --c-navy: #00426b;
+  --c-navy-dark: #00324f;
+  --c-olive: #a8af25;
+  --c-gold: #eaa41e;
+  --c-brick: #a5292b;
+  --c-coral: #db5319;
+  --c-brown: #773f10;
+  --c-ink: #141414;
+  --c-ink-soft: #4b3b2f;
+  --c-muted: #8c8177;
+  --c-line: #e6d7c8;
   --c-white: #ffffff;
-  --c-ink: #1d1b20;
-  --c-ink-soft: #3d4550;
-  --c-primary: #486284;
-  --c-primary-dark: #354b68;
-  --c-muted: #8ca2c0;
-  --c-line: #dee5ed;
 
-  /* Superficies */
-  --c-surface: #f4f6f8;
-  --c-surface-2: #e8ebef;
-  --c-surface-3: #dfe3e8;
+  /* Alias heredados */
+  --c-primary: var(--c-navy);
+  --c-primary-dark: var(--c-navy-dark);
+  --c-surface: var(--c-cream);
+  --c-surface-2: #f8e9d9;
+  --c-surface-3: var(--c-cream-deep);
 
   /* Tipografía */
+  --font-serif: 'Playfair Display', 'Georgia', 'Times New Roman', serif;
   --font-sans: 'DM Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-alt: 'Inter', 'DM Sans', system-ui, sans-serif;
+  --font-alt: var(--font-sans);
 
-  --fs-display: clamp(2.5rem, 4.2vw, 3.5rem);
-  --fs-h1: clamp(2rem, 3vw, 2.75rem);
-  --fs-h2: clamp(1.6rem, 2.2vw, 2.25rem);
-  --fs-h3: clamp(1.25rem, 1.5vw, 1.5rem);
-  --fs-lead: clamp(1rem, 1.15vw, 1.25rem);
-  --fs-body: 1rem;
+  --fs-display: clamp(2.5rem, 4.6vw, 4.25rem);
+  --fs-h1: clamp(2.1rem, 3.2vw, 3rem);
+  --fs-h2: clamp(1.75rem, 2.78vw, 2.5rem);
+  --fs-h3: clamp(1.05rem, 1.3vw, 1.125rem);
+  --fs-lead: clamp(0.95rem, 1.1vw, 1.0625rem);
+  --fs-body: 1.125rem;
   --fs-sm: 0.875rem;
   --fs-xs: 0.8125rem;
 
-  /* Layout */
-  --container: 1280px;
-  --gutter: clamp(20px, 5vw, 80px);
+  /* Layout (contenido 1281 px a 1440 de viewport) */
+  --container: 1281px;
+  --gutter: clamp(20px, 5.55vw, 80px);
   --section-y: clamp(48px, 6vw, 80px);
-  --radius-sm: 10px;
-  --radius-md: 18px;
-  --radius-lg: 38px;
+  --header-h: 100px;
+
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
   --radius-pill: 999px;
 
-  --shadow-soft: 0 18px 60px rgba(29, 27, 32, 0.08);
-  --border: 1px solid var(--c-line);
+  --shadow-soft: 0 18px 40px rgba(20, 20, 20, 0.08);
+  --shadow-card: 0 10px 30px rgba(20, 20, 20, 0.06);
 }

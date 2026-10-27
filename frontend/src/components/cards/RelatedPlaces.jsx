@@ -1,16 +1,17 @@
 import { Link } from 'react-router-dom'
+import Photo from '../ui/Photo.jsx'
 import Icon from '../ui/Icon.jsx'
 import { getEstablishment } from '../../data/establishments.js'
 
 export default function RelatedPlaces({
-  slugs,
-  title = 'Lugares relacionados',
-  text = 'También puedes conocer otras opciones de alojamiento en Gramalote y elegir la que mejor se adapte a tu visita.',
+  slugs = [],
+  title = 'También puedes disfrutar en Gramalote',
+  text = 'Explora otras opciones del municipio y descubre lugares con propuestas para compartir.',
 }) {
   const items = slugs.map(getEstablishment).filter(Boolean)
 
   return (
-    <section className="section section--tight">
+    <section className="related">
       <div className="container">
         <div className="section-head section-head--center">
           <h2>{title}</h2>
@@ -20,18 +21,14 @@ export default function RelatedPlaces({
         <div className="related-grid">
           {items.map((item) => (
             <Link key={item.id} className="related-card" to={`/establecimiento/${item.slug}`}>
+              <Photo src={item.photo} alt={item.name} />
               <div className="related-card__body">
-                <div>
-                  <h3>{item.name}</h3>
-                  <span>{item.type}</span>
-                </div>
-                <div className="related-card__actions">
-                  <span className="related-card__button">Ver más</span>
-                  <span className="related-card__link">
-                    Explorar
-                    <Icon name="arrow" />
-                  </span>
-                </div>
+                <span className="related-card__type">{item.type}</span>
+                <h3>{item.name}</h3>
+                <span className="related-card__link">
+                  Ver más
+                  <Icon name="chevron-right" />
+                </span>
               </div>
             </Link>
           ))}

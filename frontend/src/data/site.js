@@ -21,34 +21,43 @@ export const site = {
     { label: 'Curiosidades', to: '/curiosidades' },
     { label: 'Contactos útiles', to: '/informacion-practica#contactos' },
   ],
+  // Redes con iconos entregados por diseño en /brand/social.
+  // TODO: reemplazar los enlaces provisionales por las cuentas reales.
+  // Ya existen también whatsapp.svg, email.svg y linktree.svg listos para usar.
   social: [
     { label: 'Instagram', icon: 'instagram', href: 'https://www.instagram.com/' },
     { label: 'Facebook', icon: 'facebook', href: 'https://www.facebook.com/' },
+    { label: 'TikTok', icon: 'tiktok', href: 'https://www.tiktok.com/' },
     { label: 'YouTube', icon: 'youtube', href: 'https://www.youtube.com/' },
+    { label: 'X', icon: 'x', href: 'https://x.com/' },
   ],
   practical: [
     {
       title: 'Cómo llegar',
       text: 'Orientación para llegar al municipio.',
       icon: 'route',
+      brandIcon: 'camino',
       to: '/informacion-practica#como-llegar',
     },
     {
       title: 'Seguridad',
-      text: 'Recomendaciones para un recorrido tranquilo.',
+      text: 'Recomendaciones para la visita.',
       icon: 'shield',
+      brandIcon: 'escudo',
       to: '/informacion-practica#seguridad',
     },
     {
       title: 'Contactos útiles',
-      text: 'Números y entidades de apoyo en Gramalote.',
+      text: 'Teléfonos e información de contacto.',
       icon: 'phone',
+      brandIcon: 'telefono',
       to: '/informacion-practica#contactos',
     },
     {
       title: 'Antes de salir',
-      text: 'Qué llevar y qué tener en cuenta.',
+      text: 'Qué conviene preparar antes de la visita.',
       icon: 'info',
+      brandIcon: 'info',
       to: '/informacion-practica#antes-de-salir',
     },
   ],
