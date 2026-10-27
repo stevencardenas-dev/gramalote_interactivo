@@ -39,10 +39,10 @@ export default function Experiencia() {
       <div className="container container--narrow">
         <InfoBar
           items={[
-            { icon: 'clock', label: 'Horario', value: item.hours },
-            { icon: 'pin', label: 'Dirección', value: item.address },
-            { icon: 'car', label: 'Parqueadero', value: item.parking },
-            { icon: 'phone', label: 'Teléfono', value: item.phone },
+            { icon: 'horario', label: 'Horario', value: item.hours },
+            { icon: 'ubicacion', label: 'Dirección', value: item.address },
+            { icon: 'carro', label: 'Parqueadero', value: item.parking },
+            { icon: 'telefono', label: 'Teléfono', value: item.phone },
           ]}
         />
 
