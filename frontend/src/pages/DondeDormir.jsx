@@ -5,12 +5,12 @@ import PlaceCard from '../components/cards/PlaceCard.jsx'
 import FilterBar, { FilterSelect } from '../components/ui/FilterBar.jsx'
 import MapPanel from '../components/ui/MapPanel.jsx'
 import HistoryBlock from '../components/home/HistoryBlock.jsx'
-import { categories, getEstablishmentsByCategory } from '../data/establishments.js'
+import { categories, getEstablishmentsByCategory, pickEstablishments } from '../data/establishments.js'
 
 export default function DondeDormir() {
   const meta = categories.dormir
   const places = getEstablishmentsByCategory('dormir')
-  const shops = getEstablishmentsByCategory('comprar').slice(0, 2)
+  const shops = pickEstablishments(['maestros-de-la-madera', 'creaciones-martina'])
 
   return (
     <>

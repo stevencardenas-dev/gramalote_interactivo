@@ -5,12 +5,24 @@ import ListingCard from '../components/cards/ListingCard.jsx'
 import PlaceCard from '../components/cards/PlaceCard.jsx'
 import FilterBar, { FilterSelect, FilterToggle } from '../components/ui/FilterBar.jsx'
 import MapPanel from '../components/ui/MapPanel.jsx'
-import { categories, getEstablishmentsByCategory } from '../data/establishments.js'
+import { categories, pickEstablishments } from '../data/establishments.js'
 
 export default function DondeComer() {
   const meta = categories.comer
-  const places = getEstablishmentsByCategory('comer')
-  const lodging = getEstablishmentsByCategory('dormir').slice(0, 4)
+  const places = pickEstablishments([
+    'bambu',
+    'dona-claudia',
+    'dulce-paseo',
+    'fresas-con-crema-carvajal',
+    'la-sazon-de-la-tia',
+    'la-comarca',
+  ])
+  const lodging = pickEstablishments([
+    'glamping-vista-antigua',
+    'hostal-campestre-camino-real',
+    'hostal-luna-azul',
+    'cabanas-el-penon',
+  ])
 
   return (
     <>

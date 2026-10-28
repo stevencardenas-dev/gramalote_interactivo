@@ -3,11 +3,20 @@ import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
 import PlaceCard from '../components/cards/PlaceCard.jsx'
 import { MapExplorer } from '../components/ui/MapPanel.jsx'
-import { getEstablishmentsByCategory } from '../data/establishments.js'
+import { pickEstablishments } from '../data/establishments.js'
 
 export default function DondeIr() {
-  const lodging = getEstablishmentsByCategory('dormir').slice(0, 4)
-  const shops = getEstablishmentsByCategory('comprar').slice(0, 3)
+  const lodging = pickEstablishments([
+    'glamping-vista-antigua',
+    'hostal-campestre-camino-real',
+    'hostal-luna-azul',
+    'cabanas-el-penon',
+  ])
+  const shops = pickEstablishments([
+    'sombreros-techa',
+    'maestros-de-la-madera',
+    'creaciones-martina',
+  ])
 
   return (
     <>

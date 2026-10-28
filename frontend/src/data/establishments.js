@@ -562,6 +562,14 @@ export function getEstablishmentsByCategory(category) {
   )
 }
 
+// Selección editorial: devuelve las fichas en el orden de los slugs dados,
+// que es el que muestra el Figma.
+export function pickEstablishments(slugs) {
+  return slugs
+    .map((slug) => establishments.find((item) => item.slug === slug && !item.hidden))
+    .filter(Boolean)
+}
+
 export function getEstablishment(slug) {
   return establishments.find((item) => item.slug === slug)
 }
