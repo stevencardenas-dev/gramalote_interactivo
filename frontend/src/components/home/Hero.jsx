@@ -15,15 +15,8 @@ export default function Hero() {
       <div className="container home-hero__inner">
         <p className="home-hero__eyebrow">Gramalote · Norte de Santander</p>
         <h1 id="hero-title">Gramalote te espera entre montañas y memoria</h1>
-        <p className="home-hero__text">
-          Descubre qué hacer, dónde ir, dónde comer y dónde alojarte en
-          Gramalote. Explora sus lugares, conoce su historia y planea tu visita.
-        </p>
         <div className="home-hero__actions">
-          <Link className="btn btn--primary" to="/que-hacer">
-            Ver qué hacer
-          </Link>
-          <Link className="btn btn--outline-light" to="/donde-ir">
+          <Link className="btn btn--primary home-hero__cta" to="/donde-ir">
             Explorar lugares
           </Link>
         </div>
