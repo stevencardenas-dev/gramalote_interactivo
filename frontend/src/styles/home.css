@@ -658,7 +658,7 @@
 
 @media (max-width: 520px) {
   .home-hero {
-    min-height: min(520px, calc(100svh - var(--header-h)));
+    min-height: min(460px, calc(100svh - var(--header-h)));
   }
 
   .experience-card::after {
@@ -672,7 +672,7 @@
 
   .home-hero__inner {
     padding-top: clamp(92px, calc(var(--header-h) + 3vh), 112px);
-    padding-bottom: 28px;
+    padding-bottom: 20px;
   }
 
   .home-hero h1 {
