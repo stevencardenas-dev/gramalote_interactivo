@@ -688,7 +688,7 @@
 
 /* Mismas migas que .page-hero: pegadas al encabezado y dentro del contenedor */
 .ficha-hero .breadcrumb {
-  padding-block: 16px 10px;
+  padding-block: calc(var(--header-h) + 14px) 10px;
   font-size: 11px;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.94);
