@@ -7,6 +7,23 @@
   background: var(--c-surface-2);
 }
 
+/* Dentro de un contenedor que ya define su alto (panel y explorador). */
+.mapa--fill {
+  height: 100%;
+  min-height: 240px;
+  border: 0;
+  border-radius: inherit;
+}
+
+.map-panel__frame .mapa--fill {
+  height: clamp(280px, 32vw, 440px);
+}
+
+.map-explorer__media .mapa--fill {
+  position: absolute;
+  inset: 0;
+}
+
 .mapa .maplibregl-ctrl-attrib {
   font-family: var(--font-sans);
   font-size: var(--fs-xs);

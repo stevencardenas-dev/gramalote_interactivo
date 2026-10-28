@@ -43,7 +43,7 @@ export default function DondeDormir() {
             <Button variant="ghost">Cargar más</Button>
           </div>
 
-          <MapPanel title={meta.mapTitle} cta={meta.mapCta} to="/mapa" />
+          <MapPanel title={meta.mapTitle} cta={meta.mapCta} to="/mapa" groups={['dormir']} />
 
           <div className="cross-section">
             <div className="section-head section-head--center">

@@ -59,6 +59,7 @@ export default function DondeComer() {
             title={meta.mapTitle}
             cta={meta.mapCta}
             to="/mapa"
+            groups={['comer']}
           />
 
           <div className="cross-section">

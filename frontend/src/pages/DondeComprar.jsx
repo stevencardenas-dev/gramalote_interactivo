@@ -47,7 +47,7 @@ export default function DondeComprar() {
             <Button variant="ghost">Cargar más</Button>
           </div>
 
-          <MapPanel title={meta.mapTitle} cta={meta.mapCta} to="/mapa" />
+          <MapPanel title={meta.mapTitle} cta={meta.mapCta} to="/mapa" groups={['comprar']} />
 
           <div className="split-feature">
             <div className="split-feature__body">

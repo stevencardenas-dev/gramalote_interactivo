@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { site } from '../../data/site.js'
 import Icon from '../ui/Icon.jsx'
@@ -37,6 +37,7 @@ function SearchForm({ onSubmitted, inputId = 'site-search' }) {
 export default function Navbar({ over = false }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const dropdownRef = useRef(null)
 
   useEffect(() => {
     if (!over) return undefined
@@ -50,8 +51,33 @@ export default function Navbar({ over = false }) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [over])
 
+  useEffect(() => {
+    function closeDropdown() {
+      if (dropdownRef.current) dropdownRef.current.open = false
+    }
+
+    function onPointerDown(event) {
+      if (!dropdownRef.current?.contains(event.target)) closeDropdown()
+    }
+
+    function onKeyDown(event) {
+      if (event.key === 'Escape') closeDropdown()
+    }
+
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [])
+
   function closeMenu() {
     setOpen(false)
+  }
+
+  function closeDropdown() {
+    if (dropdownRef.current) dropdownRef.current.open = false
   }
 
   const solid = !over || scrolled || open
@@ -84,14 +110,14 @@ export default function Navbar({ over = false }) {
             </NavLink>
           ))}
 
-          <details className="nav-dropdown">
+          <details className="nav-dropdown" ref={dropdownRef}>
             <summary>
               {site.explore.label}
               <Icon name="chevron" />
             </summary>
             <div className="nav-dropdown__panel">
               {site.explore.items.map((item) => (
-                <Link key={item.to} to={item.to}>
+                <Link key={item.to} to={item.to} onClick={closeDropdown}>
                   {item.label}
                 </Link>
               ))}

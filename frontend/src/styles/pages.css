@@ -256,6 +256,7 @@
 }
 
 .map-explorer__media {
+  position: relative;
   aspect-ratio: 555 / 250;
   border-radius: var(--radius-md);
   overflow: hidden;
