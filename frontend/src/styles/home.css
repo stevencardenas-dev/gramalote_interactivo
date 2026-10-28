@@ -671,7 +671,7 @@
   }
 
   .home-hero__inner {
-    padding-top: clamp(28px, 6vh, 48px);
+    padding-top: clamp(92px, calc(var(--header-h) + 3vh), 112px);
     padding-bottom: 28px;
   }
 
