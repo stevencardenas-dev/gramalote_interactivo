@@ -26,25 +26,35 @@
   margin-inline: auto;
 }
 
-/* Sobre el hero: velo blanco con texto blanco */
+/* Sobre el hero: encabezado transparente con degradado oscuro que se desvanece */
 .site-header--over {
-  background: rgba(255, 255, 255, 0.52);
+  background: transparent;
   color: var(--c-white);
 }
 
-.site-header--over::after {
+.site-header--over::before {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: 28px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0));
+  inset: 0 0 auto;
+  z-index: -1;
+  height: calc(var(--header-h) + 56px);
+  background: linear-gradient(
+    180deg,
+    rgba(8, 12, 16, 0.6) 0%,
+    rgba(8, 12, 16, 0.36) 45%,
+    rgba(8, 12, 16, 0.12) 80%,
+    rgba(8, 12, 16, 0) 100%
+  );
   pointer-events: none;
 }
 
-.site-header--over.is-solid::after {
+.site-header--over.is-solid::before {
   display: none;
+}
+
+/* Logo blanco sobre el degradado, como en el diseño */
+.site-header--over:not(.is-solid) .brand__logo {
+  filter: brightness(0) invert(1);
 }
 
 .site-header--over .site-nav__link,

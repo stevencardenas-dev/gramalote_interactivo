@@ -564,18 +564,36 @@
   }
 
   .experiences {
-    padding-block: 48px;
+    padding-block: 36px 32px;
+  }
+
+  .experiences .section-head {
+    gap: 10px;
+  }
+
+  .experiences .section-head h2 {
+    font-size: 1.625rem;
+  }
+
+  .experiences .section-head p {
+    font-size: 0.9375rem;
   }
 
   .experiences__grid {
     grid-template-columns: 1fr;
-    margin-top: 34px;
+    gap: 16px;
+    margin-top: 20px;
   }
 
   .experience-card,
   .experience-card--featured {
-    min-height: 340px;
+    height: auto;
+    min-height: 300px;
     grid-column: auto;
+  }
+
+  .experience-card--featured {
+    min-height: 360px;
   }
 
   .open-today {

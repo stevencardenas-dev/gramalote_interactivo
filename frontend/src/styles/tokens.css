@@ -50,3 +50,9 @@
   --shadow-soft: 0 18px 40px rgba(20, 20, 20, 0.08);
   --shadow-card: 0 10px 30px rgba(20, 20, 20, 0.06);
 }
+
+@media (max-width: 900px) {
+  :root {
+    --header-h: 72px;
+  }
+}
