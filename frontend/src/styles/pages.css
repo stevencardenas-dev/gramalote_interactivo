@@ -612,8 +612,14 @@
   background: var(--c-white);
 }
 
-.listing-card-v .placeholder {
-  height: 160px;
+.listing-card-v .placeholder,
+.listing-card-v__media {
+  height: 240px;
+}
+
+.listing-card-v__media img {
+  height: 100%;
+  object-fit: cover;
 }
 
 .listing-card-v__body {
