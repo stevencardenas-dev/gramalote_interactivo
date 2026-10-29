@@ -5,11 +5,15 @@ import ListingCard from '../components/cards/ListingCard.jsx'
 import PlaceCard from '../components/cards/PlaceCard.jsx'
 import FilterBar, { FilterSelect, FilterToggle } from '../components/ui/FilterBar.jsx'
 import MapPanel from '../components/ui/MapPanel.jsx'
-import { categories, pickEstablishments } from '../data/establishments.js'
+import { categories } from '../data/establishments.js'
+import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
 
 export default function DondeComer() {
   const meta = categories.comer
-  const places = pickEstablishments([
+  const { data: comer, loading, error } = useEstablishments('comer')
+  const { data: dormir } = useEstablishments('dormir')
+
+  const places = orderBySlugs(comer, [
     'bambu',
     'dona-claudia',
     'dulce-paseo',
@@ -17,12 +21,13 @@ export default function DondeComer() {
     'la-sazon-de-la-tia',
     'la-comarca',
   ])
-  const lodging = pickEstablishments([
+
+  const lodging = orderBySlugs(dormir, [
     'glamping-vista-antigua',
     'hostal-campestre-camino-real',
     'hostal-luna-azul',
     'cabanas-el-penon',
-  ])
+  ]).slice(0, 4)
 
   return (
     <>
@@ -45,15 +50,20 @@ export default function DondeComer() {
             <FilterSelect label="Tipo" options={[meta.filterAll, ...meta.filters]} />
           </FilterBar>
 
-          <div className="listing-grid-v">
-            {places.slice(0, 6).map((item) => (
-              <ListingCard key={item.id} item={item} />
-            ))}
-          </div>
+          {loading ? (
+            <p className="note">Cargando establecimientos…</p>
+          ) : error ? (
+            <p className="auth-error">{error}</p>
+          ) : places.length === 0 ? (
+            <p className="empty">Todavía no hay establecimientos publicados.</p>
+          ) : (
+            <div className="listing-grid-v">
+              {places.map((item) => (
+                <ListingCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
 
-          <div className="center-action">
-            <Button variant="ghost">Cargar más</Button>
-          </div>
 
           <MapPanel
             title={meta.mapTitle}

@@ -78,7 +78,7 @@ export default function EstablecimientoDormir({ item }) {
       </section>
 
       <RelatedPlaces
-        slugs={item.related}
+        items={item.relatedItems}
         title={info.relationTitle}
         text={info.relationText}
       />

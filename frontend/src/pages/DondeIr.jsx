@@ -3,20 +3,27 @@ import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
 import PlaceCard from '../components/cards/PlaceCard.jsx'
 import { MapExplorer } from '../components/ui/MapPanel.jsx'
-import { pickEstablishments } from '../data/establishments.js'
+import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
 
 export default function DondeIr() {
-  const lodging = pickEstablishments([
+  const { data: dormir, loading: loadingDormir, error: errorDormir } = useEstablishments('dormir')
+  const { data: comprar, loading: loadingComprar, error: errorComprar } = useEstablishments('comprar')
+
+  const lodging = orderBySlugs(dormir, [
     'glamping-vista-antigua',
     'hostal-campestre-camino-real',
     'hostal-luna-azul',
     'cabanas-el-penon',
-  ])
-  const shops = pickEstablishments([
+  ]).slice(0, 4)
+
+  const shops = orderBySlugs(comprar, [
     'sombreros-techa',
     'maestros-de-la-madera',
     'creaciones-martina',
-  ])
+  ]).slice(0, 3)
+
+  const loading = loadingDormir || loadingComprar
+  const error = errorDormir || errorComprar
 
   return (
     <>
@@ -70,17 +77,23 @@ export default function DondeIr() {
             <h2>Dónde dormir</h2>
           </div>
 
-          <div className="place-grid place-grid--four">
-            {lodging.map((item) => (
-              <PlaceCard
-                key={item.id}
-                title={item.name}
-                to={`/establecimiento/${item.slug}`}
-                summary={item.summary}
-                photo={item.photo}
-              />
-            ))}
-          </div>
+          {error ? <p className="auth-error">{error}</p> : null}
+
+          {loading ? (
+            <p className="note">Cargando alojamientos…</p>
+          ) : (
+            <div className="place-grid place-grid--four">
+              {lodging.map((item) => (
+                <PlaceCard
+                  key={item.id}
+                  title={item.name}
+                  to={`/establecimiento/${item.slug}`}
+                  summary={item.summary}
+                  photo={item.photo}
+                />
+              ))}
+            </div>
+          )}
 
           <div className="center-action">
             <Button to="/donde-dormir" variant="secondary">

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, Link, useNavigate } from 'react-router-dom'
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { site } from '../../data/site.js'
 import Icon from '../ui/Icon.jsx'
 import Logo from '../ui/Logo.jsx'
@@ -26,7 +26,7 @@ function SearchForm({ onSubmitted, inputId = 'site-search' }) {
       <input
         id={inputId}
         type="search"
-        placeholder="Search for..."
+        placeholder="Buscar en el sitio…"
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
@@ -34,10 +34,18 @@ function SearchForm({ onSubmitted, inputId = 'site-search' }) {
   )
 }
 
+const DESKTOP_BREAKPOINT = 1100
+
 export default function Navbar({ over = false }) {
-  const [open, setOpen] = useState(false)
+  const { pathname } = useLocation()
+  // Se guarda la ruta en la que se abrió: al navegar, `open` pasa a false solo,
+  // sin necesidad de sincronizar estado dentro de un efecto.
+  const [openPath, setOpenPath] = useState(null)
+  const open = openPath === pathname
   const [scrolled, setScrolled] = useState(false)
+  const headerRef = useRef(null)
   const dropdownRef = useRef(null)
+  const menuButtonRef = useRef(null)
 
   useEffect(() => {
     if (!over) return undefined
@@ -51,33 +59,69 @@ export default function Navbar({ over = false }) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [over])
 
+  function closeDropdown({ restoreFocus = false } = {}) {
+    const dropdown = dropdownRef.current
+    if (!dropdown?.open) return
+    dropdown.open = false
+    if (restoreFocus) dropdown.querySelector('summary')?.focus()
+  }
+
+  // El desplegable se cierra al navegar (enlaces, atrás/adelante, redirecciones).
   useEffect(() => {
-    function closeDropdown() {
-      if (dropdownRef.current) dropdownRef.current.open = false
+    closeDropdown()
+  }, [pathname])
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key !== 'Escape') return
+      if (dropdownRef.current?.open) {
+        closeDropdown({ restoreFocus: true })
+        return
+      }
+      if (open) {
+        setOpenPath(null)
+        menuButtonRef.current?.focus()
+      }
     }
 
     function onPointerDown(event) {
-      if (!dropdownRef.current?.contains(event.target)) closeDropdown()
+      if (!headerRef.current?.contains(event.target)) {
+        setOpenPath(null)
+        closeDropdown()
+        return
+      }
+      // Un clic fuera del desplegable pero dentro del header también lo cierra.
+      if (dropdownRef.current?.open && !dropdownRef.current.contains(event.target)) {
+        closeDropdown()
+      }
     }
 
-    function onKeyDown(event) {
-      if (event.key === 'Escape') closeDropdown()
+    function onResize() {
+      if (window.innerWidth > DESKTOP_BREAKPOINT) setOpenPath(null)
     }
 
-    document.addEventListener('pointerdown', onPointerDown)
     document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('pointerdown', onPointerDown)
+    window.addEventListener('resize', onResize)
     return () => {
-      document.removeEventListener('pointerdown', onPointerDown)
       document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onPointerDown)
+      window.removeEventListener('resize', onResize)
     }
-  }, [])
+  }, [open])
+
+  // El menú móvil abierto no debe dejar scrollear el contenido de fondo.
+  useEffect(() => {
+    if (!open) return undefined
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [open])
 
   function closeMenu() {
-    setOpen(false)
-  }
-
-  function closeDropdown() {
-    if (dropdownRef.current) dropdownRef.current.open = false
+    setOpenPath(null)
   }
 
   const solid = !over || scrolled || open
@@ -90,7 +134,7 @@ export default function Navbar({ over = false }) {
     .join(' ')
 
   return (
-    <header className={headerClass}>
+    <header className={headerClass} ref={headerRef}>
       <div className="site-header__inner container">
         <Link className="brand" to="/" aria-label="Gramalote Interactivo, ir al inicio">
           <Logo variant="cube" />
@@ -117,7 +161,7 @@ export default function Navbar({ over = false }) {
             </summary>
             <div className="nav-dropdown__panel">
               {site.explore.items.map((item) => (
-                <Link key={item.to} to={item.to} onClick={closeDropdown}>
+                <Link key={item.to} to={item.to} onClick={() => closeDropdown()}>
                   {item.label}
                 </Link>
               ))}
@@ -132,11 +176,12 @@ export default function Navbar({ over = false }) {
           </Link>
           <SearchForm inputId="site-search" />
           <button
+            ref={menuButtonRef}
             className="menu-toggle"
             type="button"
             aria-expanded={open}
             aria-controls="mobile-panel"
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => setOpenPath(open ? null : pathname)}
           >
             <Icon name={open ? 'close' : 'menu'} />
             <span className="visually-hidden">

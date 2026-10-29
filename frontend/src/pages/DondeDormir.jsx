@@ -5,12 +5,14 @@ import PlaceCard from '../components/cards/PlaceCard.jsx'
 import FilterBar, { FilterSelect } from '../components/ui/FilterBar.jsx'
 import MapPanel from '../components/ui/MapPanel.jsx'
 import HistoryBlock from '../components/home/HistoryBlock.jsx'
-import { categories, getEstablishmentsByCategory, pickEstablishments } from '../data/establishments.js'
+import { categories } from '../data/establishments.js'
+import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
 
 export default function DondeDormir() {
   const meta = categories.dormir
-  const places = getEstablishmentsByCategory('dormir')
-  const shops = pickEstablishments(['maestros-de-la-madera', 'creaciones-martina'])
+  const { data: places, loading, error } = useEstablishments('dormir')
+  const { data: comprar } = useEstablishments('comprar')
+  const shops = orderBySlugs(comprar, ['maestros-de-la-madera', 'creaciones-martina']).slice(0, 2)
 
   return (
     <>
@@ -33,15 +35,19 @@ export default function DondeDormir() {
             <FilterSelect label={meta.serviceLabel} options={[meta.serviceAll, ...meta.services]} />
           </FilterBar>
 
-          <div className="listing-grid-v">
-            {places.slice(0, 6).map((item) => (
-              <ListingCard key={item.id} item={item} />
-            ))}
-          </div>
-
-          <div className="center-action">
-            <Button variant="ghost">Cargar más</Button>
-          </div>
+          {loading ? (
+            <p className="note">Cargando alojamientos…</p>
+          ) : error ? (
+            <p className="auth-error">{error}</p>
+          ) : places.length === 0 ? (
+            <p className="empty">Todavía no hay alojamientos publicados.</p>
+          ) : (
+            <div className="listing-grid-v">
+              {places.map((item) => (
+                <ListingCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
 
           <MapPanel title={meta.mapTitle} cta={meta.mapCta} to="/mapa" groups={['dormir']} />
 

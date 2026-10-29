@@ -4,11 +4,12 @@ import Button from '../components/ui/Button.jsx'
 import ListingCard from '../components/cards/ListingCard.jsx'
 import FilterBar, { FilterSelect } from '../components/ui/FilterBar.jsx'
 import MapPanel from '../components/ui/MapPanel.jsx'
-import { categories, getEstablishmentsByCategory } from '../data/establishments.js'
+import { categories } from '../data/establishments.js'
+import { useEstablishments } from '../lib/contentApi.js'
 
 export default function DondeComprar() {
   const meta = categories.comprar
-  const places = getEstablishmentsByCategory('comprar')
+  const { data: places, loading, error } = useEstablishments('comprar')
 
   return (
     <>
@@ -37,15 +38,19 @@ export default function DondeComprar() {
             />
           </FilterBar>
 
-          <div className="listing-grid-v">
-            {places.slice(0, 6).map((item) => (
-              <ListingCard key={item.id} item={item} />
-            ))}
-          </div>
-
-          <div className="center-action">
-            <Button variant="ghost">Cargar más</Button>
-          </div>
+          {loading ? (
+            <p className="note">Cargando artesanías…</p>
+          ) : error ? (
+            <p className="auth-error">{error}</p>
+          ) : places.length === 0 ? (
+            <p className="empty">Todavía no hay artesanías publicadas.</p>
+          ) : (
+            <div className="listing-grid-v">
+              {places.map((item) => (
+                <ListingCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
 
           <MapPanel title={meta.mapTitle} cta={meta.mapCta} to="/mapa" groups={['comprar']} />
 

@@ -1,14 +1,13 @@
 import { Link } from 'react-router-dom'
 import Photo from '../ui/Photo.jsx'
 import Icon from '../ui/Icon.jsx'
-import { getEstablishment } from '../../data/establishments.js'
 
 export default function RelatedPlaces({
-  slugs = [],
+  items = [],
   title = 'También puedes disfrutar en Gramalote',
   text = 'Explora otras opciones del municipio y descubre lugares con propuestas para compartir.',
 }) {
-  const items = slugs.map(getEstablishment).filter(Boolean)
+  if (items.length === 0) return null
 
   return (
     <section className="related">
