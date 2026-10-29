@@ -160,11 +160,14 @@ export default function AdminEstablecimiento() {
     setUploading(true)
     setError('')
     try {
-      for (const file of files) {
+      // La primera foto de una ficha sin imágenes entra como portada; el resto,
+      // como galería (si ya hay portada, todas van a la galería).
+      const needsCover = !form.images.some((image) => image.role === 'cover')
+      for (const [index, file] of files.entries()) {
         const data = new FormData()
         data.append('file', file)
         data.append('establishmentId', id)
-        data.append('role', form.images.length === 0 ? 'cover' : 'gallery')
+        data.append('role', needsCover && index === 0 ? 'cover' : 'gallery')
         await apiRequest('/admin/media', { method: 'POST', formData: data })
       }
       await reloadImages()
@@ -522,7 +525,7 @@ export default function AdminEstablecimiento() {
                   />
                   <Button
                     type="button"
-                    variant="secondary"
+                    variant="ghost"
                     disabled={uploading}
                     onClick={() => fileInput.current?.click()}
                   >

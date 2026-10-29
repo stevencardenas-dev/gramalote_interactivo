@@ -159,7 +159,7 @@ export default function AdminEstablecimientos() {
               ))}
             </select>
           </div>
-          <Button type="submit" variant="secondary" disabled={creating}>
+          <Button type="submit" variant="ghost" disabled={creating}>
             {creating ? 'Creando…' : 'Crear borrador'}
           </Button>
         </form>
