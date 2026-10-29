@@ -48,7 +48,8 @@ MEDIA_DIR="${MEDIA_DIR:-/opt/gramalote/media}"
 mkdir -p "$MEDIA_DIR"
 if [ -d "$MEDIA_DIR" ]; then
   chown -R 1000:1000 "$MEDIA_DIR" 2>/dev/null || echo "AVISO: no se pudo ajustar el dueño de $MEDIA_DIR"
-  chmod 750 "$MEDIA_DIR" 2>/dev/null || true
+  # nginx corre con otro UID: necesita atravesar la carpeta y leer los archivos.
+  chmod -R a+rX "$MEDIA_DIR" 2>/dev/null || true
 fi
 
 export IMAGE="${REGISTRY}/${ECR_REPO}:${IMAGE_TAG}"
