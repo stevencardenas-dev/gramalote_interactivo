@@ -6,9 +6,9 @@
   background: var(--c-cream);
   color: var(--c-ink);
   transition:
-    background-color 0.25s ease,
-    box-shadow 0.25s ease,
-    color 0.25s ease;
+    background-color 0.4s ease,
+    box-shadow 0.4s ease,
+    color 0.4s ease;
 }
 
 .site-header__inner {
@@ -46,13 +46,19 @@
     rgba(8, 12, 16, 0) 100%
   );
   pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.4s ease;
 }
 
 .site-header--over.is-solid::before {
-  display: none;
+  opacity: 0;
 }
 
 /* Logo blanco sobre el degradado, como en el diseño */
+.brand__logo {
+  transition: filter 0.4s ease;
+}
+
 .site-header--over:not(.is-solid) .brand__logo {
   filter: brightness(0) invert(1);
 }
@@ -61,6 +67,12 @@
 .site-header--over .nav-dropdown summary,
 .site-header--over .site-login {
   color: var(--c-white);
+}
+
+.site-nav__link,
+.nav-dropdown summary,
+.site-login {
+  transition: color 0.4s ease;
 }
 
 .site-header--over.is-solid {
