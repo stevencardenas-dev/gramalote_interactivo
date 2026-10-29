@@ -88,6 +88,8 @@ export default function AdminEstablecimiento() {
     )
   }
 
+  const cover = form.images.find((image) => image.role === 'cover') ?? null
+
   function update(patch) {
     setForm((current) => ({ ...current, ...patch }))
     setNotice('')
@@ -259,22 +261,43 @@ export default function AdminEstablecimiento() {
   return (
     <section className="admin-page">
       <div className="container">
-        <div className="admin-head">
-          <div>
-            <p className="admin-breadcrumb">
-              <Link to="/admin">Panel</Link> /{' '}
-              <Link to="/admin/establecimientos">Establecimientos</Link> / {form.name}
-            </p>
+        <p className="admin-breadcrumb">
+          <Link to="/admin">Panel</Link> /{' '}
+          <Link to="/admin/establecimientos">Establecimientos</Link> / {form.name}
+        </p>
+
+        <div className="admin-hero">
+          <div className="admin-hero__cover">
+            {cover ? (
+              <img src={cover.url} alt={cover.alt} />
+            ) : (
+              <span className="admin-list__placeholder">Sin portada</span>
+            )}
+          </div>
+          <div className="admin-hero__body">
+            <div className="admin-hero__badges">
+              <span
+                className={`admin-badge ${form.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
+              >
+                {form.published ? 'Publicada' : 'Borrador'}
+              </span>
+              {form.featured ? <span className="admin-badge">★ Destacada</span> : null}
+            </div>
             <h1>{form.name}</h1>
             <p className="admin-lead">
               {form.categoryName}
-              {form.zoneName ? ` · ${form.zoneName}` : ''} ·{' '}
-              {form.published ? 'publicada' : 'borrador'}
+              {form.zoneName ? ` · ${form.zoneName}` : ''} · {form.images.length}{' '}
+              {form.images.length === 1 ? 'imagen' : 'imágenes'}
             </p>
           </div>
           <div className="admin-head__actions">
-            <Link className="btn btn--ghost" to={`/establecimiento/${form.slug}`} target="_blank">
-              Ver ficha
+            <Link
+              className="btn btn--ghost"
+              to={`/establecimiento/${form.slug}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Ver ficha ↗
             </Link>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? 'Guardando…' : 'Guardar cambios'}
@@ -285,15 +308,20 @@ export default function AdminEstablecimiento() {
         {error ? <p className="auth-error">{error}</p> : null}
         {notice ? <p className="admin-notice">{notice}</p> : null}
 
-        <nav className="admin-tabs">
+        <nav className="admin-tabs admin-tabs--pills" role="tablist">
           {TABS.map((item) => (
             <button
               key={item.key}
               type="button"
+              role="tab"
+              aria-selected={tab === item.key}
               className={`admin-tab ${tab === item.key ? 'is-active' : ''}`}
               onClick={() => setTab(item.key)}
             >
               {item.label}
+              {item.key === 'images' ? (
+                <span className="admin-tab__count">{form.images.length}</span>
+              ) : null}
             </button>
           ))}
         </nav>
@@ -301,6 +329,11 @@ export default function AdminEstablecimiento() {
         <form onSubmit={handleSave} className="admin-panel">
           {tab === 'info' ? (
             <>
+              <section className="admin-section">
+                <header className="admin-section__head">
+                  <h2>Identidad</h2>
+                  <p>Cómo se llama y dónde aparece la ficha en el sitio.</p>
+                </header>
               <div className="admin-grid">
                 <Field label="Nombre">
                   <input
@@ -363,14 +396,14 @@ export default function AdminEstablecimiento() {
                     ))}
                   </select>
                 </Field>
-                <Field label="Detalle de ubicación">
-                  <input
-                    value={form.locationDetail ?? ''}
-                    onChange={(event) => update({ locationDetail: event.target.value })}
-                  />
-                </Field>
               </div>
+              </section>
 
+              <section className="admin-section">
+                <header className="admin-section__head">
+                  <h2>Descripción</h2>
+                  <p>El resumen sale en tarjetas y listados; la descripción, en la ficha.</p>
+                </header>
               <Field label="Resumen" hint={`${form.summary.length}/320 caracteres`}>
                 <textarea
                   rows={2}
@@ -388,12 +421,24 @@ export default function AdminEstablecimiento() {
                   required
                 />
               </Field>
+              </section>
 
+              <section className="admin-section">
+                <header className="admin-section__head">
+                  <h2>Ubicación</h2>
+                  <p>Se usa para el mapa; las coordenadas con decimales (ej. 5.1234567).</p>
+                </header>
               <div className="admin-grid">
                 <Field label="Dirección">
                   <input
                     value={form.address ?? ''}
                     onChange={(event) => update({ address: event.target.value })}
+                  />
+                </Field>
+                <Field label="Detalle de ubicación">
+                  <input
+                    value={form.locationDetail ?? ''}
+                    onChange={(event) => update({ locationDetail: event.target.value })}
                   />
                 </Field>
                 <Field label="Latitud">
@@ -416,6 +461,15 @@ export default function AdminEstablecimiento() {
                     }
                   />
                 </Field>
+              </div>
+              </section>
+
+              <section className="admin-section">
+                <header className="admin-section__head">
+                  <h2>Contacto</h2>
+                  <p>Cómo pueden comunicarse los visitantes.</p>
+                </header>
+              <div className="admin-grid">
                 <Field label="Teléfono">
                   <input
                     value={form.phone ?? ''}
@@ -447,6 +501,15 @@ export default function AdminEstablecimiento() {
                     onChange={(event) => update({ website: event.target.value })}
                   />
                 </Field>
+              </div>
+              </section>
+
+              <section className="admin-section">
+                <header className="admin-section__head">
+                  <h2>Horarios y precios</h2>
+                  <p>Textos libres para la ficha y rangos numéricos para ordenar y filtrar.</p>
+                </header>
+              <div className="admin-grid">
                 <Field label="Horario (texto de la ficha)">
                   <input
                     value={form.hoursText ?? ''}
@@ -491,15 +554,24 @@ export default function AdminEstablecimiento() {
                   />
                 </Field>
               </div>
+              </section>
 
-              <label className="admin-check">
-                <input
-                  type="checkbox"
-                  checked={form.featured}
-                  onChange={(event) => update({ featured: event.target.checked })}
-                />
-                Destacado en el inicio
-              </label>
+              <section className="admin-section">
+                <header className="admin-section__head">
+                  <h2>Visibilidad</h2>
+                </header>
+                <label className="admin-check admin-check--card">
+                  <input
+                    type="checkbox"
+                    checked={form.featured}
+                    onChange={(event) => update({ featured: event.target.checked })}
+                  />
+                  <span>
+                    <strong>Destacado en el inicio</strong>
+                    <small>Aparece primero en los listados.</small>
+                  </span>
+                </label>
+              </section>
             </>
           ) : null}
 
@@ -605,7 +677,7 @@ export default function AdminEstablecimiento() {
 
           {tab === 'extras' ? (
             <div className="admin-extras">
-              <section>
+              <section className="admin-section">
                 <h2>Servicios</h2>
                 <div className="admin-checks">
                   {(meta?.services ?? []).map((service) => (
@@ -627,7 +699,7 @@ export default function AdminEstablecimiento() {
                 </div>
               </section>
 
-              <section>
+              <section className="admin-section">
                 <h2>Formas de pago</h2>
                 <div className="admin-checks">
                   {(meta?.paymentMethods ?? []).map((payment) => (
@@ -649,7 +721,7 @@ export default function AdminEstablecimiento() {
                 </div>
               </section>
 
-              <section>
+              <section className="admin-section">
                 <div className="admin-section-head">
                   <h2>Tarjetas “Ten en cuenta”</h2>
                   <Button
@@ -690,7 +762,7 @@ export default function AdminEstablecimiento() {
                 ))}
               </section>
 
-              <section>
+              <section className="admin-section">
                 <div className="admin-section-head">
                   <h2>Productos</h2>
                   <Button
@@ -732,7 +804,7 @@ export default function AdminEstablecimiento() {
                 ))}
               </section>
 
-              <section>
+              <section className="admin-section">
                 <div className="admin-section-head">
                   <h2>Redes sociales</h2>
                   <Button
@@ -771,7 +843,7 @@ export default function AdminEstablecimiento() {
                 ))}
               </section>
 
-              <section>
+              <section className="admin-section">
                 <h2>También puedes visitar</h2>
                 <select
                   multiple
