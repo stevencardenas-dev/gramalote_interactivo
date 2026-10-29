@@ -1,3 +1,4 @@
+import PracticalInfo from '../components/home/PracticalInfo.jsx'
 import PageHero from '../components/ui/PageHero.jsx'
 import Button from '../components/ui/Button.jsx'
 import ListingCard from '../components/cards/ListingCard.jsx'
@@ -17,7 +18,7 @@ export default function DondeDormir() {
   return (
     <>
       <PageHero
-        image="/img/ficha/hostal-luna-azul-hero.jpg"
+        image="/img/home/hero-donde-dormir.jpg"
         title={meta.label}
         intro={meta.intro}
         breadcrumb={[
@@ -80,6 +81,8 @@ export default function DondeDormir() {
           <HistoryBlock embedded />
         </div>
       </section>
+
+      <PracticalInfo />
     </>
   )
 }

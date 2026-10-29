@@ -37,6 +37,7 @@ export const site = {
       text: 'Orientación para llegar al municipio.',
       icon: 'route',
       brandIcon: 'camino',
+      illustration: '/img/illus/ILUSTRACION_COMO_LLEGAR.svg',
       to: '/informacion-practica#como-llegar',
     },
     {
@@ -44,6 +45,7 @@ export const site = {
       text: 'Recomendaciones para la visita.',
       icon: 'shield',
       brandIcon: 'escudo',
+      illustration: '/img/illus/ILUSTRACION_SEGURIDAD.svg',
       to: '/informacion-practica#seguridad',
     },
     {
@@ -51,6 +53,7 @@ export const site = {
       text: 'Teléfonos e información de contacto.',
       icon: 'phone',
       brandIcon: 'telefono',
+      illustration: '/img/illus/ILUSTRACION_CONTACTO_UTIL.svg',
       to: '/informacion-practica#contactos',
     },
     {
@@ -58,6 +61,7 @@ export const site = {
       text: 'Qué conviene preparar antes de la visita.',
       icon: 'info',
       brandIcon: 'info',
+      illustration: '/img/illus/ILUSTRACION_ANTES_DE_SALIR.svg',
       to: '/informacion-practica#antes-de-salir',
     },
   ],

@@ -1,5 +1,5 @@
+import PracticalInfo from '../components/home/PracticalInfo.jsx'
 import PageHero from '../components/ui/PageHero.jsx'
-import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
 import ListingCard from '../components/cards/ListingCard.jsx'
 import PlaceCard from '../components/cards/PlaceCard.jsx'
@@ -32,7 +32,7 @@ export default function DondeComer() {
   return (
     <>
       <PageHero
-        image="/img/ficha/bambu-hero.jpg"
+        image="/img/home/hero-donde-comer.jpg"
         title={meta.label}
         intro={meta.intro}
         breadcrumb={[
@@ -96,23 +96,22 @@ export default function DondeComer() {
               </Button>
             </div>
           </div>
-
-          <div className="split-feature">
-            <div className="split-feature__body">
-              <p className="eyebrow">Describe Gramalote</p>
-              <h2>Curiosidades</h2>
-              <p>
-                Conoce las tradiciones, la naturaleza, la gastronomía y los
-                detalles que hacen único a Gramalote.
-              </p>
-              <Button to="/curiosidades" variant="secondary">
-                Ver más
-              </Button>
-            </div>
-            <Photo src="/img/home/historia.jpg" alt="Calle de Gramalote" className="split-feature__media" />
-          </div>
         </div>
       </section>
+
+      <section className="curio-banner" style={{ '--banner-image': 'url(/img/home/curiosidades-banner.jpg)' }}>
+        <div className="curio-banner__card">
+          <p className="eyebrow">Descubre Gramalote</p>
+          <h2>Curiosidades</h2>
+          <p>
+            Conoce las tradiciones, la naturaleza, la gastronomía y los
+            detalles que hacen único a Gramalote.
+          </p>
+          <Button to="/curiosidades">Ver curiosidades</Button>
+        </div>
+      </section>
+
+      <PracticalInfo />
     </>
   )
 }

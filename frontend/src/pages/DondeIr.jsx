@@ -1,3 +1,4 @@
+import PracticalInfo from '../components/home/PracticalInfo.jsx'
 import PageHero from '../components/ui/PageHero.jsx'
 import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
@@ -28,7 +29,7 @@ export default function DondeIr() {
   return (
     <>
       <PageHero
-        image="/img/home/que-hacer.jpg"
+        image="/img/home/hero-donde-ir.jpg"
         title="Dónde ir"
         breadcrumb={[
           { label: 'Inicio', to: '/' },
@@ -66,9 +67,9 @@ export default function DondeIr() {
               </Button>
             </div>
             <div className="photo-collage photo-collage--right">
-              <Photo src="/img/ficha/la-sazon-de-la-tia-carnes.jpg" alt="Carnes a la plancha" className="photo-collage__tall" />
-              <Photo src="/img/ficha/fresas-con-crema-carvajal-fresas.jpg" alt="Fresas con crema" />
-              <Photo src="/img/ficha/la-comarca-helados.jpg" alt="Helados artesanales" />
+              <Photo src="/img/home/colage-comer-1.jpg" alt="Carnes a la plancha" className="photo-collage__tall" />
+              <Photo src="/img/home/colage-comer-2.jpg" alt="Fresas con crema" />
+              <Photo src="/img/home/colage-comer-3.jpg" alt="Helados artesanales" />
             </div>
           </div>
 
@@ -139,6 +140,8 @@ export default function DondeIr() {
           </div>
         </div>
       </section>
+
+      <PracticalInfo />
     </>
   )
 }

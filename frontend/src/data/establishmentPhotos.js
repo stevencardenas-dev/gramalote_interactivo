@@ -73,7 +73,10 @@ export const establishmentPhotos = {
     photo: f('casa-hiedra-hotel-boutique-card'),
     gallery: [f('casa-hiedra-hotel-boutique-card')],
   },
-  artelu: { hero: f('artelu-hero') },
+  artelu: { photo: f('artelu-card'), hero: f('artelu-hero') },
+  chelinarte: { photo: f('chelinarte-card') },
+  'mi-gordita-bella': { photo: f('mi-gordita-bella-card') },
+  'mi-hermoso-eden': { photo: f('mi-hermoso-eden-card') },
   'maestros-de-la-madera': {
     photo: f('maestros-de-la-madera-card'),
     products: [

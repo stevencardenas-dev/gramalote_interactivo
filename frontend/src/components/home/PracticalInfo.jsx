@@ -14,10 +14,14 @@ export default function PracticalInfo() {
         <div className="practical-grid">
           {site.practical.map((item) => (
             <Link key={item.title} className="feature-card" to={item.to}>
-              <span className="feature-card__icon">
-                <IconMask icon={`icono-${item.brandIcon}`} size={58} />
-              </span>
-              <h3>{item.title}</h3>
+              {item.illustration ? (
+                <img className="feature-card__art" src={item.illustration} alt="" loading="lazy" />
+              ) : (
+                <span className="feature-card__icon">
+                  <IconMask icon={`icono-${item.brandIcon}`} size={58} />
+                </span>
+              )}
+              <h3 className="feature-card__title">{item.title}</h3>
               <p>{item.text}</p>
             </Link>
           ))}

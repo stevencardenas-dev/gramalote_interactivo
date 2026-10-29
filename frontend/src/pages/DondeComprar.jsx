@@ -1,3 +1,4 @@
+import PracticalInfo from '../components/home/PracticalInfo.jsx'
 import PageHero from '../components/ui/PageHero.jsx'
 import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
@@ -14,7 +15,7 @@ export default function DondeComprar() {
   return (
     <>
       <PageHero
-        image="/img/ficha/sombreros-techa-sombrero.jpg"
+        image="/img/home/hero-donde-comprar.jpg"
         title={meta.label}
         intro={meta.intro}
         breadcrumb={[
@@ -68,9 +69,9 @@ export default function DondeComprar() {
               </Button>
             </div>
             <div className="photo-collage photo-collage--right">
-              <Photo src="/img/ficha/sombreros-techa-card.jpg" alt="Sombreros Techa" className="photo-collage__tall" />
-              <Photo src="/img/ficha/maestros-de-la-madera-card.jpg" alt="Maestros de la Madera" />
-              <Photo src="/img/ficha/creaciones-martina-card.jpg" alt="Creaciones Martina" />
+              <Photo src="/img/home/platos-1.jpg" alt="Sopa tradicional" className="photo-collage__tall" />
+              <Photo src="/img/home/platos-2.jpg" alt="Arepas" />
+              <Photo src="/img/home/platos-3.jpg" alt="Café y pan" />
             </div>
           </div>
 
@@ -85,10 +86,12 @@ export default function DondeComprar() {
                 Ver restaurantes
               </Button>
             </div>
-            <Photo src="/img/home/historia.jpg" alt="Calle de Gramalote" className="split-feature__media" />
+            <Photo src="/img/home/donde-comer-bar.jpg" alt="Barra de un restaurante de Gramalote" className="split-feature__media" />
           </div>
         </div>
       </section>
+
+      <PracticalInfo />
     </>
   )
 }
