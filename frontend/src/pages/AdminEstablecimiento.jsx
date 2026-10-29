@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
@@ -22,6 +22,48 @@ function Field({ label, children, hint }) {
   )
 }
 
+function Section({ title, hint, actions, defaultOpen = false, signal, children }) {
+  const [open, setOpen] = useState(defaultOpen)
+  const bodyId = useId()
+
+  const [seen, setSeen] = useState(signal.n)
+  if (seen !== signal.n) {
+    setSeen(signal.n)
+    setOpen(signal.open)
+  }
+
+  return (
+    <section className={`admin-section ${open ? 'is-open' : 'is-closed'}`}>
+      <div className="admin-section__bar">
+        <h2>
+          <button
+            type="button"
+            className="admin-section__toggle"
+            aria-expanded={open}
+            aria-controls={bodyId}
+            onClick={() => setOpen((value) => !value)}
+          >
+            <span className="admin-section__title">
+              {title}
+              {hint ? <small>{hint}</small> : null}
+            </span>
+            <span className="admin-section__chevron" aria-hidden="true" />
+          </button>
+        </h2>
+        {actions}
+      </div>
+      <div
+        id={bodyId}
+        className="admin-section__body"
+        hidden={!open}
+        onInvalidCapture={() => setOpen(true)}
+      >
+        {children}
+      </div>
+    </section>
+  )
+}
+
 export default function AdminEstablecimiento() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -29,6 +71,7 @@ export default function AdminEstablecimiento() {
   const fileInput = useRef(null)
 
   const [tab, setTab] = useState('info')
+  const [signal, setSignal] = useState({ open: false, n: 0 })
   const [form, setForm] = useState(null)
   const [meta, setMeta] = useState(null)
   const [allEstablishments, setAllEstablishments] = useState([])
@@ -327,13 +370,28 @@ export default function AdminEstablecimiento() {
         </nav>
 
         <form onSubmit={handleSave} className="admin-panel">
+          {tab === 'info' || tab === 'extras' ? (
+            <div className="admin-panel__tools">
+              <button
+                type="button"
+                className="admin-link"
+                onClick={() => setSignal((prev) => ({ open: true, n: prev.n + 1 }))}
+              >
+                Expandir todo
+              </button>
+              <button
+                type="button"
+                className="admin-link"
+                onClick={() => setSignal((prev) => ({ open: false, n: prev.n + 1 }))}
+              >
+                Contraer todo
+              </button>
+            </div>
+          ) : null}
+
           {tab === 'info' ? (
             <>
-              <section className="admin-section">
-                <header className="admin-section__head">
-                  <h2>Identidad</h2>
-                  <p>Cómo se llama y dónde aparece la ficha en el sitio.</p>
-                </header>
+              <Section title="Identidad" hint="Cómo se llama y dónde aparece la ficha en el sitio." defaultOpen signal={signal}>
               <div className="admin-grid">
                 <Field label="Nombre">
                   <input
@@ -397,13 +455,9 @@ export default function AdminEstablecimiento() {
                   </select>
                 </Field>
               </div>
-              </section>
+              </Section>
 
-              <section className="admin-section">
-                <header className="admin-section__head">
-                  <h2>Descripción</h2>
-                  <p>El resumen sale en tarjetas y listados; la descripción, en la ficha.</p>
-                </header>
+              <Section title="Descripción" hint="El resumen sale en tarjetas y listados; la descripción, en la ficha." defaultOpen signal={signal}>
               <Field label="Resumen" hint={`${form.summary.length}/320 caracteres`}>
                 <textarea
                   rows={2}
@@ -421,13 +475,9 @@ export default function AdminEstablecimiento() {
                   required
                 />
               </Field>
-              </section>
+              </Section>
 
-              <section className="admin-section">
-                <header className="admin-section__head">
-                  <h2>Ubicación</h2>
-                  <p>Se usa para el mapa; las coordenadas con decimales (ej. 5.1234567).</p>
-                </header>
+              <Section title="Ubicación" hint="Se usa para el mapa; las coordenadas con decimales (ej. 5.1234567)." signal={signal}>
               <div className="admin-grid">
                 <Field label="Dirección">
                   <input
@@ -462,13 +512,9 @@ export default function AdminEstablecimiento() {
                   />
                 </Field>
               </div>
-              </section>
+              </Section>
 
-              <section className="admin-section">
-                <header className="admin-section__head">
-                  <h2>Contacto</h2>
-                  <p>Cómo pueden comunicarse los visitantes.</p>
-                </header>
+              <Section title="Contacto" hint="Cómo pueden comunicarse los visitantes." signal={signal}>
               <div className="admin-grid">
                 <Field label="Teléfono">
                   <input
@@ -502,13 +548,9 @@ export default function AdminEstablecimiento() {
                   />
                 </Field>
               </div>
-              </section>
+              </Section>
 
-              <section className="admin-section">
-                <header className="admin-section__head">
-                  <h2>Horarios y precios</h2>
-                  <p>Textos libres para la ficha y rangos numéricos para ordenar y filtrar.</p>
-                </header>
+              <Section title="Horarios y precios" hint="Textos libres para la ficha y rangos numéricos para ordenar y filtrar." signal={signal}>
               <div className="admin-grid">
                 <Field label="Horario (texto de la ficha)">
                   <input
@@ -554,12 +596,9 @@ export default function AdminEstablecimiento() {
                   />
                 </Field>
               </div>
-              </section>
+              </Section>
 
-              <section className="admin-section">
-                <header className="admin-section__head">
-                  <h2>Visibilidad</h2>
-                </header>
+              <Section title="Visibilidad" signal={signal}>
                 <label className="admin-check admin-check--card">
                   <input
                     type="checkbox"
@@ -571,7 +610,7 @@ export default function AdminEstablecimiento() {
                     <small>Aparece primero en los listados.</small>
                   </span>
                 </label>
-              </section>
+              </Section>
             </>
           ) : null}
 
@@ -677,8 +716,7 @@ export default function AdminEstablecimiento() {
 
           {tab === 'extras' ? (
             <div className="admin-extras">
-              <section className="admin-section">
-                <h2>Servicios</h2>
+              <Section title="Servicios" defaultOpen signal={signal}>
                 <div className="admin-checks">
                   {(meta?.services ?? []).map((service) => (
                     <label key={service.id} className="admin-check">
@@ -697,10 +735,9 @@ export default function AdminEstablecimiento() {
                     </label>
                   ))}
                 </div>
-              </section>
+              </Section>
 
-              <section className="admin-section">
-                <h2>Formas de pago</h2>
+              <Section title="Formas de pago" signal={signal}>
                 <div className="admin-checks">
                   {(meta?.paymentMethods ?? []).map((payment) => (
                     <label key={payment.id} className="admin-check">
@@ -719,11 +756,10 @@ export default function AdminEstablecimiento() {
                     </label>
                   ))}
                 </div>
-              </section>
+              </Section>
 
-              <section className="admin-section">
-                <div className="admin-section-head">
-                  <h2>Tarjetas “Ten en cuenta”</h2>
+              <Section title="Tarjetas “Ten en cuenta”" signal={signal}
+                actions={
                   <Button
                     type="button"
                     variant="ghost"
@@ -738,7 +774,7 @@ export default function AdminEstablecimiento() {
                   >
                     Añadir tarjeta
                   </Button>
-                </div>
+                }>
                 {form.features.map((feature, index) => (
                   <div key={index} className="admin-row">
                     <input
@@ -760,11 +796,10 @@ export default function AdminEstablecimiento() {
                     </button>
                   </div>
                 ))}
-              </section>
+              </Section>
 
-              <section className="admin-section">
-                <div className="admin-section-head">
-                  <h2>Productos</h2>
+              <Section title="Productos" signal={signal}
+                actions={
                   <Button
                     type="button"
                     variant="ghost"
@@ -779,7 +814,7 @@ export default function AdminEstablecimiento() {
                   >
                     Añadir producto
                   </Button>
-                </div>
+                }>
                 {form.products.map((product, index) => (
                   <div key={index} className="admin-row">
                     <input
@@ -802,11 +837,10 @@ export default function AdminEstablecimiento() {
                     </button>
                   </div>
                 ))}
-              </section>
+              </Section>
 
-              <section className="admin-section">
-                <div className="admin-section-head">
-                  <h2>Redes sociales</h2>
+              <Section title="Redes sociales" signal={signal}
+                actions={
                   <Button
                     type="button"
                     variant="ghost"
@@ -814,7 +848,7 @@ export default function AdminEstablecimiento() {
                   >
                     Añadir red
                   </Button>
-                </div>
+                }>
                 {form.social.map((link, index) => (
                   <div key={index} className="admin-row">
                     <select
@@ -841,10 +875,9 @@ export default function AdminEstablecimiento() {
                     </button>
                   </div>
                 ))}
-              </section>
+              </Section>
 
-              <section className="admin-section">
-                <h2>También puedes visitar</h2>
+              <Section title="También puedes visitar" signal={signal}>
                 <select
                   multiple
                   className="admin-multiselect"
@@ -866,7 +899,7 @@ export default function AdminEstablecimiento() {
                     ))}
                 </select>
                 <p className="note">Ctrl/Cmd + clic para elegir varias.</p>
-              </section>
+              </Section>
             </div>
           ) : null}
 

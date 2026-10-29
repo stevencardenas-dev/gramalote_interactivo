@@ -517,32 +517,96 @@
 }
 
 .admin-section {
-  padding: 22px 24px;
   border: var(--border);
   border-radius: var(--radius-md);
   background: var(--c-white);
   box-shadow: 0 2px 10px rgba(0, 66, 107, 0.05);
+}
+
+.admin-section__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 16px;
+}
+
+.admin-section__bar h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.admin-section__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 8px 14px 24px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--c-navy);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-section__toggle:focus-visible {
+  outline: 3px solid rgba(0, 66, 107, 0.35);
+  outline-offset: -3px;
+}
+
+.admin-section__title {
+  display: grid;
+  gap: 2px;
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.admin-section__title small {
+  color: var(--c-muted);
+  font-family: var(--font-sans, inherit);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+}
+
+.admin-section.is-open .admin-section__title small {
+  display: block;
+}
+
+.admin-section__chevron {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.admin-section.is-open .admin-section__chevron {
+  transform: rotate(-135deg);
+}
+
+.admin-section__body {
   display: grid;
   gap: 16px;
   align-content: start;
+  padding: 4px 24px 22px;
 }
 
-.admin-section__head h2,
-.admin-section > h2,
-.admin-section .admin-section-head h2 {
-  font-size: 1.1rem;
-  margin: 0;
-  color: var(--c-navy);
+.admin-section__body[hidden] {
+  display: none;
 }
 
-.admin-section__head p {
-  color: var(--c-muted);
-  font-size: var(--fs-xs);
-  margin-top: 2px;
-}
-
-.admin-section .admin-section-head {
-  margin-bottom: 0;
+.admin-panel__tools {
+  display: flex;
+  justify-content: flex-end;
+  gap: 18px;
 }
 
 .admin-section .admin-grid {
@@ -670,7 +734,24 @@
   }
 
   .admin-tabs--pills {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
     border-radius: 18px;
+  }
+
+  .admin-tabs--pills .admin-tab {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .admin-section__toggle {
+    padding-left: 16px;
+  }
+
+  .admin-section__body {
+    padding-inline: 16px;
   }
 }
 
