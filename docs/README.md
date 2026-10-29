@@ -45,6 +45,8 @@ npm run lint     # oxlint
 | `/buscar?q=` | Buscador | Implementada (búsqueda local) |
 | `/acceder` | Login administración | Implementada (conectada a la API) |
 | `/admin` | Panel de administración | Implementada (base protegida por sesión) |
+| `/admin/establecimientos` | Listado editable de fichas | Implementada (API real) |
+| `/admin/establecimientos/:id` | Editor de ficha e imágenes | Implementada (datos, fotos, publicación) |
 | `*` | 404 | Implementada |
 
 ## Mapeo Figma → React

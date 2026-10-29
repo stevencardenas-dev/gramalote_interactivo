@@ -8,6 +8,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://127.0.0.1:4000',
+      // Imágenes subidas desde el panel (disco local, ver docs/ADMIN-PANEL.md).
+      '/media': 'http://127.0.0.1:4000',
     },
   },
 })

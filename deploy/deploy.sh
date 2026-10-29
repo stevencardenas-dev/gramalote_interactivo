@@ -42,12 +42,33 @@ echo "Autenticando contra ECR ($REGISTRY)..."
 aws ecr get-login-password --region "$AWS_REGION" \
   | docker login --username AWS --password-stdin "$REGISTRY" >/dev/null
 
+# Carpeta de imágenes subidas desde el panel (disco local, sin S3).
+# Debe existir y pertenecer al UID del proceso node (1000) del contenedor.
+MEDIA_DIR="${MEDIA_DIR:-/opt/gramalote/media}"
+mkdir -p "$MEDIA_DIR"
+if [ -d "$MEDIA_DIR" ]; then
+  chown -R 1000:1000 "$MEDIA_DIR" 2>/dev/null || echo "AVISO: no se pudo ajustar el dueño de $MEDIA_DIR"
+  chmod 750 "$MEDIA_DIR" 2>/dev/null || true
+fi
+
 export IMAGE="${REGISTRY}/${ECR_REPO}:${IMAGE_TAG}"
 export API_IMAGE="${REGISTRY}/${ECR_REPO_API}:${IMAGE_TAG}"
 echo "Desplegando $IMAGE y $API_IMAGE"
 
 docker compose pull --quiet
 docker compose up -d --remove-orphans
+
+# Migraciones idempotentes (database/migrations/*.sql). La API puede tardar en
+# arrancar, así que se reintenta antes de seguir con el healthcheck.
+migrated=0
+for _ in 1 2 3 4 5; do
+  if docker compose run --rm --no-deps api node scripts/migrate.js; then
+    migrated=1
+    break
+  fi
+  sleep 4
+done
+[ "$migrated" = 1 ] || echo "AVISO: no se pudieron aplicar las migraciones"
 
 # La cuenta de administración se crea o se rota desde ADMIN_* del .env.
 if [ -n "${ADMIN_EMAIL:-}" ] && [ -n "${ADMIN_PASSWORD:-}" ]; then

@@ -152,12 +152,23 @@ scripts/
   seed-content.js     Carga database/seed-content.sql y valida los conteos
 ```
 
+## Panel de administración
+
+Módulo **Establecimientos** implementado (`src/routes/admin.js`): listado y
+detalle, edición transaccional de la ficha y sus tablas hijas, publicación con
+rol `admin`, auditoría en `audit_log` y gestión de imágenes en disco con
+`sharp` (variantes WebP 480/960/1440, sin EXIF).
+
+- `POST /api/admin/media` guarda en `MEDIA_ROOT` (por defecto `backend/media`).
+- `GET /api/admin/media/stats` informa uso y cuota.
+- `npm run db:migrate` aplica `database/migrations/*.sql`.
+- `npm run media:prune` informa (o borra con `--apply`) archivos huérfanos.
+- Detalle funcional y de seguridad: `docs/ADMIN-PANEL.md`.
+
 ## Pendiente
 
-- CRUD del panel de administración (la autenticación ya está implementada).
-- Que cada guardado del panel actualice `search_documents` en la misma
-  transacción (hoy se puebla con el seed de contenido).
-- Conectar el frontend a la API: todavía lee `frontend/src/data`.
-- Definir almacenamiento de imágenes (S3/CloudFront o disco) y proveedor de mapa.
-- Migraciones versionadas; `schema.sql` es el arranque local, no un sistema de
-  migraciones.
+- Módulos de experiencias, curiosidades e historia.
+- Editor de horarios por día (`opening_hours`) en la UI; hoy se edita
+  `hours_text` y la API ya reemplaza los turnos si se envían.
+- Conectar el frontend público a la API: todavía lee `frontend/src/data`.
+- Proveedor de mapa real.

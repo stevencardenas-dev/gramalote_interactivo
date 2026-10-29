@@ -16,6 +16,8 @@ import Mapa from './pages/Mapa.jsx'
 import Buscar from './pages/Buscar.jsx'
 import Acceder from './pages/Acceder.jsx'
 import Admin from './pages/Admin.jsx'
+import AdminEstablecimientos from './pages/AdminEstablecimientos.jsx'
+import AdminEstablecimiento from './pages/AdminEstablecimiento.jsx'
 import RequireAdmin from './components/admin/RequireAdmin.jsx'
 import NoEncontrada from './pages/NoEncontrada.jsx'
 
@@ -46,6 +48,22 @@ export default function App() {
           element={
             <RequireAdmin>
               <Admin />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/establecimientos"
+          element={
+            <RequireAdmin>
+              <AdminEstablecimientos />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/establecimientos/:id"
+          element={
+            <RequireAdmin>
+              <AdminEstablecimiento />
             </RequireAdmin>
           }
         />

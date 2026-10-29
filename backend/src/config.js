@@ -50,6 +50,18 @@ export const config = {
       (process.env.TRUST_PROXY ?? '').toLowerCase(),
     ),
   },
+  media: {
+    // Disco local de la instancia: sin S3, para poder migrar a un servidor
+    // físico copiando la carpeta. Ver docs/ADMIN-PANEL.md.
+    root: process.env.MEDIA_ROOT ?? fileURLToPath(new URL('../media', import.meta.url)),
+    publicBase: process.env.MEDIA_PUBLIC_BASE ?? '/media',
+    maxUploadMb: integer(process.env.MEDIA_MAX_UPLOAD_MB, 8),
+    quotaMb: integer(process.env.MEDIA_QUOTA_MB, 500),
+    variants: list(process.env.MEDIA_VARIANTS, '480,960,1440')
+      .map((value) => Number.parseInt(value, 10))
+      .filter((value) => Number.isFinite(value) && value > 0)
+      .sort((a, b) => a - b),
+  },
   db: {
     host: process.env.MYSQL_HOST ?? '127.0.0.1',
     port: integer(process.env.MYSQL_PORT, 3307),

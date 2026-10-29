@@ -10,9 +10,10 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 
-# Código, rutas y scripts (scripts/seed-admin.js se usa para crear el admin).
+# Código, rutas y scripts (seed-admin, migraciones y limpieza de medios).
 COPY src ./src
 COPY scripts ./scripts
+COPY database ./database
 COPY package.json ./
 
 USER node

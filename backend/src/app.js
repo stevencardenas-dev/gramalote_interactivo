@@ -3,6 +3,8 @@ import express from 'express'
 import { config } from './config.js'
 import { ping } from './db.js'
 import { errorHandler, notFoundHandler } from './http.js'
+import { mediaRoot } from './media.js'
+import adminRouter from './routes/admin.js'
 import authRouter from './routes/auth.js'
 import curiositiesRouter from './routes/curiosities.js'
 import establishmentsRouter from './routes/establishments.js'
@@ -27,6 +29,18 @@ app.use(
   }),
 )
 app.use(express.json({ limit: '1mb' }))
+
+// En producción nginx sirve /media/ directo desde el volumen; esto mantiene
+// el entorno local y el acceso directo a la API funcionando igual.
+app.use(
+  config.media.publicBase,
+  express.static(mediaRoot(), {
+    index: false,
+    immutable: true,
+    maxAge: '30d',
+    fallthrough: false,
+  }),
+)
 
 app.get('/api', (_req, res) => {
   res.json({
@@ -53,6 +67,10 @@ app.get('/api', (_req, res) => {
       'GET /api/practical',
       'GET /api/map',
       'GET /api/search?q=',
+      'GET /api/admin/establishments',
+      'GET /api/admin/establishments/:id',
+      'PATCH /api/admin/establishments/:id',
+      'POST /api/admin/media',
     ],
   })
 })
@@ -79,6 +97,7 @@ app.get('/api/health', async (_req, res) => {
 app.use(
   '/api',
   authRouter,
+  adminRouter,
   metaRouter,
   establishmentsRouter,
   experiencesRouter,

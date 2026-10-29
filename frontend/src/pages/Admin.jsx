@@ -1,12 +1,17 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import { getUser, logout } from '../lib/auth.js'
 
 const MODULES = [
-  { key: 'establecimientos', name: 'Establecimientos', hint: 'Comer, dormir y comprar' },
-  { key: 'experiencias', name: 'Experiencias', hint: 'Qué hacer' },
-  { key: 'curiosidades', name: 'Curiosidades', hint: 'Contenido editorial' },
+  {
+    key: 'establecimientos',
+    name: 'Establecimientos',
+    hint: 'Datos e imágenes de comer, dormir y comprar',
+    path: '/admin/establecimientos',
+  },
+  { key: 'experiencias', name: 'Experiencias', hint: 'Qué hacer', path: null },
+  { key: 'curiosidades', name: 'Curiosidades', hint: 'Contenido editorial', path: null },
 ]
 
 export default function Admin() {
@@ -30,8 +35,17 @@ export default function Admin() {
           <ul className="admin-modules">
             {MODULES.map((module) => (
               <li key={module.key} className="admin-module">
-                <span className="admin-module__name">{module.name}</span>
-                <span className="admin-module__hint">{module.hint} · próximamente</span>
+                {module.path ? (
+                  <Link className="admin-module__link" to={module.path}>
+                    <span className="admin-module__name">{module.name}</span>
+                    <span className="admin-module__hint">{module.hint}</span>
+                  </Link>
+                ) : (
+                  <>
+                    <span className="admin-module__name">{module.name}</span>
+                    <span className="admin-module__hint">{module.hint} · próximamente</span>
+                  </>
+                )}
               </li>
             ))}
           </ul>
@@ -40,7 +54,8 @@ export default function Admin() {
             {pending ? 'Cerrando…' : 'Cerrar sesión'}
           </Button>
           <p className="note">
-            Los módulos de edición se habilitan en las siguientes entregas del plan.
+            Por ahora solo se edita el módulo de establecimientos; las imágenes se
+            guardan en el disco del servidor.
           </p>
         </div>
       </div>

@@ -101,3 +101,46 @@ export async function logout() {
 export function getUser() {
   return currentUser
 }
+
+// Petición autenticada a la API del panel. Renueva la sesión una vez si el
+// access token venció (30 min) y devuelve `data` como los demás endpoints.
+export async function apiRequest(path, { method = 'GET', body, formData } = {}) {
+  async function send() {
+    const headers = { Accept: 'application/json' }
+    if (body) headers['Content-Type'] = 'application/json'
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`
+
+    return fetch(`/api${path}`, {
+      method,
+      headers,
+      body: formData ?? (body ? JSON.stringify(body) : undefined),
+      credentials: 'same-origin',
+    })
+  }
+
+  let response = await send()
+  if (response.status === 401) {
+    const session = await refreshSession()
+    if (session) response = await send()
+  }
+
+  if (response.status === 204) return null
+
+  let payload = null
+  try {
+    payload = await response.json()
+  } catch {
+    // Respuesta no JSON.
+  }
+
+  if (!response.ok) {
+    const error = new AuthError(
+      payload?.error?.message ?? 'No se pudo completar la operación',
+    )
+    error.code = payload?.error?.code ?? null
+    error.status = response.status
+    throw error
+  }
+
+  return payload?.data ?? null
+}

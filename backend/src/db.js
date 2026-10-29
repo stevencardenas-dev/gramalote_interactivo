@@ -13,6 +13,22 @@ export async function queryOne(sql, params = []) {
   return rows[0] ?? null
 }
 
+// Ejecuta un bloque dentro de una transacción con una conexión dedicada.
+export async function withTransaction(handler) {
+  const connection = await pool.getConnection()
+  try {
+    await connection.beginTransaction()
+    const result = await handler(connection)
+    await connection.commit()
+    return result
+  } catch (error) {
+    await connection.rollback()
+    throw error
+  } finally {
+    connection.release()
+  }
+}
+
 export async function ping() {
   await pool.query('SELECT 1 AS ok')
 }

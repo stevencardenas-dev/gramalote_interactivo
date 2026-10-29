@@ -212,14 +212,16 @@ datos locales cuando el frontend se conecte a la API.
 3. **Autenticación real** en `/acceder`: Argon2id/bcrypt, JWT de acceso corto +
    refresh token hasheado en `admin_refresh_tokens`. *(Implementada.)*
 4. **CRUD del panel admin** para establecimientos, experiencias, curiosidades,
-   historia e información práctica.
+   historia e información práctica. Especificación: `docs/ADMIN-PANEL.md`.
 5. **Mantener `search_documents`** desde los servicios de escritura
    (transacción junto al guardado de la entidad). Hoy lo puebla el seed de
    contenido.
 6. **Cálculo de “Abierto hoy”** con `opening_hours` y
    `opening_hours_exceptions`; definir zona horaria `America/Bogota`.
-7. **Almacenamiento de imágenes**: decidir S3/CloudFront vs. disco del EC2;
-   `media.storage_path` y `media.public_url` ya lo soportan.
+7. **Almacenamiento de imágenes: decidido.** Disco de la EC2 en
+   `/opt/gramalote/media`, servido por nginx en `/media/*`; sin S3 ni EFS, para
+   poder migrar a un servidor físico con `rsync`. Comparación de opciones y
+   pros/contras en `docs/ADMIN-PANEL.md` (§3).
 8. **Mapa**: cargar `latitude`/`longitude` y el GeoJSON de `zones`; elegir
    proveedor (Leaflet, Mapbox o Google).
 9. **Migraciones versionadas** antes de producción; `schema.sql` es un script
