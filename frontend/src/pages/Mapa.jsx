@@ -24,9 +24,7 @@ export default function Mapa() {
           <Suspense fallback={<p className="note">Cargando mapa…</p>}>
             <LiveMap
               key={`${categoria}|${tipo}`}
-              filterable
-              showLegend
-              showList
+              explorer
               initialGroup={categoria}
               initialType={tipo}
             />

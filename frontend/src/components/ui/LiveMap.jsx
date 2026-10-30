@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Map as MapLibreMap,
   NavigationControl,
@@ -10,6 +11,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import '../../styles/mapa.css'
 import { getJson } from '../../lib/api.js'
+import { establishmentPhotos } from '../../data/establishmentPhotos'
 
 // AVISO: las teselas públicas de openstreetmap.org son solo para desarrollo y
 // pruebas. Antes de publicar el sitio hay que cambiarlas (VITE_MAP_TILES_URL)
@@ -39,6 +41,14 @@ const GROUPS = [
 ]
 const GROUP_BY_KEY = Object.fromEntries(GROUPS.map((group) => [group.key, group]))
 
+// Ignora mayúsculas, tildes, ñ y espacios al buscar.
+const normalize = (value) =>
+  String(value ?? '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, '')
+
 function isValidCoordinates(coordinates) {
   const { latitude, longitude } = coordinates ?? {}
   return (
@@ -59,10 +69,13 @@ function toPlaces(data) {
       const group = item.kind === 'experience' ? 'experiencia' : item.category?.slug
       return {
         id: `${item.kind}-${item.id}`,
+        slug: item.slug,
+        kind: item.kind,
         name: item.name,
         group: GROUP_BY_KEY[group] ? group : null,
         categoryName: item.category?.name ?? GROUP_BY_KEY[group]?.label ?? '',
         type: item.type ?? null,
+        photo: item.cover?.url ?? establishmentPhotos[item.slug]?.photo ?? null,
         longitude: item.coordinates.longitude,
         latitude: item.coordinates.latitude,
       }
@@ -78,6 +91,7 @@ function toFeatureCollection(places) {
       // GeoJSON: [longitud, latitud]
       geometry: { type: 'Point', coordinates: [place.longitude, place.latitude] },
       properties: {
+        id: place.id,
         group: place.group,
         name: place.name,
         categoryName: place.categoryName,
@@ -89,14 +103,22 @@ function toFeatureCollection(places) {
 
 function fitToPlaces(map, places) {
   if (places.length === 0) return
+  // El contenedor puede haber cambiado de tamaño desde que se creó el mapa.
+  map.resize()
   const bounds = new LngLatBounds()
   places.forEach((place) => bounds.extend([place.longitude, place.latitude]))
   map.fitBounds(bounds, { padding: 60, maxZoom: 16, duration: 0 })
 }
 
+function placeSubtitle(place) {
+  return place.type ? `${place.categoryName} · ${place.type}` : place.categoryName
+}
+
 // Mapa de MapLibre con los lugares de GET /api/map.
 // `groups`: lista de grupos a mostrar (por defecto, todos).
 // `fill`: el mapa toma el alto de su contenedor en vez de uno propio.
+// `explorer`: panel lateral con buscador, filtros y lista de lugares; al elegir
+// un lugar el mapa se centra en él.
 export default function LiveMap({
   groups = null,
   label = 'Mapa de Gramalote',
@@ -104,35 +126,72 @@ export default function LiveMap({
   showList = false,
   fill = false,
   filterable = false,
+  explorer = false,
   initialGroup = '',
   initialType = '',
 }) {
+  const navigate = useNavigate()
   const containerRef = useRef(null)
+  const popupRef = useRef(null)
+  const placesRef = useRef([])
+  const listRef = useRef(null)
   const [allPlaces, setAllPlaces] = useState([])
   const [status, setStatus] = useState('loading')
   const [readyMap, setReadyMap] = useState(null)
   const [activeGroup, setActiveGroup] = useState(initialGroup)
   const [activeType, setActiveType] = useState(initialType)
+  const [search, setSearch] = useState('')
+  const [selectedId, setSelectedId] = useState('')
   const groupsKey = groups ? groups.join(',') : ''
 
-  const places = useMemo(
-    () =>
-      allPlaces.filter(
-        (place) =>
-          (!activeGroup || place.group === activeGroup) &&
-          (!activeType || place.type === activeType),
-      ),
-    [allPlaces, activeGroup, activeType],
-  )
+  const places = useMemo(() => {
+    const term = normalize(search)
+    return allPlaces.filter(
+      (place) =>
+        (!activeGroup || place.group === activeGroup) &&
+        (!activeType || place.type === activeType) &&
+        (!term || normalize(`${place.name}${place.type ?? ''}`).includes(term)),
+    )
+  }, [allPlaces, activeGroup, activeType, search])
 
-  // Tipos disponibles dentro del grupo elegido, para el segundo filtro.
+  // Tipos disponibles dentro del grupo elegido (o de todos) para el segundo filtro.
   const typeOptions = useMemo(() => {
-    if (!activeGroup) return []
     const names = allPlaces
-      .filter((place) => place.group === activeGroup && place.type)
+      .filter((place) => (!activeGroup || place.group === activeGroup) && place.type)
       .map((place) => place.type)
     return [...new Set(names)].sort((a, b) => a.localeCompare(b, 'es'))
   }, [allPlaces, activeGroup])
+
+  useEffect(() => {
+    placesRef.current = allPlaces
+  }, [allPlaces])
+
+  // Abre el popup de un lugar; el enlace a la ficha navega sin recargar la página.
+  const showPopup = (map, place) => {
+    const content = document.createElement('div')
+    content.className = 'mapa-popup'
+    const title = document.createElement('strong')
+    title.textContent = place.name
+    const detail = document.createElement('span')
+    detail.textContent = placeSubtitle(place)
+    content.append(title, detail)
+    if (place.kind === 'establishment' && place.slug) {
+      const href = `/establecimiento/${place.slug}`
+      const link = document.createElement('a')
+      link.href = href
+      link.textContent = 'Ver ficha'
+      link.className = 'mapa-popup__enlace'
+      link.addEventListener('click', (event) => {
+        event.preventDefault()
+        navigate(href)
+      })
+      content.append(link)
+    }
+    popupRef.current
+      ?.setLngLat([place.longitude, place.latitude])
+      .setDOMContent(content)
+      .addTo(map)
+  }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -160,7 +219,7 @@ export default function LiveMap({
     })
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right')
 
-    const popup = new Popup({ closeButton: true, closeOnClick: true, maxWidth: '260px' })
+    popupRef.current = new Popup({ closeButton: true, closeOnClick: false, maxWidth: '260px' })
 
     const mapLoaded = new Promise((resolve) => map.once('load', resolve))
     const dataLoaded = getJson('/map', { signal: controller.signal })
@@ -196,6 +255,19 @@ export default function LiveMap({
             'circle-stroke-width': 2,
           },
         })
+        // Aro que resalta el lugar elegido.
+        map.addLayer({
+          id: 'lugar-elegido',
+          type: 'circle',
+          source: 'lugares',
+          filter: ['==', ['get', 'id'], ''],
+          paint: {
+            'circle-color': 'rgba(0, 0, 0, 0)',
+            'circle-radius': 20,
+            'circle-stroke-color': '#00426b',
+            'circle-stroke-width': 4,
+          },
+        })
         setReadyMap(map)
       })
       .catch((error) => {
@@ -204,17 +276,11 @@ export default function LiveMap({
       })
 
     map.on('click', 'lugares', (event) => {
-      const feature = event.features?.[0]
-      if (!feature) return
-      const { name, categoryName, type } = feature.properties
-      const content = document.createElement('div')
-      content.className = 'mapa-popup'
-      const title = document.createElement('strong')
-      title.textContent = name
-      const detail = document.createElement('span')
-      detail.textContent = type ? `${categoryName} · ${type}` : categoryName
-      content.append(title, detail)
-      popup.setLngLat(feature.geometry.coordinates).setDOMContent(content).addTo(map)
+      const id = event.features?.[0]?.properties?.id
+      const place = placesRef.current.find((item) => item.id === id)
+      if (!place) return
+      setSelectedId(place.id)
+      showPopup(map, place)
     })
     map.on('mouseenter', 'lugares', () => {
       map.getCanvas().style.cursor = 'pointer'
@@ -228,23 +294,154 @@ export default function LiveMap({
     return () => {
       removed = true
       controller.abort()
+      popupRef.current?.remove()
       map.remove()
     }
+    // showPopup solo usa refs y navigate, que no cambian entre renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupsKey])
 
   // Refleja el filtro en el mapa y lo encuadra sobre los puntos visibles.
   useEffect(() => {
     if (!readyMap) return
     readyMap.getSource('lugares')?.setData(toFeatureCollection(places))
+    popupRef.current?.remove()
     fitToPlaces(readyMap, places)
   }, [readyMap, places])
+
+  // Resalta el lugar elegido en el mapa y lo deja a la vista en la lista.
+  useEffect(() => {
+    if (readyMap?.getLayer('lugar-elegido')) {
+      readyMap.setFilter('lugar-elegido', ['==', ['get', 'id'], selectedId])
+    }
+    listRef.current
+      ?.querySelector('[aria-current="true"]')
+      ?.scrollIntoView({ block: 'nearest' })
+  }, [readyMap, selectedId])
 
   const chooseGroup = (key) => {
     setActiveGroup(key)
     setActiveType('')
+    setSelectedId('')
+  }
+
+  // Centra el mapa en el lugar elegido de la lista y abre su popup.
+  const focusPlace = (place) => {
+    setSelectedId(place.id)
+    if (!readyMap) return
+    readyMap.flyTo({
+      center: [place.longitude, place.latitude],
+      zoom: Math.max(readyMap.getZoom(), 16),
+      duration: 800,
+    })
+    showPopup(readyMap, place)
   }
 
   const visibleGroups = groups ? GROUPS.filter((group) => groups.includes(group.key)) : GROUPS
+
+  const typeSelect =
+    typeOptions.length > 1 ? (
+      <label className="mapa-filtros__tipo">
+        <span>Tipo</span>
+        <select value={activeType} onChange={(event) => setActiveType(event.target.value)}>
+          <option value="">Todos los tipos</option>
+          {typeOptions.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </label>
+    ) : null
+
+  const statusNotes = (
+    <>
+      {status === 'loading' ? <p className="note">Cargando lugares…</p> : null}
+      {status === 'error' ? (
+        <p className="note">No se pudieron cargar los lugares. Intenta de nuevo más tarde.</p>
+      ) : null}
+      {status === 'ready' && places.length === 0 ? (
+        <p className="note">
+          {allPlaces.length > 0
+            ? 'No hay lugares con ese filtro.'
+            : 'Todavía no hay lugares con ubicación para mostrar.'}
+        </p>
+      ) : null}
+    </>
+  )
+
+  if (explorer) {
+    return (
+      <div className="mapa-explorador">
+        <aside className="mapa-panel" aria-label="Lugares del mapa">
+          <input
+            type="search"
+            className="mapa-panel__buscar"
+            placeholder="Buscar un lugar…"
+            aria-label="Buscar un lugar"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              setSelectedId('')
+            }}
+          />
+          <div className="mapa-filtros__grupos" role="group" aria-label="Filtrar por categoría">
+            {[{ key: '', label: 'Todos' }, ...visibleGroups].map((group) => (
+              <button
+                key={group.key}
+                type="button"
+                className="mapa-filtro"
+                aria-pressed={activeGroup === group.key}
+                onClick={() => chooseGroup(group.key)}
+              >
+                {group.color ? (
+                  <span className="mapa-filtro__punto" style={{ background: group.color }} aria-hidden="true" />
+                ) : null}
+                {group.label}
+              </button>
+            ))}
+          </div>
+          {typeSelect}
+          <p className="mapa-panel__cuenta" aria-live="polite">
+            {places.length === 1 ? '1 lugar' : `${places.length} lugares`}
+          </p>
+          {statusNotes}
+          <ul className="mapa-panel__lista" ref={listRef}>
+            {places.map((place) => (
+              <li key={place.id}>
+                <button
+                  type="button"
+                  className="mapa-lugar"
+                  aria-current={selectedId === place.id ? 'true' : undefined}
+                  onClick={() => focusPlace(place)}
+                >
+                  {place.photo ? (
+                    <img className="mapa-lugar__foto" src={place.photo} alt="" loading="lazy" />
+                  ) : (
+                    <span
+                      className="mapa-lugar__foto mapa-lugar__foto--vacia"
+                      style={{ background: GROUP_BY_KEY[place.group].color }}
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span className="mapa-lugar__texto">
+                    <strong>{place.name}</strong>
+                    <span>{placeSubtitle(place)}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </aside>
+        <div
+          ref={containerRef}
+          className="mapa mapa--explorador"
+          role="region"
+          aria-label={label}
+        />
+      </div>
+    )
+  }
 
   return (
     <>
@@ -263,19 +460,7 @@ export default function LiveMap({
               </button>
             ))}
           </div>
-          {typeOptions.length > 1 ? (
-            <label className="mapa-filtros__tipo">
-              <span>Tipo</span>
-              <select value={activeType} onChange={(event) => setActiveType(event.target.value)}>
-                <option value="">Todos los tipos</option>
-                {typeOptions.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
+          {typeSelect}
         </div>
       ) : null}
 
@@ -301,24 +486,14 @@ export default function LiveMap({
         </ul>
       ) : null}
 
-      {status === 'loading' ? <p className="note">Cargando lugares…</p> : null}
-      {status === 'error' ? (
-        <p className="note">No se pudieron cargar los lugares. Intenta de nuevo más tarde.</p>
-      ) : null}
-      {status === 'ready' && places.length === 0 ? (
-        <p className="note">
-          {allPlaces.length > 0
-            ? 'No hay lugares con ese filtro.'
-            : 'Todavía no hay lugares con ubicación para mostrar.'}
-        </p>
-      ) : null}
+      {statusNotes}
 
       {showList && places.length > 0 ? (
         <ul className="mapa-lista" aria-label="Lugares en el mapa">
           {places.map((place) => (
             <li key={place.id}>
               <strong>{place.name}</strong>
-              <span>{place.type ? `${place.categoryName} · ${place.type}` : place.categoryName}</span>
+              <span>{placeSubtitle(place)}</span>
             </li>
           ))}
         </ul>
