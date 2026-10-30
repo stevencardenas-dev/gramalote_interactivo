@@ -1869,23 +1869,54 @@
 .auth-wrap {
   display: grid;
   place-items: center;
-  min-height: 60vh;
-  padding-block: 48px;
+  min-height: calc(100vh - 116px);
+  padding-block: 56px;
+  background:
+    linear-gradient(160deg, rgba(0, 66, 107, 0.78), rgba(0, 50, 79, 0.55) 55%, rgba(119, 63, 16, 0.45)),
+    url('/img/home/hero.jpg') center / cover no-repeat;
+}
+
+.auth-wrap > .container {
+  display: grid;
+  justify-items: center;
 }
 
 .auth-card {
+  position: relative;
   width: 100%;
-  max-width: 420px;
-  padding: clamp(24px, 4vw, 36px);
-  border: var(--border);
-  border-radius: var(--radius-md);
+  max-width: 440px;
+  padding: clamp(32px, 5vw, 44px);
+  padding-top: clamp(44px, 6vw, 56px);
+  border: 0;
+  border-radius: 28px;
   background: var(--c-white);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 24px 60px rgba(0, 30, 50, 0.35);
+  overflow: hidden;
+}
+
+/* Franja con los colores de la marca */
+.auth-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 8px;
+  background: linear-gradient(90deg, var(--c-coral) 0 25%, var(--c-gold) 25% 50%, var(--c-olive) 50% 75%, var(--c-navy) 75%);
+}
+
+.auth-card__logo {
+  display: block;
+  height: 64px;
+  margin: 0 auto 14px;
+}
+
+.auth-card h1,
+.auth-card > p {
+  text-align: center;
 }
 
 .auth-card h1 {
-  font-size: 1.6rem;
-  margin-bottom: 6px;
+  font-size: 2rem;
+  margin-bottom: 8px;
 }
 
 .auth-card p {
@@ -1906,10 +1937,10 @@
 }
 
 .field input {
-  padding: 12px 14px;
+  padding: 14px 18px;
   border: 1px solid var(--c-line);
-  border-radius: 12px;
-  background: var(--c-white);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
 }
 
 .field input:focus {
@@ -2197,4 +2228,20 @@
 
 .curio-banner__card h2 {
   font-size: var(--fs-h2);
+}
+
+/* Crédito de la foto del encabezado (licencia CC BY-SA) */
+.page-hero__credit {
+  position: absolute;
+  right: var(--gutter);
+  bottom: 10px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.72rem;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.page-hero__credit a {
+  color: inherit;
+  text-decoration: underline;
 }

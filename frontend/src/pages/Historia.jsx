@@ -1,5 +1,6 @@
 import PageHero from '../components/ui/PageHero.jsx'
 import Placeholder from '../components/ui/Placeholder.jsx'
+import { heroViejo } from '../data/heroImages.js'
 
 const blocks = [
   {
@@ -20,6 +21,8 @@ export default function Historia() {
   return (
     <>
       <PageHero
+        image={heroViejo.src}
+        credit={heroViejo.credit}
         eyebrow="Memoria del municipio"
         title="Su historia"
         intro="Conoce los acontecimientos y la memoria de Gramalote, un pueblo que renació entre las montañas."

@@ -3,11 +3,14 @@ import Placeholder from '../components/ui/Placeholder.jsx'
 import Button from '../components/ui/Button.jsx'
 import Icon from '../components/ui/Icon.jsx'
 import { MapExplorer } from '../components/ui/MapPanel.jsx'
+import { heroNuevo } from '../data/heroImages.js'
 
 export default function QueHacer() {
   return (
     <>
       <PageHero
+        image={heroNuevo.src}
+        credit={heroNuevo.credit}
         title="Qué hacer"
         breadcrumb={[
           { label: 'Inicio', to: '/' },

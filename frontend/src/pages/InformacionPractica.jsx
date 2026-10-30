@@ -2,6 +2,7 @@ import PageHero from '../components/ui/PageHero.jsx'
 import Placeholder from '../components/ui/Placeholder.jsx'
 import Button from '../components/ui/Button.jsx'
 import Icon from '../components/ui/Icon.jsx'
+import { heroNuevo } from '../data/heroImages.js'
 import {
   accessRoutes,
   preparationTips,
@@ -14,6 +15,8 @@ export default function InformacionPractica() {
   return (
     <>
       <PageHero
+        image={heroNuevo.src}
+        credit={heroNuevo.credit}
         title="Información práctica"
         intro="Todo lo que necesitas saber para planear tu visita a Gramalote y disfrutar una experiencia segura y agradable."
         breadcrumb={[

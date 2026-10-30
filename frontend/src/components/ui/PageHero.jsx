@@ -28,6 +28,7 @@ export default function PageHero({
   children,
   className = '',
   image,
+  credit,
 }) {
   const trail = breadcrumb ?? [{ label: 'Inicio', to: '/' }, { label: title }]
 
@@ -45,6 +46,18 @@ export default function PageHero({
           {children}
         </div>
       </div>
+      {credit ? (
+        <p className="page-hero__credit">
+          <a href={credit.source} target="_blank" rel="noopener noreferrer">
+            Foto: {credit.author} (recortada)
+          </a>
+          {' · '}
+          <a href={credit.license.url} target="_blank" rel="noopener noreferrer">
+            {credit.license.label}
+          </a>
+          {' · Wikimedia Commons'}
+        </p>
+      ) : null}
     </section>
   )
 }

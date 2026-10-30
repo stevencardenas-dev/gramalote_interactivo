@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
+import Logo from '../components/ui/Logo.jsx'
 import { AuthError, ensureSession, login, logout } from '../lib/auth.js'
 
 export default function Acceder() {
@@ -53,6 +54,7 @@ export default function Acceder() {
       <section className="auth-wrap">
         <div className="container">
           <div className="auth-card">
+            <Logo variant="iso" className="auth-card__logo" alt="" />
             <h1>Acceder</h1>
             <p>Verificando sesión…</p>
           </div>
@@ -66,10 +68,9 @@ export default function Acceder() {
       <section className="auth-wrap">
         <div className="container">
           <div className="auth-card">
-            <h1>Sesión activa</h1>
-            <p>
-              {user.name} · {user.email}
-            </p>
+            <Logo variant="iso" className="auth-card__logo" alt="" />
+            <h1>¡Hola, {user.name}!</h1>
+            <p>Tu sesión está activa ({user.email}).</p>
             <Button to="/admin">Ir al panel</Button>
             <Button variant="secondary" onClick={handleLogout} disabled={pending}>
               Cerrar sesión
@@ -89,8 +90,9 @@ export default function Acceder() {
     <section className="auth-wrap">
       <div className="container">
         <div className="auth-card">
+            <Logo variant="iso" className="auth-card__logo" alt="" />
           <h1>Acceder</h1>
-          <p>Área de administración de Gramalote Interactivo.</p>
+          <p>Bienvenido al área de administración. Ingresa para editar las fichas de Gramalote.</p>
 
           <form onSubmit={handleSubmit}>
             {error ? <p className="auth-error">{error}</p> : null}
