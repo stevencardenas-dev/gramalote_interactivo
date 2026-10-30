@@ -44,6 +44,7 @@ export default function Buscar() {
   return (
     <>
       <PageHero
+        image="/img/home/hero-donde-comprar.jpg"
         title="Buscar"
         intro={
           query

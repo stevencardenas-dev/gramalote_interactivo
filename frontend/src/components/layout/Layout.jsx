@@ -17,6 +17,8 @@ export default function Layout() {
       '/historia',
       '/curiosidades',
       '/informacion-practica',
+      '/buscar',
+      '/mapa',
     ].includes(pathname)
 
   useEffect(() => {
