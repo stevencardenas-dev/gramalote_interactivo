@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Map as MapLibreMap,
+  Marker,
   NavigationControl,
   Popup,
   LngLatBounds,
@@ -83,22 +84,19 @@ function toPlaces(data) {
     .filter((place) => place.group)
 }
 
-function toFeatureCollection(places) {
-  return {
-    type: 'FeatureCollection',
-    features: places.map((place) => ({
-      type: 'Feature',
-      // GeoJSON: [longitud, latitud]
-      geometry: { type: 'Point', coordinates: [place.longitude, place.latitude] },
-      properties: {
-        id: place.id,
-        group: place.group,
-        name: place.name,
-        categoryName: place.categoryName,
-        type: place.type ?? '',
-      },
-    })),
-  }
+// Pin SVG del color del grupo; es un elemento del DOM, no una capa de WebGL.
+function createPin(place, onSelect) {
+  const group = GROUP_BY_KEY[place.group]
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.className = 'mapa-pin'
+  button.setAttribute('aria-label', `${place.name}, ${placeSubtitle(place)}`)
+  button.innerHTML = `<svg class="mapa-pin__icono" viewBox="0 0 24 32" width="30" height="40" aria-hidden="true"><path d="M12 1C5.9 1 1 5.8 1 11.8 1 20 12 31 12 31s11-11 11-19.2C23 5.8 18.1 1 12 1z" fill="${group.color}" stroke="#ffffff" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="#ffffff"/></svg>`
+  button.addEventListener('click', (event) => {
+    event.stopPropagation()
+    onSelect(place)
+  })
+  return button
 }
 
 function fitToPlaces(map, places) {
@@ -133,6 +131,7 @@ export default function LiveMap({
   const navigate = useNavigate()
   const containerRef = useRef(null)
   const popupRef = useRef(null)
+  const markersRef = useRef(new Map())
   const placesRef = useRef([])
   const listRef = useRef(null)
   const [allPlaces, setAllPlaces] = useState([])
@@ -196,6 +195,7 @@ export default function LiveMap({
   useEffect(() => {
     const controller = new AbortController()
     const allowed = groupsKey ? groupsKey.split(',') : null
+    const pins = markersRef.current
     let removed = false
 
     const map = new MapLibreMap({
@@ -219,13 +219,13 @@ export default function LiveMap({
     })
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right')
 
-    popupRef.current = new Popup({ closeButton: true, closeOnClick: false, maxWidth: '260px' })
+    popupRef.current = new Popup({ closeButton: true, closeOnClick: false, maxWidth: '260px', offset: [0, -38] })
 
-    const mapLoaded = new Promise((resolve) => map.once('load', resolve))
     const dataLoaded = getJson('/map', { signal: controller.signal })
 
-    Promise.all([mapLoaded, dataLoaded])
-      .then(([, response]) => {
+    // Los pines son elementos del DOM: no hace falta esperar a las teselas.
+    dataLoaded
+      .then((response) => {
         if (removed) return
         const loaded = toPlaces(response?.data).filter(
           (place) => !allowed || allowed.includes(place.group),
@@ -233,41 +233,6 @@ export default function LiveMap({
         setAllPlaces(loaded)
         setStatus('ready')
 
-        map.addSource('lugares', { type: 'geojson', data: toFeatureCollection([]) })
-        map.addLayer({
-          id: 'lugares',
-          type: 'circle',
-          source: 'lugares',
-          paint: {
-            'circle-color': [
-              'match',
-              ['get', 'group'],
-              ...GROUPS.flatMap((group) => [group.key, group.color]),
-              '#1d1b20',
-            ],
-            'circle-radius': [
-              'match',
-              ['get', 'group'],
-              ...GROUPS.flatMap((group) => [group.key, group.radius]),
-              8,
-            ],
-            'circle-stroke-color': '#ffffff',
-            'circle-stroke-width': 2,
-          },
-        })
-        // Aro que resalta el lugar elegido.
-        map.addLayer({
-          id: 'lugar-elegido',
-          type: 'circle',
-          source: 'lugares',
-          filter: ['==', ['get', 'id'], ''],
-          paint: {
-            'circle-color': 'rgba(0, 0, 0, 0)',
-            'circle-radius': 20,
-            'circle-stroke-color': '#00426b',
-            'circle-stroke-width': 4,
-          },
-        })
         setReadyMap(map)
       })
       .catch((error) => {
@@ -275,49 +240,56 @@ export default function LiveMap({
         setStatus('error')
       })
 
-    map.on('click', 'lugares', (event) => {
-      const id = event.features?.[0]?.properties?.id
-      const place = placesRef.current.find((item) => item.id === id)
-      if (!place) return
-      setSelectedId(place.id)
-      showPopup(map, place)
-    })
-    map.on('mouseenter', 'lugares', () => {
-      map.getCanvas().style.cursor = 'pointer'
-    })
-    map.on('mouseleave', 'lugares', () => {
-      map.getCanvas().style.cursor = ''
-    })
-
     // En StrictMode el efecto se monta, se limpia y se monta de nuevo:
     // remove() libera el mapa de la primera pasada.
     return () => {
       removed = true
       controller.abort()
       popupRef.current?.remove()
+      pins.forEach((marker) => marker.remove())
+      pins.clear()
       map.remove()
     }
     // showPopup solo usa refs y navigate, que no cambian entre renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupsKey])
 
-  // Refleja el filtro en el mapa y lo encuadra sobre los puntos visibles.
+  // Un pin por lugar visible; cambia con los filtros y se encuadra sobre ellos.
   useEffect(() => {
     if (!readyMap) return
-    readyMap.getSource('lugares')?.setData(toFeatureCollection(places))
+    const markers = markersRef.current
+    markers.forEach((marker) => marker.remove())
+    markers.clear()
     popupRef.current?.remove()
+    places.forEach((place) => {
+      const marker = new Marker({
+        element: createPin(place, (item) => {
+          setSelectedId(item.id)
+          showPopup(readyMap, item)
+        }),
+        anchor: 'bottom',
+      })
+        .setLngLat([place.longitude, place.latitude])
+        .addTo(readyMap)
+      markers.set(place.id, marker)
+    })
     fitToPlaces(readyMap, places)
+    // showPopup solo usa refs y navigate, que no cambian entre renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readyMap, places])
 
-  // Resalta el lugar elegido en el mapa y lo deja a la vista en la lista.
+  // Resalta el pin elegido y deja su tarjeta a la vista en la lista.
   useEffect(() => {
-    if (readyMap?.getLayer('lugar-elegido')) {
-      readyMap.setFilter('lugar-elegido', ['==', ['get', 'id'], selectedId])
-    }
+    markersRef.current.forEach((marker, id) => {
+      const element = marker.getElement()
+      const active = id === selectedId
+      element.toggleAttribute('data-activo', active)
+      element.style.zIndex = active ? '2' : ''
+    })
     listRef.current
       ?.querySelector('[aria-current="true"]')
       ?.scrollIntoView({ block: 'nearest' })
-  }, [readyMap, selectedId])
+  }, [places, selectedId])
 
   const chooseGroup = (key) => {
     setActiveGroup(key)

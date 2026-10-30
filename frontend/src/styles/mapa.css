@@ -289,3 +289,24 @@
     max-height: 360px;
   }
 }
+
+/* Pines del mapa */
+.mapa-pin {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mapa-pin__icono {
+  display: block;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+  transform-origin: 50% 100%;
+  transition: transform 0.15s ease;
+}
+
+.mapa-pin:hover .mapa-pin__icono,
+.mapa-pin[data-activo] .mapa-pin__icono {
+  transform: scale(1.3);
+}
