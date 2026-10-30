@@ -2,14 +2,15 @@ import PageHero from '../components/ui/PageHero.jsx'
 import Placeholder from '../components/ui/Placeholder.jsx'
 import Button from '../components/ui/Button.jsx'
 import { curiositySections } from '../data/curiosities.js'
-import { heroViejo } from '../data/heroImages.js'
+import { heroNuevo3 } from '../data/heroImages.js'
 
 export default function Curiosidades() {
   return (
     <>
       <PageHero
-        image={heroViejo.src}
-        credit={heroViejo.credit}
+        image={heroNuevo3.src}
+        imagePosition={heroNuevo3.position}
+        credit={heroNuevo3.credit}
         title="Curiosidades"
         breadcrumb={[
           { label: 'Inicio', to: '/' },

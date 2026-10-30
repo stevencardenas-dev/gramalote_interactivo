@@ -8,7 +8,16 @@ export default function Layout() {
   const overHero =
     pathname === '/' ||
     pathname.startsWith('/establecimiento/') ||
-    ['/donde-ir', '/donde-comer', '/donde-dormir', '/donde-comprar'].includes(pathname)
+    [
+      '/donde-ir',
+      '/donde-comer',
+      '/donde-dormir',
+      '/donde-comprar',
+      '/que-hacer',
+      '/historia',
+      '/curiosidades',
+      '/informacion-practica',
+    ].includes(pathname)
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })

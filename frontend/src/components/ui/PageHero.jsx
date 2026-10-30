@@ -28,6 +28,7 @@ export default function PageHero({
   children,
   className = '',
   image,
+  imagePosition,
   credit,
 }) {
   const trail = breadcrumb ?? [{ label: 'Inicio', to: '/' }, { label: title }]
@@ -35,7 +36,7 @@ export default function PageHero({
   return (
     <section
       className={`page-hero${center ? ' page-hero--center' : ''}${image ? ' page-hero--image' : ''} ${className}`.trim()}
-      style={image ? { '--hero-image': `url(${image})` } : undefined}
+      style={image ? { '--hero-image': `url(${image})`, '--hero-position': imagePosition } : undefined}
     >
       <div className="container">
         <Breadcrumb items={trail} />

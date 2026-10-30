@@ -21,3 +21,22 @@ export const heroViejo = {
     license: LICENSE,
   },
 }
+
+export const heroNuevo2 = {
+  src: '/img/home/hero-nuevo-gramalote-2.jpg',
+  credit: {
+    author: 'EEIM',
+    source: 'https://commons.wikimedia.org/wiki/File:Nuevo_Gramalote_2_pan_agt_2021.jpg',
+    license: LICENSE,
+  },
+}
+
+export const heroNuevo3 = {
+  src: '/img/home/hero-nuevo-gramalote-3.jpg',
+  position: 'center 42%',
+  credit: {
+    author: 'EEIM',
+    source: 'https://commons.wikimedia.org/wiki/File:Nuevo_Gramalote_agt_2021-3.jpg',
+    license: LICENSE,
+  },
+}

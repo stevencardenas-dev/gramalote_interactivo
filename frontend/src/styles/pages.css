@@ -2139,7 +2139,7 @@
   isolation: isolate;
   padding-top: var(--header-h);
   padding-bottom: clamp(48px, 7vw, 88px);
-  background: var(--hero-image) center / cover no-repeat;
+  background: var(--hero-image) var(--hero-position, center) / cover no-repeat;
   color: var(--c-white);
 }
 
@@ -2160,6 +2160,11 @@
 
 .page-hero--image .page-hero__intro {
   font-weight: 500;
+}
+
+.page-hero--image .eyebrow {
+  color: var(--c-white);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
 }
 
 .listing-card-v .photo {
