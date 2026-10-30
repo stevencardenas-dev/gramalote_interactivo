@@ -84,6 +84,14 @@ function toPlaces(data) {
     .filter((place) => place.group)
 }
 
+// PRUEBA: iconos ilustrados (entrega del 29 de octubre) en dos alojamientos
+// cercanos para compararlos con el pin de siempre. Se miden en píxeles.
+const ICON_SIZE = 64
+const TEST_ICONS = {
+  'verdeser-glampings': '/img/mapa/glamping-claro.svg',
+  'glamping-vista-antigua': '/img/mapa/glamping-oscuro.svg',
+}
+
 // Pin SVG del color del grupo; es un elemento del DOM, no una capa de WebGL.
 function createPin(place, onSelect) {
   const group = GROUP_BY_KEY[place.group]
@@ -91,7 +99,10 @@ function createPin(place, onSelect) {
   button.type = 'button'
   button.className = 'mapa-pin'
   button.setAttribute('aria-label', `${place.name}, ${placeSubtitle(place)}`)
-  button.innerHTML = `<svg class="mapa-pin__icono" viewBox="0 0 24 32" width="30" height="40" aria-hidden="true"><path d="M12 1C5.9 1 1 5.8 1 11.8 1 20 12 31 12 31s11-11 11-19.2C23 5.8 18.1 1 12 1z" fill="${group.color}" stroke="#ffffff" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="#ffffff"/></svg>`
+  const icon = TEST_ICONS[place.slug]
+  if (icon) {
+    button.innerHTML = `<img class="mapa-pin__icono" src="${icon}" width="${ICON_SIZE}" height="${ICON_SIZE}" alt="" />`
+  } else button.innerHTML = `<svg class="mapa-pin__icono" viewBox="0 0 24 32" width="30" height="40" aria-hidden="true"><path d="M12 1C5.9 1 1 5.8 1 11.8 1 20 12 31 12 31s11-11 11-19.2C23 5.8 18.1 1 12 1z" fill="${group.color}" stroke="#ffffff" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="#ffffff"/></svg>`
   button.addEventListener('click', (event) => {
     event.stopPropagation()
     onSelect(place)
@@ -187,7 +198,8 @@ export default function LiveMap({
       content.append(link)
     }
     popupRef.current
-      ?.setLngLat([place.longitude, place.latitude])
+      ?.setOffset(TEST_ICONS[place.slug] ? [0, -ICON_SIZE / 2] : [0, -38])
+      .setLngLat([place.longitude, place.latitude])
       .setDOMContent(content)
       .addTo(map)
   }
@@ -267,7 +279,7 @@ export default function LiveMap({
           setSelectedId(item.id)
           showPopup(readyMap, item)
         }),
-        anchor: 'bottom',
+        anchor: TEST_ICONS[place.slug] ? 'center' : 'bottom',
       })
         .setLngLat([place.longitude, place.latitude])
         .addTo(readyMap)
