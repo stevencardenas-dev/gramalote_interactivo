@@ -3,18 +3,36 @@ import PageHero from '../components/ui/PageHero.jsx'
 import { experiences } from '../data/experiences.js'
 import { useEstablishments } from '../lib/contentApi.js'
 
-// Ignora mayúsculas, tildes, ñ y espacios al comparar.
-const normalize = (value) =>
+// Ignora mayúsculas, tildes y ñ; `compact` también ignora los espacios.
+const fold = (value) =>
   String(value ?? '')
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
-    .replace(/\s+/g, '')
+const compact = (value) => fold(value).replace(/\s+/g, '')
+const words = (value) => fold(value).split(/[^a-z0-9]+/).filter(Boolean)
+
+// Relevancia de un resultado (0 = no coincide):
+// 3 el nombre empieza por lo escrito, 2 lo contiene, 1 coincide al inicio de
+// palabras del tipo o la descripción (solo desde 3 letras, para no traer ruido).
+function score(item, query) {
+  const term = compact(query)
+  if (!term) return 1
+  const title = compact(item.title)
+  if (title.startsWith(term)) return 3
+  if (title.includes(term)) return 2
+  if (term.length < 3) return 0
+  const wanted = words(query)
+  const matches = (text) => {
+    const tokens = words(text)
+    return wanted.every((word) => tokens.some((token) => token.startsWith(word)))
+  }
+  return matches(item.type) || matches(item.text) ? 1 : 0
+}
 
 export default function Buscar() {
   const [params] = useSearchParams()
   const query = (params.get('q') ?? '').trim()
-  const term = normalize(query)
   const { data: establishments } = useEstablishments()
 
   const results = [
@@ -35,11 +53,11 @@ export default function Buscar() {
       photo: item.photo,
       to: item.to,
     })),
-  ].filter((item) =>
-    [item.title, item.meta, item.type, item.text].some((value) =>
-      normalize(value).includes(term),
-    ),
-  )
+  ]
+    .map((item) => ({ item, relevance: score(item, query) }))
+    .filter(({ relevance }) => relevance > 0)
+    .sort((a, b) => b.relevance - a.relevance)
+    .map(({ item }) => item)
 
   return (
     <>
