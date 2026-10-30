@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Map as MapLibreMap,
   NavigationControl,
@@ -103,11 +103,36 @@ export default function LiveMap({
   showLegend = false,
   showList = false,
   fill = false,
+  filterable = false,
+  initialGroup = '',
+  initialType = '',
 }) {
   const containerRef = useRef(null)
-  const [places, setPlaces] = useState([])
+  const [allPlaces, setAllPlaces] = useState([])
   const [status, setStatus] = useState('loading')
+  const [readyMap, setReadyMap] = useState(null)
+  const [activeGroup, setActiveGroup] = useState(initialGroup)
+  const [activeType, setActiveType] = useState(initialType)
   const groupsKey = groups ? groups.join(',') : ''
+
+  const places = useMemo(
+    () =>
+      allPlaces.filter(
+        (place) =>
+          (!activeGroup || place.group === activeGroup) &&
+          (!activeType || place.type === activeType),
+      ),
+    [allPlaces, activeGroup, activeType],
+  )
+
+  // Tipos disponibles dentro del grupo elegido, para el segundo filtro.
+  const typeOptions = useMemo(() => {
+    if (!activeGroup) return []
+    const names = allPlaces
+      .filter((place) => place.group === activeGroup && place.type)
+      .map((place) => place.type)
+    return [...new Set(names)].sort((a, b) => a.localeCompare(b, 'es'))
+  }, [allPlaces, activeGroup])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -146,10 +171,10 @@ export default function LiveMap({
         const loaded = toPlaces(response?.data).filter(
           (place) => !allowed || allowed.includes(place.group),
         )
-        setPlaces(loaded)
+        setAllPlaces(loaded)
         setStatus('ready')
 
-        map.addSource('lugares', { type: 'geojson', data: toFeatureCollection(loaded) })
+        map.addSource('lugares', { type: 'geojson', data: toFeatureCollection([]) })
         map.addLayer({
           id: 'lugares',
           type: 'circle',
@@ -171,7 +196,7 @@ export default function LiveMap({
             'circle-stroke-width': 2,
           },
         })
-        fitToPlaces(map, loaded)
+        setReadyMap(map)
       })
       .catch((error) => {
         if (error?.name === 'AbortError' || removed) return
@@ -207,10 +232,53 @@ export default function LiveMap({
     }
   }, [groupsKey])
 
+  // Refleja el filtro en el mapa y lo encuadra sobre los puntos visibles.
+  useEffect(() => {
+    if (!readyMap) return
+    readyMap.getSource('lugares')?.setData(toFeatureCollection(places))
+    fitToPlaces(readyMap, places)
+  }, [readyMap, places])
+
+  const chooseGroup = (key) => {
+    setActiveGroup(key)
+    setActiveType('')
+  }
+
   const visibleGroups = groups ? GROUPS.filter((group) => groups.includes(group.key)) : GROUPS
 
   return (
     <>
+      {filterable ? (
+        <div className="mapa-filtros">
+          <div className="mapa-filtros__grupos" role="group" aria-label="Filtrar por categoría">
+            {[{ key: '', label: 'Todos' }, ...visibleGroups].map((group) => (
+              <button
+                key={group.key}
+                type="button"
+                className="mapa-filtro"
+                aria-pressed={activeGroup === group.key}
+                onClick={() => chooseGroup(group.key)}
+              >
+                {group.label}
+              </button>
+            ))}
+          </div>
+          {typeOptions.length > 1 ? (
+            <label className="mapa-filtros__tipo">
+              <span>Tipo</span>
+              <select value={activeType} onChange={(event) => setActiveType(event.target.value)}>
+                <option value="">Todos los tipos</option>
+                {typeOptions.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+        </div>
+      ) : null}
+
       <div
         ref={containerRef}
         className={`mapa${fill ? ' mapa--fill' : ''}`}
@@ -238,7 +306,11 @@ export default function LiveMap({
         <p className="note">No se pudieron cargar los lugares. Intenta de nuevo más tarde.</p>
       ) : null}
       {status === 'ready' && places.length === 0 ? (
-        <p className="note">Todavía no hay lugares con ubicación para mostrar.</p>
+        <p className="note">
+          {allPlaces.length > 0
+            ? 'No hay lugares con ese filtro.'
+            : 'Todavía no hay lugares con ubicación para mostrar.'}
+        </p>
       ) : null}
 
       {showList && places.length > 0 ? (

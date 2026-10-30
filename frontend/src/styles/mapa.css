@@ -86,3 +86,57 @@
     border-radius: var(--radius-sm);
   }
 }
+
+/* Filtros por categoría y tipo */
+.mapa-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-bottom: 16px;
+}
+
+.mapa-filtros__grupos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mapa-filtro {
+  padding: 8px 18px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.mapa-filtro:hover {
+  border-color: var(--c-primary);
+}
+
+.mapa-filtro[aria-pressed='true'] {
+  border-color: var(--c-primary);
+  background: var(--c-primary);
+  color: var(--c-white);
+}
+
+.mapa-filtros__tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+
+.mapa-filtros__tipo select {
+  padding: 8px 12px;
+  border: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+}

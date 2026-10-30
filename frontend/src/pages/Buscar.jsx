@@ -1,19 +1,30 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import PageHero from '../components/ui/PageHero.jsx'
-import { establishments } from '../data/establishments.js'
 import { experiences } from '../data/experiences.js'
+import { useEstablishments } from '../lib/contentApi.js'
+
+// Ignora mayúsculas, tildes, ñ y espacios al comparar.
+const normalize = (value) =>
+  String(value ?? '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, '')
 
 export default function Buscar() {
   const [params] = useSearchParams()
   const query = (params.get('q') ?? '').trim()
-  const term = query.toLowerCase()
+  const term = normalize(query)
+  const { data: establishments } = useEstablishments()
 
   const results = [
     ...establishments.map((item) => ({
       id: item.id,
       title: item.name,
       meta: 'Establecimiento',
+      type: item.type,
       text: item.summary,
+      photo: item.photo,
       to: `/establecimiento/${item.slug}`,
     })),
     ...experiences.map((item) => ({
@@ -21,11 +32,12 @@ export default function Buscar() {
       title: item.title,
       meta: 'Experiencia',
       text: item.description,
+      photo: item.photo,
       to: item.to,
     })),
   ].filter((item) =>
-    [item.title, item.meta, item.text].some((value) =>
-      value.toLowerCase().includes(term),
+    [item.title, item.meta, item.type, item.text].some((value) =>
+      normalize(value).includes(term),
     ),
   )
 
@@ -49,8 +61,16 @@ export default function Buscar() {
           ) : (
             <div className="search-results">
               {results.map((item) => (
-                <Link key={item.id} className="search-result" to={item.to}>
-                  <div>
+                <Link key={`${item.meta}-${item.id}`} className="search-result" to={item.to}>
+                  {item.photo && (
+                    <img
+                      className="search-result__photo"
+                      src={item.photo}
+                      alt=""
+                      loading="lazy"
+                    />
+                  )}
+                  <div className="search-result__body">
                     <span className="search-result__meta">{item.meta}</span>
                     <strong>{item.title}</strong>
                     <span className="search-result__meta">{item.text}</span>

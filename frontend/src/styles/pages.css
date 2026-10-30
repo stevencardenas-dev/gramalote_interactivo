@@ -1842,6 +1842,19 @@
   background: var(--c-white);
 }
 
+.search-result__photo {
+  flex: none;
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.search-result__body {
+  flex: 1;
+  min-width: 0;
+}
+
 .search-result:hover {
   border-color: var(--c-primary);
 }

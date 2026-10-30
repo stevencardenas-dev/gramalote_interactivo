@@ -5,6 +5,10 @@ import Button from './Button.jsx'
 // MapLibre pesa bastante: se descarga solo cuando una página muestra el mapa.
 const LiveMap = lazy(() => import('./LiveMap.jsx'))
 
+// Si el panel muestra una sola categoría, el mapa completo se abre ya filtrado.
+const withCategory = (to, groups) =>
+  groups?.length === 1 && to === '/mapa' ? `${to}?categoria=${groups[0]}` : to
+
 export default function MapPanel({ title, cta, to = '/mapa', groups = null }) {
   return (
     <div className="map-panel">
@@ -14,7 +18,7 @@ export default function MapPanel({ title, cta, to = '/mapa', groups = null }) {
         </Suspense>
       </div>
       {cta ? (
-        <Button to={to} icon="arrow" className="map-panel__cta">
+        <Button to={withCategory(to, groups)} icon="arrow" className="map-panel__cta">
           {cta}
         </Button>
       ) : null}
@@ -33,7 +37,7 @@ export function MapExplorer({ title, text, cta, to = '/mapa', groups = null }) {
       <div className="map-explorer__body">
         <h2>{title}</h2>
         <p>{text}</p>
-        <Button to={to} icon="arrow">
+        <Button to={withCategory(to, groups)} icon="arrow">
           {cta}
         </Button>
       </div>
