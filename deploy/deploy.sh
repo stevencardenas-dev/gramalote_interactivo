@@ -71,6 +71,12 @@ for _ in 1 2 3 4 5; do
 done
 [ "$migrated" = 1 ] || echo "AVISO: no se pudieron aplicar las migraciones"
 
+# Fotos de las fichas (database/media-seed): solo se importan las de fichas que
+# aún no tienen ninguna; lo subido desde el panel no se toca.
+if [ "$migrated" = 1 ]; then
+  docker compose run --rm --no-deps api node scripts/media-import.js || echo "AVISO: no se pudieron importar las fotos de las fichas"
+fi
+
 # La cuenta de administración se crea o se rota desde ADMIN_* del .env.
 if [ -n "${ADMIN_EMAIL:-}" ] && [ -n "${ADMIN_PASSWORD:-}" ]; then
   echo "Sembrando cuenta admin ($ADMIN_EMAIL)..."

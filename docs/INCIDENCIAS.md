@@ -1,7 +1,7 @@
 # Incidencias e incongruencias detectadas
 
-Revisión: **2026-10-22** · Alcance: frontend React, documentación, Figma y
-backend.
+Revisión: **2026-10-22** · Actualizado **2026-10-31** · Alcance: frontend
+React, documentación, Figma y backend.
 
 Estados: **Corregido**, **Pendiente**, **Observación** (no es un error, pero
 conviene decidir).
@@ -48,8 +48,8 @@ Se corrigió el orden y se agregó la fila sin título. Ver commit `fb093c2` y
 | ID | Hallazgo | Evidencia | Impacto | Estado |
 | --- | --- | --- | --- | --- |
 | INC-07 | **No existía ningún esquema de base de datos.** `backend/` solo tenía un README que decía “pendiente de definir stack, modelo de datos y endpoints”. | `backend/README.md` (antes), `git log --all -- '*.sql'` | No había modelo para la API ni para el panel admin | **Corregido**: se creó el esquema MySQL propuesto |
-| INC-08 | El frontend depende de datos locales (`src/data/*.js`); la API de lectura ya existe, pero el frontend aún no la consume. | `frontend/src/data/`, `backend/src/` | Los cambios de contenido no se guardan | **Parcial**: integrar la API y migrar datos |
-| INC-09 | El despliegue actual solo publica el frontend; no hay servicio de MySQL ni migraciones. | `docker-compose.yml` raíz, `.github/workflows/deploy-ec2.yml` | La base no está integrada a CI/CD ni a la instancia | **Pendiente** |
+| INC-08 | El frontend depende de datos locales (`src/data/*.js`); la API de lectura ya existe, pero el frontend aún no la consume. | `frontend/src/data/`, `backend/src/` | Los cambios de contenido no se guardan | **Parcial**: establecimientos, fotos y mapa ya salen de la API; falta el resto del contenido (Fase 3) |
+| INC-09 | El despliegue actual solo publica el frontend; no hay servicio de MySQL ni migraciones. | `docker-compose.yml` raíz, `.github/workflows/deploy-ec2.yml` | La base no está integrada a CI/CD ni a la instancia | **Corregido**: stack web + API + MySQL; `deploy.sh` aplica migraciones e importa las fotos |
 
 **Esquema creado:** `backend/database/schema.sql` (33 tablas + 3 vistas),
 `seed.sql` (catálogos) y `backend/database/README.md` (ER, mapeo y pendientes).
@@ -59,17 +59,18 @@ Validado en MySQL 8.4.11 con Docker. Decisión: MySQL 8.0+ e InnoDB.
 
 | ID | Hallazgo | Evidencia | Estado |
 | --- | --- | --- | --- |
-| INC-10 | Los filtros de tipo, servicios y precio son visuales: `FilterSelect` no tiene `value`/`onChange` y no filtran. | `FilterBar.jsx:17`, `DondeDormir.jsx:29`, `DondeComprar.jsx:27` | **Pendiente** |
-| INC-11 | “Abierto hoy” no calcula horarios; `openNow` existe en los datos pero no se usa. | `DondeComer.jsx:30`, `establishments.js:74` | **Pendiente** |
-| INC-12 | “Cargar más” no tiene `onClick` ni paginación. | `DondeComer.jsx:42`, `DondeDormir.jsx:42`, `DondeComprar.jsx:46` | **Pendiente** |
-| INC-13 | El mapa es decorativo; no hay geolocalización ni filtros reales. | `Mapa.jsx:9`, `MapPanel.jsx:24` | **Pendiente** |
-| INC-14 | `/acceder` solo hace `preventDefault()`; no autentica. | `Acceder.jsx:12` | **Pendiente** |
+| INC-10 | Los filtros de tipo, servicios y precio son visuales: `FilterSelect` no tiene `value`/`onChange` y no filtran. | `FilterBar.jsx:17`, `DondeDormir.jsx:29`, `DondeComprar.jsx:27` | **Corregido** (Fase 1, verificado en producción) |
+| INC-11 | “Abierto hoy” no calcula horarios; `openNow` existe en los datos pero no se usa. | `DondeComer.jsx:30`, `establishments.js:74` | **Corregido** (Fase 1) |
+| INC-12 | “Cargar más” no tiene `onClick` ni paginación. | `DondeComer.jsx:42`, `DondeDormir.jsx:42`, `DondeComprar.jsx:46` | **Corregido** (Fase 1) |
+| INC-13 | El mapa es decorativo; no hay geolocalización ni filtros reales. | `Mapa.jsx:9`, `MapPanel.jsx:24` | **Corregido**: explorador con MapLibre, búsqueda y filtros (sin geolocalización) |
+| INC-14 | `/acceder` solo hace `preventDefault()`; no autentica. | `Acceder.jsx:12` | **Corregido**: login real con JWT |
 | INC-15 | El buscador solo indexa establecimientos y experiencias; no busca curiosidades, historia ni información práctica, y no normaliza acentos. | `Buscar.jsx:7` | **Pendiente** |
-| INC-16 | Los carruseles de Qué hacer tienen flechas y dots sin lógica. | `QueHacer.jsx:33`, `QueHacer.jsx:112` | **Pendiente** |
+| INC-16 | Los carruseles de Qué hacer tienen flechas y dots sin lógica. | `QueHacer.jsx:33`, `QueHacer.jsx:112` | **Corregido** (Fase 1) |
 | INC-17 | **ID duplicado `site-search`**: el formulario de búsqueda se renderiza en escritorio y en el panel móvil, ambos con el mismo `id` y `htmlFor`. | `Navbar.jsx:47`, `Navbar.jsx:103`, `Navbar.jsx:146` | **Corregido**: IDs `site-search` y `site-search-mobile` |
-| INC-18 | Los iconos sociales de las fichas son `<span>` sin URL. | `HeroFicha.jsx:46` | **Pendiente** |
+| INC-18 | Los iconos sociales de las fichas son `<span>` sin URL. | `HeroFicha.jsx:46` | **Corregido** (Fase 1) |
 | INC-19 | Los teléfonos de contactos son de ejemplo y se repiten; las redes del footer apuntan a las home genéricas. | `practical.js:82`, `site.js:25` | **Pendiente** |
 | INC-20 | No hay `prefers-reduced-motion` ni metadatos SEO por ruta. | `global.css`, `index.html:10` | **Pendiente** (calidad) |
+| INC-29 | Al pasar las fichas a la API (Fase 1), “Nuestra oferta” quedó vacía en los restaurantes sin platos en la base (Doña Claudia, Fresas, La Comarca, La Sazón) y los platos y productos mostraban la foto de portada. | `lib/contentApi.js` | **Corregido** (Fase 2): cada plato y producto tiene su foto; si la base no tiene, se usan los del diseño |
 
 ## 5. Incongruencias de contenido e inventario
 
@@ -82,7 +83,7 @@ Validado en MySQL 8.4.11 con Docker. Decisión: MySQL 8.0+ e InnoDB.
 | INC-25 | `homeHighlights` usa “Restaurante El Gran Sazón” para el slug `la-sazon-de-la-tia` (la ficha se llama “La Sazón de la Tía”) y “Coofe Garden” no existe en establecimientos. | `inicio.js` | **Pendiente** |
 | INC-26 | `Café Marquetalia` está clasificado como `Parque` en `experienceDetails`, aunque es una cafetería. | `experiences.js:66` | **Pendiente** |
 | INC-27 | La experiencia “Otro sitio” es contenido de relleno (“Por definir”). | `experiences.js:99` | **Pendiente** |
-| INC-28 | No hay fotos en Inicio, Qué hacer, Información práctica, Curiosidades ni Historia; todo es placeholder. | `docs/IMAGENES.md` | **Pendiente** |
+| INC-28 | No hay fotos en Inicio, Qué hacer, Información práctica, Curiosidades ni Historia; todo es placeholder. | `docs/IMAGENES.md` | **Corregido**: fotos e ilustraciones de las entregas del 27 y 29 de octubre |
 
 ## 6. Prioridad sugerida
 

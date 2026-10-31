@@ -11,6 +11,29 @@ const TABS = [
 ]
 
 const PLATFORMS = ['facebook', 'instagram', 'whatsapp', 'tiktok', 'youtube', 'x', 'website']
+const ROLE_LABELS = { cover: 'Portada', hero: 'Encabezado', gallery: 'Galería', logo: 'Logo' }
+
+// Elige una de las fotos ya subidas a la ficha para un plato o producto.
+function PhotoSelect({ images, value, onChange }) {
+  const selected = images.find((image) => image.mediaId === value)
+  return (
+    <div className="admin-photo-select">
+      {selected ? <img src={selected.url} alt="" /> : <span aria-hidden="true" />}
+      <select
+        aria-label="Foto"
+        value={value ?? ''}
+        onChange={(event) => onChange(event.target.value ? Number(event.target.value) : null)}
+      >
+        <option value="">Sin foto (usa la portada)</option>
+        {images.map((image, index) => (
+          <option key={image.imageId} value={image.mediaId}>
+            {image.alt || `Foto ${index + 1}`} · {ROLE_LABELS[image.role] ?? image.role}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
 
 function Field({ label, children, hint }) {
   return (
@@ -620,8 +643,10 @@ export default function AdminEstablecimiento() {
                 <div>
                   <h2>Imágenes de la ficha</h2>
                   <p className="note">
-                    La portada es la que se ve en tarjetas y listados. Se convierten a
-                    WebP automáticamente y se guardan en el disco del servidor.
+                    La portada es la que se ve en tarjetas y listados; el encabezado, la
+                    foto ancha de arriba de la ficha (sin él se usa la portada). Las
+                    fotos de platos y productos se eligen en “Más datos”. Se convierten
+                    a WebP automáticamente y se guardan en el disco del servidor.
                   </p>
                 </div>
                 <div>
@@ -655,10 +680,10 @@ export default function AdminEstablecimiento() {
                       <div className="admin-media__meta">
                         <span
                           className={`admin-badge ${
-                            image.role === 'cover' ? 'admin-badge--ok' : ''
+                            image.role === 'cover' || image.role === 'hero' ? 'admin-badge--ok' : ''
                           }`}
                         >
-                          {image.role === 'cover' ? 'Portada' : image.role}
+                          {ROLE_LABELS[image.role] ?? image.role}
                         </span>
                         <span className="admin-media__dims">
                           {image.width}×{image.height}
@@ -682,6 +707,15 @@ export default function AdminEstablecimiento() {
                             onClick={() => patchImage(image, { role: 'cover' })}
                           >
                             Hacer portada
+                          </button>
+                        ) : null}
+                        {image.role !== 'hero' ? (
+                          <button
+                            type="button"
+                            disabled={busyImage}
+                            onClick={() => patchImage(image, { role: 'hero' })}
+                          >
+                            Usar de encabezado
                           </button>
                         ) : null}
                         <button
@@ -758,7 +792,7 @@ export default function AdminEstablecimiento() {
                 </div>
               </Section>
 
-              <Section title="Tarjetas “Ten en cuenta”" signal={signal}
+              <Section title="Platos y servicios destacados" signal={signal}
                 actions={
                   <Button
                     type="button"
@@ -790,6 +824,11 @@ export default function AdminEstablecimiento() {
                       onChange={(event) =>
                         updateList('features', index, { description: event.target.value })
                       }
+                    />
+                    <PhotoSelect
+                      images={form.images}
+                      value={feature.mediaId}
+                      onChange={(mediaId) => updateList('features', index, { mediaId })}
                     />
                     <button type="button" onClick={() => removeFromList('features', index)}>
                       Quitar
@@ -831,6 +870,11 @@ export default function AdminEstablecimiento() {
                       onChange={(event) =>
                         updateList('products', index, { price: event.target.value })
                       }
+                    />
+                    <PhotoSelect
+                      images={form.images}
+                      value={product.mediaId}
+                      onChange={(mediaId) => updateList('products', index, { mediaId })}
                     />
                     <button type="button" onClick={() => removeFromList('products', index)}>
                       Quitar

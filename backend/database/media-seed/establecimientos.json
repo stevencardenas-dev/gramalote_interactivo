@@ -1,0 +1,254 @@
+{
+  "bambu": {
+    "cover": "bambu-card.jpg",
+    "hero": "bambu-hero.jpg",
+    "features": [
+      {
+        "title": "Hamburguesas",
+        "description": "Variedad de hamburguesas para disfrutar.",
+        "photo": "bambu-hamburguesas.jpg"
+      },
+      {
+        "title": "Coctelería",
+        "description": "Cócteles y bebidas para compartir.",
+        "photo": "bambu-cocteleria.jpg"
+      },
+      {
+        "title": "Cafetería",
+        "description": "Opciones de café y bebidas para acompañar tu visita.",
+        "photo": "bambu-cafeteria.jpg"
+      }
+    ],
+    "gallery": [
+      "bambu-1.jpg",
+      "bambu-2.jpg",
+      "bambu-3.jpg"
+    ]
+  },
+  "dulce-paseo": {
+    "cover": "dulce-paseo-card.jpg",
+    "hero": "dulce-paseo-hero.jpg"
+  },
+  "dona-claudia": {
+    "cover": "dona-claudia-card.jpg",
+    "hero": "dona-claudia-hero.jpg",
+    "features": [
+      {
+        "title": "Arroz con verduras",
+        "description": "Arroz con verduras y pan tostado.",
+        "photo": "dona-claudia-plato-1.jpg"
+      },
+      {
+        "title": "Pollo con arroz",
+        "description": "Pollo con arroz y acompañamientos.",
+        "photo": "dona-claudia-plato-2.jpg"
+      },
+      {
+        "title": "Pollo con mazorca",
+        "description": "Pollo con mazorca y acompañamientos.",
+        "photo": "dona-claudia-plato-3.jpg"
+      }
+    ]
+  },
+  "fresas-con-crema-carvajal": {
+    "cover": "fresas-con-crema-carvajal-card.jpg",
+    "hero": "fresas-con-crema-carvajal-hero.jpg",
+    "features": [
+      {
+        "title": "Fresas con crema",
+        "description": "El postre insignia, con fruta fresca.",
+        "photo": "fresas-con-crema-carvajal-fresas.jpg"
+      },
+      {
+        "title": "Maracumango",
+        "description": "Un refresco frutal y tropical.",
+        "photo": "fresas-con-crema-carvajal-maracumango.jpg"
+      },
+      {
+        "title": "Obleas",
+        "description": "Obleas con arequipe, queso y mermelada.",
+        "photo": "fresas-con-crema-carvajal-obleas.jpg"
+      }
+    ]
+  },
+  "la-comarca": {
+    "cover": "la-comarca-card.jpg",
+    "hero": "la-comarca-hero.jpg",
+    "features": [
+      {
+        "title": "Helados artesanales",
+        "description": "Sabores de la región elaborados con ingredientes locales.",
+        "photo": "la-comarca-helados.jpg"
+      },
+      {
+        "title": "Postres",
+        "description": "Fresas con crema y copas para compartir.",
+        "photo": "la-comarca-postres.jpg"
+      },
+      {
+        "title": "Yogur griego",
+        "description": "Yogur natural para llevar durante el recorrido.",
+        "photo": "la-comarca-yogur.jpg"
+      }
+    ]
+  },
+  "la-sazon-de-la-tia": {
+    "cover": "la-sazon-de-la-tia-card.jpg",
+    "hero": "la-sazon-de-la-tia-hero.jpg",
+    "features": [
+      {
+        "title": "Carnes a la plancha",
+        "description": "Cortes a la plancha con acompañamientos.",
+        "photo": "la-sazon-de-la-tia-carnes.jpg"
+      },
+      {
+        "title": "Pechuga en salsa de champiñones",
+        "description": "Un plato casero con salsa cremosa.",
+        "photo": "la-sazon-de-la-tia-pechuga.jpg"
+      },
+      {
+        "title": "Sobrebarriga en salsa",
+        "description": "Receta tradicional de la casa.",
+        "photo": "la-sazon-de-la-tia-sobrebarriga.jpg"
+      }
+    ]
+  },
+  "origen-cocina-de-autor": {
+    "cover": "origen-cocina-de-autor-card.jpg",
+    "features": [
+      {
+        "title": "Choripán",
+        "description": "Una versión de autor del clásico.",
+        "photo": "origen-cocina-de-autor-card.jpg"
+      },
+      {
+        "title": "El Tesoro",
+        "description": "Hamburguesa de la casa.",
+        "photo": "origen-cocina-de-autor-plato-1.jpg"
+      },
+      {
+        "title": "Maicito mixto",
+        "description": "Maíz tierno con quesos y toppings.",
+        "photo": "origen-cocina-de-autor-plato-2.jpg"
+      }
+    ]
+  },
+  "glamping-vista-antigua": {
+    "cover": "glamping-vista-antigua-card.jpg",
+    "hero": "glamping-vista-antigua-hero.jpg"
+  },
+  "hostal-campestre-camino-real": {
+    "cover": "hostal-campestre-camino-real-card.jpg",
+    "hero": "hostal-campestre-camino-real-hero.jpg"
+  },
+  "hostal-luna-azul": {
+    "cover": "hostal-luna-azul-card.jpg",
+    "hero": "hostal-luna-azul-hero.jpg"
+  },
+  "cabanas-el-penon": {
+    "cover": "cabanas-el-penon-card.jpg",
+    "hero": "cabanas-el-penon-hero.jpg"
+  },
+  "casa-hiedra-hotel-boutique": {
+    "cover": "casa-hiedra-hotel-boutique-card.jpg",
+    "hero": "casa-hiedra-hotel-boutique-hero.jpg"
+  },
+  "artelu": {
+    "cover": "artelu-card.jpg",
+    "hero": "artelu-hero.jpg",
+    "gallery": [
+      "artelu-1.jpg",
+      "artelu-2.jpg",
+      "artelu-3.jpg",
+      "artelu-4.jpg"
+    ]
+  },
+  "verdeser-glampings": {
+    "cover": "verdeser-glampings-card.jpg",
+    "hero": "verdeser-hero.jpg",
+    "gallery": [
+      "verdeser-1.jpg",
+      "verdeser-2.jpg",
+      "verdeser-3.jpg",
+      "verdeser-4.jpg",
+      "verdeser-5.jpg"
+    ]
+  },
+  "chelinarte": {
+    "cover": "chelinarte-card.jpg"
+  },
+  "mi-gordita-bella": {
+    "cover": "mi-gordita-bella-card.jpg"
+  },
+  "mi-hermoso-eden": {
+    "cover": "mi-hermoso-eden-card.jpg"
+  },
+  "maestros-de-la-madera": {
+    "cover": "maestros-de-la-madera-card.jpg",
+    "products": [
+      {
+        "name": "Llaveros",
+        "photo": "maestros-de-la-madera-llaveros.jpg"
+      },
+      {
+        "name": "Imanes",
+        "photo": "maestros-de-la-madera-imanes.jpg"
+      },
+      {
+        "name": "Letreros",
+        "photo": "maestros-de-la-madera-letreros.jpg"
+      },
+      {
+        "name": "Adornos",
+        "photo": "maestros-de-la-madera-adornos.jpg"
+      }
+    ]
+  },
+  "creaciones-martina": {
+    "cover": "creaciones-martina-card.jpg",
+    "products": [
+      {
+        "name": "Amigurumis",
+        "photo": "creaciones-martina-amigurumis.jpg"
+      },
+      {
+        "name": "Velas artesanales",
+        "photo": "creaciones-martina-velas.jpg"
+      },
+      {
+        "name": "Llaveros",
+        "photo": "creaciones-martina-llaveros.jpg"
+      },
+      {
+        "name": "Cuadros decorativos",
+        "photo": "creaciones-martina-cuadros.jpg"
+      }
+    ]
+  },
+  "caliopes": {
+    "cover": "caliopes-card.jpg",
+    "products": [
+      {
+        "name": "Macetas",
+        "photo": "caliopes-macetas.jpg"
+      },
+      {
+        "name": "Plantas",
+        "photo": "caliopes-plantas.jpg"
+      }
+    ]
+  },
+  "sombreros-techa": {
+    "cover": "sombreros-techa-card.jpg",
+    "products": [
+      {
+        "name": "Sombreros",
+        "photo": "sombreros-techa-sombrero.jpg"
+      },
+      {
+        "name": "Productos textiles",
+        "photo": "sombreros-techa-textil.jpg"
+      }
+    ]
+  }
+}

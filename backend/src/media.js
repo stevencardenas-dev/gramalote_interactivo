@@ -12,7 +12,7 @@ sharp.concurrency(1)
 sharp.cache(false)
 
 const FORMATS = new Set(['jpeg', 'png', 'webp'])
-export const IMAGE_ROLES = new Set(['cover', 'gallery', 'logo'])
+export const IMAGE_ROLES = new Set(['cover', 'hero', 'gallery', 'logo'])
 
 export function mediaRoot() {
   return path.resolve(config.media.root)

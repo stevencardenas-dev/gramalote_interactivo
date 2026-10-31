@@ -304,6 +304,34 @@
   margin-bottom: 8px;
 }
 
+/* Fila con selector de foto (platos y productos). */
+.admin-row:has(.admin-photo-select) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.2fr) auto;
+}
+
+.admin-photo-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-photo-select img,
+.admin-photo-select > span {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--c-line);
+}
+
+@media (max-width: 760px) {
+  .admin-row:has(.admin-photo-select) {
+    grid-template-columns: 1fr;
+  }
+}
+
 .admin-row button {
   border: 1px solid var(--c-line);
   border-radius: 10px;

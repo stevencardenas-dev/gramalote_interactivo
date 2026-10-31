@@ -2,6 +2,7 @@ import PageHero from '../components/ui/PageHero.jsx'
 import Placeholder from '../components/ui/Placeholder.jsx'
 import Button from '../components/ui/Button.jsx'
 import Icon from '../components/ui/Icon.jsx'
+import OfflineDownload from '../components/ui/OfflineDownload.jsx'
 import { heroNuevo2 } from '../data/heroImages.js'
 import {
   accessRoutes,
@@ -110,6 +111,8 @@ export default function InformacionPractica() {
                 </article>
               ))}
             </div>
+
+            <OfflineDownload />
           </div>
 
           <div className="section-head section-head--center">

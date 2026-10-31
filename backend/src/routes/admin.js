@@ -25,7 +25,9 @@ const PLATFORMS = new Set([
   'x',
   'website',
 ])
-const IMAGE_ROLES = new Set(['cover', 'gallery', 'logo'])
+const IMAGE_ROLES = new Set(['cover', 'hero', 'gallery', 'logo'])
+// Roles de los que una ficha solo tiene una foto: la anterior pasa a galería.
+const SINGLE_ROLES = new Set(['cover', 'hero'])
 
 // ---------------------------------------------------------------------------
 // Utilidades
@@ -133,7 +135,7 @@ async function loadImages(establishmentId) {
      FROM establishment_images i
      JOIN media m ON m.id = i.media_id
      WHERE i.establishment_id = ?
-     ORDER BY FIELD(i.role, 'cover', 'logo', 'gallery'), i.sort_order, i.id`,
+     ORDER BY FIELD(i.role, 'cover', 'hero', 'logo', 'gallery'), i.sort_order, i.id`,
     [establishmentId],
   )
 }
@@ -223,7 +225,7 @@ router.get(
       await Promise.all([
         loadImages(id),
         query(
-          `SELECT id, title, description, icon, sort_order FROM establishment_features
+          `SELECT id, title, description, icon, media_id, sort_order FROM establishment_features
            WHERE establishment_id = ? ORDER BY sort_order, id`,
           [id],
         ),
@@ -310,6 +312,7 @@ router.get(
           title: feature.title,
           description: feature.description ?? null,
           icon: feature.icon ?? null,
+          mediaId: toNumber(feature.media_id),
           sortOrder: toNumber(feature.sort_order) ?? 0,
         })),
         products: products.map((product) => ({
@@ -554,13 +557,15 @@ async function replaceChildren(connection, id, body) {
     for (const [index, feature] of body.features.entries()) {
       const title = text(feature?.title, 'Título de la tarjeta', { max: 160, required: true })
       await connection.query(
-        `INSERT INTO establishment_features (establishment_id, title, description, icon, sort_order)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO establishment_features
+           (establishment_id, title, description, icon, media_id, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?)`,
         [
           id,
           title,
           text(feature?.description, 'Descripción de la tarjeta', { max: 500 }),
           text(feature?.icon, 'Icono', { max: 40 }),
+          integer(feature?.mediaId, 'Imagen de la tarjeta'),
           integer(feature?.sortOrder, 'Orden') ?? index * 10,
         ],
       )
@@ -871,11 +876,11 @@ router.post(
       )
       const sortOrder = Number(sortRows[0]?.max_order ?? 0) + 10
 
-      if (role === 'cover') {
+      if (SINGLE_ROLES.has(role)) {
         await connection.query(
           `UPDATE establishment_images SET role = 'gallery'
-           WHERE establishment_id = ? AND role = 'cover'`,
-          [establishmentId],
+           WHERE establishment_id = ? AND role = ?`,
+          [establishmentId, role],
         )
       }
 
@@ -955,8 +960,9 @@ router.delete(
     const usage = await queryOne(
       `SELECT
          (SELECT COUNT(*) FROM establishment_images WHERE media_id = ?) +
-         (SELECT COUNT(*) FROM establishment_products WHERE media_id = ?) AS total`,
-      [id, id],
+         (SELECT COUNT(*) FROM establishment_products WHERE media_id = ?) +
+         (SELECT COUNT(*) FROM establishment_features WHERE media_id = ?) AS total`,
+      [id, id, id],
     )
     if (Number(usage?.total ?? 0) > 0) {
       throw new ApiError(
@@ -998,11 +1004,11 @@ router.post(
     if (!media) throw new ApiError(404, 'NOT_FOUND', 'Imagen no encontrada')
 
     const imageId = await withTransaction(async (connection) => {
-      if (role === 'cover') {
+      if (SINGLE_ROLES.has(role)) {
         await connection.query(
           `UPDATE establishment_images SET role = 'gallery'
-           WHERE establishment_id = ? AND role = 'cover'`,
-          [establishmentId],
+           WHERE establishment_id = ? AND role = ?`,
+          [establishmentId, role],
         )
       }
       const [sortRows] = await connection.query(
@@ -1044,11 +1050,11 @@ router.patch(
       if (!current) throw new ApiError(404, 'NOT_FOUND', 'Imagen de la ficha no encontrada')
 
       const role = IMAGE_ROLES.has(req.body?.role) ? req.body.role : current.role
-      if (role === 'cover' && current.role !== 'cover') {
+      if (SINGLE_ROLES.has(role) && current.role !== role) {
         await connection.query(
           `UPDATE establishment_images SET role = 'gallery'
-           WHERE establishment_id = ? AND role = 'cover'`,
-          [establishmentId],
+           WHERE establishment_id = ? AND role = ?`,
+          [establishmentId, role],
         )
       }
 

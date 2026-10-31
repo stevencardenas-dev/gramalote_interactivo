@@ -216,14 +216,17 @@ router.get(
          FROM establishment_images i
          JOIN media m ON m.id = i.media_id
          WHERE i.establishment_id = ?
-         ORDER BY FIELD(i.role, 'cover', 'logo', 'gallery'), i.sort_order, i.id`,
+         ORDER BY FIELD(i.role, 'cover', 'hero', 'logo', 'gallery'), i.sort_order, i.id`,
         [row.id],
       ),
       query(
-        `SELECT id, title, description, icon, sort_order
-         FROM establishment_features
-         WHERE establishment_id = ?
-         ORDER BY sort_order, id`,
+        `SELECT f.id, f.title, f.description, f.icon, f.sort_order,
+                m.id AS media_id, m.public_url, m.alt_text, m.caption,
+                m.credit, m.mime_type, m.width_px, m.height_px
+         FROM establishment_features f
+         LEFT JOIN media m ON m.id = f.media_id
+         WHERE f.establishment_id = ?
+         ORDER BY f.sort_order, f.id`,
         [row.id],
       ),
       query(
@@ -286,11 +289,14 @@ router.get(
     const openNow = calculateOpenNow(hours, exceptions)
     const imageList = images.map(toImage).filter(Boolean)
     const cover = imageList.find((image) => image.role === 'cover') ?? imageList[0] ?? null
+    // Foto ancha del encabezado; sin ella la ficha usa la portada.
+    const hero = imageList.find((image) => image.role === 'hero') ?? cover
 
     res.json({
       data: {
         ...toEstablishmentSummary(row),
         cover,
+        hero,
         phoneSecondary: row.phone_secondary ?? null,
         openNow,
         images: imageList,
@@ -299,6 +305,7 @@ router.get(
           title: feature.title,
           description: feature.description ?? null,
           icon: feature.icon ?? null,
+          media: mediaFromRow(feature),
           sortOrder: Number(feature.sort_order),
         })),
         products: products.map((product) => ({

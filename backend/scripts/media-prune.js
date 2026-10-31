@@ -28,6 +28,7 @@ async function main() {
   const referenced = await query(`
     SELECT media_id FROM establishment_images
     UNION SELECT media_id FROM establishment_products WHERE media_id IS NOT NULL
+    UNION SELECT media_id FROM establishment_features WHERE media_id IS NOT NULL
     UNION SELECT media_id FROM experience_images
     UNION SELECT media_id FROM curiosity_block_media
     UNION SELECT media_id FROM history_images

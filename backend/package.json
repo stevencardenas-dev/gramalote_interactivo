@@ -14,6 +14,7 @@
     "seed:content": "node scripts/seed-content.js",
     "db:migrate": "node scripts/migrate.js",
     "media:prune": "node scripts/media-prune.js",
+    "media:import": "node scripts/media-import.js",
     "lint": "oxlint src src/*.js scripts"
   },
   "dependencies": {

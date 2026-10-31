@@ -222,7 +222,7 @@ CREATE TABLE establishment_images (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   establishment_id BIGINT UNSIGNED NOT NULL,
   media_id         BIGINT UNSIGNED NOT NULL,
-  role             ENUM('cover', 'gallery', 'logo') NOT NULL DEFAULT 'gallery',
+  role             ENUM('cover', 'hero', 'gallery', 'logo') NOT NULL DEFAULT 'gallery',
   sort_order       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   alt_override     VARCHAR(255) NULL,
   PRIMARY KEY (id),
@@ -242,12 +242,17 @@ CREATE TABLE establishment_features (
   title            VARCHAR(160) NOT NULL,
   description      VARCHAR(500) NULL,
   icon             VARCHAR(40) NULL,
+  media_id         BIGINT UNSIGNED NULL,
   sort_order       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
   KEY idx_establishment_features_order (establishment_id, sort_order),
+  KEY idx_establishment_features_media (media_id),
   CONSTRAINT fk_establishment_features_establishment
     FOREIGN KEY (establishment_id) REFERENCES establishments (id)
-    ON DELETE CASCADE ON UPDATE CASCADE
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_establishment_features_media
+    FOREIGN KEY (media_id) REFERENCES media (id)
+    ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB COMMENT='Tarjetas de oferta/servicios destacados de la ficha';
 
 CREATE TABLE establishment_products (

@@ -21,17 +21,60 @@ function joinPayments(payments) {
   return payments.map((payment) => payment.name).join(' · ')
 }
 
+// Compara nombres sin mayúsculas ni tildes ("Coctelería" = "cocteleria").
+const plain = (value) =>
+  String(value ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim()
+const sameName = (a, b) => plain(a) === plain(b)
+
+// Platos y productos: la foto propia de la API; si no tiene, la del diseño con
+// el mismo nombre; y si la ficha no tiene ninguno en la base, los del diseño.
+function adaptFeatures(item, legacy, cover) {
+  const rows = Array.isArray(item.features) ? item.features : []
+  if (rows.length === 0) return legacy.features
+  return rows.map((feature) => ({
+    title: feature.title,
+    text: feature.description,
+    photo:
+      feature.media?.url ??
+      legacy.features?.find((old) => sameName(old.title, feature.title))?.photo ??
+      cover,
+  }))
+}
+
+function adaptProducts(item, legacy, cover) {
+  const rows = Array.isArray(item.products) ? item.products : []
+  if (rows.length === 0) return legacy.products
+  return rows.map((product) => ({
+    name: product.name,
+    photo:
+      product.media?.url ??
+      legacy.products?.find((old) => sameName(old.name, product.name))?.photo ??
+      cover,
+    price: product.price,
+  }))
+}
+
 // Traduce una ficha de la API a la forma que esperan las plantillas.
 export function adaptEstablishment(item) {
   if (!item) return null
-  // Mientras no haya fotos subidas en el panel se mantienen las del diseño,
-  // para no dejar las fichas vacías durante la transición.
+  // Las fotos viven en el servidor (/media, tabla media). Las del diseño en
+  // src/data quedan solo de respaldo para fichas que aún no tengan ninguna.
   const legacy = establishmentPhotos[item.slug] ?? {}
   const cover = item.cover?.url ?? legacy.photo ?? null
-  const uploaded = (item.images ?? []).map((image) => image.url).filter(Boolean)
+  const hero = item.hero?.url ?? item.cover?.url ?? legacy.hero ?? legacy.photo ?? null
+  const features = adaptFeatures(item, legacy, cover)
+  const products = adaptProducts(item, legacy, cover)
+  // Galería: las fotos con rol "galería" que no son de un plato o producto.
+  const itemPhotos = new Set([...(features ?? []), ...(products ?? [])].map((row) => row.photo))
+  const uploaded = (item.images ?? [])
+    .filter((image) => image.role === 'gallery' && image.url && !itemPhotos.has(image.url))
+    .map((image) => image.url)
+  const fallback = [...new Set([cover, hero].filter(Boolean))]
   const gallery = uploaded.length > 0
     ? uploaded
-    : legacy.gallery ?? (legacy.photo ? [legacy.photo] : [])
+    : (item.images ?? []).length > 0
+      ? fallback
+      : legacy.gallery ?? fallback
 
   return {
     id: item.id,
@@ -56,22 +99,10 @@ export function adaptEstablishment(item) {
     openNow: Boolean(item.openNow),
     socialLinks: Array.isArray(item.social) ? item.social : [],
     photo: cover,
-    hero: item.cover?.url ?? legacy.hero ?? legacy.photo ?? null,
+    hero,
     gallery,
-    features: Array.isArray(item.features)
-      ? item.features.map((feature) => ({
-          title: feature.title,
-          text: feature.description,
-          photo: cover,
-        }))
-      : undefined,
-    products: Array.isArray(item.products)
-      ? item.products.map((product) => ({
-          name: product.name,
-          photo: product.media?.url ?? cover,
-          price: product.price,
-        }))
-      : undefined,
+    features,
+    products,
     related: (item.related ?? []).map((related) => related.slug),
     relatedItems: (item.related ?? []).map((related) => ({
       id: related.id,

@@ -398,3 +398,19 @@
     height: 44px;
   }
 }
+
+/* Aviso de "sin conexión" (PWA). Va sobre todo, incluida la barra fija. */
+.offline-banner {
+  position: fixed;
+  inset: auto 16px 16px;
+  z-index: 1000;
+  max-width: 520px;
+  margin-inline: auto;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--c-ink);
+  color: var(--c-white);
+  font-size: var(--fs-sm);
+  text-align: center;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+}

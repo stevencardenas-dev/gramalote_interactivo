@@ -53,14 +53,17 @@ código ni pedir permisos a AWS.
 
 ### 2.2 `establishment_images` — orden y rol
 
-[schema.sql:221](../backend/database/schema.sql#L221): `role` (`cover`, `gallery`,
-`logo`), `sort_order` y `alt_override`. El mismo patrón existe en
+[schema.sql:221](../backend/database/schema.sql#L221): `role` (`cover`, `hero`,
+`gallery`, `logo`), `sort_order` y `alt_override`. `cover` es la foto de las
+tarjetas; `hero`, la foto ancha del encabezado de la ficha (migración 003; sin
+ella se usa la portada). Platos (`establishment_features`) y productos
+(`establishment_products`) apuntan a su foto con `media_id`. El mismo patrón existe en
 `experience_images`, `curiosity_block_media` e `history_images`.
 
 Reglas:
 
-- Una sola portada por establecimiento: al marcar una imagen como `cover` se
-  degrada la anterior a `gallery` **en la misma transacción**.
+- Una sola portada y un solo encabezado por establecimiento: al marcar una imagen
+  como `cover` o `hero` se degrada la anterior a `gallery` **en la misma transacción**.
 - `sort_order` se renumera de 10 en 10 para permitir inserciones sin reescribir todo.
 - `alt_override` gana sobre `media.alt_text` en la ficha.
 - Nunca se borra una fila de `media` mientras alguna tabla puente la referencie
@@ -436,6 +439,9 @@ servicios propietarios. Checklist al mudar:
 - [x] `POST /api/admin/media` con `sharp`, validación de firma y variantes.
 - [x] Asociación, orden y portada de `establishment_images`.
 - [x] Script `media:prune` (dry-run por defecto) y endpoint de estadísticas.
+- [x] Script `media:import`: sube las fotos de `database/media-seed/` a las fichas
+  sin fotos; lo ejecuta `deploy.sh` en cada despliegue (idempotente).
+- [x] Rol `hero` y foto por plato/producto, elegible desde “Más datos”.
 - [x] UI: listado, formulario por pestañas y gestor de imágenes.
 - [x] Matriz de roles aplicada en API **y** en UI.
 - [x] Montaje `/srv/media` en nginx y `client_max_body_size` ajustado.
