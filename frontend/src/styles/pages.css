@@ -148,15 +148,54 @@
   padding-top: 14px;
 }
 
-.carousel-dots span {
+.carousel-dots span,
+.carousel-dots button {
   width: 6px;
   height: 6px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
   background: var(--c-line);
+  cursor: pointer;
 }
 
-.carousel-dots span.is-active {
+.carousel-dots span.is-active,
+.carousel-dots button.is-active {
   background: var(--c-primary);
+}
+
+.carousel-dots--overlay {
+  position: absolute;
+  right: 0;
+  bottom: 14px;
+  left: 0;
+  padding-top: 0;
+}
+
+.carousel-dots--overlay button {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.carousel-dots--overlay button.is-active {
+  background: var(--c-white);
+}
+
+.featured-experience__media .photo,
+.story-block__media .photo {
+  position: absolute;
+  inset: 0;
+}
+
+.featured-experience__media .photo img,
+.story-block__media .photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+button.social-dot {
+  border: 0;
+  cursor: pointer;
 }
 
 /* Panel promocional */
@@ -2249,4 +2288,9 @@
 .page-hero__credit a {
   color: inherit;
   text-decoration: underline;
+}
+
+.filter-toggle input:focus-visible + .toggle {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
 }

@@ -7,11 +7,21 @@ import FilterBar, { FilterSelect } from '../components/ui/FilterBar.jsx'
 import MapPanel from '../components/ui/MapPanel.jsx'
 import HistoryBlock from '../components/home/HistoryBlock.jsx'
 import { categories } from '../data/establishments.js'
+import { useState } from 'react'
 import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
+import { usePagedList } from '../lib/listing.js'
 
 export default function DondeDormir() {
   const meta = categories.dormir
+  const [type, setType] = useState(meta.filterAll)
+  const [service, setService] = useState(meta.serviceAll)
   const { data: places, loading, error } = useEstablishments('dormir')
+  const filtered = places.filter(
+    (item) =>
+      (type === meta.filterAll || item.filterGroup === type) &&
+      (service === meta.serviceAll || item.services.includes(service)),
+  )
+  const { visible, hasMore, loadMore } = usePagedList(filtered, `${type}|${service}`)
   const { data: comprar } = useEstablishments('comprar')
   const shops = orderBySlugs(comprar, ['maestros-de-la-madera', 'creaciones-martina']).slice(0, 2)
 
@@ -31,9 +41,19 @@ export default function DondeDormir() {
       <section className="section section--tight">
         <div className="container">
           <FilterBar>
-            <FilterSelect label={meta.filterLabel} options={[meta.filterAll, ...meta.filters]} />
+            <FilterSelect
+              label={meta.filterLabel}
+              options={[meta.filterAll, ...meta.filters]}
+              value={type}
+              onChange={setType}
+            />
             <span className="filter-divider" aria-hidden="true" />
-            <FilterSelect label={meta.serviceLabel} options={[meta.serviceAll, ...meta.services]} />
+            <FilterSelect
+              label={meta.serviceLabel}
+              options={[meta.serviceAll, ...meta.services]}
+              value={service}
+              onChange={setService}
+            />
           </FilterBar>
 
           {loading ? (
@@ -42,13 +62,23 @@ export default function DondeDormir() {
             <p className="auth-error">{error}</p>
           ) : places.length === 0 ? (
             <p className="empty">Todavía no hay alojamientos publicados.</p>
+          ) : filtered.length === 0 ? (
+            <p className="empty">Ningún alojamiento coincide con los filtros elegidos.</p>
           ) : (
             <div className="listing-grid-v">
-              {places.map((item) => (
+              {visible.map((item) => (
                 <ListingCard key={item.id} item={item} />
               ))}
             </div>
           )}
+
+          {hasMore ? (
+            <div className="center-action">
+              <Button variant="secondary" onClick={loadMore}>
+                Cargar más
+              </Button>
+            </div>
+          ) : null}
 
           <MapPanel title={meta.mapTitle} cta={meta.mapCta} to="/mapa" groups={['dormir']} />
 

@@ -6,11 +6,22 @@ import ListingCard from '../components/cards/ListingCard.jsx'
 import FilterBar, { FilterSelect } from '../components/ui/FilterBar.jsx'
 import MapPanel from '../components/ui/MapPanel.jsx'
 import { categories } from '../data/establishments.js'
+import { useState } from 'react'
 import { useEstablishments } from '../lib/contentApi.js'
+import { matchesPriceRange, usePagedList } from '../lib/listing.js'
 
 export default function DondeComprar() {
   const meta = categories.comprar
+  const [type, setType] = useState(meta.filterAll)
+  const [price, setPrice] = useState(meta.priceAll)
   const { data: places, loading, error } = useEstablishments('comprar')
+  const priceIndex = meta.prices.indexOf(price)
+  const filtered = places.filter(
+    (item) =>
+      (type === meta.filterAll || item.filterGroup === type) &&
+      (priceIndex < 0 || matchesPriceRange(item.priceRange, priceIndex)),
+  )
+  const { visible, hasMore, loadMore } = usePagedList(filtered, `${type}|${price}`)
 
   return (
     <>
@@ -31,11 +42,15 @@ export default function DondeComprar() {
             <FilterSelect
               label={meta.filterLabel}
               options={[meta.filterAll, ...meta.filters]}
+              value={type}
+              onChange={setType}
             />
             <span className="filter-divider" aria-hidden="true" />
             <FilterSelect
               label={meta.priceLabel}
               options={[meta.priceAll, ...meta.prices]}
+              value={price}
+              onChange={setPrice}
             />
           </FilterBar>
 
@@ -45,13 +60,23 @@ export default function DondeComprar() {
             <p className="auth-error">{error}</p>
           ) : places.length === 0 ? (
             <p className="empty">Todavía no hay artesanías publicadas.</p>
+          ) : filtered.length === 0 ? (
+            <p className="empty">Ninguna artesanía coincide con los filtros elegidos.</p>
           ) : (
             <div className="listing-grid-v">
-              {places.map((item) => (
+              {visible.map((item) => (
                 <ListingCard key={item.id} item={item} />
               ))}
             </div>
           )}
+
+          {hasMore ? (
+            <div className="center-action">
+              <Button variant="secondary" onClick={loadMore}>
+                Cargar más
+              </Button>
+            </div>
+          ) : null}
 
           <MapPanel title={meta.mapTitle} cta={meta.mapCta} to="/mapa" groups={['comprar']} />
 

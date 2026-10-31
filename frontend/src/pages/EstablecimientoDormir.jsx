@@ -19,7 +19,8 @@ export default function EstablecimientoDormir({ item }) {
         image={item.hero ?? '/img/home/hero.jpg'}
         imageAlt={item.name}
         pillTone="brick"
-        social={['instagram']}
+        social={['share']}
+        links={item.socialLinks}
         breadcrumb={[
           { label: 'Inicio', to: '/' },
           { label: 'Dónde ir', to: '/donde-ir' },

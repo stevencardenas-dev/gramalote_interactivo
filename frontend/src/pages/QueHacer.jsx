@@ -1,11 +1,24 @@
 import PageHero from '../components/ui/PageHero.jsx'
 import Placeholder from '../components/ui/Placeholder.jsx'
 import Button from '../components/ui/Button.jsx'
-import Icon from '../components/ui/Icon.jsx'
+import Photo from '../components/ui/Photo.jsx'
+import { CarouselArrows, CarouselDots } from '../components/ui/Carousel.jsx'
+import { useCarousel } from '../lib/useCarousel.js'
 import { MapExplorer } from '../components/ui/MapPanel.jsx'
 import { heroNuevo } from '../data/heroImages.js'
+import { experiences } from '../data/experiences.js'
+
+const historySlides = [
+  { src: '/img/home/historia.jpg', alt: 'Gramalote y su historia' },
+  { src: '/img/home/historia-banner.jpg', alt: 'Panorámica de Gramalote' },
+]
 
 export default function QueHacer() {
+  const featured = useCarousel(experiences.length)
+  const story = useCarousel(historySlides.length)
+  const experience = experiences[featured.index]
+  const slide = historySlides[story.index]
+
   return (
     <>
       <PageHero
@@ -32,27 +45,24 @@ export default function QueHacer() {
         <div className="container">
           <div className="featured-experience">
             <div className="featured-experience__media">
-              <Placeholder />
-              <button className="carousel-arrow carousel-arrow--left" type="button" aria-label="Anterior">
-                <Icon name="chevron" />
-              </button>
-              <button className="carousel-arrow carousel-arrow--right" type="button" aria-label="Siguiente">
-                <Icon name="chevron" />
-              </button>
-              <div className="carousel-dots" aria-hidden="true">
-                <span className="is-active" />
-                <span />
-                <span />
-              </div>
+              <Photo src={experience.photo} alt={experience.title} />
+              <CarouselArrows
+                count={experiences.length}
+                onPrev={featured.prev}
+                onNext={featured.next}
+              />
+              <CarouselDots
+                overlay
+                count={experiences.length}
+                index={featured.index}
+                onGo={featured.go}
+              />
             </div>
-            <div className="featured-experience__body">
-              <p className="eyebrow">Naturaleza</p>
-              <h2>Cascadas Arco Iris</h2>
-              <p>
-                Las Cascadas Arcoíris destacan por sus arcoíris naturales y el
-                avistamiento nocturno de golondrinas en Gramalote.
-              </p>
-              <Button to="/que-hacer/cascadas-arco-iris" variant="secondary">
+            <div className="featured-experience__body" aria-live="polite">
+              <p className="eyebrow">{experience.category}</p>
+              <h2>{experience.title}</h2>
+              <p>{experience.description}</p>
+              <Button to={experience.to} variant="secondary">
                 Ver más
               </Button>
             </div>
@@ -111,19 +121,14 @@ export default function QueHacer() {
             </div>
 
             <div className="story-block__media">
-              <Placeholder />
-              <button className="carousel-arrow carousel-arrow--left" type="button" aria-label="Anterior">
-                <Icon name="chevron" />
-              </button>
-              <button className="carousel-arrow carousel-arrow--right" type="button" aria-label="Siguiente">
-                <Icon name="chevron" />
-              </button>
+              <Photo src={slide.src} alt={slide.alt} />
+              <CarouselArrows
+                count={historySlides.length}
+                onPrev={story.prev}
+                onNext={story.next}
+              />
             </div>
-            <div className="carousel-dots" aria-hidden="true">
-              <span />
-              <span className="is-active" />
-              <span />
-            </div>
+            <CarouselDots count={historySlides.length} index={story.index} onGo={story.go} />
           </div>
         </div>
       </section>

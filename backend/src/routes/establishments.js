@@ -85,6 +85,59 @@ function filtersFromQuery(queryParams) {
   }
 }
 
+// Horario y servicios de varias fichas con tres consultas, para que el listado
+// pueda filtrar "Abierto hoy" y servicios sin pedir cada ficha por separado.
+async function listExtras(ids) {
+  const result = new Map()
+  if (ids.length === 0) return result
+
+  const [hours, exceptions, services] = await Promise.all([
+    query(
+      `SELECT establishment_id, day_of_week, opens_at, closes_at, is_closed
+       FROM opening_hours WHERE establishment_id IN (?)`,
+      [ids],
+    ),
+    query(
+      `SELECT establishment_id, exception_date, is_closed, opens_at, closes_at
+       FROM opening_hours_exceptions WHERE establishment_id IN (?)`,
+      [ids],
+    ),
+    query(
+      `SELECT es.establishment_id, s.slug, s.name
+       FROM establishment_services es
+       JOIN services s ON s.id = es.service_id
+       WHERE es.establishment_id IN (?)
+       ORDER BY s.sort_order, s.id`,
+      [ids],
+    ),
+  ])
+
+  const group = (rows) => {
+    const map = new Map()
+    for (const row of rows) {
+      const key = Number(row.establishment_id)
+      if (!map.has(key)) map.set(key, [])
+      map.get(key).push(row)
+    }
+    return map
+  }
+  const hoursBy = group(hours)
+  const exceptionsBy = group(exceptions)
+  const servicesBy = group(services)
+
+  for (const id of ids) {
+    const key = Number(id)
+    result.set(key, {
+      openNow: calculateOpenNow(hoursBy.get(key) ?? [], exceptionsBy.get(key) ?? []),
+      services: (servicesBy.get(key) ?? []).map((row) => ({
+        slug: row.slug,
+        name: row.name,
+      })),
+    })
+  }
+  return result
+}
+
 router.get(
   '/establishments',
   asyncHandler(async (req, res) => {
@@ -106,8 +159,17 @@ router.get(
       ),
     ])
 
+    const extras = await listExtras(rows.map((row) => row.id))
+
     res.json({
-      data: rows.map(toEstablishmentSummary),
+      data: rows.map((row) => {
+        const extra = extras.get(Number(row.id))
+        return {
+          ...toEstablishmentSummary(row),
+          openNow: extra?.openNow ?? null,
+          services: extra?.services ?? [],
+        }
+      }),
       meta: {
         total: Number(countRow?.total ?? 0),
         limit,

@@ -28,7 +28,7 @@ export default function Experiencia() {
         eyebrow={item.category}
         title={item.title}
         summary={item.summary}
-        social={item.social}
+        social={['share']}
         breadcrumb={[
           { label: 'Inicio', to: '/' },
           { label: 'Qué hacer', to: '/que-hacer' },

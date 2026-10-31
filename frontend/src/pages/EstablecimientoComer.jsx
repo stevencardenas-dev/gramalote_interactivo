@@ -30,7 +30,8 @@ export default function EstablecimientoComer({ item }) {
         summary={item.summary}
         image={item.hero ?? '/img/home/hero.jpg'}
         imageAlt={item.name}
-        social={['instagram', 'share']}
+        social={['share']}
+        links={item.socialLinks}
         breadcrumb={[
           { label: 'Inicio', to: '/' },
           { label: 'Dónde ir', to: '/donde-ir' },

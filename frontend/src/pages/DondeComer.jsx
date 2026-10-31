@@ -6,10 +6,14 @@ import PlaceCard from '../components/cards/PlaceCard.jsx'
 import FilterBar, { FilterSelect, FilterToggle } from '../components/ui/FilterBar.jsx'
 import MapPanel from '../components/ui/MapPanel.jsx'
 import { categories } from '../data/establishments.js'
+import { useState } from 'react'
 import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
+import { usePagedList } from '../lib/listing.js'
 
 export default function DondeComer() {
   const meta = categories.comer
+  const [type, setType] = useState(meta.filterAll)
+  const [openOnly, setOpenOnly] = useState(false)
   const { data: comer, loading, error } = useEstablishments('comer')
   const { data: dormir } = useEstablishments('dormir')
 
@@ -21,6 +25,13 @@ export default function DondeComer() {
     'la-sazon-de-la-tia',
     'la-comarca',
   ])
+
+  const filtered = places.filter(
+    (item) =>
+      (type === meta.filterAll || item.filterGroup === type) &&
+      (!openOnly || item.openNow),
+  )
+  const { visible, hasMore, loadMore } = usePagedList(filtered, `${type}|${openOnly}`)
 
   const lodging = orderBySlugs(dormir, [
     'glamping-vista-antigua',
@@ -45,9 +56,14 @@ export default function DondeComer() {
       <section className="section section--tight">
         <div className="container">
           <FilterBar>
-            <FilterToggle label="Abierto hoy" />
+            <FilterToggle label="Abierto hoy" active={openOnly} onChange={setOpenOnly} />
             <span className="filter-divider" aria-hidden="true" />
-            <FilterSelect label="Tipo" options={[meta.filterAll, ...meta.filters]} />
+            <FilterSelect
+              label="Tipo"
+              options={[meta.filterAll, ...meta.filters]}
+              value={type}
+              onChange={setType}
+            />
           </FilterBar>
 
           {loading ? (
@@ -56,14 +72,23 @@ export default function DondeComer() {
             <p className="auth-error">{error}</p>
           ) : places.length === 0 ? (
             <p className="empty">Todavía no hay establecimientos publicados.</p>
+          ) : filtered.length === 0 ? (
+            <p className="empty">Ningún establecimiento coincide con los filtros elegidos.</p>
           ) : (
             <div className="listing-grid-v">
-              {places.map((item) => (
+              {visible.map((item) => (
                 <ListingCard key={item.id} item={item} />
               ))}
             </div>
           )}
 
+          {hasMore ? (
+            <div className="center-action">
+              <Button variant="secondary" onClick={loadMore}>
+                Cargar más
+              </Button>
+            </div>
+          ) : null}
 
           <MapPanel
             title={meta.mapTitle}

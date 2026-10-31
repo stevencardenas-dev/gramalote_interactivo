@@ -1,5 +1,47 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from './Icon.jsx'
+import SocialIcon from './SocialIcon.jsx'
+
+const NETWORKS = {
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  whatsapp: 'WhatsApp',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  x: 'X',
+}
+
+function ShareButton({ title }) {
+  const [copied, setCopied] = useState(false)
+
+  async function share() {
+    const url = window.location.href
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url })
+        return
+      }
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // El usuario canceló o el navegador bloqueó el portapapeles.
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className="social-dot"
+      onClick={share}
+      aria-label={copied ? 'Enlace copiado' : 'Compartir'}
+      title={copied ? 'Enlace copiado' : 'Compartir'}
+    >
+      <Icon name="share" />
+    </button>
+  )
+}
 
 function Breadcrumb({ items = [] }) {
   return (
@@ -26,10 +68,12 @@ export default function HeroFicha({
   image,
   imageAlt = '',
   pillTone = 'olive',
-  social = ['instagram', 'share'],
+  social = ['share'],
+  links = [],
   dots = true,
 }) {
-  const icons = Array.isArray(social) ? social : social ? ['instagram', 'share'] : []
+  const canShare = Array.isArray(social) ? social.includes('share') : Boolean(social)
+  const networks = links.filter((link) => NETWORKS[link.platform] && link.url)
 
   return (
     <section className="ficha-hero">
@@ -41,24 +85,22 @@ export default function HeroFicha({
         <Breadcrumb items={breadcrumb} />
 
         <div className="ficha-hero__center">
-          {icons.length ? (
+          {networks.length || canShare ? (
             <div className="ficha-hero__social">
-              {icons.includes('instagram') ? (
+              {networks.map((link) => (
                 <a
+                  key={link.platform}
                   className="social-dot"
-                  href="https://www.instagram.com/"
+                  href={link.url}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label="Instagram"
+                  aria-label={NETWORKS[link.platform]}
+                  title={NETWORKS[link.platform]}
                 >
-                  <Icon name="instagram" />
+                  <SocialIcon name={link.platform} />
                 </a>
-              ) : null}
-              {icons.includes('share') ? (
-                <a className="social-dot" href="#compartir" aria-label="Compartir">
-                  <Icon name="share" />
-                </a>
-              ) : null}
+              ))}
+              {canShare ? <ShareButton title={title} /> : null}
             </div>
           ) : null}
 

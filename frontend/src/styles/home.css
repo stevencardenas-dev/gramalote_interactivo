@@ -781,3 +781,11 @@
   background: var(--c-orange, #d9531e);
   color: #fff;
 }
+
+.explore-block__media--map {
+  position: relative;
+}
+
+.explore-block__media--map .placeholder {
+  height: 100%;
+}

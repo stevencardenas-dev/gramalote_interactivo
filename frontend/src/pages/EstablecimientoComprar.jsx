@@ -19,7 +19,8 @@ export default function EstablecimientoComprar({ item }) {
         image={item.hero ?? '/img/home/hero.jpg'}
         imageAlt={item.name}
         pillTone="gold"
-        social={['instagram']}
+        social={['share']}
+        links={item.socialLinks}
         dots={false}
         breadcrumb={[
           { label: 'Inicio', to: '/' },
