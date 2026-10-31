@@ -1,7 +1,6 @@
 // Datos públicos desde la API (MySQL). Las plantillas siguen recibiendo la
 // forma que ya usaban con src/data; aquí se traduce la respuesta camelCase.
 import { useEffect, useState } from 'react'
-import { establishmentPhotos } from '../data/establishmentPhotos'
 
 const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 
@@ -21,60 +20,41 @@ function joinPayments(payments) {
   return payments.map((payment) => payment.name).join(' · ')
 }
 
-// Compara nombres sin mayúsculas ni tildes ("Coctelería" = "cocteleria").
-const plain = (value) =>
-  String(value ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim()
-const sameName = (a, b) => plain(a) === plain(b)
-
-// Platos y productos: la foto propia de la API; si no tiene, la del diseño con
-// el mismo nombre; y si la ficha no tiene ninguno en la base, los del diseño.
-function adaptFeatures(item, legacy, cover) {
+// Platos y productos con su foto (o la portada si no tienen). Sin platos en la
+// base, la ficha de comer muestra sus tarjetas genéricas.
+function adaptFeatures(item, cover) {
   const rows = Array.isArray(item.features) ? item.features : []
-  if (rows.length === 0) return legacy.features
+  if (rows.length === 0) return undefined
   return rows.map((feature) => ({
     title: feature.title,
     text: feature.description,
-    photo:
-      feature.media?.url ??
-      legacy.features?.find((old) => sameName(old.title, feature.title))?.photo ??
-      cover,
+    photo: feature.media?.url ?? cover,
   }))
 }
 
-function adaptProducts(item, legacy, cover) {
+function adaptProducts(item, cover) {
   const rows = Array.isArray(item.products) ? item.products : []
-  if (rows.length === 0) return legacy.products
   return rows.map((product) => ({
     name: product.name,
-    photo:
-      product.media?.url ??
-      legacy.products?.find((old) => sameName(old.name, product.name))?.photo ??
-      cover,
+    photo: product.media?.url ?? cover,
     price: product.price,
   }))
 }
 
 // Traduce una ficha de la API a la forma que esperan las plantillas.
+// Las fotos viven en el servidor (/media, tabla media) y se cambian en el panel.
 export function adaptEstablishment(item) {
   if (!item) return null
-  // Las fotos viven en el servidor (/media, tabla media). Las del diseño en
-  // src/data quedan solo de respaldo para fichas que aún no tengan ninguna.
-  const legacy = establishmentPhotos[item.slug] ?? {}
-  const cover = item.cover?.url ?? legacy.photo ?? null
-  const hero = item.hero?.url ?? item.cover?.url ?? legacy.hero ?? legacy.photo ?? null
-  const features = adaptFeatures(item, legacy, cover)
-  const products = adaptProducts(item, legacy, cover)
+  const cover = item.cover?.url ?? null
+  const hero = item.hero?.url ?? cover
+  const features = adaptFeatures(item, cover)
+  const products = adaptProducts(item, cover)
   // Galería: las fotos con rol "galería" que no son de un plato o producto.
-  const itemPhotos = new Set([...(features ?? []), ...(products ?? [])].map((row) => row.photo))
+  const itemPhotos = new Set([...(features ?? []), ...products].map((row) => row.photo))
   const uploaded = (item.images ?? [])
     .filter((image) => image.role === 'gallery' && image.url && !itemPhotos.has(image.url))
     .map((image) => image.url)
-  const fallback = [...new Set([cover, hero].filter(Boolean))]
-  const gallery = uploaded.length > 0
-    ? uploaded
-    : (item.images ?? []).length > 0
-      ? fallback
-      : legacy.gallery ?? fallback
+  const gallery = uploaded.length > 0 ? uploaded : [...new Set([cover, hero].filter(Boolean))]
 
   return {
     id: item.id,

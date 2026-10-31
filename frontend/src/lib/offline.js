@@ -47,8 +47,8 @@ function listUrl(category) {
   return `${API_URL}/establishments?${params.toString()}`
 }
 
-// Las fotos que pintan las plantillas: las de la API y, si una ficha aún no
-// tiene, las de respaldo del diseño (contentApi.js decide cuál).
+// Las fotos que pintan las plantillas (contentApi.js decide cuál va en cada
+// sitio) y el resto de las de la ficha.
 function photosOf(item) {
   const adapted = adaptEstablishment(item)
   if (!adapted) return []

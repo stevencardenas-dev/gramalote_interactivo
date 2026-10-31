@@ -11,7 +11,7 @@ para construir las vistas.
 | `brand/icons/` | 29 iconos SVG de la entrega de Figma (`icono-*.svg`) |
 | `brand/social/` | 8 iconos de redes sociales |
 | `img/home/` | Fotos de Inicio (hero, categorías, exp-*, est-*) |
-| `img/ficha/` | Fotos de fichas de establecimiento y relacionados |
+| ~~`img/ficha/`~~ | Ya no existe: las fotos de las fichas están en `/media` (servidor) y su origen en `backend/database/media-seed/` |
 | `img/brand/` | Logos PNG (alcaldía) |
 
 Reglas: nada pesado (> ~500 KB) va aquí; comprimir/redimensionar antes. Los
@@ -26,7 +26,7 @@ el código** (se referencian por nombre cuando se integren las vistas).
 | `disenos-figma/frames-26-octubre/` | Frames nuevos: Inicio y establecimientos comer/comprar/dormir |
 | `entregas-drive/<entrega> - <fecha>/` | Lo extraído de los `.zip` del Drive (SVG originales, fotos en alta resolución) |
 | `disenos-figma/frames-27-octubre/` | Frames más recientes: Dónde ir/comer/dormir, fichas comer/comprar/dormir e Inicio |
-| `fotos-establecimientos/<tipo>/<slug>/` | Fotos del Drive ya ordenadas por establecimiento (slug = el de `establishments.js`); `inicio/` trae hero, categorías y experiencias; `sin-ficha-en-codigo/` lo que aún no tiene ficha |
+| `fotos-establecimientos/<tipo>/<slug>/` | Fotos del Drive ya ordenadas por establecimiento (slug = el de la ficha en la API); `inicio/` trae hero, categorías y experiencias; `sin-ficha-en-codigo/` lo que aún no tiene ficha |
 | `capturas-sitio/` | Capturas del sitio construido (QA visual), no son diseño |
 
 Las fotos de `entregas-drive/Imagenes alta resolucion Inicio - 27 octubre/`

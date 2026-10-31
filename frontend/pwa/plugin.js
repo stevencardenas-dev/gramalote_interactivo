@@ -5,9 +5,8 @@ import { readFileSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
 
 // Carpetas de public/ que entran en "Descargar para usar sin conexión".
-// img/ficha es el respaldo de las fotos de las fichas, que ya viven en /media.
+// Las fotos de las fichas viven en /media y se piden a partir de la API.
 const OFFLINE_DIRS = ['img', 'brand', 'icons']
-const OFFLINE_SKIP = /^img\/ficha\//
 
 function walk(root, dir = '') {
   return readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((entry) => {
@@ -37,7 +36,7 @@ export default function pwa({ tilesUrl }) {
       ]
 
       const offline = OFFLINE_DIRS.flatMap((dir) =>
-        walk(config.publicDir, dir).filter((file) => !OFFLINE_SKIP.test(file)).map((file) => ({
+        walk(config.publicDir, dir).map((file) => ({
           url: `${base}${file}`,
           bytes: statSync(path.join(config.publicDir, file)).size,
         })),

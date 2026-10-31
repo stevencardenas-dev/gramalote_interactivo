@@ -12,7 +12,6 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import '../../styles/mapa.css'
 import { getJson } from '../../lib/api.js'
-import { establishmentPhotos } from '../../data/establishmentPhotos'
 
 // AVISO: las teselas públicas de openstreetmap.org son solo para desarrollo y
 // pruebas. Antes de publicar el sitio hay que cambiarlas (VITE_MAP_TILES_URL)
@@ -76,7 +75,7 @@ function toPlaces(data) {
         group: GROUP_BY_KEY[group] ? group : null,
         categoryName: item.category?.name ?? GROUP_BY_KEY[group]?.label ?? '',
         type: item.type ?? null,
-        photo: item.cover?.url ?? establishmentPhotos[item.slug]?.photo ?? null,
+        photo: item.cover?.url ?? null,
         longitude: item.coordinates.longitude,
         latitude: item.coordinates.latitude,
       }
