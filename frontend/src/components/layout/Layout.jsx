@@ -2,6 +2,30 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import Navbar from './Navbar.jsx'
 import Footer from './Footer.jsx'
+import { usePageTitle } from '../../lib/usePageTitle.js'
+
+// Títulos de las vistas fijas. Las fichas y detalles ponen el suyo (el efecto
+// del hijo corre antes que el de Layout, así que aquí no se tocan).
+const TITLES = {
+  '/': '',
+  '/que-hacer': 'Qué hacer',
+  '/donde-ir': 'Dónde ir',
+  '/donde-comer': 'Dónde comer',
+  '/donde-dormir': 'Dónde dormir',
+  '/donde-comprar': 'Dónde comprar',
+  '/historia': 'Su historia',
+  '/curiosidades': 'Curiosidades',
+  '/informacion-practica': 'Información práctica',
+  '/mapa': 'Mapa',
+  '/buscar': 'Buscar',
+  '/acceder': 'Acceder',
+}
+
+function StaticTitle({ pathname }) {
+  const title = pathname.startsWith('/admin') ? 'Panel de administración' : TITLES[pathname]
+  usePageTitle(title)
+  return null
+}
 
 export default function Layout() {
   const { pathname } = useLocation()
@@ -47,6 +71,9 @@ export default function Layout() {
           Sin conexión: estás viendo la información guardada en este dispositivo.
         </p>
       )}
+      {pathname in TITLES || pathname.startsWith('/admin') ? (
+        <StaticTitle pathname={pathname} />
+      ) : null}
       <Navbar over={overHero} />
       <main id="contenido" className={overHero ? 'main--over-hero' : undefined}>
         <Outlet />

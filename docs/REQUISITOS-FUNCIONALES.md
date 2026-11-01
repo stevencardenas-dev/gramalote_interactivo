@@ -35,7 +35,7 @@ Estados usados:
 | RF-09 | Footer con CTA de Información práctica, navegación y redes | `Footer.jsx:30` | Implementado | El CTA se oculta en fichas y en Información práctica |
 | RF-10 | Diseño responsive con menú móvil y grids adaptables | `home.css:514`, `layout.css:190`, `pages.css:1600` | Implementado | Breakpoints 1024/720 px |
 | RF-11 | Anclas profundas a secciones de Información práctica (`#como-llegar`, `#seguridad`, `#contactos`, `#antes-de-salir`) | `InformacionPractica.jsx:28`, `site.js:34` | Implementado | Las secciones ya tienen `id` y `scroll-margin-top` |
-| RF-12 | Metadatos SEO por ruta | `index.html:10` | Parcial | Solo hay `title` y `description` globales; no cambian por vista |
+| RF-12 | Metadatos SEO por ruta | `lib/usePageTitle.js`, `Layout.jsx` | Parcial | El título de la pestaña cambia por vista y por ficha; `description` y Open Graph siguen siendo globales |
 | RF-12b | Instalable y usable sin conexión (PWA con descarga previa) | `pwa/`, `lib/offline.js`, `OfflineDownload.jsx` | Implementado | Manifest + service worker; “Descargar para usar sin conexión” en Información práctica. El mapa solo guarda las teselas ya vistas |
 
 ## 3. Inicio

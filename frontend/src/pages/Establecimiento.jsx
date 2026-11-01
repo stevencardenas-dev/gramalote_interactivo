@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import { useEstablishment } from '../lib/contentApi.js'
+import { usePageTitle } from '../lib/usePageTitle.js'
 import EstablecimientoComer from './EstablecimientoComer.jsx'
 import EstablecimientoDormir from './EstablecimientoDormir.jsx'
 import EstablecimientoComprar from './EstablecimientoComprar.jsx'
@@ -8,6 +9,7 @@ import EstablecimientoComprar from './EstablecimientoComprar.jsx'
 export default function Establecimiento() {
   const { slug } = useParams()
   const { data: item, loading, error } = useEstablishment(slug)
+  usePageTitle(item?.name ?? (loading ? '' : 'Ficha no encontrada'))
 
   if (loading) {
     return (

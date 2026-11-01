@@ -3,6 +3,7 @@ import PageHero from '../components/ui/PageHero.jsx'
 import Placeholder from '../components/ui/Placeholder.jsx'
 import Button from '../components/ui/Button.jsx'
 import { getCuriosity } from '../data/curiosities.js'
+import { usePageTitle } from '../lib/usePageTitle.js'
 
 function Paragraphs({ items }) {
   return items.map((paragraph, index) => (
@@ -89,6 +90,7 @@ function ContentBlock({ block }) {
 export default function CuriosidadDetalle() {
   const { slug } = useParams()
   const item = getCuriosity(slug)
+  usePageTitle(item?.title ?? 'Curiosidad no encontrada')
 
   if (!item) {
     return (

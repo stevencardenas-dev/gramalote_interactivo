@@ -4,10 +4,12 @@ import InfoBar from '../components/ui/InfoBar.jsx'
 import Placeholder from '../components/ui/Placeholder.jsx'
 import Button from '../components/ui/Button.jsx'
 import { getExperience } from '../data/experiences.js'
+import { usePageTitle } from '../lib/usePageTitle.js'
 
 export default function Experiencia() {
   const { slug } = useParams()
   const item = getExperience(slug)
+  usePageTitle(item?.title ?? 'Experiencia no encontrada')
 
   if (!item) {
     return (

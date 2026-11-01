@@ -69,7 +69,7 @@ Validado en MySQL 8.4.11 con Docker. Decisión: MySQL 8.0+ e InnoDB.
 | INC-17 | **ID duplicado `site-search`**: el formulario de búsqueda se renderiza en escritorio y en el panel móvil, ambos con el mismo `id` y `htmlFor`. | `Navbar.jsx:47`, `Navbar.jsx:103`, `Navbar.jsx:146` | **Corregido**: IDs `site-search` y `site-search-mobile` |
 | INC-18 | Los iconos sociales de las fichas son `<span>` sin URL. | `HeroFicha.jsx:46` | **Corregido** (Fase 1) |
 | INC-19 | Los teléfonos de contactos son de ejemplo y se repiten; las redes del footer apuntan a las home genéricas. | `practical.js:82`, `site.js:25` | **Pendiente** |
-| INC-20 | No hay `prefers-reduced-motion` ni metadatos SEO por ruta. | `global.css`, `index.html:10` | **Pendiente** (calidad) |
+| INC-20 | No hay `prefers-reduced-motion` ni metadatos SEO por ruta. | `global.css`, `index.html:10` | **Parcial**: `prefers-reduced-motion` y título por vista (`usePageTitle`); faltan `description` y Open Graph por ruta |
 | INC-29 | Al pasar las fichas a la API (Fase 1), “Nuestra oferta” quedó vacía en los restaurantes sin platos en la base (Doña Claudia, Fresas, La Comarca, La Sazón) y los platos y productos mostraban la foto de portada. | `lib/contentApi.js` | **Corregido** (Fase 2): cada plato y producto tiene su foto; si la base no tiene, se usan los del diseño |
 
 ## 5. Incongruencias de contenido e inventario

@@ -1,0 +1,11 @@
+import { useEffect } from 'react'
+
+const SITE = 'Gramalote Interactivo'
+
+// Título de la pestaña por vista: "Bambú · Gramalote Interactivo".
+// Sin título (cargando o sin datos) se deja el nombre del sitio.
+export function usePageTitle(title) {
+  useEffect(() => {
+    document.title = title ? `${title} · ${SITE}` : SITE
+  }, [title])
+}

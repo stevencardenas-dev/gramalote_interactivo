@@ -130,3 +130,20 @@ ul {
 .skip-link:focus {
   transform: translateY(0);
 }
+
+/* Quien pide menos movimiento en su sistema no ve desplazamientos suaves,
+   transiciones ni animaciones (WCAG 2.3.3). El mapa ya lo respeta solo. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

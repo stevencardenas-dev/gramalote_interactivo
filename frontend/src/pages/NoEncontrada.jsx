@@ -1,6 +1,8 @@
 import Button from '../components/ui/Button.jsx'
+import { usePageTitle } from '../lib/usePageTitle.js'
 
 export default function NoEncontrada() {
+  usePageTitle('Página no encontrada')
   return (
     <section className="section">
       <div className="container">
