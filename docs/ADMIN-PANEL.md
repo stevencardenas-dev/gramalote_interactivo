@@ -393,7 +393,23 @@ La t3.micro tiene poco margen; el plan debe incluir control, no solo subida:
 final es un **servidor físico**, así que los respaldos no usan ningún servicio de
 AWS (ni S3): solo `docker compose`, un timer de systemd y SSH.
 
-### 9.1 En el servidor (automático)
+### 9.1 En el servidor (activable)
+
+**Apagados por defecto** (decisión del 2026-10-31): no cuestan dinero, pero ocupan
+disco, y hoy casi todo se reconstruye desde el repositorio (`schema.sql`,
+`seed*.sql`, migraciones y `media-seed/`). Lo irrecuperable es lo que se edite o
+suba desde el panel: **actívalos cuando los administradores empiecen a usarlo.**
+
+```bash
+# Activar: añade la variable al .env del servidor y vuelve a desplegar
+echo 'BACKUP_ENABLED=1' | sudo tee -a /opt/gramalote/.env
+gh workflow run deploy-ec2.yml        # o cualquier push a main
+# Desactivar: quita la línea (o pon BACKUP_ENABLED=0) y vuelve a desplegar
+```
+
+Con la variable en `1`, `deploy.sh` instala el timer y hace un respaldo antes de
+cada despliegue; con `0` (o sin ella) desactiva el timer. `backup.sh` siempre se
+puede ejecutar a mano.
 
 [`deploy/backup.sh`](../deploy/backup.sh) guarda en `/opt/gramalote/backups/`
 (carpeta de root, `700`):
@@ -405,8 +421,8 @@ AWS (ni S3): solo `docker compose`, un timer de systemd y SSH.
   si quedan menos de 1 GiB libres (`BACKUP_MIN_FREE_MB`), para no llenar el disco
   de MySQL.
 
-`deploy.sh` lo instala en cada despliegue y crea `gramalote-backup.timer` (todos
-los días a las **03:30 hora de Colombia**). También hace un respaldo **antes de
+Activado, `deploy.sh` crea `gramalote-backup.timer` (todos los días a las **03:30
+hora de Colombia**). También hace un respaldo **antes de
 cada despliegue**, porque las migraciones pueden cambiar el esquema.
 
 ```bash

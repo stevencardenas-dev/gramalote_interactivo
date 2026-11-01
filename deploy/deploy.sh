@@ -44,7 +44,18 @@ if [ -n "$COMPOSE_URL" ]; then
   fi
 fi
 
-if [ -x "$APP_DIR/backup.sh" ] && command -v systemctl >/dev/null 2>&1; then
+# Los respaldos se activan con BACKUP_ENABLED=1 en $APP_DIR/.env (apagados por
+# defecto mientras casi todo el contenido se reconstruye desde el repositorio).
+BACKUP_ENABLED="${BACKUP_ENABLED:-0}"
+
+if [ "$BACKUP_ENABLED" != 1 ] && command -v systemctl >/dev/null 2>&1; then
+  if systemctl is-enabled --quiet gramalote-backup.timer 2>/dev/null; then
+    systemctl disable --now gramalote-backup.timer >/dev/null 2>&1 || true
+    echo "Respaldos desactivados (BACKUP_ENABLED != 1)"
+  fi
+fi
+
+if [ "$BACKUP_ENABLED" = 1 ] && [ -x "$APP_DIR/backup.sh" ] && command -v systemctl >/dev/null 2>&1; then
   cat > /etc/systemd/system/gramalote-backup.service <<UNIT
 [Unit]
 Description=Respaldo de Gramalote (MySQL + media)
@@ -97,7 +108,8 @@ echo "Desplegando $IMAGE y $API_IMAGE"
 docker compose pull --quiet
 
 # Respaldo previo: las migraciones de este despliegue pueden cambiar el esquema.
-if [ -x "$APP_DIR/backup.sh" ] && docker compose ps --status running --services 2>/dev/null | grep -qx db; then
+if [ "$BACKUP_ENABLED" = 1 ] && [ -x "$APP_DIR/backup.sh" ] \
+  && docker compose ps --status running --services 2>/dev/null | grep -qx db; then
   echo "Respaldo previo al despliegue..."
   "$APP_DIR/backup.sh" || echo "AVISO: no se pudo hacer el respaldo previo"
 fi
@@ -138,7 +150,11 @@ for _ in $(seq 1 60); do
     if curl -fsS http://127.0.0.1/api/health >/dev/null 2>&1; then
       echo "Despliegue OK"
       docker compose ps
-      systemctl list-timers gramalote-backup.timer --no-pager 2>/dev/null | head -n 2 || true
+      if [ "$BACKUP_ENABLED" = 1 ]; then
+        systemctl list-timers gramalote-backup.timer --no-pager 2>/dev/null | head -n 2 || true
+      else
+        echo "Respaldos: apagados (BACKUP_ENABLED=1 en $APP_DIR/.env para activarlos)"
+      fi
       exit 0
     fi
   fi

@@ -2,8 +2,9 @@
 # Respaldo diario de Gramalote: base MySQL + fotos subidas (/media).
 # Sin servicios de AWS: sirve igual en la EC2 y en el servidor físico.
 #
-# Lo ejecuta el timer de systemd que instala deploy.sh (gramalote-backup.timer).
-# A mano:   sudo /opt/gramalote/backup.sh
+# Lo ejecuta el timer de systemd que instala deploy.sh (gramalote-backup.timer)
+# solo si BACKUP_ENABLED=1 en /opt/gramalote/.env. A mano funciona siempre:
+#   sudo /opt/gramalote/backup.sh
 # Copia fuera del servidor: deploy/backup-pull.ps1 desde el PC del administrador.
 set -euo pipefail
 
