@@ -33,6 +33,44 @@ if [ -n "$COMPOSE_URL" ]; then
     curl -fsSL "$REPO_RAW/backend/database/$file" -o "$APP_DIR/database/$file" \
       || echo "AVISO: no se pudo descargar $file"
   done
+
+  # Respaldo diario (MySQL + media) con un timer de systemd: nada de AWS, igual
+  # que en el servidor físico. Ver deploy/backup.sh.
+  if curl -fsSL "$REPO_RAW/deploy/backup.sh" -o "$APP_DIR/backup.sh.new"; then
+    mv "$APP_DIR/backup.sh.new" "$APP_DIR/backup.sh"
+    chmod 750 "$APP_DIR/backup.sh"
+  else
+    echo "AVISO: no se pudo descargar backup.sh"
+  fi
+fi
+
+if [ -x "$APP_DIR/backup.sh" ] && command -v systemctl >/dev/null 2>&1; then
+  cat > /etc/systemd/system/gramalote-backup.service <<UNIT
+[Unit]
+Description=Respaldo de Gramalote (MySQL + media)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+Environment=APP_DIR=$APP_DIR
+ExecStart=$APP_DIR/backup.sh
+UNIT
+  cat > /etc/systemd/system/gramalote-backup.timer <<UNIT
+[Unit]
+Description=Respaldo diario de Gramalote
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 America/Bogota
+RandomizedDelaySec=10m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+UNIT
+  systemctl daemon-reload
+  systemctl enable --now gramalote-backup.timer >/dev/null 2>&1 \
+    || echo "AVISO: no se pudo activar gramalote-backup.timer"
 fi
 
 ACCOUNT_ID="${ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}"
@@ -57,6 +95,13 @@ export API_IMAGE="${REGISTRY}/${ECR_REPO_API}:${IMAGE_TAG}"
 echo "Desplegando $IMAGE y $API_IMAGE"
 
 docker compose pull --quiet
+
+# Respaldo previo: las migraciones de este despliegue pueden cambiar el esquema.
+if [ -x "$APP_DIR/backup.sh" ] && docker compose ps --status running --services 2>/dev/null | grep -qx db; then
+  echo "Respaldo previo al despliegue..."
+  "$APP_DIR/backup.sh" || echo "AVISO: no se pudo hacer el respaldo previo"
+fi
+
 docker compose up -d --remove-orphans
 
 # Migraciones idempotentes (database/migrations/*.sql). La API puede tardar en
@@ -93,6 +138,7 @@ for _ in $(seq 1 60); do
     if curl -fsS http://127.0.0.1/api/health >/dev/null 2>&1; then
       echo "Despliegue OK"
       docker compose ps
+      systemctl list-timers gramalote-backup.timer --no-pager 2>/dev/null | head -n 2 || true
       exit 0
     fi
   fi

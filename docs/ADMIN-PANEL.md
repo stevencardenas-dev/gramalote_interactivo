@@ -389,24 +389,63 @@ La t3.micro tiene poco margen; el plan debe incluir control, no solo subida:
 
 ## 9. Respaldos
 
-`/opt/gramalote/media` es parte del estado del sitio, igual que MySQL. Los
-respaldos se **transmiten** fuera de la instancia: escribir un `.tar.gz` en `/tmp`
-de 2.6 GiB libres es arriesgado.
+`/opt/gramalote/media` es parte del estado del sitio, igual que MySQL. El destino
+final es un **servidor físico**, así que los respaldos no usan ningún servicio de
+AWS (ni S3): solo `docker compose`, un timer de systemd y SSH.
+
+### 9.1 En el servidor (automático)
+
+[`deploy/backup.sh`](../deploy/backup.sh) guarda en `/opt/gramalote/backups/`
+(carpeta de root, `700`):
+
+- `gramalote-AAAA-MM-DD-HHMM.sql.gz`: `mysqldump --single-transaction` (no bloquea
+  el sitio); se descarta si no termina con `-- Dump completed`.
+- `media-AAAA-MM-DD-HHMM.tar.gz`: la carpeta `media` completa.
+- Conserva los **7** más recientes de cada tipo (`BACKUP_KEEP`) y **no respalda**
+  si quedan menos de 1 GiB libres (`BACKUP_MIN_FREE_MB`), para no llenar el disco
+  de MySQL.
+
+`deploy.sh` lo instala en cada despliegue y crea `gramalote-backup.timer` (todos
+los días a las **03:30 hora de Colombia**). También hace un respaldo **antes de
+cada despliegue**, porque las migraciones pueden cambiar el esquema.
 
 ```bash
-# Desde la máquina del administrador: medios comprimidos por el canal SSH.
-ssh -i gramalote-key.pem ec2-user@18.119.155.81 \
-  'tar -C /opt/gramalote -czf - media' > media-$(date +%F).tar.gz
+systemctl list-timers gramalote-backup.timer   # próxima ejecución
+sudo systemctl start gramalote-backup.service  # respaldo ahora
+journalctl -u gramalote-backup.service -n 20   # resultado
+sudo ls -lh /opt/gramalote/backups
+```
 
-# Base de datos, también en streaming.
-ssh -i gramalote-key.pem ec2-user@18.119.155.81 \
-  'sudo docker exec gramalote-db sh -c "mysqldump -uroot -p\$MYSQL_ROOT_PASSWORD --single-transaction gramalote"' \
-  > gramalote-$(date +%F).sql
+### 9.2 Copia fuera del servidor (PC del administrador)
+
+Un respaldo que vive en el mismo disco no sirve si se pierde la máquina.
+[`deploy/backup-pull.ps1`](../deploy/backup-pull.ps1) baja por SSH el último par
+de archivos a `%USERPROFILE%\Gramalote\respaldos` y conserva 30:
+
+```powershell
+pwsh -File deploy/backup-pull.ps1
+# Servidor físico:
+pwsh -File deploy/backup-pull.ps1 -Servidor admin@IP -Llave C:\ruta\llave
+```
+
+Para que sea diario, prográmalo en el Programador de tareas de Windows (por
+ejemplo a las 9:00, con “ejecutar lo antes posible si se omitió”). En la EC2 el
+Security Group solo deja entrar por SSH a la IP de casa: si cambia, el script da
+*timeout* (ver `AGENTS.md`).
+
+### 9.3 Restaurar
+
+```bash
+cd /opt/gramalote
+# Base de datos (sobrescribe las tablas del volcado)
+gunzip -c gramalote-FECHA.sql.gz | sudo docker compose exec -T db \
+  sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'
+# Fotos
+sudo tar -C /opt/gramalote -xzf media-FECHA.tar.gz
+sudo chown -R 1000:1000 media && sudo chmod -R a+rX media
 ```
 
 - No se borra un `media` en uso: las claves foráneas son `ON DELETE RESTRICT`.
-- Si se usa S3, que sea **solo destino de respaldo** y gestionado por un script
-  aparte: el runtime del sitio no debe depender de él.
 - Probar la restauración en un directorio limpio al menos una vez por entrega.
 
 ---
