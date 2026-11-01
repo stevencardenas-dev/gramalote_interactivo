@@ -1117,3 +1117,105 @@ a.admin-module-card:hover {
     height: 160px;
   }
 }
+
+/* Editor de horario por día (AdminEstablecimiento → Información). */
+.admin-hours {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-hours__week {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-hours__day {
+  display: grid;
+  grid-template-columns: 96px 140px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding-block: 6px;
+  border-bottom: 1px solid var(--c-line);
+  font-size: var(--fs-sm);
+}
+
+.admin-hours__slots {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.admin-hours__slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-hours select,
+.admin-hours input {
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-white);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+}
+
+.admin-hours button {
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-white);
+  padding: 7px 12px;
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+.admin-hours button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-hours .admin-hours__add {
+  justify-self: start;
+  border-style: dashed;
+}
+
+.admin-hours__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-hours__preview {
+  margin: 0;
+  color: var(--c-ink-soft);
+  font-size: var(--fs-sm);
+}
+
+.admin-hours__subtitle {
+  margin: 8px 0 0;
+  font-size: 1rem;
+}
+
+.admin-hours__exception {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-hours__exception input:not([type]) {
+  flex: 1 1 180px;
+}
+
+@media (max-width: 760px) {
+  .admin-hours__day {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-hours__slots {
+    grid-column: 1 / -1;
+  }
+}

@@ -56,7 +56,7 @@ Estados usados:
 | RF-19 | Hub Dónde ir con mapa, comida, alojamiento y compras | `DondeIr.jsx:31` | Implementado | |
 | RF-20 | Listado de establecimientos por categoría | `DondeComer.jsx:36`, `DondeDormir.jsx:37`, `DondeComprar.jsx:40` | Implementado | Datos locales en `establishments.js` |
 | RF-21 | Filtro por tipo, servicios y precio | `FilterBar.jsx`, `lib/listing.js` | Implementado | Verificado en producción con datos reales (2026-10-31) |
-| RF-22 | Filtro “Abierto hoy” | `DondeComer.jsx`, `backend/src/opening-hours.js` | Implementado | Usa `openNow`, que calcula la API con los horarios |
+| RF-22 | Filtro “Abierto hoy” | `DondeComer.jsx`, `backend/src/opening-hours.js` | Implementado | Usa `openNow`, que calcula la API con los horarios; se editan por día en el panel (Información → Horario por día) |
 | RF-23 | Botón “Cargar más” | `DondeComer.jsx`, `DondeDormir.jsx`, `DondeComprar.jsx` | Implementado | 6 fichas por página |
 | RF-24 | Panel de mapa con CTA al mapa completo | `MapPanel.jsx:4` | Parcial | El CTA navega; el mapa es visual |
 | RF-25 | Secciones cruzadas (también puedes dormir / comprar / curiosidades) | `DondeComer.jsx:51`, `DondeDormir.jsx:49`, `DondeComprar.jsx:53` | Implementado | |

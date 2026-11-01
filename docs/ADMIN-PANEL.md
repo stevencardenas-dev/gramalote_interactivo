@@ -446,7 +446,8 @@ servicios propietarios. Checklist al mudar:
 - [x] Matriz de roles aplicada en API **y** en UI.
 - [x] Montaje `/srv/media` en nginx y `client_max_body_size` ajustado.
 - [ ] Ampliar el volumen raíz EBS (8 → 20 GiB) o decidir volumen dedicado.
-- [ ] Editor de horarios por día (`opening_hours`) en la UI.
+- [x] Editor de horarios por día (`opening_hours`) y excepciones en la UI, con
+  texto de la ficha generado desde el horario.
 - [ ] Módulos de experiencias, curiosidades e historia.
 - [ ] Prueba de migración a un directorio limpio para validar portabilidad.
 

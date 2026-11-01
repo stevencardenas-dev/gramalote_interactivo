@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
+import OpeningHoursEditor from '../components/admin/OpeningHoursEditor.jsx'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 
 const TABS = [
@@ -619,6 +620,20 @@ export default function AdminEstablecimiento() {
                   />
                 </Field>
               </div>
+              </Section>
+
+              <Section
+                title="Horario por día"
+                hint="Calcula “Abierto hoy”; el texto de arriba es el que se lee en la ficha."
+                signal={signal}
+              >
+                <OpeningHoursEditor
+                  hours={form.openingHours ?? []}
+                  exceptions={form.openingHoursExceptions ?? []}
+                  onChange={(openingHours) => update({ openingHours })}
+                  onExceptionsChange={(openingHoursExceptions) => update({ openingHoursExceptions })}
+                  onUseText={(hoursText) => update({ hoursText })}
+                />
               </Section>
 
               <Section title="Visibilidad" signal={signal}>
