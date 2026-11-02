@@ -310,3 +310,47 @@
 .mapa-pin[data-activo] .mapa-pin__icono {
   transform: scale(1.3);
 }
+
+/* Control "Iconos 1 | 2" dentro del mapa */
+.maplibregl-ctrl.mapa-version {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 10px;
+  border-radius: 999px;
+  background: var(--c-white);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  color: var(--c-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.mapa-version span {
+  margin-right: 4px;
+}
+
+.mapa-version button {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-navy);
+  font: inherit;
+  cursor: pointer;
+}
+
+.mapa-version button:hover {
+  background: var(--c-cream);
+}
+
+.mapa-version button[aria-pressed='true'] {
+  background: var(--c-navy);
+  color: var(--c-white);
+}
+
+.mapa-version button:focus-visible {
+  outline: 2px solid var(--c-coral);
+  outline-offset: 2px;
+}

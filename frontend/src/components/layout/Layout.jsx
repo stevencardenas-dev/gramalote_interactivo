@@ -32,6 +32,8 @@ export default function Layout() {
   const overHero =
     pathname === '/' ||
     pathname.startsWith('/establecimiento/') ||
+    pathname.startsWith('/que-hacer/') ||
+    pathname.startsWith('/curiosidades/') ||
     [
       '/donde-ir',
       '/donde-comer',

@@ -7,8 +7,18 @@ const year = new Date().getFullYear()
 export default function Footer() {
   return (
     <footer className="site-footer">
-      <div className="container">
-        <div className="footer-top">
+      <div className="footer-logos">
+        <img src="/brand/logo-rect.svg" alt="Gramalote Interactivo" />
+        <span className="footer-logos__rule" aria-hidden="true" />
+        <img
+          className="footer-logos__institution"
+          src="/img/brand/alcaldia.png"
+          alt="Alcaldía de Gramalote"
+        />
+      </div>
+
+      <div className="footer-top">
+        <div className="container footer-top__inner">
           <nav className="footer-nav" aria-label="Navegación del pie de página">
             {site.footer.map((link) => (
               <Link key={link.to} to={link.to}>
@@ -31,18 +41,7 @@ export default function Footer() {
             ))}
           </div>
         </div>
-
-        <div className="footer-logos">
-          <img src="/brand/logo-rect.svg" alt="Gramalote Interactivo" />
-          <img
-            className="footer-logos__institution"
-            src="/img/brand/alcaldia.png"
-            alt="Alcaldía de Gramalote"
-          />
-        </div>
       </div>
-
-      <div className="footer-rule" />
 
       <div className="footer-legal">
         © {year} Gramalote Interactivo. Todos los derechos reservados.

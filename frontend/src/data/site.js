@@ -23,10 +23,10 @@ export const site = {
   ],
   // Redes con iconos entregados por diseño en /brand/social.
   // TODO: reemplazar los enlaces provisionales por las cuentas reales.
-  // Ya existen también whatsapp.svg, email.svg y linktree.svg listos para usar.
+  // Ya existen también facebook.svg, email.svg y linktree.svg listos para usar.
   social: [
     { label: 'Instagram', icon: 'instagram', href: 'https://www.instagram.com/' },
-    { label: 'Facebook', icon: 'facebook', href: 'https://www.facebook.com/' },
+    { label: 'WhatsApp', icon: 'whatsapp', href: 'https://www.whatsapp.com/' },
     { label: 'TikTok', icon: 'tiktok', href: 'https://www.tiktok.com/' },
     { label: 'YouTube', icon: 'youtube', href: 'https://www.youtube.com/' },
     { label: 'X', icon: 'x', href: 'https://x.com/' },

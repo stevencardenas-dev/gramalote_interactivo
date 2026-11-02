@@ -63,6 +63,7 @@ router.get(
       name: row.name,
       category: { slug: row.category_slug, name: row.category_name },
       type: row.type_name ?? null,
+      mapIcon: row.map_icon ?? null,
       zone: row.zone_slug ? { slug: row.zone_slug, name: row.zone_name } : null,
       coordinates: {
         latitude: Number(row.latitude),

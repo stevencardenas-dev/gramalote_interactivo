@@ -12,6 +12,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import '../../styles/mapa.css'
 import { getJson } from '../../lib/api.js'
+import { mapIconUrl, resolveMapIcon } from '../../data/mapIcons.js'
 
 // AVISO: las teselas públicas de openstreetmap.org son solo para desarrollo y
 // pruebas. Antes de publicar el sitio hay que cambiarlas (VITE_MAP_TILES_URL)
@@ -75,6 +76,12 @@ function toPlaces(data) {
         group: GROUP_BY_KEY[group] ? group : null,
         categoryName: item.category?.name ?? GROUP_BY_KEY[group]?.label ?? '',
         type: item.type ?? null,
+        icon: resolveMapIcon({
+          mapIcon: item.mapIcon,
+          slug: item.slug,
+          type: item.type,
+          group,
+        }),
         photo: item.cover?.url ?? null,
         longitude: item.coordinates.longitude,
         latitude: item.coordinates.latitude,
@@ -83,25 +90,80 @@ function toPlaces(data) {
     .filter((place) => place.group)
 }
 
-// PRUEBA: iconos ilustrados (entrega del 29 de octubre) en dos alojamientos
-// cercanos para compararlos con el pin de siempre. Se miden en píxeles.
-const ICON_SIZE = 64
-const TEST_ICONS = {
-  'verdeser-glampings': '/img/mapa/glamping-claro.svg',
-  'glamping-vista-antigua': '/img/mapa/glamping-oscuro.svg',
+// Iconos ilustrados (src/data/mapIcons.js), medidos en píxeles. La versión 1
+// (fondo oscuro) o 2 (fondo claro) la elige quien mira el mapa con el control
+// "Iconos" y se recuerda en este navegador.
+const ICON_SIZE = 48
+const VERSION_KEY = 'gramalote:iconos-mapa'
+
+function readIconVersion() {
+  try {
+    return localStorage.getItem(VERSION_KEY) === '2' ? 2 : 1
+  } catch {
+    return 1
+  }
 }
 
-// Pin SVG del color del grupo; es un elemento del DOM, no una capa de WebGL.
-function createPin(place, onSelect) {
-  const group = GROUP_BY_KEY[place.group]
+function saveIconVersion(version) {
+  try {
+    localStorage.setItem(VERSION_KEY, String(version))
+  } catch {
+    // Sin almacenamiento (modo privado): la elección dura lo que la página.
+  }
+}
+
+// Control de MapLibre (DOM plano) con los botones "1" y "2".
+class IconVersionControl {
+  constructor(onChange) {
+    this.onChange = onChange
+  }
+
+  onAdd() {
+    this.element = document.createElement('div')
+    this.element.className = 'maplibregl-ctrl mapa-version'
+    this.element.setAttribute('role', 'group')
+    this.element.setAttribute('aria-label', 'Versión de los iconos del mapa')
+    const label = document.createElement('span')
+    label.textContent = 'Iconos'
+    label.setAttribute('aria-hidden', 'true')
+    this.element.append(label)
+    this.buttons = [1, 2].map((version) => {
+      const button = document.createElement('button')
+      button.type = 'button'
+      button.textContent = String(version)
+      button.title = version === 1 ? 'Iconos versión 1 (fondo oscuro)' : 'Iconos versión 2 (fondo claro)'
+      button.setAttribute('aria-label', button.title)
+      button.addEventListener('click', () => this.onChange(version))
+      this.element.append(button)
+      return button
+    })
+    return this.element
+  }
+
+  setVersion(version) {
+    this.buttons?.forEach((button, index) =>
+      button.setAttribute('aria-pressed', String(index + 1 === version)),
+    )
+  }
+
+  onRemove() {
+    this.element?.remove()
+  }
+}
+
+// Pin con el icono del lugar; es un elemento del DOM, no una capa de WebGL.
+function createPin(place, version, onSelect) {
   const button = document.createElement('button')
   button.type = 'button'
   button.className = 'mapa-pin'
   button.setAttribute('aria-label', `${place.name}, ${placeSubtitle(place)}`)
-  const icon = TEST_ICONS[place.slug]
-  if (icon) {
-    button.innerHTML = `<img class="mapa-pin__icono" src="${icon}" width="${ICON_SIZE}" height="${ICON_SIZE}" alt="" />`
-  } else button.innerHTML = `<svg class="mapa-pin__icono" viewBox="0 0 24 32" width="30" height="40" aria-hidden="true"><path d="M12 1C5.9 1 1 5.8 1 11.8 1 20 12 31 12 31s11-11 11-19.2C23 5.8 18.1 1 12 1z" fill="${group.color}" stroke="#ffffff" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="#ffffff"/></svg>`
+  const image = document.createElement('img')
+  image.className = 'mapa-pin__icono'
+  image.src = mapIconUrl(place.icon, version)
+  image.width = ICON_SIZE
+  image.height = ICON_SIZE
+  image.alt = ''
+  button.append(image)
   button.addEventListener('click', (event) => {
     event.stopPropagation()
     onSelect(place)
@@ -151,6 +213,9 @@ export default function LiveMap({
   const [activeType, setActiveType] = useState(initialType)
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState('')
+  const [iconVersion, setIconVersion] = useState(readIconVersion)
+  const iconVersionRef = useRef(iconVersion)
+  const versionControlRef = useRef(null)
   const groupsKey = groups ? groups.join(',') : ''
 
   const places = useMemo(() => {
@@ -197,7 +262,7 @@ export default function LiveMap({
       content.append(link)
     }
     popupRef.current
-      ?.setOffset(TEST_ICONS[place.slug] ? [0, -ICON_SIZE / 2] : [0, -38])
+      ?.setOffset([0, -ICON_SIZE / 2])
       .setLngLat([place.longitude, place.latitude])
       .setDOMContent(content)
       .addTo(map)
@@ -229,8 +294,12 @@ export default function LiveMap({
       },
     })
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right')
+    const versionControl = new IconVersionControl(setIconVersion)
+    map.addControl(versionControl, 'top-left')
+    versionControl.setVersion(iconVersionRef.current)
+    versionControlRef.current = versionControl
 
-    popupRef.current = new Popup({ closeButton: true, closeOnClick: false, maxWidth: '260px', offset: [0, -38] })
+    popupRef.current = new Popup({ closeButton: true, closeOnClick: false, maxWidth: '260px', offset: [0, -ICON_SIZE / 2] })
 
     const dataLoaded = getJson('/map', { signal: controller.signal })
 
@@ -274,11 +343,11 @@ export default function LiveMap({
     popupRef.current?.remove()
     places.forEach((place) => {
       const marker = new Marker({
-        element: createPin(place, (item) => {
+        element: createPin(place, iconVersionRef.current, (item) => {
           setSelectedId(item.id)
           showPopup(readyMap, item)
         }),
-        anchor: TEST_ICONS[place.slug] ? 'center' : 'bottom',
+        anchor: 'center',
       })
         .setLngLat([place.longitude, place.latitude])
         .addTo(readyMap)
@@ -288,6 +357,19 @@ export default function LiveMap({
     // showPopup solo usa refs y navigate, que no cambian entre renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readyMap, places])
+
+  // Cambia la versión de los iconos sin volver a crear los pines.
+  useEffect(() => {
+    iconVersionRef.current = iconVersion
+    saveIconVersion(iconVersion)
+    versionControlRef.current?.setVersion(iconVersion)
+    const byId = new Map(places.map((place) => [place.id, place]))
+    markersRef.current.forEach((marker, id) => {
+      const place = byId.get(id)
+      const image = marker.getElement().querySelector('img')
+      if (place && image) image.src = mapIconUrl(place.icon, iconVersion)
+    })
+  }, [iconVersion, places])
 
   // Resalta el pin elegido y deja su tarjeta a la vista en la lista.
   useEffect(() => {

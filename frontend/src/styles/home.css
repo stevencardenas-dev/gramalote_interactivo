@@ -401,6 +401,12 @@
   text-align: right;
 }
 
+/* El eyebrow global es negro: sobre la foto oscura no se leía. */
+.history-banner__body .eyebrow {
+  color: var(--c-white);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
 .history-banner__body h2 {
   margin-top: 12px;
   font-size: 2.75rem;
@@ -418,8 +424,8 @@
 
 /* Información práctica */
 .practical {
-  padding-block: 40px 86px;
-  background: var(--c-cream);
+  padding-block: 56px 86px;
+  background: var(--c-peach);
 }
 
 .practical .section-head {

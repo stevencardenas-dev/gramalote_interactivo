@@ -9,6 +9,7 @@ import './styles/ui.css'
 import './styles/layout.css'
 import './styles/home.css'
 import './styles/pages.css'
+import './styles/vistas.css'
 import './styles/admin.css'
 
 createRoot(document.getElementById('root')).render(

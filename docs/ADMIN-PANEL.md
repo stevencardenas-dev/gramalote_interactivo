@@ -342,6 +342,11 @@ Reglas de negocio:
   (`v_public_establishments` ya filtra); `media` no se toca.
 - **Zona horaria**: las horas se guardan como texto y se calculan con
   `America/Bogota` (`backend/src/opening-hours.js`).
+- **Icono del mapa** (`establishments.map_icon`, migración 004): uno de los
+  nombres de `backend/src/map-icons.js` o `NULL` (Automático: el frontend lo
+  deduce del tipo, `frontend/src/data/mapIcons.js`). Se elige en
+  Información → Ubicación. La versión 1 (fondo oscuro) o 2 (fondo claro) no se
+  guarda en la ficha: la elige quien mira el mapa con el control "Iconos".
 
 ---
 

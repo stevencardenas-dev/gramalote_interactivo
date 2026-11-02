@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import PageHero from '../components/ui/PageHero.jsx'
-import { experiences } from '../data/experiences.js'
+import { activities } from '../data/experiences.js'
 import { useEstablishments } from '../lib/contentApi.js'
 
 // Ignora mayúsculas, tildes y ñ; `compact` también ignora los espacios.
@@ -45,13 +45,13 @@ export default function Buscar() {
       photo: item.photo,
       to: `/establecimiento/${item.slug}`,
     })),
-    ...experiences.map((item) => ({
-      id: item.id,
+    ...activities.map((item) => ({
+      id: item.slug,
       title: item.title,
       meta: 'Experiencia',
-      text: item.description,
+      text: item.text,
       photo: item.photo,
-      to: item.to,
+      to: `/que-hacer/${item.slug}`,
     })),
   ]
     .map((item) => ({ item, relevance: score(item, query) }))

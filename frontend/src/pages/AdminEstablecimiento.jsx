@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import OpeningHoursEditor from '../components/admin/OpeningHoursEditor.jsx'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
+import { MAP_ICONS, mapIconUrl, resolveMapIcon } from '../data/mapIcons.js'
 
 const TABS = [
   { key: 'info', label: 'Información' },
@@ -33,6 +34,42 @@ function PhotoSelect({ images, value, onChange }) {
         ))}
       </select>
     </div>
+  )
+}
+
+// Icono del pin en el mapa. "Automático" deja que el mapa lo deduzca del tipo.
+function MapIconPicker({ value, automatic, onChange }) {
+  const name = useId()
+  const options = [{ key: '', label: 'Automático' }, ...MAP_ICONS]
+  return (
+    <fieldset className="admin-map-icons">
+      <legend>Icono en el mapa</legend>
+      <p className="admin-map-icons__hint">
+        Automático usa el icono del tipo (ahora: {MAP_ICONS.find((icon) => icon.key === automatic)?.label}).
+        Se muestra en versión 1 o 2 según elija quien mira el mapa.
+      </p>
+      <div className="admin-map-icons__grid">
+        {options.map((option) => {
+          const icon = option.key || automatic
+          return (
+            <label key={option.key || 'auto'} className="admin-map-icon">
+              <input
+                type="radio"
+                name={name}
+                value={option.key}
+                checked={(value ?? '') === option.key}
+                onChange={() => onChange(option.key || null)}
+              />
+              <span className="admin-map-icon__images" aria-hidden="true">
+                <img src={mapIconUrl(icon, 1)} alt="" loading="lazy" />
+                <img src={mapIconUrl(icon, 2)} alt="" loading="lazy" />
+              </span>
+              <span>{option.label}</span>
+            </label>
+          )
+        })}
+      </div>
+    </fieldset>
   )
 }
 
@@ -137,13 +174,15 @@ export default function AdminEstablecimiento() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  const types = useMemo(() => {
-    if (!meta || !form) return []
-    const category = meta.establishmentCategories.find(
-      (item) => item.id === Number(form.categoryId),
-    )
-    return category?.types ?? []
-  }, [meta, form])
+  const category = meta && form
+    ? meta.establishmentCategories.find((item) => item.id === Number(form.categoryId))
+    : null
+  const types = useMemo(() => category?.types ?? [], [category])
+  // Icono que tendría la ficha en "Automático", según su categoría y tipo.
+  const automaticIcon = resolveMapIcon({
+    type: types.find((type) => type.id === form?.typeId)?.name,
+    group: category?.slug,
+  })
 
   if (!form) {
     return (
@@ -536,6 +575,11 @@ export default function AdminEstablecimiento() {
                   />
                 </Field>
               </div>
+              <MapIconPicker
+                value={form.mapIcon}
+                automatic={automaticIcon}
+                onChange={(mapIcon) => update({ mapIcon })}
+              />
               </Section>
 
               <Section title="Contacto" hint="Cómo pueden comunicarse los visitantes." signal={signal}>

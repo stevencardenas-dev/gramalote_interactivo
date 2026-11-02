@@ -1219,3 +1219,70 @@ a.admin-module-card:hover {
     grid-column: 1 / -1;
   }
 }
+
+/* Icono del pin en el mapa (ficha > Ubicación) */
+.admin-map-icons {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 0;
+  border: 0;
+}
+
+.admin-map-icons legend {
+  margin-bottom: 4px;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.admin-map-icons__hint {
+  color: var(--c-ink-soft);
+  font-size: var(--fs-xs);
+}
+
+.admin-map-icons__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 8px;
+}
+
+.admin-map-icon {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-white);
+  font-size: var(--fs-xs);
+  text-align: center;
+  cursor: pointer;
+}
+
+.admin-map-icon input {
+  position: absolute;
+  opacity: 0;
+}
+
+.admin-map-icon__images {
+  display: flex;
+  gap: 2px;
+}
+
+.admin-map-icon__images img {
+  width: 40px;
+  height: 40px;
+}
+
+.admin-map-icon:has(input:checked) {
+  border-color: var(--c-navy);
+  background: var(--c-cream);
+  box-shadow: inset 0 0 0 1px var(--c-navy);
+  font-weight: 600;
+}
+
+.admin-map-icon:has(input:focus-visible) {
+  outline: 2px solid var(--c-coral);
+  outline-offset: 2px;
+}

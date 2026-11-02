@@ -5,6 +5,7 @@ import ListingCard from '../components/cards/ListingCard.jsx'
 import PlaceCard from '../components/cards/PlaceCard.jsx'
 import FilterBar, { FilterSelect, FilterToggle } from '../components/ui/FilterBar.jsx'
 import MapPanel from '../components/ui/MapPanel.jsx'
+import PhotoBanner from '../components/ui/PhotoBanner.jsx'
 import { categories } from '../data/establishments.js'
 import { useState } from 'react'
 import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
@@ -124,17 +125,14 @@ export default function DondeComer() {
         </div>
       </section>
 
-      <section className="curio-banner" style={{ '--banner-image': 'url(/img/home/curiosidades-banner.jpg)' }}>
-        <div className="curio-banner__card">
-          <p className="eyebrow">Descubre Gramalote</p>
-          <h2>Curiosidades</h2>
-          <p>
-            Conoce las tradiciones, la naturaleza, la gastronomía y los
-            detalles que hacen único a Gramalote.
-          </p>
-          <Button to="/curiosidades">Ver curiosidades</Button>
-        </div>
-      </section>
+      <PhotoBanner
+        image="/img/home/curiosidades-banner.jpg"
+        eyebrow="Descubre Gramalote"
+        title="Curiosidades"
+        text="Conoce las tradiciones, la naturaleza, la gastronomía y los detalles que hacen único a Gramalote."
+        cta="Ver curiosidades"
+        to="/curiosidades"
+      />
 
       <PracticalInfo />
     </>

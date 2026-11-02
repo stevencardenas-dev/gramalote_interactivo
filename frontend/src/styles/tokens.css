@@ -9,6 +9,11 @@
   --c-brick: #a5292b;
   --c-coral: #db5319;
   --c-brown: #773f10;
+  --c-green: #306c46;
+  /* Verde hoja oscurecido para texto blanco (4.5:1) */
+  --c-leaf-dark: #557a23;
+  --c-peach: #fce3cf;
+  --c-footer-gray: #ebebeb;
   --c-ink: #141414;
   --c-ink-soft: #4b3b2f;
   --c-muted: #8c8177;
