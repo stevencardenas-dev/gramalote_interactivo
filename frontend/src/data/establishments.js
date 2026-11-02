@@ -42,7 +42,7 @@ export const categories = {
       'Descubre las artesanías y creaciones locales de Gramalote. Encuentra productos hechos a mano, conoce a sus creadores y consulta cómo contactarlos.',
     filterLabel: 'Tipo de producto',
     filterAll: 'Todos los productos',
-    filters: ['Tejidos', 'Perfumería', 'Decoración', 'Regalos'],
+    filters: ['Artesanía', 'Otro'],
     priceLabel: 'Precio',
     priceAll: 'Todos los precios',
     prices: ['Hasta $50.000', '$50.000 - $150.000', 'Más de $150.000'],

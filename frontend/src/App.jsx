@@ -15,7 +15,9 @@ import InformacionPractica from './pages/InformacionPractica.jsx'
 import Mapa from './pages/Mapa.jsx'
 import Buscar from './pages/Buscar.jsx'
 import Acceder from './pages/Acceder.jsx'
+import Restablecer from './pages/Restablecer.jsx'
 import Admin from './pages/Admin.jsx'
+import AdminUsuarios from './pages/AdminUsuarios.jsx'
 import AdminEstablecimientos from './pages/AdminEstablecimientos.jsx'
 import AdminEstablecimiento from './pages/AdminEstablecimiento.jsx'
 import RequireAdmin from './components/admin/RequireAdmin.jsx'
@@ -43,6 +45,7 @@ export default function App() {
         <Route path="mapa" element={<Mapa />} />
         <Route path="buscar" element={<Buscar />} />
         <Route path="acceder" element={<Acceder />} />
+        <Route path="restablecer" element={<Restablecer />} />
         <Route
           path="admin"
           element={
@@ -64,6 +67,14 @@ export default function App() {
           element={
             <RequireAdmin>
               <AdminEstablecimiento />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/usuarios"
+          element={
+            <RequireAdmin>
+              <AdminUsuarios />
             </RequireAdmin>
           }
         />

@@ -517,3 +517,20 @@ servicios propietarios. Checklist al mudar:
 - ¿Se conservan los originales en `originals/` (más calidad, más disco)?
 - ¿Límite de imágenes por establecimiento (hoy el esquema no lo impone)?
 - ¿Se amplía el volumen raíz (opción B) o se añade un EBS dedicado (opción C)?
+
+## 13. Usuarios, roles y restablecer contraseña (2026-11-01)
+
+- **Roles:** `admin` (todo: publicar fichas, usuarios) y `editor` (edita fichas, no
+  publica ni gestiona usuarios). Un admin cambia el rol, desactiva o reactiva cuentas en
+  `/admin/usuarios`; no puede quitarse su propio acceso ni dejar el sitio sin
+  administrador activo. Cambiar el rol o desactivar cierra las sesiones de esa cuenta.
+- **Enlace de restablecimiento:** `POST /api/admin/users/:id/reset-link` (o al crear la
+  cuenta) devuelve un enlace `/restablecer?token=…` de un solo uso (24 h; 72 h al crear).
+  En la base solo queda el hash SHA-256 (`admin_password_resets`, migración 005). El admin
+  se lo entrega a la persona por el canal que prefiera.
+- **«¿Olvidaste tu contraseña?»:** `POST /api/auth/forgot` responde siempre igual y
+  registra la solicitud en `audit_log`; `/admin/usuarios` muestra el aviso junto a la
+  cuenta. **No se envía correo**: no hay SMTP configurado. Para enviarlo solo hará falta
+  un servidor SMTP (decisión abierta) y llamar `createResetToken` desde esa ruta.
+- `POST /api/auth/reset` fija la contraseña nueva (mínimo 8) y revoca las sesiones;
+  `POST /api/auth/change-password` es el cambio propio con la contraseña actual.

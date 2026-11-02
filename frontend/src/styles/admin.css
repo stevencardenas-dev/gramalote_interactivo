@@ -1286,3 +1286,84 @@ a.admin-module-card:hover {
   outline: 2px solid var(--c-coral);
   outline-offset: 2px;
 }
+
+/* Usuarios y roles */
+.admin-users {
+  list-style: none;
+  display: grid;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.admin-users__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--c-white);
+}
+
+.admin-users__item.is-off {
+  opacity: 0.65;
+}
+
+.admin-users__name {
+  font-weight: 600;
+}
+
+.admin-users__meta {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--c-text-soft, inherit);
+}
+
+.admin-users__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-users__actions select,
+.admin-users__actions button {
+  font: inherit;
+  font-size: var(--fs-sm);
+  padding: 6px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--c-white);
+  cursor: pointer;
+}
+
+.admin-link-box {
+  grid-column: 1 / -1;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--c-sky, #eef3f9);
+  font-size: var(--fs-sm);
+}
+
+.admin-link-box code {
+  display: block;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.admin-password {
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+}
+
+@media (max-width: 640px) {
+  .admin-users__item {
+    grid-template-columns: 1fr;
+  }
+  .admin-new.admin-new--users {
+    grid-template-columns: 1fr;
+  }
+}

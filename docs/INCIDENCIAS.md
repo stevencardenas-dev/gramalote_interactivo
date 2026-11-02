@@ -76,7 +76,7 @@ Validado en MySQL 8.4.11 con Docker. Decisión: MySQL 8.0+ e InnoDB.
 
 | ID | Hallazgo | Evidencia | Estado |
 | --- | --- | --- | --- |
-| INC-21 | Hay fotos sin ficha: Lonchería Romero (3), ArteLu (5), Caliopes (5) y Yawart (5). | `docs/IMAGENES.md` | **Pendiente** |
+| INC-21 | Hay fotos sin ficha: Lonchería Romero (3), ArteLu (5), Caliopes (5) y Yawart (5). | `docs/IMAGENES.md` | **Corregido** (2026-11-01: Lonchería Romero y Yawart ya tienen fotos; el resto ya estaba) |
 | INC-22 | Hay fichas sin fotos: Aroma Twins, Dulce Paseo y Doña Claudia. | `docs/IMAGENES.md` | **Pendiente** |
 | INC-23 | El nombre difiere: Drive “Mi gorda Bella” vs. código “Mi Gordita Bella”. | `establishments.js`, `docs/IMAGENES.md` | **Pendiente** |
 | INC-24 | `Origen Cocina de Autor` está oculto de los listados (`hidden: true`) pero sigue accesible por URL directa. | `establishments.js:191`, `establishments.js:445` | **Observación** |

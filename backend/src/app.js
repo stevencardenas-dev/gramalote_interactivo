@@ -14,6 +14,7 @@ import mapRouter from './routes/map.js'
 import metaRouter from './routes/meta.js'
 import practicalRouter from './routes/practical.js'
 import searchRouter from './routes/search.js'
+import usersRouter from './routes/users.js'
 
 const app = express()
 
@@ -52,6 +53,12 @@ app.get('/api', (_req, res) => {
       'POST /api/auth/refresh',
       'POST /api/auth/logout',
       'GET /api/auth/me',
+      'POST /api/auth/forgot',
+      'POST /api/auth/reset',
+      'POST /api/auth/change-password',
+      'GET|POST /api/admin/users',
+      'PATCH /api/admin/users/:id',
+      'POST /api/admin/users/:id/reset-link',
       'GET /api/meta',
       'GET /api/site',
       'GET /api/settings/:key',
@@ -98,6 +105,7 @@ app.use(
   '/api',
   authRouter,
   adminRouter,
+  usersRouter,
   metaRouter,
   establishmentsRouter,
   experiencesRouter,

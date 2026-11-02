@@ -58,6 +58,23 @@ export async function login(email, password) {
   return applySession(data)
 }
 
+export async function forgotPassword(email) {
+  const data = await request('/forgot', { method: 'POST', body: { email } })
+  return data?.message ?? ''
+}
+
+export async function resetPassword(token, password) {
+  await request('/reset', { method: 'POST', body: { token, password } })
+}
+
+export async function changePassword(currentPassword, newPassword) {
+  await request('/change-password', {
+    method: 'POST',
+    body: { currentPassword, newPassword },
+    auth: true,
+  })
+}
+
 export async function refreshSession() {
   if (refreshPromise) return refreshPromise
 

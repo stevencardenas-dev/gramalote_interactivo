@@ -95,6 +95,17 @@
   color: var(--c-navy);
 }
 
+.link-arrow {
+  cursor: pointer;
+}
+
+button.link-arrow {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+}
+
 .link-arrow::after {
   content: '';
   width: 16px;

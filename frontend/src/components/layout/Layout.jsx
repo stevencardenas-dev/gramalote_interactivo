@@ -19,6 +19,7 @@ const TITLES = {
   '/mapa': 'Mapa',
   '/buscar': 'Buscar',
   '/acceder': 'Acceder',
+  '/restablecer': 'Nueva contraseña',
 }
 
 function StaticTitle({ pathname }) {

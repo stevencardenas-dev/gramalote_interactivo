@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import {
   clearRefreshCookie,
+  hashPassword,
   newRefreshToken,
   placeholderHash,
   readRefreshCookie,
@@ -13,6 +14,7 @@ import {
 import { config } from '../config.js'
 import { query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, stringParam } from '../http.js'
+import { resetTokenHash } from '../password-reset.js'
 
 const router = Router()
 
@@ -132,6 +134,115 @@ router.post(
       )
     }
     clearRefreshCookie(res)
+    res.status(204).end()
+  }),
+)
+
+// Límite sencillo en memoria para no inundar el aviso de "olvidé mi clave".
+const forgotHits = new Map()
+function tooManyForgot(key) {
+  const now = Date.now()
+  const recent = (forgotHits.get(key) ?? []).filter((time) => now - time < 15 * 60 * 1000)
+  recent.push(now)
+  forgotHits.set(key, recent)
+  if (forgotHits.size > 500) forgotHits.clear()
+  return recent.length > 5
+}
+
+// No hay correo saliente configurado: la solicitud queda registrada y un
+// administrador ve el aviso en Usuarios para generar el enlace. La respuesta es
+// siempre la misma para no revelar qué correos existen.
+router.post(
+  '/auth/forgot',
+  asyncHandler(async (req, res) => {
+    const email = stringParam(req.body?.email, { max: 190 })?.toLowerCase()
+    const ip = (req.ip ?? '').slice(0, 45) || null
+    if (email && !tooManyForgot(`${ip}|${email}`)) {
+      const user = await queryOne(
+        'SELECT id FROM admin_users WHERE email = ? AND is_active = 1 AND deleted_at IS NULL',
+        [email],
+      )
+      if (user) {
+        await query(
+          `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, ip_address)
+           VALUES (NULL, 'password_reset_requested', 'admin_user', ?, ?)`,
+          [user.id, ip],
+        )
+      }
+    }
+    res.json({
+      data: {
+        message:
+          'Si el correo pertenece a una cuenta activa, un administrador recibió el aviso y te enviará un enlace para crear una contraseña nueva.',
+      },
+    })
+  }),
+)
+
+router.post(
+  '/auth/reset',
+  asyncHandler(async (req, res) => {
+    const token = stringParam(req.body?.token, { max: 128 })
+    const password = typeof req.body?.password === 'string' ? req.body.password : ''
+    if (!token) throw new ApiError(400, 'VALIDATION', 'Falta el enlace de restablecimiento')
+    if (password.length < 8 || password.length > 256) {
+      throw new ApiError(400, 'VALIDATION', 'La contraseña debe tener entre 8 y 256 caracteres')
+    }
+
+    const reset = await queryOne(
+      `SELECT r.id, r.user_id, r.expires_at, r.used_at, u.is_active
+       FROM admin_password_resets r
+       JOIN admin_users u ON u.id = r.user_id AND u.deleted_at IS NULL
+       WHERE r.token_hash = ?`,
+      [resetTokenHash(token)],
+    )
+    if (
+      !reset ||
+      reset.used_at ||
+      !reset.is_active ||
+      new Date(reset.expires_at).getTime() <= Date.now()
+    ) {
+      throw new ApiError(400, 'INVALID_RESET', 'El enlace no es válido o ya venció; pide uno nuevo')
+    }
+
+    await query('UPDATE admin_users SET password_hash = ? WHERE id = ?', [
+      await hashPassword(password),
+      reset.user_id,
+    ])
+    await query('UPDATE admin_password_resets SET used_at = NOW() WHERE id = ?', [reset.id])
+    await query(
+      'UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
+      [reset.user_id],
+    )
+    await query(
+      `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, ip_address)
+       VALUES (?, 'password_reset', 'admin_user', ?, ?)`,
+      [reset.user_id, reset.user_id, (req.ip ?? '').slice(0, 45) || null],
+    )
+    res.status(204).end()
+  }),
+)
+
+router.post(
+  '/auth/change-password',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const current = typeof req.body?.currentPassword === 'string' ? req.body.currentPassword : ''
+    const next = typeof req.body?.newPassword === 'string' ? req.body.newPassword : ''
+    if (next.length < 8 || next.length > 256) {
+      throw new ApiError(400, 'VALIDATION', 'La contraseña nueva debe tener entre 8 y 256 caracteres')
+    }
+    const user = await queryOne(
+      'SELECT id, password_hash FROM admin_users WHERE id = ? AND is_active = 1 AND deleted_at IS NULL',
+      [req.admin.id],
+    )
+    if (!user || !(await verifyPassword(current, user.password_hash))) {
+      throw new ApiError(400, 'INVALID_CREDENTIALS', 'La contraseña actual no es correcta')
+    }
+    await query('UPDATE admin_users SET password_hash = ? WHERE id = ?', [
+      await hashPassword(next),
+      user.id,
+    ])
     res.status(204).end()
   }),
 )

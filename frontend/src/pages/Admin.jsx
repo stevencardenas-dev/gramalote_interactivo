@@ -10,6 +10,13 @@ const MODULES = [
     hint: 'Datos e imágenes de comer, dormir y comprar',
     path: '/admin/establecimientos',
   },
+  {
+    key: 'usuarios',
+    name: 'Usuarios',
+    hint: 'Cuentas, roles y enlaces para restablecer contraseñas',
+    path: '/admin/usuarios',
+    adminOnly: true,
+  },
   { key: 'experiencias', name: 'Experiencias', hint: 'Qué hacer en Gramalote', path: null },
   { key: 'curiosidades', name: 'Curiosidades', hint: 'Contenido editorial', path: null },
 ]
@@ -265,7 +272,7 @@ export default function Admin() {
 
         <h2 className="admin-title-sm">Módulos</h2>
         <ul className="admin-modules-grid">
-          {MODULES.map((module) => (
+          {MODULES.filter((module) => !module.adminOnly || user?.role === 'admin').map((module) => (
             <li key={module.key}>
               {module.path ? (
                 <Link className="admin-module-card" to={module.path}>

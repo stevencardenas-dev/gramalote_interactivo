@@ -250,5 +250,15 @@
         "photo": "sombreros-techa-textil.jpg"
       }
     ]
+  },
+  "loncheria-romero": {
+    "cover": "loncheria-romero-card.jpg",
+    "gallery": [
+      "loncheria-romero-1.jpg",
+      "loncheria-romero-2.jpg"
+    ]
+  },
+  "yawart": {
+    "cover": "yawart-card.jpg"
   }
 }

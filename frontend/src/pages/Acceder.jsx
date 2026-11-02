@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import Logo from '../components/ui/Logo.jsx'
-import { AuthError, ensureSession, login, logout } from '../lib/auth.js'
+import { AuthError, ensureSession, forgotPassword, login, logout } from '../lib/auth.js'
 
 export default function Acceder() {
   const navigate = useNavigate()
@@ -13,6 +13,8 @@ export default function Acceder() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
+  const [forgot, setForgot] = useState(false)
+  const [notice, setNotice] = useState('')
 
   useEffect(() => {
     let alive = true
@@ -36,6 +38,19 @@ export default function Acceder() {
       navigate(location.state?.from ?? '/admin', { replace: true })
     } catch (err) {
       setError(err instanceof AuthError ? err.message : 'No se pudo iniciar sesión')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  async function handleForgot(event) {
+    event.preventDefault()
+    setPending(true)
+    setError('')
+    try {
+      setNotice(await forgotPassword(email))
+    } catch (err) {
+      setError(err instanceof AuthError ? err.message : 'No se pudo enviar la solicitud')
     } finally {
       setPending(false)
     }
@@ -94,34 +109,89 @@ export default function Acceder() {
           <h1>Acceder</h1>
           <p>Bienvenido al área de administración. Ingresa para editar las fichas de Gramalote.</p>
 
-          <form onSubmit={handleSubmit}>
-            {error ? <p className="auth-error">{error}</p> : null}
-            <div className="field">
-              <label htmlFor="email">Correo electrónico</label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="password">Contraseña</label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </div>
-            <Button type="submit" disabled={pending}>
-              {pending ? 'Ingresando…' : 'Ingresar'}
-            </Button>
-          </form>
+          {forgot ? (
+            <form onSubmit={handleForgot}>
+              {error ? <p className="auth-error">{error}</p> : null}
+              {notice ? (
+                <p role="status">{notice}</p>
+              ) : (
+                <>
+                  <p>
+                    Escribe tu correo. Un administrador recibirá el aviso y te enviará un enlace para
+                    crear una contraseña nueva.
+                  </p>
+                  <div className="field">
+                    <label htmlFor="forgot-email">Correo electrónico</label>
+                    <input
+                      id="forgot-email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                    />
+                  </div>
+                  <Button type="submit" disabled={pending}>
+                    {pending ? 'Enviando…' : 'Pedir enlace'}
+                  </Button>
+                </>
+              )}
+              <p className="note">
+                <button
+                  type="button"
+                  className="link-arrow"
+                  onClick={() => {
+                    setForgot(false)
+                    setNotice('')
+                    setError('')
+                  }}
+                >
+                  Volver a ingresar
+                </button>
+              </p>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              {error ? <p className="auth-error">{error}</p> : null}
+              <div className="field">
+                <label htmlFor="email">Correo electrónico</label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="password">Contraseña</label>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </div>
+              <Button type="submit" disabled={pending}>
+                {pending ? 'Ingresando…' : 'Ingresar'}
+              </Button>
+              <p className="note">
+                <button
+                  type="button"
+                  className="link-arrow"
+                  onClick={() => {
+                    setForgot(true)
+                    setError('')
+                  }}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </p>
+            </form>
+          )}
 
           <p className="note">
             <Link className="link-arrow" to="/">
