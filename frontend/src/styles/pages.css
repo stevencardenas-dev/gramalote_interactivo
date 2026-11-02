@@ -985,7 +985,7 @@ button.social-dot {
   align-items: center;
   gap: 6px;
   margin-top: 6px;
-  color: var(--c-coral);
+  color: #b8410f;
   font-size: 0.875rem;
   font-weight: 700;
 }

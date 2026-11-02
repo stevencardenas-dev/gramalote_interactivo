@@ -694,6 +694,10 @@
   padding-block: clamp(36px, 4vw, 56px) 0;
 }
 
+.story__blocks:last-child {
+  padding-bottom: clamp(48px, 6vw, 80px);
+}
+
 .story h2 {
   color: var(--tone);
   font-size: clamp(1.75rem, 2.8vw, 2.5rem);

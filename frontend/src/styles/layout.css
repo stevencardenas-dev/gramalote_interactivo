@@ -153,6 +153,10 @@
   transition: transform 0.2s ease;
 }
 
+.nav-dropdown:not([open]) .nav-dropdown__panel {
+  display: none;
+}
+
 .nav-dropdown__panel {
   position: absolute;
   top: calc(100% + 14px);
