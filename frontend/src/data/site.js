@@ -2,13 +2,18 @@ export const site = {
   name: 'Gramalote Interactivo',
   place: 'Gramalote · Norte de Santander',
   nav: [
-    { label: 'Inicio', to: '/' },
-    { label: 'Qué hacer', to: '/que-hacer' },
-    { label: 'Dónde ir', to: '/donde-ir' },
-    { label: 'Su historia', to: '/historia' },
+    { label: 'Inicio', to: '/', match: ['/'], exact: true },
+    { label: 'Qué hacer', to: '/que-hacer', match: ['/que-hacer'] },
+    {
+      label: 'Dónde ir',
+      to: '/donde-ir',
+      match: ['/donde-ir', '/donde-comer', '/donde-dormir', '/donde-comprar', '/establecimiento', '/mapa'],
+    },
+    { label: 'Su historia', to: '/historia', match: ['/historia'] },
   ],
   explore: {
     label: 'Explorar',
+    match: ['/curiosidades', '/informacion-practica'],
     items: [
       { label: 'Curiosidades', to: '/curiosidades' },
       { label: 'Información práctica', to: '/informacion-practica' },

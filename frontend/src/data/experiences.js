@@ -127,10 +127,20 @@ export const activities = [
     meta: '20 min en carro o moto · Dificultad media baja',
     photo: '/img/que-hacer/marquetalia.jpg',
     openDaily: false,
-    info: {},
+    hero: '/img/que-hacer/marquetalia.jpg',
+    summary:
+      'Un lugar para descansar entre zonas verdes, tomar un café, acampar o alquilar la cocina para un asado.',
+    description:
+      'Café Marquetalia es un espacio para tomar fotografías entre zonas verdes, descansar en hamacas y kioscos y tomar un café. También se puede acampar o alquilar la cocina para hacer un asado o un sancocho. No tiene restaurante.',
+    info: { access: '20 min en carro o moto', difficulty: 'Media baja' },
+    gallery: [
+      { src: '/img/que-hacer/marquetalia.jpg', alt: 'Entrada de Café Marquetalia entre la vegetación' },
+      { src: '/img/home/est-1.jpg', alt: 'Café Marquetalia' },
+    ],
     tips: [
       { icon: 'huellas', title: 'Cómo llegar', text: '20 minutos en carro o moto.' },
       { icon: 'camino', title: 'Dificultad', text: 'Media baja.' },
+      { icon: 'bolso', title: 'Qué puedes hacer', text: 'Fotografías entre zonas verdes, hamacas y kioscos, café, camping y alquiler de cocina.' },
       { icon: 'info', title: 'Ten en cuenta', text: 'No tiene restaurante: puedes alquilar la cocina para un asado o un sancocho.' },
     ],
   },

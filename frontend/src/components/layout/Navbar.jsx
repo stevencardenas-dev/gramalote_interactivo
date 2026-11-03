@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { site } from '../../data/site.js'
 import { getUser, subscribe } from '../../lib/auth.js'
 import Icon from '../ui/Icon.jsx'
@@ -36,6 +36,14 @@ function SearchForm({ onSubmitted, inputId = 'site-search' }) {
 }
 
 const DESKTOP_BREAKPOINT = 1100
+
+// La rayita del menú sigue a la sección, no solo a la ruta exacta: las fichas,
+// los listados y los accesos por redirección también marcan su opción.
+function isActive({ match = [], exact = false }, pathname) {
+  return match.some((base) =>
+    exact ? pathname === base : pathname === base || pathname.startsWith(`${base}/`),
+  )
+}
 
 export default function Navbar({ over = false }) {
   const { pathname } = useLocation()
@@ -147,21 +155,22 @@ export default function Navbar({ over = false }) {
         </Link>
 
         <nav className="site-nav" aria-label="Navegación principal">
-          {site.nav.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.to === '/'}
-              className={({ isActive }) =>
-                `site-nav__link${isActive ? ' active' : ''}`
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
+          {site.nav.map((link) => {
+            const active = isActive(link, pathname)
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                aria-current={active ? 'page' : undefined}
+                className={`site-nav__link${active ? ' active' : ''}`}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
 
           <details className="nav-dropdown" ref={dropdownRef}>
-            <summary>
+            <summary className={isActive(site.explore, pathname) ? 'active' : undefined}>
               {site.explore.label}
               <Icon name="chevron" />
             </summary>

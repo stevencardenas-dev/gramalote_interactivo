@@ -9,6 +9,8 @@ import { getActivity } from '../data/experiences.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
 
 const INFO_FIELDS = [
+  { key: 'access', icon: 'huellas', label: 'Cómo llegar' },
+  { key: 'difficulty', icon: 'camino', label: 'Dificultad' },
   { key: 'hours', icon: 'horario', label: 'Horario' },
   { key: 'location', icon: 'ubicacion', label: 'Ubicación' },
   { key: 'fee', icon: 'billetera', label: 'Tarifa' },
