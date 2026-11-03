@@ -47,10 +47,19 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
   return payload?.data ?? null
 }
 
+const listeners = new Set()
+
 function applySession(data) {
   accessToken = data?.accessToken ?? null
   currentUser = data?.user ?? null
+  listeners.forEach((listener) => listener())
   return currentUser
+}
+
+// Para que el menú se entere cuando la sesión cambia (useSyncExternalStore).
+export function subscribe(listener) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
 }
 
 export async function login(email, password) {

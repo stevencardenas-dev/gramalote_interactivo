@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { site } from '../../data/site.js'
-import { getUser } from '../../lib/auth.js'
+import { getUser, subscribe } from '../../lib/auth.js'
 import Icon from '../ui/Icon.jsx'
 import Logo from '../ui/Logo.jsx'
 
@@ -125,8 +125,8 @@ export default function Navbar({ over = false }) {
     setOpenPath(null)
   }
 
-  // Con sesión iniciada el acceso lleva al panel (se relee en cada navegación).
-  const loggedIn = Boolean(getUser())
+  // Con sesión iniciada el acceso lleva al panel.
+  const loggedIn = Boolean(useSyncExternalStore(subscribe, getUser))
   const loginTo = loggedIn ? '/admin' : '/acceder'
   const loginLabel = loggedIn ? 'Panel' : 'Acceder'
 
