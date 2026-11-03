@@ -72,6 +72,7 @@ export function adaptEstablishment(item) {
     checkin: item.checkin ?? null,
     address: item.address ?? null,
     coordinates: item.coordinates ?? null,
+    mapsUrl: item.mapsUrl ?? null,
     payment: joinPayments(item.payments),
     phone: item.phone ?? null,
     phoneSecondary: item.phoneSecondary ?? null,

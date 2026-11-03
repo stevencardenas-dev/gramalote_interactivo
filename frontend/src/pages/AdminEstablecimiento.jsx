@@ -560,6 +560,14 @@ export default function AdminEstablecimiento() {
                     onChange={(event) => update({ locationDetail: event.target.value })}
                   />
                 </Field>
+                <Field label="Enlace de Google Maps (opcional)" hint="Si lo dejas vacío, el botón usa las coordenadas.">
+                  <input
+                    type="url"
+                    placeholder="https://maps.app.goo.gl/… o https://www.google.com/maps/place/…"
+                    value={form.mapsUrl ?? ''}
+                    onChange={(event) => update({ mapsUrl: event.target.value })}
+                  />
+                </Field>
                 <Field label="Latitud">
                   <input
                     type="number"

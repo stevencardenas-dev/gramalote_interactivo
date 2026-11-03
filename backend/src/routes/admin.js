@@ -77,6 +77,15 @@ function integer(value, field) {
   return parsed
 }
 
+// Enlace de Google Maps; vacío = el botón usa las coordenadas.
+function mapsUrl(value) {
+  const url = text(value, 'Enlace de Google Maps', { max: 500 })
+  if (url !== null && !/^https?:\/\//i.test(url)) {
+    throw new ApiError(400, 'VALIDATION', 'El enlace de Google Maps debe empezar con http:// o https://')
+  }
+  return url
+}
+
 // Icono del pin en el mapa; vacío = el mapa lo deduce del tipo.
 function mapIcon(value) {
   const icon = text(value, 'Icono del mapa', { max: 40 })
@@ -302,6 +311,7 @@ router.get(
         latitude: toNumber(row.latitude),
         longitude: toNumber(row.longitude),
         mapIcon: row.map_icon ?? null,
+        mapsUrl: row.maps_url ?? null,
         phone: row.phone ?? null,
         phoneSecondary: row.phone_secondary ?? null,
         whatsapp: row.whatsapp ?? null,
@@ -479,6 +489,7 @@ router.patch(
         longitude: decimal(body.longitude, 'Longitud', { min: -180, max: 180 }),
         // Sin la clave (cliente anterior) se conserva el icono actual.
         map_icon: 'mapIcon' in body ? mapIcon(body.mapIcon) : current.map_icon,
+        maps_url: mapsUrl(body.mapsUrl),
         phone: text(body.phone, 'Teléfono', { max: 40 }),
         phone_secondary: text(body.phoneSecondary, 'Teléfono secundario', { max: 40 }),
         whatsapp: text(body.whatsapp, 'WhatsApp', { max: 40 }),
@@ -513,7 +524,7 @@ router.patch(
         `UPDATE establishments SET
            slug = ?, name = ?, category_id = ?, type_id = ?, zone_id = ?,
            location_detail = ?, summary = ?, description = ?, address = ?,
-           latitude = ?, longitude = ?, map_icon = ?, phone = ?, phone_secondary = ?,
+           latitude = ?, longitude = ?, map_icon = ?, maps_url = ?, phone = ?, phone_secondary = ?,
            whatsapp = ?, email = ?, website = ?, hours_text = ?, checkin_text = ?,
            price_text = ?, price_min_cop = ?, price_max_cop = ?,
            is_featured = ?, sort_order = ?
@@ -521,7 +532,7 @@ router.patch(
         [
           fields.slug, fields.name, fields.category_id, fields.type_id, fields.zone_id,
           fields.location_detail, fields.summary, fields.description, fields.address,
-          fields.latitude, fields.longitude, fields.map_icon, fields.phone, fields.phone_secondary,
+          fields.latitude, fields.longitude, fields.map_icon, fields.maps_url, fields.phone, fields.phone_secondary,
           fields.whatsapp, fields.email, fields.website, fields.hours_text,
           fields.checkin_text, fields.price_text, fields.price_min_cop,
           fields.price_max_cop, fields.is_featured ? 1 : 0, fields.sort_order, id,
