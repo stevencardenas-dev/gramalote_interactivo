@@ -260,5 +260,11 @@
   },
   "yawart": {
     "cover": "yawart-card.jpg"
+  },
+  "el-sabor-gramalotero": {
+    "cover": "el-sabor-gramalotero-card.jpg",
+    "hero": "el-sabor-gramalotero-hero.jpg",
+    "alt": "Hamburguesa con papas fritas (imagen de referencia)",
+    "credit": "Imagen de referencia: Sergey A. Demidov, CC BY 4.0, Wikimedia Commons"
   }
 }

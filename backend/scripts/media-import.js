@@ -24,8 +24,11 @@ async function loadManifest() {
 // Lista de fotos de una ficha con su rol y el texto alternativo.
 function photosFor(name, entry) {
   const photos = []
-  if (entry.cover) photos.push({ file: entry.cover, role: 'cover', alt: name })
-  if (entry.hero) photos.push({ file: entry.hero, role: 'hero', alt: name })
+  // `alt` y `credit` son opcionales (fotos de stock: crédito y licencia).
+  const alt = entry.alt ?? name
+  const credit = entry.credit ?? null
+  if (entry.cover) photos.push({ file: entry.cover, role: 'cover', alt, credit })
+  if (entry.hero) photos.push({ file: entry.hero, role: 'hero', alt, credit })
   for (const file of entry.gallery ?? []) {
     photos.push({ file, role: 'gallery', alt: name })
   }
@@ -69,12 +72,13 @@ async function importEstablishment(establishment, entry) {
     await withTransaction(async (connection) => {
       const mediaIds = new Map()
       for (const [file, image] of stored) {
-        const alt = photos.find((photo) => photo.file === file)?.alt ?? establishment.name
+        const photo = photos.find((item) => item.file === file)
+        const alt = photo?.alt ?? establishment.name
         const [result] = await connection.query(
           `INSERT INTO media
              (storage_disk, storage_path, public_url, mime_type, width_px, height_px,
-              alt_text, source, source_ref, checksum_sha256)
-           VALUES ('local', ?, ?, ?, ?, ?, ?, 'drive', ?, ?)`,
+              alt_text, credit, source, source_ref, checksum_sha256)
+           VALUES ('local', ?, ?, ?, ?, ?, ?, ?, 'drive', ?, ?)`,
           [
             image.storagePath,
             image.publicUrl,
@@ -82,6 +86,7 @@ async function importEstablishment(establishment, entry) {
             image.width,
             image.height,
             alt.slice(0, 255),
+            photo?.credit ?? null,
             sourceRef(file),
             image.checksum,
           ],

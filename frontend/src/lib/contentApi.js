@@ -36,6 +36,7 @@ function adaptProducts(item, cover) {
   const rows = Array.isArray(item.products) ? item.products : []
   return rows.map((product) => ({
     name: product.name,
+    description: product.description ?? null,
     photo: product.media?.url ?? cover,
     price: product.price,
   }))
@@ -70,8 +71,10 @@ export function adaptEstablishment(item) {
     hours: item.hours ?? null,
     checkin: item.checkin ?? null,
     address: item.address ?? null,
+    coordinates: item.coordinates ?? null,
     payment: joinPayments(item.payments),
     phone: item.phone ?? null,
+    phoneSecondary: item.phoneSecondary ?? null,
     whatsapp: item.whatsapp ?? null,
     email: item.email ?? null,
     website: item.website ?? null,

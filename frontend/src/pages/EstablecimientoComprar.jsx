@@ -2,6 +2,8 @@ import HeroFicha from '../components/ui/HeroFicha.jsx'
 import InfoBar from '../components/ui/InfoBar.jsx'
 import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
+import { locationButtonProps } from '../lib/maps.js'
+import { contactLines } from '../lib/contact.js'
 import RelatedPlaces from '../components/cards/RelatedPlaces.jsx'
 import { categories } from '../data/establishments.js'
 
@@ -36,7 +38,7 @@ export default function EstablecimientoComprar({ item }) {
             { icon: 'horario', label: 'Horario', value: item.hours },
             { icon: 'ubicacion', label: 'Ubicación', value: item.address },
             { icon: 'billetera', label: 'Precios', value: item.priceRange },
-            { icon: 'telefono', label: 'Teléfono', value: item.phone },
+            { icon: 'telefono', label: 'Contacto', value: contactLines(item) },
           ]}
         />
       </div>
@@ -57,7 +59,7 @@ export default function EstablecimientoComprar({ item }) {
           </div>
 
           <div className="center-action">
-            <Button to="/mapa" icon="arrow">
+            <Button {...locationButtonProps(item)} icon="arrow">
               Ver ubicación en el mapa
             </Button>
           </div>

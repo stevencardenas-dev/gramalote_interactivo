@@ -437,16 +437,22 @@ export default function AdminEstablecimiento() {
             <div className="admin-panel__tools">
               <button
                 type="button"
-                className="admin-link"
+                className="admin-tool-btn"
                 onClick={() => setSignal((prev) => ({ open: true, n: prev.n + 1 }))}
               >
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="m4 3.5 4 4 4-4M4 8.5l4 4 4-4" />
+                </svg>
                 Expandir todo
               </button>
               <button
                 type="button"
-                className="admin-link"
+                className="admin-tool-btn"
                 onClick={() => setSignal((prev) => ({ open: false, n: prev.n + 1 }))}
               >
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="m4 7.5 4-4 4 4M4 12.5l4-4 4 4" />
+                </svg>
                 Contraer todo
               </button>
             </div>
@@ -609,13 +615,8 @@ export default function AdminEstablecimiento() {
                     onChange={(event) => update({ email: event.target.value })}
                   />
                 </Field>
-                <Field label="Sitio web">
-                  <input
-                    value={form.website ?? ''}
-                    onChange={(event) => update({ website: event.target.value })}
-                  />
-                </Field>
               </div>
+              <p className="admin-hint">El sitio web y las redes se agregan en «Redes sociales».</p>
               </Section>
 
               <Section title="Horarios y precios" hint="Textos libres para la ficha y rangos numéricos para ordenar y filtrar." signal={signal}>
@@ -914,7 +915,7 @@ export default function AdminEstablecimiento() {
                   </Button>
                 }>
                 {form.products.map((product, index) => (
-                  <div key={index} className="admin-row">
+                  <div key={index} className="admin-row admin-row--product">
                     <input
                       placeholder="Nombre"
                       value={product.name}
@@ -928,6 +929,13 @@ export default function AdminEstablecimiento() {
                       value={product.price ?? ''}
                       onChange={(event) =>
                         updateList('products', index, { price: event.target.value })
+                      }
+                    />
+                    <input
+                      placeholder="Descripción"
+                      value={product.description ?? ''}
+                      onChange={(event) =>
+                        updateList('products', index, { description: event.target.value })
                       }
                     />
                     <PhotoSelect

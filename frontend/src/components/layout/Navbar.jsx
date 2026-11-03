@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { site } from '../../data/site.js'
+import { getUser } from '../../lib/auth.js'
 import Icon from '../ui/Icon.jsx'
 import Logo from '../ui/Logo.jsx'
 
@@ -124,6 +125,11 @@ export default function Navbar({ over = false }) {
     setOpenPath(null)
   }
 
+  // Con sesión iniciada el acceso lleva al panel (se relee en cada navegación).
+  const loggedIn = Boolean(getUser())
+  const loginTo = loggedIn ? '/admin' : '/acceder'
+  const loginLabel = loggedIn ? 'Panel' : 'Acceder'
+
   const solid = !over || scrolled || open
   const headerClass = [
     'site-header',
@@ -170,9 +176,9 @@ export default function Navbar({ over = false }) {
         </nav>
 
         <div className="site-header__actions">
-          <Link className="site-login" to="/acceder">
+          <Link className="site-login" to={loginTo}>
             <Icon name="lock" />
-            Acceder
+            {loginLabel}
           </Link>
           <SearchForm inputId="site-search" />
           <button
@@ -209,8 +215,8 @@ export default function Navbar({ over = false }) {
               </li>
             ))}
             <li>
-              <Link to="/acceder" onClick={closeMenu}>
-                Acceder
+              <Link to={loginTo} onClick={closeMenu}>
+                {loginLabel}
               </Link>
             </li>
           </ul>

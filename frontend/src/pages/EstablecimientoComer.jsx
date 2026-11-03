@@ -2,13 +2,29 @@ import HeroFicha from '../components/ui/HeroFicha.jsx'
 import InfoBar from '../components/ui/InfoBar.jsx'
 import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
+import { locationButtonProps } from '../lib/maps.js'
+import { contactLines } from '../lib/contact.js'
 import RelatedPlaces from '../components/cards/RelatedPlaces.jsx'
 import { categories } from '../data/establishments.js'
 
 const info = categories.comer
 
+const money = new Intl.NumberFormat('es-CO', {
+  style: 'currency',
+  currency: 'COP',
+  maximumFractionDigits: 0,
+})
+
+// La oferta sale de «Productos» del panel; si la ficha aún no tiene, de las
+// tarjetas destacadas y, por último, de tres tarjetas genéricas.
 export default function EstablecimientoComer({ item }) {
-  const features = item.features ?? [
+  const offer = (item.products ?? []).map((product) => ({
+    title: product.name,
+    text: product.description,
+    photo: product.photo,
+    price: product.price,
+  }))
+  const features = (offer.length > 0 ? offer : item.features) ?? [
     { title: item.type, text: item.summary, photo: item.photo },
     {
       title: 'Atención cercana',
@@ -46,7 +62,7 @@ export default function EstablecimientoComer({ item }) {
             { icon: 'horario', label: 'Horario', value: item.hours },
             { icon: 'ubicacion', label: 'Ubicación', value: item.address },
             { icon: 'billetera', label: 'Métodos de pago', value: item.payment },
-            { icon: 'telefono', label: 'Teléfono', value: item.phone },
+            { icon: 'telefono', label: 'Contacto', value: contactLines(item) },
           ]}
         />
       </div>
@@ -63,13 +79,14 @@ export default function EstablecimientoComer({ item }) {
               <article key={feature.title} className="offer-card">
                 <Photo src={feature.photo ?? item.photo} alt={feature.title} />
                 <h3>{feature.title}</h3>
-                <p>{feature.text}</p>
+                {feature.text ? <p>{feature.text}</p> : null}
+                {feature.price ? <p className="offer-card__price">{money.format(feature.price)}</p> : null}
               </article>
             ))}
           </div>
 
           <div className="center-action">
-            <Button to="/mapa" icon="arrow">
+            <Button {...locationButtonProps(item)} icon="arrow">
               Ver ubicación en el mapa
             </Button>
           </div>
