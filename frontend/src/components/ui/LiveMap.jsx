@@ -24,6 +24,14 @@ const TILES_URL =
 const INITIAL_CENTER = [-72.79, 7.89]
 const INITIAL_ZOOM = 13
 
+// Límites aproximados de Norte de Santander: [[oeste, sur], [este, norte]].
+// Evitan pedir teselas de otras regiones y llenar el caché offline con ellas.
+const NORTE_DE_SANTANDER_BOUNDS = [
+  [-73.7, 6.9],
+  [-72.0, 9.3],
+]
+const MIN_ZOOM = 8
+
 // MapLibre busca su worker junto a su propio archivo, que Vite empaqueta en otro
 // lugar. Se le indica el worker que trae el paquete npm (sin CDN externo).
 setWorkerUrl(workerUrl)
@@ -278,6 +286,8 @@ export default function LiveMap({
       container: containerRef.current,
       center: INITIAL_CENTER,
       zoom: INITIAL_ZOOM,
+      minZoom: MIN_ZOOM,
+      maxBounds: NORTE_DE_SANTANDER_BOUNDS,
       attributionControl: { compact: false },
       style: {
         version: 8,
