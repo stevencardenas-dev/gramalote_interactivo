@@ -49,8 +49,15 @@ export default function Layout() {
     ].includes(pathname)
 
   useEffect(() => {
+    if (hash) {
+      const target = document.getElementById(decodeURIComponent(hash.slice(1)))
+      if (target) {
+        target.scrollIntoView({ behavior: 'instant', block: 'start' })
+        return
+      }
+    }
     window.scrollTo({ top: 0, behavior: 'instant' })
-  }, [pathname])
+  }, [pathname, hash])
 
   // Aviso cuando se navega sin señal con lo guardado por el service worker.
   const [online, setOnline] = useState(() => navigator.onLine)
