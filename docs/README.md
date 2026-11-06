@@ -15,7 +15,7 @@ gramalote_interactivo/
 - **Stack:** React 19 + Vite 8 + React Router 7.
 - **Estilos:** CSS plano con variables (`src/styles/tokens.css`), sin framework.
 - **Tipografías:** DM Sans (principal) e Inter (apoyo), cargadas desde Google Fonts.
-- **Datos:** por ahora en `src/data/` con registros de ejemplo; se reemplazarán por la API del backend.
+- **Datos:** el inventario ya vive en MySQL (`backend/database/seed-content.sql`) y la API lo expone; el frontend todavía lee `src/data/` y se conectará a la API en la siguiente entrega. La base sigue siendo la fuente de verdad para el panel de administración.
 
 ```bash
 cd frontend
@@ -43,7 +43,10 @@ npm run lint     # oxlint
 | `/informacion-practica` | Información práctica | Implementada (frame INFORMACION PRACTICA) |
 | `/mapa` | Mapa interactivo | Placeholder visual (pendiente mapa real) |
 | `/buscar?q=` | Buscador | Implementada (búsqueda local) |
-| `/acceder` | Login administración | Formulario sin conexión |
+| `/acceder` | Login administración | Implementada (conectada a la API) |
+| `/admin` | Panel de administración | Implementada (base protegida por sesión) |
+| `/admin/establecimientos` | Listado editable de fichas | Implementada (API real) |
+| `/admin/establecimientos/:id` | Editor de ficha e imágenes | Implementada (datos, fotos, publicación) |
 | `*` | 404 | Implementada |
 
 ## Mapeo Figma → React
@@ -105,6 +108,8 @@ Las carpetas de Historia, Curiosidades y Funcionalidades siguen vacías en Drive
   evidenciados por la UI, con estado y archivo de referencia.
 - [`INCIDENCIAS.md`](./INCIDENCIAS.md): incongruencias detectadas, estado y
   prioridad.
+- [`mobile-plan.md`](./mobile-plan.md): cómo se resuelve el diseño responsive de
+  Inicio y de las fichas, breakpoints y verificación.
 - [`../backend/README.md`](../backend/README.md): API de lectura y variables de
   entorno.
 - [`../backend/database/README.md`](../backend/database/README.md): esquema
@@ -112,9 +117,12 @@ Las carpetas de Historia, Curiosidades y Funcionalidades siguen vacías en Drive
 
 ## Pendientes / notas
 
-- Las imágenes siguen siendo placeholders CSS. Drive tiene 106 fotos de
-  restaurantes, hospedajes y artesanías, pero ninguna para Inicio, Qué hacer,
-  Información práctica, Curiosidades o Historia (ver `IMAGENES.md`).
+- Inicio y las fichas de establecimiento usan ya los recortes de los PNG de
+  Figma (`frontend/public/img/home`, `/ficha`, `/brand`). El resto de vistas
+  (Qué hacer, Donde ir, Curiosidades, Historia) sigue con placeholders CSS.
+  Drive tiene 106 fotos de restaurantes, hospedajes y artesanías, pero ninguna
+  para Inicio, Qué hacer, Información práctica, Curiosidades o Historia
+  (ver `IMAGENES.md`).
 - Faltan fichas para Lonchería Romero, ArteLu, Caliopes y Yawart, y hay tres
   fichas sin fotos (Aroma Twins, Dulce Paseo, Doña Claudia).
 - Los establecimientos y experiencias son datos de ejemplo basados en los nombres

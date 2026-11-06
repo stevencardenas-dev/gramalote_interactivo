@@ -85,6 +85,59 @@ function filtersFromQuery(queryParams) {
   }
 }
 
+// Horario y servicios de varias fichas con tres consultas, para que el listado
+// pueda filtrar "Abierto hoy" y servicios sin pedir cada ficha por separado.
+async function listExtras(ids) {
+  const result = new Map()
+  if (ids.length === 0) return result
+
+  const [hours, exceptions, services] = await Promise.all([
+    query(
+      `SELECT establishment_id, day_of_week, opens_at, closes_at, is_closed
+       FROM opening_hours WHERE establishment_id IN (?)`,
+      [ids],
+    ),
+    query(
+      `SELECT establishment_id, exception_date, is_closed, opens_at, closes_at
+       FROM opening_hours_exceptions WHERE establishment_id IN (?)`,
+      [ids],
+    ),
+    query(
+      `SELECT es.establishment_id, s.slug, s.name
+       FROM establishment_services es
+       JOIN services s ON s.id = es.service_id
+       WHERE es.establishment_id IN (?)
+       ORDER BY s.sort_order, s.id`,
+      [ids],
+    ),
+  ])
+
+  const group = (rows) => {
+    const map = new Map()
+    for (const row of rows) {
+      const key = Number(row.establishment_id)
+      if (!map.has(key)) map.set(key, [])
+      map.get(key).push(row)
+    }
+    return map
+  }
+  const hoursBy = group(hours)
+  const exceptionsBy = group(exceptions)
+  const servicesBy = group(services)
+
+  for (const id of ids) {
+    const key = Number(id)
+    result.set(key, {
+      openNow: calculateOpenNow(hoursBy.get(key) ?? [], exceptionsBy.get(key) ?? []),
+      services: (servicesBy.get(key) ?? []).map((row) => ({
+        slug: row.slug,
+        name: row.name,
+      })),
+    })
+  }
+  return result
+}
+
 router.get(
   '/establishments',
   asyncHandler(async (req, res) => {
@@ -106,8 +159,17 @@ router.get(
       ),
     ])
 
+    const extras = await listExtras(rows.map((row) => row.id))
+
     res.json({
-      data: rows.map(toEstablishmentSummary),
+      data: rows.map((row) => {
+        const extra = extras.get(Number(row.id))
+        return {
+          ...toEstablishmentSummary(row),
+          openNow: extra?.openNow ?? null,
+          services: extra?.services ?? [],
+        }
+      }),
       meta: {
         total: Number(countRow?.total ?? 0),
         limit,
@@ -154,14 +216,17 @@ router.get(
          FROM establishment_images i
          JOIN media m ON m.id = i.media_id
          WHERE i.establishment_id = ?
-         ORDER BY FIELD(i.role, 'cover', 'logo', 'gallery'), i.sort_order, i.id`,
+         ORDER BY FIELD(i.role, 'cover', 'hero', 'logo', 'gallery'), i.sort_order, i.id`,
         [row.id],
       ),
       query(
-        `SELECT id, title, description, icon, sort_order
-         FROM establishment_features
-         WHERE establishment_id = ?
-         ORDER BY sort_order, id`,
+        `SELECT f.id, f.title, f.description, f.icon, f.sort_order,
+                m.id AS media_id, m.public_url, m.alt_text, m.caption,
+                m.credit, m.mime_type, m.width_px, m.height_px
+         FROM establishment_features f
+         LEFT JOIN media m ON m.id = f.media_id
+         WHERE f.establishment_id = ?
+         ORDER BY f.sort_order, f.id`,
         [row.id],
       ),
       query(
@@ -224,11 +289,14 @@ router.get(
     const openNow = calculateOpenNow(hours, exceptions)
     const imageList = images.map(toImage).filter(Boolean)
     const cover = imageList.find((image) => image.role === 'cover') ?? imageList[0] ?? null
+    // Foto ancha del encabezado; sin ella la ficha usa la portada.
+    const hero = imageList.find((image) => image.role === 'hero') ?? cover
 
     res.json({
       data: {
         ...toEstablishmentSummary(row),
         cover,
+        hero,
         phoneSecondary: row.phone_secondary ?? null,
         openNow,
         images: imageList,
@@ -237,6 +305,7 @@ router.get(
           title: feature.title,
           description: feature.description ?? null,
           icon: feature.icon ?? null,
+          media: mediaFromRow(feature),
           sortOrder: Number(feature.sort_order),
         })),
         products: products.map((product) => ({

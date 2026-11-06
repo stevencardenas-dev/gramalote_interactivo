@@ -1,5 +1,6 @@
 import PageHero from '../components/ui/PageHero.jsx'
 import Placeholder from '../components/ui/Placeholder.jsx'
+import { heroViejo } from '../data/heroImages.js'
 
 const blocks = [
   {
@@ -20,6 +21,8 @@ export default function Historia() {
   return (
     <>
       <PageHero
+        image={heroViejo.src}
+        credit={heroViejo.credit}
         eyebrow="Memoria del municipio"
         title="Su historia"
         intro="Conoce los acontecimientos y la memoria de Gramalote, un pueblo que renació entre las montañas."
@@ -29,19 +32,21 @@ export default function Historia() {
         ]}
       />
 
-      <section className="section">
-        <div className="container container--narrow">
+      {/* Mismas filas de foto y texto que los detalles de Curiosidades. */}
+      <section className="story story--navy">
+        <div className="story__blocks">
           {blocks.map((block, index) => (
-            <article
-              key={block.title}
-              className={`curiosity-detail__row${index % 2 === 1 ? ' is-reverse' : ''}`}
-            >
-              <Placeholder className="curiosity-detail__media" />
-              <div className="curiosity-detail__body">
-                <h2>{block.title}</h2>
-                <p>{block.text}</p>
-              </div>
-            </article>
+            <div key={block.title} className="container">
+              <article className={`story-row${index % 2 === 1 ? ' story-row--reverse' : ''}`}>
+                <div className="story-row__media">
+                  <Placeholder className="photo" />
+                </div>
+                <div className="story-row__body">
+                  <h2>{block.title}</h2>
+                  <p>{block.text}</p>
+                </div>
+              </article>
+            </div>
           ))}
         </div>
       </section>

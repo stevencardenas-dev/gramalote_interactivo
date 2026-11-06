@@ -1,3 +1,4 @@
+// Tarjetas de "Experiencias que no olvidarás" en Inicio.
 export const experiences = [
   {
     id: 'cascadas-escondidas',
@@ -5,7 +6,8 @@ export const experiences = [
     title: 'Cascadas escondidas entre la niebla',
     category: 'Naturaleza',
     description:
-      'El sonido del agua te guía por el sendero. Al final, la recompensa es un arcoíris entre la niebla.',
+      'El sonido del agua te guía por el sendero. Al final, la recompensa es fría y transparente.',
+    photo: '/img/home/exp-1.jpg',
     to: '/que-hacer/cascadas-arco-iris',
   },
   {
@@ -14,7 +16,8 @@ export const experiences = [
     title: 'Sabores de Gramalote',
     category: 'Gastronomía',
     description:
-      'Descubre los platos y sabores que reúnen historias, tradiciones y memoria del municipio.',
+      'Descubre la gastronomía local y los sabores tradicionales del municipio.',
+    photo: '/img/home/exp-2b.jpg',
     to: '/donde-comer',
   },
   {
@@ -23,113 +26,126 @@ export const experiences = [
     title: 'Artesanías con identidad local',
     category: 'Cultura',
     description:
-      'Conoce los productos y las creaciones de los artesanos de Gramalote, piezas que guardan su historia.',
+      'Conoce los productos y las creaciones de los artesanos de Gramalote.',
+    photo: '/img/home/exp-3b.jpg',
     to: '/donde-comprar',
   },
 ]
 
-export const experienceDetails = [
+const RECOMMENDATIONS =
+  'Lleva ropa cómoda, zapatos cerrados, agua, gorra y protector solar.'
+
+// Experiencias de "Qué hacer" (frame QUE HACER, 1 de noviembre) y sus fichas.
+// `openDaily`: abre todos los días; es lo que usa el filtro "Abierto hoy".
+// Solo Cascadas Arco Iris tiene ficha completa en el diseño; las demás
+// muestran lo que dice su tarjeta.
+export const activities = [
+  {
+    slug: 'pueblo-viejo',
+    title: 'Pueblo Viejo',
+    category: 'Patrimonio',
+    text: 'Caminar por el camino veredal, cruzar el puente de Pueblo Viejo, hoy puente del Divino Niño, y conocer los vestigios de la primera cabecera municipal, a orillas de la quebrada Calderera.',
+    meta: '30 min en vehículo · Dificultad media baja',
+    photo: '/img/que-hacer/pueblo-viejo.jpg',
+    openDaily: true,
+    info: { location: 'Pueblo Viejo, a orillas de la quebrada Calderera' },
+    tips: [
+      { icon: 'huellas', title: 'Cómo llegar', text: '30 minutos en vehículo.' },
+      { icon: 'camino', title: 'Dificultad', text: 'Media baja.' },
+      { icon: 'bolso', title: 'Recomendaciones', text: RECOMMENDATIONS },
+    ],
+  },
+  {
+    slug: 'ruinas-antiguo-gramalote',
+    title: 'Las ruinas del antiguo Gramalote',
+    category: 'Patrimonio',
+    text: 'Recorrer en unas 2 horas lo que queda de la segunda cabecera municipal: la plaza de la Restauración, la torre, el kiosco y el samán.',
+    meta: '31 min en vehículo · Dificultad baja · Precaución: no entrar a las ruinas ni al antiguo templo',
+    photo: '/img/que-hacer/ruinas.jpg',
+    openDaily: true,
+    info: { location: 'Gramalote Viejo' },
+    tips: [
+      { icon: 'huellas', title: 'Cómo llegar', text: '31 minutos en vehículo. El recorrido toma unas 2 horas.' },
+      { icon: 'camino', title: 'Dificultad', text: 'Baja.' },
+      { icon: 'alerta', title: 'Precaución', text: 'No entres a las ruinas ni al antiguo templo.' },
+      { icon: 'bolso', title: 'Recomendaciones', text: RECOMMENDATIONS },
+    ],
+  },
+  {
+    slug: 'nuevo-gramalote',
+    title: 'Nuevo Gramalote',
+    category: 'Patrimonio',
+    text: 'Caminar hasta 3 horas entre paisajes panorámicos y murales, visitar la casa de la cultura y la biblioteca, y encontrar gastronomía, hospedaje y artesanías.',
+    meta: '1 h desde Cúcuta · Dificultad media alta · Entrada libre',
+    photo: '/img/que-hacer/nuevo-gramalote.jpg',
+    openDaily: true,
+    info: { location: 'Casco urbano de Gramalote', fee: 'Entrada libre' },
+    tips: [
+      { icon: 'huellas', title: 'Cómo llegar', text: '1 hora desde Cúcuta. Recorridos a pie de hasta 3 horas.' },
+      { icon: 'camino', title: 'Dificultad', text: 'Media alta.' },
+      { icon: 'bolso', title: 'Recomendaciones', text: RECOMMENDATIONS },
+    ],
+  },
   {
     slug: 'cascadas-arco-iris',
     title: 'Cascadas Arco Iris',
     category: 'Naturaleza',
+    text: 'Ver los arcoíris que el sol forma entre las gotas de la quebrada y, de noche, avistar golondrinas. Está en la finca Limoncito, donde vivió el fundador Gregorio Montes.',
+    meta: '15 min en vehículo · Dificultad media alta',
+    photo: '/img/experiencias/cascadas/1.jpg',
+    hero: '/img/experiencias/cascadas/hero.jpg',
+    openDaily: true,
     summary:
-      'Las Cascadas Arcoíris destacan por sus arcoíris naturales y el avistamiento nocturno de golondrinas en Gramalote.',
+      'Las Cascadas Arco Iris destacan por sus arcoíris naturales y el avistamiento nocturno de golondrinas en Gramalote.',
     description:
-      'Cascadas Arcoíris es un atractivo turístico del municipio de Gramalote en la finca Limoncito, donde vivió los últimos años de vida nuestro fundador Gregorio Montes. Tiene una característica óptica muy interesante: cuando los rayos de sol entran en la espesura del entorno logra separar los colores del haz de luz al pasar por cada gotica de agua que cae roca abajo, generando ese espectáculo visual de muchos arcoíris. Propiamente el nombre a la quebrada que siempre se conoció como Las Golondrinas, ya que en ella posaban estas aves hasta nuestros tiempos en horas nocturnas, como un plan extra para avistarlas.',
-    hours: 'Lunes a domingo, de 8:00 a. m. a 9:00 p. m.',
-    address: 'Calle 5 #4-20, Gramalote Nuevo.',
-    parking: 'Sí, parqueadero para clientes.',
-    phone: '+57 310 123 4567',
-    social: ['facebook', 'instagram'],
-    gallery: 5,
+      'Cascadas Arco Iris es un atractivo turístico del municipio de Gramalote, ubicado en la finca Limoncito, donde vivió sus últimos años el fundador Gregorio Montes. Cuando los rayos del sol entran en la espesura del entorno, cada gota de agua que cae roca abajo separa los colores de la luz y forma arcoíris. La quebrada siempre se conoció como Las Golondrinas, porque en ella posan estas aves, que se pueden avistar en horas nocturnas como plan adicional.',
+    info: {
+      hours: '9:00 a. m. – 6:00 p. m.',
+      location: 'Finca Limoncito, vereda Valderrama',
+      fee: '$5.000',
+      phone: '310 7881532',
+    },
+    gallery: [
+      { src: '/img/experiencias/cascadas/1.jpg', alt: 'Cascada entre paredes de roca cubiertas de musgo' },
+      { src: '/img/experiencias/cascadas/2.jpg', alt: 'Letrero de Cascadas Arcoíris con alas de colores' },
+      { src: '/img/experiencias/cascadas/3.jpg', alt: 'Salto de agua sobre una roca oscura' },
+      { src: '/img/experiencias/cascadas/4.jpg', alt: 'Cascada que cae sobre una pared de roca' },
+      { src: '/img/experiencias/cascadas/5.jpg', alt: 'Arcoíris sobre la cascada' },
+    ],
     tips: [
-      {
-        title: 'Tiempo de caminata',
-        text: 'Aproximadamente 50 minutos a pie desde la plaza principal.',
-      },
-      {
-        title: 'Dificultad',
-        text: 'Media-alta. Ten en cuenta las condiciones del acceso.',
-      },
-      {
-        title: 'Recomendaciones',
-        text: 'Lleva ropa cómoda, zapatos cerrados, agua, gorra y protector solar.',
-      },
-      {
-        title: 'Estado del lugar',
-        text: 'Cierre temporal. Verifica si se autoriza la visita antes de desplazarte.',
-      },
+      { icon: 'huellas', title: 'Tiempo de caminata', text: 'Aproximadamente 50 minutos a pie desde la plaza principal.' },
+      { icon: 'camino', title: 'Dificultad', text: 'Media-alta. Se recomienda ir con guía y tener en cuenta las condiciones del acceso.' },
+      { icon: 'bolso', title: 'Recomendaciones', text: 'Lleva ropa cómoda, zapatos cerrados, agua, gorra y protector solar. No fumar. Hay parqueadero.' },
+      { icon: 'info', title: 'Estado del lugar', text: 'Abierto de 9:00 a. m. a 6:00 p. m. Antes de ir, consulta la información de acceso.' },
     ],
   },
   {
     slug: 'cafe-marquetalia',
     title: 'Café Marquetalia',
-    category: 'Parque',
+    category: 'Naturaleza',
+    text: 'Tomar fotografías entre zonas verdes, descansar en hamacas y kioscos, tomar un café, acampar o alquilar la cocina para un asado o sancocho. No tiene restaurante.',
+    meta: '20 min en carro o moto · Dificultad media baja',
+    photo: '/img/que-hacer/marquetalia.jpg',
+    openDaily: false,
+    hero: '/img/que-hacer/marquetalia.jpg',
     summary:
-      'Consulta la información de este establecimiento y descubre qué ofrece para complementar tu visita a Gramalote.',
+      'Un lugar para descansar entre zonas verdes, tomar un café, acampar o alquilar la cocina para un asado.',
     description:
-      'Un espacio para disfrutar del café de la región y del paisaje de montaña, con atención para visitantes y habitantes de Gramalote.',
-    hours: 'Pendiente de confirmar',
-    address: 'Gramalote, Norte de Santander.',
-    parking: 'Pendiente de confirmar',
-    phone: 'Pendiente de confirmar',
-    social: [],
-    gallery: 5,
-    tips: [
-      {
-        title: 'Tiempo de caminata',
-        text: 'Consulta el tiempo aproximado de recorrido desde el punto de referencia.',
-      },
-      {
-        title: 'Dificultad',
-        text: 'Revisa el nivel de dificultad y las condiciones generales del acceso.',
-      },
-      {
-        title: 'Recomendaciones',
-        text: 'Lleva ropa cómoda, calzado adecuado, agua, gorra y protección solar.',
-      },
-      {
-        title: 'Estado del lugar',
-        text: 'Verifica restricciones y recomendaciones vigentes antes de salir.',
-      },
+      'Café Marquetalia es un espacio para tomar fotografías entre zonas verdes, descansar en hamacas y kioscos y tomar un café. También se puede acampar o alquilar la cocina para hacer un asado o un sancocho. No tiene restaurante.',
+    info: { access: '20 min en carro o moto', difficulty: 'Media baja' },
+    gallery: [
+      { src: '/img/que-hacer/marquetalia.jpg', alt: 'Entrada de Café Marquetalia entre la vegetación' },
+      { src: '/img/home/est-1.jpg', alt: 'Café Marquetalia' },
     ],
-  },
-  {
-    slug: 'otro-sitio',
-    title: 'Otro sitio',
-    category: 'Por definir',
-    summary:
-      'Atractivos, naturaleza, gastronomía, eventos y la memoria del municipio en una sola guía pensada para el celular: qué hay para hacer y cómo llegar a cada lugar.',
-    description:
-      'Atractivos, naturaleza, gastronomía, eventos y la memoria del municipio en una sola guía pensada para el celular: qué hay para hacer y cómo llegar a cada lugar.',
-    hours: 'Pendiente de confirmar',
-    address: 'Gramalote, Norte de Santander.',
-    parking: 'Pendiente de confirmar',
-    phone: 'Pendiente de confirmar',
-    social: [],
-    gallery: 5,
     tips: [
-      {
-        title: 'Tiempo de caminata',
-        text: 'Pendiente de confirmar.',
-      },
-      {
-        title: 'Dificultad',
-        text: 'Pendiente de confirmar.',
-      },
-      {
-        title: 'Recomendaciones',
-        text: 'Lleva ropa cómoda, calzado adecuado, agua, gorra y protección solar.',
-      },
-      {
-        title: 'Estado del lugar',
-        text: 'Verifica restricciones y recomendaciones vigentes antes de salir.',
-      },
+      { icon: 'huellas', title: 'Cómo llegar', text: '20 minutos en carro o moto.' },
+      { icon: 'camino', title: 'Dificultad', text: 'Media baja.' },
+      { icon: 'bolso', title: 'Qué puedes hacer', text: 'Fotografías entre zonas verdes, hamacas y kioscos, café, camping y alquiler de cocina.' },
+      { icon: 'info', title: 'Ten en cuenta', text: 'No tiene restaurante: puedes alquilar la cocina para un asado o un sancocho.' },
     ],
   },
 ]
 
-export function getExperience(slug) {
-  return experienceDetails.find((item) => item.slug === slug)
+export function getActivity(slug) {
+  return activities.find((item) => item.slug === slug)
 }

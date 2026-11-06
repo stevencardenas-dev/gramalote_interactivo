@@ -1,94 +1,168 @@
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import PageHero from '../components/ui/PageHero.jsx'
-import Placeholder from '../components/ui/Placeholder.jsx'
+import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
+import Icon from '../components/ui/Icon.jsx'
+import PracticalInfo from '../components/home/PracticalInfo.jsx'
 import { getCuriosity } from '../data/curiosities.js'
+import { usePageTitle } from '../lib/usePageTitle.js'
 
 function Paragraphs({ items }) {
-  return items.map((paragraph, index) => (
-    <p key={`paragraph-${index}`}>{paragraph}</p>
-  ))
+  return items.map((paragraph, index) => <p key={`p-${index}`}>{paragraph}</p>)
 }
 
-function RowMedia({ count = 1 }) {
-  if (count > 1) {
-    return (
-      <div className="curiosity-detail__media-group">
-        {Array.from({ length: count }, (_, index) => (
-          <Placeholder key={`media-${index}`} />
+function Row({ block }) {
+  const row = (
+    <div
+      className={`story-row${block.side === 'right' ? ' story-row--reverse' : ''}${
+        block.images.length > 1 ? ' story-row--duo' : ''
+      }${block.tall ? ' story-row--tall' : ''}`}
+    >
+      <div className="story-row__media">
+        {block.images.map((image) => (
+          <Photo key={image.src} src={image.src} alt={image.alt} position={image.position} />
         ))}
       </div>
-    )
-  }
-
-  return <Placeholder className="curiosity-detail__media" />
-}
-
-function ContentBlock({ block }) {
-  if (block.type === 'feature') {
-    return (
-      <article className="curiosity-feature">
-        <Placeholder className="curiosity-feature__media" />
-        <div className="curiosity-feature__body">
-          <h2>{block.title}</h2>
-          <Paragraphs items={block.paragraphs} />
-        </div>
-      </article>
-    )
-  }
-
-  if (block.type === 'featured') {
-    return (
-      <div className="curiosity-featured">
-        <div className="curiosity-featured__body">
-          <span className="eyebrow">{block.eyebrow}</span>
-          <h2>{block.title}</h2>
-          <p>{block.text}</p>
-        </div>
-        <Placeholder className="curiosity-featured__media" />
-      </div>
-    )
-  }
-
-  if (block.type === 'collection') {
-    return (
-      <section className="curiosity-collection">
-        <h2>{block.title}</h2>
-        <div
-          className="curiosity-collection__grid"
-          style={{ '--curiosity-columns': block.columns ?? 3 }}
-        >
-          {block.items.map((item) => (
-            <figure key={item.label} className="curiosity-collection__item">
-              <Placeholder />
-              <figcaption>{item.label}</figcaption>
-              {item.text ? <p>{item.text}</p> : null}
-            </figure>
-          ))}
-        </div>
-        <Paragraphs items={block.paragraphs} />
-      </section>
-    )
-  }
-
-  return (
-    <div
-      className={`curiosity-detail__row${
-        block.mediaSide === 'right' ? ' is-reverse' : ''
-      }`}
-    >
-      <RowMedia count={block.mediaCount} />
-      <div className="curiosity-detail__body">
+      <div className="story-row__body">
         {block.title ? <h2>{block.title}</h2> : null}
         <Paragraphs items={block.paragraphs} />
+        {block.link ? (
+          <Button to={block.link.to} className="btn--tone" icon="arrow">
+            {block.link.label}
+          </Button>
+        ) : null}
       </div>
     </div>
   )
+
+  if (!block.band) return <div className="container">{row}</div>
+  return (
+    <div className="story-band">
+      <div className="container">{row}</div>
+    </div>
+  )
+}
+
+function Block({ block }) {
+  switch (block.type) {
+    case 'row':
+      return <Row block={block} />
+
+    case 'featured':
+      return (
+        <div className="container">
+          <div className="story-date">
+            <p className="story-date__eyebrow">{block.eyebrow}</p>
+            <h2>{block.title}</h2>
+            <p>{block.text}</p>
+          </div>
+        </div>
+      )
+
+    case 'collection':
+      return (
+        <section className="container story-collection">
+          <h2>{block.title}</h2>
+          <div className="story-collection__grid">
+            {block.items.map((item) => (
+              <article key={item.title}>
+                <Photo src={item.src} alt={item.alt} />
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )
+
+    case 'pair':
+      return (
+        <section className={`container story-pair${block.titleFirst ? ' story-pair--title-first' : ''}`}>
+          {block.title ? <h2>{block.title}</h2> : null}
+          <div className="story-pair__grid">
+            {block.items.map((item) => (
+              <article key={item.title}>
+                <h3>{item.title}</h3>
+                <Photo src={item.src} alt={item.alt} />
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+          {block.note ? (
+            <div className="story-pair__note">
+              <h3>{block.note.title}</h3>
+              <p>{block.note.text}</p>
+            </div>
+          ) : null}
+        </section>
+      )
+
+    case 'related':
+      return (
+        <section className="story-related" aria-labelledby="related-title">
+          <div className="container">
+            <h2 id="related-title">También te puede interesar</h2>
+            <div className="story-related__grid">
+              {block.items.map((item) => (
+                <article key={item.to} className="story-related__card">
+                  <img src={item.photo} alt="" loading="lazy" />
+                  <div>
+                    <h3>{item.title}</h3>
+                    <p>{item.text}</p>
+                    <Link className="btn btn--primary btn--sm" to={item.to}>
+                      {item.cta} <Icon name="arrow" size={16} />
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+
+    case 'strip':
+      return (
+        <div className="container story-strip">
+          <Photo src={block.image.src} alt={block.image.alt} />
+          <p>{block.text}</p>
+        </div>
+      )
+
+    case 'overlay':
+      return (
+        <div className="container">
+          <div className="story-overlay">
+            <img src={block.image.src} alt={block.image.alt} loading="lazy" />
+            <div className="story-overlay__body">
+              <h2>{block.title}</h2>
+              <Paragraphs items={block.paragraphs} />
+            </div>
+          </div>
+        </div>
+      )
+
+    case 'card':
+      return (
+        <div className="container">
+          <div className="story-card">
+            <Photo src={block.image.src} alt={block.image.alt} />
+            <div className="story-card__body">
+              <h2>{block.title}</h2>
+              <p>{block.text}</p>
+            </div>
+          </div>
+        </div>
+      )
+
+    default:
+      return null
+  }
 }
 
 export default function CuriosidadDetalle() {
   const { slug } = useParams()
   const item = getCuriosity(slug)
+  usePageTitle(item?.title ?? 'Curiosidad no encontrada')
 
   if (!item) {
     return (
@@ -103,9 +177,12 @@ export default function CuriosidadDetalle() {
   }
 
   return (
-    <>
+    <div className={`story story--${item.tone}`}>
       <PageHero
-        title={item.title}
+        className="page-hero--story"
+        image={item.hero}
+        eyebrow={item.title}
+        title={item.heading}
         breadcrumb={[
           { label: 'Inicio', to: '/' },
           { label: 'Curiosidades', to: '/curiosidades' },
@@ -113,34 +190,26 @@ export default function CuriosidadDetalle() {
         ]}
       />
 
-      <section className="section section--intro">
-        <div className="container container--narrow">
-          <h2 className="curiosity-detail__heading">{item.introTitle}</h2>
-          <p className="curiosity-detail__intro">{item.introText}</p>
+      <section className="story-intro">
+        <div className="container">
+          <p>{item.intro}</p>
         </div>
       </section>
 
-      <section className="section section--tight">
-        <div className="container container--narrow">
-          {item.content.map((block, index) => (
-            <ContentBlock key={`${block.type}-${index}`} block={block} />
-          ))}
+      <div className="story__blocks">
+        {item.blocks.map((block, index) => (
+          <Block key={`${block.type}-${index}`} block={block} />
+        ))}
+      </div>
 
-          <div
-            className={`curiosity-closing${
-              item.closingMediaSide === 'right' ? ' is-reverse' : ''
-            }`}
-          >
-            <Placeholder className="curiosity-closing__media" />
-            <div className="curiosity-closing__body">
-              {item.closingTitle ? <h2>{item.closingTitle}</h2> : null}
-              {item.closingText.split('\n\n').map((paragraph, paragraphIndex) => (
-                <p key={`cierre-${paragraphIndex}`}>{paragraph}</p>
-              ))}
-            </div>
-          </div>
+      <section className="story-closing" style={{ '--closing-image': `url(${item.closing.image})` }}>
+        <div className="container">
+          {item.closing.title ? <h2>{item.closing.title}</h2> : null}
+          <Paragraphs items={item.closing.paragraphs} />
         </div>
       </section>
-    </>
+
+      <PracticalInfo />
+    </div>
   )
 }

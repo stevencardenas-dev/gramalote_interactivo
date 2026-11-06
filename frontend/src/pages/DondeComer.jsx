@@ -1,20 +1,50 @@
+import PracticalInfo from '../components/home/PracticalInfo.jsx'
 import PageHero from '../components/ui/PageHero.jsx'
-import Placeholder from '../components/ui/Placeholder.jsx'
 import Button from '../components/ui/Button.jsx'
 import ListingCard from '../components/cards/ListingCard.jsx'
 import PlaceCard from '../components/cards/PlaceCard.jsx'
 import FilterBar, { FilterSelect, FilterToggle } from '../components/ui/FilterBar.jsx'
 import MapPanel from '../components/ui/MapPanel.jsx'
-import { categories, getEstablishmentsByCategory } from '../data/establishments.js'
+import PhotoBanner from '../components/ui/PhotoBanner.jsx'
+import { categories } from '../data/establishments.js'
+import { useState } from 'react'
+import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
+import { usePagedList } from '../lib/listing.js'
 
 export default function DondeComer() {
   const meta = categories.comer
-  const places = getEstablishmentsByCategory('comer')
-  const lodging = getEstablishmentsByCategory('dormir').slice(0, 4)
+  const [type, setType] = useState(meta.filterAll)
+  const [openOnly, setOpenOnly] = useState(false)
+  const { data: comer, loading, error } = useEstablishments('comer')
+  const { data: dormir } = useEstablishments('dormir')
+
+  const places = orderBySlugs(comer, [
+    'bambu',
+    'dona-claudia',
+    'dulce-paseo',
+    'fresas-con-crema-carvajal',
+    'la-sazon-de-la-tia',
+    'la-comarca',
+  ])
+
+  const filtered = places.filter(
+    (item) =>
+      (type === meta.filterAll || item.filterGroup === type) &&
+      (!openOnly || item.openNow),
+  )
+  const { visible, hasMore, loadMore } = usePagedList(filtered, `${type}|${openOnly}`)
+
+  const lodging = orderBySlugs(dormir, [
+    'glamping-vista-antigua',
+    'hostal-campestre-camino-real',
+    'hostal-luna-azul',
+    'cabanas-el-penon',
+  ]).slice(0, 4)
 
   return (
     <>
       <PageHero
+        image="/img/home/hero-donde-comer.jpg"
         title={meta.label}
         intro={meta.intro}
         breadcrumb={[
@@ -27,25 +57,45 @@ export default function DondeComer() {
       <section className="section section--tight">
         <div className="container">
           <FilterBar>
-            <FilterToggle label="Abierto hoy" />
+            <FilterToggle label="Abierto hoy" active={openOnly} onChange={setOpenOnly} />
             <span className="filter-divider" aria-hidden="true" />
-            <FilterSelect label="Tipo" options={[meta.filterAll, ...meta.filters]} />
+            <FilterSelect
+              label="Tipo"
+              options={[meta.filterAll, ...meta.filters]}
+              value={type}
+              onChange={setType}
+            />
           </FilterBar>
 
-          <div className="listing-grid-v">
-            {places.slice(0, 6).map((item) => (
-              <ListingCard key={item.id} item={item} />
-            ))}
-          </div>
+          {loading ? (
+            <p className="note">Cargando establecimientos…</p>
+          ) : error ? (
+            <p className="auth-error">{error}</p>
+          ) : places.length === 0 ? (
+            <p className="empty">Todavía no hay establecimientos publicados.</p>
+          ) : filtered.length === 0 ? (
+            <p className="empty">Ningún establecimiento coincide con los filtros elegidos.</p>
+          ) : (
+            <div className="listing-grid-v">
+              {visible.map((item) => (
+                <ListingCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
 
-          <div className="center-action">
-            <Button variant="ghost">Cargar más</Button>
-          </div>
+          {hasMore ? (
+            <div className="center-action">
+              <Button variant="secondary" onClick={loadMore}>
+                Cargar más
+              </Button>
+            </div>
+          ) : null}
 
           <MapPanel
             title={meta.mapTitle}
             cta={meta.mapCta}
             to="/mapa"
+            groups={['comer']}
           />
 
           <div className="cross-section">
@@ -61,6 +111,7 @@ export default function DondeComer() {
                   title={item.name}
                   to={`/establecimiento/${item.slug}`}
                   summary={item.summary}
+                  photo={item.photo}
                 />
               ))}
             </div>
@@ -71,23 +122,19 @@ export default function DondeComer() {
               </Button>
             </div>
           </div>
-
-          <div className="split-feature">
-            <div className="split-feature__body">
-              <p className="eyebrow">Describe Gramalote</p>
-              <h2>Curiosidades</h2>
-              <p>
-                Conoce las tradiciones, la naturaleza, la gastronomía y los
-                detalles que hacen único a Gramalote.
-              </p>
-              <Button to="/curiosidades" variant="secondary">
-                Ver más
-              </Button>
-            </div>
-            <Placeholder className="split-feature__media" />
-          </div>
         </div>
       </section>
+
+      <PhotoBanner
+        image="/img/home/curiosidades-banner.jpg"
+        eyebrow="Descubre Gramalote"
+        title="Curiosidades"
+        text="Conoce las tradiciones, la naturaleza, la gastronomía y los detalles que hacen único a Gramalote."
+        cta="Ver curiosidades"
+        to="/curiosidades"
+      />
+
+      <PracticalInfo />
     </>
   )
 }

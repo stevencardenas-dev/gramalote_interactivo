@@ -81,6 +81,7 @@ export function toEstablishmentSummary(row) {
     description: row.description,
     address: row.address ?? null,
     coordinates: toCoordinates(row.latitude, row.longitude),
+    mapsUrl: row.maps_url ?? null,
     phone: row.phone ?? null,
     whatsapp: row.whatsapp ?? null,
     email: row.email ?? null,

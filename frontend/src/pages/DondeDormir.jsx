@@ -1,3 +1,4 @@
+import PracticalInfo from '../components/home/PracticalInfo.jsx'
 import PageHero from '../components/ui/PageHero.jsx'
 import Button from '../components/ui/Button.jsx'
 import ListingCard from '../components/cards/ListingCard.jsx'
@@ -5,16 +6,29 @@ import PlaceCard from '../components/cards/PlaceCard.jsx'
 import FilterBar, { FilterSelect } from '../components/ui/FilterBar.jsx'
 import MapPanel from '../components/ui/MapPanel.jsx'
 import HistoryBlock from '../components/home/HistoryBlock.jsx'
-import { categories, getEstablishmentsByCategory } from '../data/establishments.js'
+import { categories } from '../data/establishments.js'
+import { useState } from 'react'
+import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
+import { usePagedList } from '../lib/listing.js'
 
 export default function DondeDormir() {
   const meta = categories.dormir
-  const places = getEstablishmentsByCategory('dormir')
-  const shops = getEstablishmentsByCategory('comprar').slice(0, 2)
+  const [type, setType] = useState(meta.filterAll)
+  const [service, setService] = useState(meta.serviceAll)
+  const { data: places, loading, error } = useEstablishments('dormir')
+  const filtered = places.filter(
+    (item) =>
+      (type === meta.filterAll || item.filterGroup === type) &&
+      (service === meta.serviceAll || item.services.includes(service)),
+  )
+  const { visible, hasMore, loadMore } = usePagedList(filtered, `${type}|${service}`)
+  const { data: comprar } = useEstablishments('comprar')
+  const shops = orderBySlugs(comprar, ['maestros-de-la-madera', 'creaciones-martina']).slice(0, 2)
 
   return (
     <>
       <PageHero
+        image="/img/home/hero-donde-dormir.jpg"
         title={meta.label}
         intro={meta.intro}
         breadcrumb={[
@@ -27,22 +41,46 @@ export default function DondeDormir() {
       <section className="section section--tight">
         <div className="container">
           <FilterBar>
-            <FilterSelect label={meta.filterLabel} options={[meta.filterAll, ...meta.filters]} />
+            <FilterSelect
+              label={meta.filterLabel}
+              options={[meta.filterAll, ...meta.filters]}
+              value={type}
+              onChange={setType}
+            />
             <span className="filter-divider" aria-hidden="true" />
-            <FilterSelect label={meta.serviceLabel} options={[meta.serviceAll, ...meta.services]} />
+            <FilterSelect
+              label={meta.serviceLabel}
+              options={[meta.serviceAll, ...meta.services]}
+              value={service}
+              onChange={setService}
+            />
           </FilterBar>
 
-          <div className="listing-grid-v">
-            {places.slice(0, 6).map((item) => (
-              <ListingCard key={item.id} item={item} />
-            ))}
-          </div>
+          {loading ? (
+            <p className="note">Cargando alojamientos…</p>
+          ) : error ? (
+            <p className="auth-error">{error}</p>
+          ) : places.length === 0 ? (
+            <p className="empty">Todavía no hay alojamientos publicados.</p>
+          ) : filtered.length === 0 ? (
+            <p className="empty">Ningún alojamiento coincide con los filtros elegidos.</p>
+          ) : (
+            <div className="listing-grid-v">
+              {visible.map((item) => (
+                <ListingCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
 
-          <div className="center-action">
-            <Button variant="ghost">Cargar más</Button>
-          </div>
+          {hasMore ? (
+            <div className="center-action">
+              <Button variant="secondary" onClick={loadMore}>
+                Cargar más
+              </Button>
+            </div>
+          ) : null}
 
-          <MapPanel title={meta.mapTitle} cta={meta.mapCta} to="/mapa" />
+          <MapPanel title={meta.mapTitle} cta={meta.mapCta} to="/mapa" groups={['dormir']} />
 
           <div className="cross-section">
             <div className="section-head section-head--center">
@@ -58,6 +96,7 @@ export default function DondeDormir() {
                   title={item.name}
                   to={`/establecimiento/${item.slug}`}
                   summary={item.summary}
+                  photo={item.photo}
                 />
               ))}
             </div>
@@ -72,6 +111,8 @@ export default function DondeDormir() {
           <HistoryBlock embedded />
         </div>
       </section>
+
+      <PracticalInfo />
     </>
   )
 }

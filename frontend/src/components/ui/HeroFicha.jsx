@@ -1,6 +1,47 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import Placeholder from './Placeholder.jsx'
 import Icon from './Icon.jsx'
+import SocialIcon from './SocialIcon.jsx'
+
+const NETWORKS = {
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  whatsapp: 'WhatsApp',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  x: 'X',
+}
+
+function ShareButton({ title }) {
+  const [copied, setCopied] = useState(false)
+
+  async function share() {
+    const url = window.location.href
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url })
+        return
+      }
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // El usuario canceló o el navegador bloqueó el portapapeles.
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className="social-dot"
+      onClick={share}
+      aria-label={copied ? 'Enlace copiado' : 'Compartir'}
+      title={copied ? 'Enlace copiado' : 'Compartir'}
+    >
+      <Icon name="share" />
+    </button>
+  )
+}
 
 function Breadcrumb({ items = [] }) {
   return (
@@ -21,49 +62,62 @@ function Breadcrumb({ items = [] }) {
 
 export default function HeroFicha({
   breadcrumb,
-  variant = 'split',
   eyebrow,
   title,
   summary,
-  social = [],
+  image,
+  imageAlt = '',
+  pillTone = 'olive',
+  social = ['share'],
+  links = [],
   dots = true,
-  imageLabel,
-  children,
 }) {
+  const canShare = Array.isArray(social) ? social.includes('share') : Boolean(social)
+  const networks = links.filter((link) => NETWORKS[link.platform] && link.url)
+
   return (
-    <section className={`ficha-hero ficha-hero--${variant}`}>
-      <div className="container">
+    <section className="ficha-hero">
+      <div className="ficha-hero__bg">
+        {image ? <img src={image} alt={imageAlt} /> : null}
+      </div>
+
+      <div className="container ficha-hero__inner">
         <Breadcrumb items={breadcrumb} />
-        <div className="ficha-hero__grid">
-          {variant === 'split' ? (
-            <Placeholder className="ficha-hero__media" label={imageLabel} />
+
+        <div className="ficha-hero__center">
+          {networks.length || canShare ? (
+            <div className="ficha-hero__social">
+              {networks.map((link) => (
+                <a
+                  key={link.platform}
+                  className="social-dot"
+                  href={link.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={NETWORKS[link.platform]}
+                  title={NETWORKS[link.platform]}
+                >
+                  <SocialIcon name={link.platform} />
+                </a>
+              ))}
+              {canShare ? <ShareButton title={title} /> : null}
+            </div>
           ) : null}
 
-          <div className="ficha-hero__body">
-            {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+          {eyebrow ? (
+            <span className={`ficha-hero__pill ficha-hero__pill--${pillTone}`}>{eyebrow}</span>
+          ) : null}
 
-            {social.length ? (
-              <div className="ficha-hero__social">
-                {social.map((network) => (
-                  <span key={network} className="social-dot" aria-hidden="true">
-                    <Icon name={network} size={16} />
-                  </span>
-                ))}
-              </div>
-            ) : null}
+          <h1>{title}</h1>
 
-            <h1>{title}</h1>
-            <p>{summary}</p>
+          {summary ? <p className="ficha-hero__summary">{summary}</p> : null}
 
-            {dots ? (
-              <div className="ficha-hero__dots" aria-hidden="true">
-                <span />
-                <span className="is-active" />
-              </div>
-            ) : null}
-
-            {children}
-          </div>
+          {dots ? (
+            <div className="ficha-hero__dots" aria-hidden="true">
+              <span className="is-active" />
+              <span />
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

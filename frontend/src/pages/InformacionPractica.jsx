@@ -1,7 +1,9 @@
 import PageHero from '../components/ui/PageHero.jsx'
-import Placeholder from '../components/ui/Placeholder.jsx'
-import Button from '../components/ui/Button.jsx'
+import Photo from '../components/ui/Photo.jsx'
 import Icon from '../components/ui/Icon.jsx'
+import IconMask from '../components/ui/IconMask.jsx'
+import OfflineDownload from '../components/ui/OfflineDownload.jsx'
+import { MapExplorer } from '../components/ui/MapPanel.jsx'
 import {
   accessRoutes,
   preparationTips,
@@ -14,6 +16,7 @@ export default function InformacionPractica() {
   return (
     <>
       <PageHero
+        image="/img/info/hero.jpg"
         title="Información práctica"
         intro="Todo lo que necesitas saber para planear tu visita a Gramalote y disfrutar una experiencia segura y agradable."
         breadcrumb={[
@@ -32,12 +35,15 @@ export default function InformacionPractica() {
           <div className="access-grid">
             {accessRoutes.map((route) => (
               <article key={route.title} className="access-card">
-                <Placeholder />
-                <h3>{route.title}</h3>
-                <p>{route.text}</p>
-                <Button to="/informacion-practica#contactos" variant="secondary" icon="arrow">
-                  Consultar ruta
-                </Button>
+                <Photo src={route.photo} alt={route.alt} />
+                <div className="access-card__body">
+                  <h3>{route.title}</h3>
+                  <p>{route.text}</p>
+                  <a className="pill-link" href={route.href} target="_blank" rel="noreferrer">
+                    Consultar ruta <span aria-hidden="true">↗</span>
+                    <span className="visually-hidden"> {route.title.toLowerCase()} (abre Google Maps)</span>
+                  </a>
+                </div>
               </article>
             ))}
           </div>
@@ -49,7 +55,7 @@ export default function InformacionPractica() {
           <div className="transport-grid">
             {transportOptions.map((option) => (
               <article key={option.title} className="transport-card">
-                <Placeholder />
+                <IconMask icon={`icono-${option.icon}`} size={78} className="transport-card__icon" />
                 <h3>{option.title}</h3>
                 <p>{option.text}</p>
               </article>
@@ -61,12 +67,18 @@ export default function InformacionPractica() {
           </div>
 
           <div className="safety-block">
-            <Placeholder className="safety-block__media" />
+            <figure className="safety-block__media">
+              <Photo src="/img/info/seguridad.jpg" alt="Sendero de tierra entre el bosque" />
+              <figcaption>
+                Consulta las recomendaciones de seguridad antes de visitar
+                Gramalote y sus espacios naturales.
+              </figcaption>
+            </figure>
             <ul className="safety-list">
               {safetyTips.map((tip) => (
                 <li key={tip.title}>
                   <span className="safety-list__icon">
-                    <Icon name={tip.icon} size={18} />
+                    <IconMask icon={`icono-${tip.icon}`} size={20} />
                   </span>
                   <div className="safety-list__body">
                     <h3>{tip.title}</h3>
@@ -77,36 +89,36 @@ export default function InformacionPractica() {
             </ul>
           </div>
 
-          <p className="safety-note">
-            Consulta las recomendaciones de seguridad antes de visitar
-            Gramalote y sus espacios naturales.
-          </p>
-
-          <div className="help-note">
+          <a className="help-note" href="#contactos">
             <span className="help-note__icon">
               <Icon name="phone" />
             </span>
-            <div>
+            <span>
               <strong>¿Necesitas ayuda?</strong>
-              <p>Consulta los contactos de emergencia en esta misma página.</p>
-            </div>
-          </div>
+              <span>Consulta los contactos de emergencia en esta misma página.</span>
+            </span>
+          </a>
 
           <div className="preparation" id="antes-de-salir">
-            <p className="eyebrow">Antes de salir</p>
-            <h2>Prepara tu visita a Gramalote</h2>
+            <div className="section-head section-head--center">
+              <h2>Prepara tu visita a Gramalote</h2>
+              <p>
+                Prepara cada detalle antes de salir y disfruta al máximo tu
+                experiencia en Gramalote.
+              </p>
+            </div>
 
             <div className="preparation__grid">
               {preparationTips.map((tip) => (
                 <article key={tip.title} className="preparation-card">
-                  <span className="preparation-card__icon">
-                    <Icon name={tip.icon} size={30} />
-                  </span>
+                  <Photo src={tip.photo} alt={tip.alt} />
                   <h3>{tip.title}</h3>
                   <p>{tip.text}</p>
                 </article>
               ))}
             </div>
+
+            <OfflineDownload />
           </div>
 
           <div className="section-head section-head--center">
@@ -120,31 +132,31 @@ export default function InformacionPractica() {
           <div className="contacts-grid">
             {usefulContacts.map((contact) => (
               <article key={contact.title} className="contact-card">
-                <Placeholder className="contact-card__media" />
+                <div className={`contact-card__logo${contact.logo ? '' : ' contact-card__logo--health'}`}>
+                  {contact.logo ? (
+                    <img src={contact.logo} alt="" loading="lazy" />
+                  ) : (
+                    <span className="contact-card__cross" aria-hidden="true" />
+                  )}
+                </div>
                 <div className="contact-card__body">
+                  <p className="contact-card__kind">{contact.kind}</p>
                   <h3>{contact.title}</h3>
                   <p>{contact.text}</p>
-                  <span>
-                    <Icon name="phone" size={16} /> {contact.phone}
-                  </span>
-                  <span>
-                    <Icon name="clock" size={16} /> {contact.hours}
-                  </span>
+                  <p className="contact-card__phone">
+                    <strong>Teléfono:</strong>{' '}
+                    <a href={`tel:+57${contact.phone}`}>{contact.phone}</a>
+                  </p>
                 </div>
               </article>
             ))}
           </div>
 
-          <div className="location-block">
-            <span className="location-block__icon">
-              <Icon name="pin" size={34} />
-            </span>
-            <h2 id="ubicacion">Ubicación</h2>
-            <p>Mapa o acceso a la ubicación de Gramalote.</p>
-            <Button to="/mapa" icon="arrow">
-              Ver ubicación en el mapa
-            </Button>
-          </div>
+          <MapExplorer
+            title="Explora Gramalote en el mapa"
+            text="Encuentra lugares turísticos, restaurantes, alojamientos y artesanos, y consulta su ubicación."
+            cta="Explorar mapa"
+          />
         </div>
       </section>
     </>

@@ -1,13 +1,26 @@
 import { useParams } from 'react-router-dom'
 import HeroFicha from '../components/ui/HeroFicha.jsx'
 import InfoBar from '../components/ui/InfoBar.jsx'
-import Placeholder from '../components/ui/Placeholder.jsx'
+import Photo from '../components/ui/Photo.jsx'
+import IconMask from '../components/ui/IconMask.jsx'
 import Button from '../components/ui/Button.jsx'
-import { getExperience } from '../data/experiences.js'
+import PracticalInfo from '../components/home/PracticalInfo.jsx'
+import { getActivity } from '../data/experiences.js'
+import { usePageTitle } from '../lib/usePageTitle.js'
+
+const INFO_FIELDS = [
+  { key: 'access', icon: 'huellas', label: 'Cómo llegar' },
+  { key: 'difficulty', icon: 'camino', label: 'Dificultad' },
+  { key: 'hours', icon: 'horario', label: 'Horario' },
+  { key: 'location', icon: 'ubicacion', label: 'Ubicación' },
+  { key: 'fee', icon: 'billetera', label: 'Tarifa' },
+  { key: 'phone', icon: 'telefono', label: 'Teléfono' },
+]
 
 export default function Experiencia() {
   const { slug } = useParams()
-  const item = getExperience(slug)
+  const item = getActivity(slug)
+  usePageTitle(item?.title ?? 'Experiencia no encontrada')
 
   if (!item) {
     return (
@@ -21,14 +34,23 @@ export default function Experiencia() {
     )
   }
 
+  const info = INFO_FIELDS.filter((field) => item.info[field.key]).map((field) => ({
+    icon: field.icon,
+    label: field.label,
+    value: item.info[field.key],
+  }))
+  const gallery = item.gallery ?? []
+
   return (
     <>
       <HeroFicha
-        variant="center"
         eyebrow={item.category}
+        pillTone={item.category === 'Naturaleza' ? 'leaf' : 'brown'}
         title={item.title}
-        summary={item.summary}
-        social={item.social}
+        summary={item.summary ?? item.text}
+        image={item.hero ?? item.photo}
+        social={[]}
+        dots={false}
         breadcrumb={[
           { label: 'Inicio', to: '/' },
           { label: 'Qué hacer', to: '/que-hacer' },
@@ -36,42 +58,35 @@ export default function Experiencia() {
         ]}
       />
 
-      <div className="container container--narrow">
-        <InfoBar
-          items={[
-            { icon: 'clock', label: 'Horario', value: item.hours },
-            { icon: 'pin', label: 'Dirección', value: item.address },
-            { icon: 'car', label: 'Parqueadero', value: item.parking },
-            { icon: 'phone', label: 'Teléfono', value: item.phone },
-          ]}
-        />
+      <div className="container experience">
+        {info.length ? <InfoBar items={info} /> : null}
 
-        <p className="detail-description">{item.description}</p>
+        {item.description ? <p className="experience__description">{item.description}</p> : null}
 
-        <div className="gallery gallery--experience">
-          <Placeholder className="gallery__wide" />
-          <Placeholder className="gallery__wide" />
-          <Placeholder />
-          <Placeholder />
-          <Placeholder />
-        </div>
+        {gallery.length ? (
+          <div className="experience-gallery">
+            {gallery.map((photo) => (
+              <Photo key={photo.src} src={photo.src} alt={photo.alt} />
+            ))}
+          </div>
+        ) : null}
 
-        <div className="considerations">
-          <h2>Ten en cuenta</h2>
-          <div className="considerations__grid">
+        <section className="tips" aria-labelledby="tips-title">
+          <h2 id="tips-title">Ten en cuenta</h2>
+          <div className="tips__grid">
             {item.tips.map((tip) => (
-              <article key={tip.title} className="consideration-card">
-                <Placeholder />
+              <article key={tip.title} className="tip">
+                <IconMask icon={`icono-${tip.icon}`} size={64} className="tip__icon" />
                 <h3>{tip.title}</h3>
                 <p>{tip.text}</p>
               </article>
             ))}
           </div>
-          <Button to="/informacion-practica#contactos" variant="secondary">
-            Consultar información de acceso
-          </Button>
-        </div>
+          <Button to="/informacion-practica#como-llegar">Consultar información de acceso</Button>
+        </section>
       </div>
+
+      <PracticalInfo />
     </>
   )
 }

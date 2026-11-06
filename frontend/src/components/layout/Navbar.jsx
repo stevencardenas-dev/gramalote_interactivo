@@ -1,28 +1,9 @@
-import { useState } from 'react'
-import { NavLink, Link, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { site } from '../../data/site.js'
+import { getUser, subscribe } from '../../lib/auth.js'
 import Icon from '../ui/Icon.jsx'
-
-function Brand() {
-  return (
-    <Link className="brand" to="/" aria-label="Gramalote Interactivo, ir al inicio">
-      <span className="brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none">
-          <circle cx="5" cy="5" r="1.8" fill="currentColor" />
-          <circle cx="12" cy="5" r="1.8" fill="currentColor" />
-          <circle cx="19" cy="5" r="1.8" fill="currentColor" />
-          <circle cx="5" cy="12" r="1.8" fill="currentColor" />
-          <circle cx="12" cy="12" r="1.8" fill="currentColor" />
-          <circle cx="19" cy="12" r="1.8" fill="currentColor" />
-          <circle cx="5" cy="19" r="1.8" fill="currentColor" />
-          <circle cx="12" cy="19" r="1.8" fill="currentColor" />
-          <circle cx="19" cy="19" r="1.8" fill="currentColor" />
-        </svg>
-      </span>
-      <span className="visually-hidden">Gramalote</span>
-    </Link>
-  )
-}
+import Logo from '../ui/Logo.jsx'
 
 function SearchForm({ onSubmitted, inputId = 'site-search' }) {
   const navigate = useNavigate()
@@ -46,7 +27,7 @@ function SearchForm({ onSubmitted, inputId = 'site-search' }) {
       <input
         id={inputId}
         type="search"
-        placeholder="Buscar..."
+        placeholder="Buscar en el sitio…"
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
@@ -54,40 +35,148 @@ function SearchForm({ onSubmitted, inputId = 'site-search' }) {
   )
 }
 
-export default function Navbar() {
-  const [open, setOpen] = useState(false)
+const DESKTOP_BREAKPOINT = 1100
 
-  function closeMenu() {
-    setOpen(false)
+// La rayita del menú sigue a la sección, no solo a la ruta exacta: las fichas,
+// los listados y los accesos por redirección también marcan su opción.
+function isActive({ match = [], exact = false }, pathname) {
+  return match.some((base) =>
+    exact ? pathname === base : pathname === base || pathname.startsWith(`${base}/`),
+  )
+}
+
+export default function Navbar({ over = false }) {
+  const { pathname } = useLocation()
+  // Se guarda la ruta en la que se abrió: al navegar, `open` pasa a false solo,
+  // sin necesidad de sincronizar estado dentro de un efecto.
+  const [openPath, setOpenPath] = useState(null)
+  const open = openPath === pathname
+  const [scrolled, setScrolled] = useState(false)
+  const headerRef = useRef(null)
+  const dropdownRef = useRef(null)
+  const menuButtonRef = useRef(null)
+
+  useEffect(() => {
+    if (!over) return undefined
+
+    function onScroll() {
+      setScrolled(window.scrollY > 30)
+    }
+
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [over])
+
+  function closeDropdown({ restoreFocus = false } = {}) {
+    const dropdown = dropdownRef.current
+    if (!dropdown?.open) return
+    dropdown.open = false
+    if (restoreFocus) dropdown.querySelector('summary')?.focus()
   }
 
+  // El desplegable se cierra al navegar (enlaces, atrás/adelante, redirecciones).
+  useEffect(() => {
+    closeDropdown()
+  }, [pathname])
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key !== 'Escape') return
+      if (dropdownRef.current?.open) {
+        closeDropdown({ restoreFocus: true })
+        return
+      }
+      if (open) {
+        setOpenPath(null)
+        menuButtonRef.current?.focus()
+      }
+    }
+
+    function onPointerDown(event) {
+      if (!headerRef.current?.contains(event.target)) {
+        setOpenPath(null)
+        closeDropdown()
+        return
+      }
+      // Un clic fuera del desplegable pero dentro del header también lo cierra.
+      if (dropdownRef.current?.open && !dropdownRef.current.contains(event.target)) {
+        closeDropdown()
+      }
+    }
+
+    function onResize() {
+      if (window.innerWidth > DESKTOP_BREAKPOINT) setOpenPath(null)
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('pointerdown', onPointerDown)
+    window.addEventListener('resize', onResize)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onPointerDown)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [open])
+
+  // El menú móvil abierto no debe dejar scrollear el contenido de fondo.
+  useEffect(() => {
+    if (!open) return undefined
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [open])
+
+  function closeMenu() {
+    setOpenPath(null)
+  }
+
+  // Con sesión iniciada el acceso lleva al panel.
+  const loggedIn = Boolean(useSyncExternalStore(subscribe, getUser))
+  const loginTo = loggedIn ? '/admin' : '/acceder'
+  const loginLabel = loggedIn ? 'Panel' : 'Acceder'
+
+  const solid = !over || scrolled || open
+  const headerClass = [
+    'site-header',
+    over ? 'site-header--over' : '',
+    over && solid ? 'is-solid' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <header className="site-header">
-      <div className="site-header__inner container container--wide">
-        <Brand />
+    <header className={headerClass} ref={headerRef}>
+      <div className="site-header__inner container">
+        <Link className="brand" to="/" aria-label="Gramalote Interactivo, ir al inicio">
+          <Logo variant="cube" />
+        </Link>
 
         <nav className="site-nav" aria-label="Navegación principal">
-          {site.nav.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.to === '/'}
-              className={({ isActive }) =>
-                `site-nav__link${isActive ? ' active' : ''}`
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
+          {site.nav.map((link) => {
+            const active = isActive(link, pathname)
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                aria-current={active ? 'page' : undefined}
+                className={`site-nav__link${active ? ' active' : ''}`}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
 
-          <details className="nav-dropdown">
-            <summary>
+          <details className="nav-dropdown" ref={dropdownRef}>
+            <summary className={isActive(site.explore, pathname) ? 'active' : undefined}>
               {site.explore.label}
               <Icon name="chevron" />
             </summary>
             <div className="nav-dropdown__panel">
               {site.explore.items.map((item) => (
-                <Link key={item.to} to={item.to}>
+                <Link key={item.to} to={item.to} onClick={() => closeDropdown()}>
                   {item.label}
                 </Link>
               ))}
@@ -96,17 +185,18 @@ export default function Navbar() {
         </nav>
 
         <div className="site-header__actions">
-          <Link className="site-login" to="/acceder">
+          <Link className="site-login" to={loginTo}>
             <Icon name="lock" />
-            Acceder
+            {loginLabel}
           </Link>
           <SearchForm inputId="site-search" />
           <button
+            ref={menuButtonRef}
             className="menu-toggle"
             type="button"
             aria-expanded={open}
             aria-controls="mobile-panel"
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => setOpenPath(open ? null : pathname)}
           >
             <Icon name={open ? 'close' : 'menu'} />
             <span className="visually-hidden">
@@ -116,10 +206,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <div
-        className={`mobile-panel${open ? ' is-open' : ''}`}
-        id="mobile-panel"
-      >
+      <div className={`mobile-panel${open ? ' is-open' : ''}`} id="mobile-panel">
         <nav aria-label="Navegación móvil">
           <ul className="mobile-panel__list">
             {site.nav.map((link) => (
@@ -137,8 +224,8 @@ export default function Navbar() {
               </li>
             ))}
             <li>
-              <Link to="/acceder" onClick={closeMenu}>
-                Acceder
+              <Link to={loginTo} onClick={closeMenu}>
+                {loginLabel}
               </Link>
             </li>
           </ul>

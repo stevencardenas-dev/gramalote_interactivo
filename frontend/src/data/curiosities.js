@@ -1,282 +1,393 @@
+// Curiosidades (frames CURIOSIDADES y sus cuatro detalles, 1 de noviembre).
+// `tone` pinta títulos, botones y bandas de cada faceta.
 export const curiositySections = [
   {
     slug: 'territorio',
-    eyebrow: 'Territorio e identidad',
     title: 'Territorio e identidad',
     summary:
       'Conoce los símbolos, productos y referentes culturales que representan a Gramalote y reflejan la relación de su comunidad con la tierra.',
     cta: 'Explorar territorio',
+    tone: 'navy',
+    photo: '/img/curiosidades/territorio.jpg',
+    alt: 'Vista aérea del Nuevo Gramalote entre montañas',
   },
   {
     slug: 'tradiciones',
-    eyebrow: 'Tradiciones y celebraciones',
     title: 'Tradiciones y celebraciones',
     summary:
-      'Descubre las fiestas, comparsas y celebraciones que han reunido a generaciones de gramaloteros y forman parte de su memoria colectiva.',
+      'Faroles, comparsas, globos y Reyes: recorre las celebraciones que reunieron a generaciones de gramaloteros y hacen parte de su memoria colectiva.',
     cta: 'Conocer tradiciones',
+    tone: 'brown',
+    photo: '/img/curiosidades/tradiciones.jpg',
+    alt: 'Faldas de colores de bailarinas en un desfile',
   },
   {
     slug: 'sabores',
-    eyebrow: 'Sabores tradicionales',
     title: 'Sabores tradicionales',
     summary:
-      'Acércate a los ingredientes, las preparaciones y las costumbres culinarias que conservan parte de la historia gastronómica del municipio.',
+      'Del pancoger a la mesa de domingo: chocheco, ajiaco, mute, masato y otros sabores que se cocinan y se comparten en Gramalote.',
     cta: 'Descubrir sabores',
+    tone: 'coral',
+    photo: '/img/curiosidades/sabores.jpg',
+    alt: 'Plato de mute con aguacate y ají',
   },
   {
     slug: 'naturaleza',
-    eyebrow: 'Naturaleza y vida',
     title: 'Naturaleza y vida',
     summary:
-      'Explora los árboles, las flores, las aves, los animales y los paisajes naturales que forman parte del entorno de Gramalote.',
+      'El Bojoso, los ceibos, la dalia y la chocheca: explora los árboles, las flores, las aves y los paisajes que hacen parte del entorno de Gramalote.',
     cta: 'Explorar naturaleza',
+    tone: 'green',
+    photo: '/img/experiencias/cascadas/1.jpg',
+    alt: 'Cascada entre paredes de roca cubiertas de musgo',
   },
 ]
 
+// Tarjetas de "También te puede interesar".
+const related = {
+  territorio: {
+    title: 'Territorio e identidad',
+    text: 'Explora los símbolos, lugares y referentes que identifican al municipio.',
+    cta: 'Explorar territorio',
+    to: '/curiosidades/territorio',
+    photo: '/img/curiosidades/territorio.jpg',
+  },
+  tradiciones: {
+    title: 'Tradiciones y celebraciones',
+    text: 'Conoce las expresiones culturales y religiosas que hacen parte de la memoria de Gramalote.',
+    cta: 'Conocer tradiciones',
+    to: '/curiosidades/tradiciones',
+    photo: '/img/curiosidades/tradiciones.jpg',
+  },
+  sabores: {
+    title: 'Sabores tradicionales',
+    text: 'Conoce los platos y preparaciones que forman parte de la cocina gramalotera.',
+    cta: 'Descubrir sabores',
+    to: '/curiosidades/sabores',
+    photo: '/img/curiosidades/sabores.jpg',
+  },
+  naturaleza: {
+    title: 'Naturaleza y vida',
+    text: 'Descubre los elementos naturales que representan la identidad del territorio.',
+    cta: 'Explorar naturaleza',
+    to: '/curiosidades/naturaleza',
+    photo: '/img/curiosidades/naturaleza-arbol.jpg',
+  },
+  lugares: {
+    title: 'Lugares para descubrir',
+    text: 'Encuentra espacios naturales y rincones para conocer durante tu visita.',
+    cta: 'Descubrir lugares',
+    to: '/que-hacer',
+    photo: '/img/experiencias/cascadas/1.jpg',
+  },
+}
+
+const T = '/img/curiosidades/territorio'
+const R = '/img/curiosidades/tradiciones'
+const S = '/img/curiosidades/sabores'
+const N = '/img/curiosidades/naturaleza'
+
+// Bloques de cada detalle, en el orden del diseño:
+// - row: foto(s) a un lado y texto al otro (`side` = lado de la foto; `band`
+//   pone el fondo de color de la faceta).
+// - featured: tarjeta de fecha destacada.
+// - collection: tarjetas con foto, título y texto.
+// - pair: dos platos o plantas con foto grande (`titleFirst` = título arriba).
+// - related: "También te puede interesar".
+// - strip: foto panorámica con un párrafo debajo.
+// - overlay: foto grande con el texto encima.
+// - card: tarjeta con foto a la izquierda y texto sobre fondo de color.
+// - closing: foto a todo el ancho con el texto de cierre.
 export const curiosities = {
   territorio: {
     title: 'Territorio e identidad',
-    introTitle: 'Un territorio que nos identifica',
-    introText:
-      'Gramalote es un municipio de montañas y tradición agrícola, cuya identidad está ligada al trabajo campesino, las expresiones religiosas y los productos de su tierra. Sus símbolos y referentes culturales permiten conocer las costumbres y los vínculos que han acompañado la historia de su comunidad.',
-    content: [
+    tone: 'navy',
+    hero: `${T}/hero.jpg`,
+    heading: 'Un territorio que nos identifica',
+    intro:
+      'Gramalote es un municipio de montañas y tradición campesina. Su identidad se ha formado entre los cafetales, la fe en su patrona y los símbolos que los gramaloteros reconocen como propios. Esta sección recorre algunos de ellos: el café, la bandera, el himno, la Virgen de Monguí, el chocheco y los elementos naturales que los representan.',
+    blocks: [
       {
         type: 'row',
-        title: 'Un territorio que nos identifica',
-        mediaSide: 'left',
+        side: 'left',
+        title: 'El café, raíz de nuestra historia',
+        images: [{ src: `${T}/cafe-recoleccion.jpg`, alt: 'Campesino con un canasto de café recién recogido' }],
         paragraphs: [
-          'El café fue uno de los productos que impulsó la economía de Gramalote y marcó la relación de sus habitantes con el trabajo del campo. Su cultivo contribuyó al desarrollo económico del municipio y al sustento de las familias campesinas, convirtiéndose en un referente de la historia y la identidad gramalotera.',
-          'Su importancia también se refleja en la simbología municipal, especialmente en el himno, donde se evocan los cafetales y la esperanza de las cosechas. Las flores del cafeto representan la conexión entre la tierra, el esfuerzo de quienes la trabajan y el desarrollo de una comunidad cuya historia se ha construido alrededor de tres dimensiones fundamentales: la economía, la religión y la política.',
+          'En 1821, en la hacienda «Piedra de moler», en la vereda Miraflores, se establecieron cultivos de café con fines económicos que se fueron extendiendo por las veredas vecinas. La cercanía al río Zulia, y más tarde al ferrocarril, permitía exportar el grano por el lago de Maracaibo.',
+          'Hoy el café se siembra en fincas desde los 1.200 metros de altura, en unas 1.100 hectáreas, y da dos cosechas principales al año. Es parte de la economía del municipio desde hace más de 200 años.',
         ],
       },
       {
         type: 'row',
+        side: 'right',
+        images: [{ src: `${T}/cafe-cerezas.jpg`, alt: 'Ramas de cafeto con cerezas rojas' }],
+        paragraphs: [
+          'Su importancia también se refleja en los símbolos del municipio. En la bandera, adoptada en 1994, el blanco recuerda las flores del café, esperanza de una buena cosecha, y el rojo evoca la cereza del grano. El himno, nacido en 1956 y aprobado en 2013, nombra a los cafetos desde su primera estrofa y une en sus versos la fe, el trabajo y la alegría de la gente.',
+        ],
+      },
+      {
+        type: 'row',
+        side: 'left',
         title: 'La Virgen de Monguí, una tradición que permanece',
-        mediaSide: 'right',
+        images: [{ src: `${T}/virgen-mongui.jpg`, alt: 'Cuadro de la Virgen de Monguí con el Niño', position: 'center 15%' }],
         paragraphs: [
-          'La Virgen de Monguí ocupa un lugar importante en la tradición religiosa y cultural de Gramalote. Su imagen ha acompañado celebraciones y encuentros comunitarios, y está vinculada con prácticas que reúnen a familias y habitantes de distintas generaciones.',
-          'Durante las festividades tradicionales, la devoción a la Virgen ha estado relacionada con recorridos por las veredas y visitas a hogares campesinos, fortaleciendo los vínculos entre la fe y la vida comunitaria.',
+          'La imagen de la patrona es una versión hecha por un taller boyacense, que replica la imagen traída a Boyacá desde España. Llegó a Gramalote, entonces Galindo, cuando el obispo entregó el retablo al párroco de San Rafael de Galindo.',
+          'El cuadro representa un descanso de la Sagrada Familia en su huida a Egipto. Sus colores, el blanco, el azul y el rojo, son los mismos de la bandera del municipio.',
         ],
       },
       {
         type: 'row',
+        side: 'right',
+        band: true,
         title: 'El chocheco, parte de nuestra identidad gastronómica',
-        mediaSide: 'left',
-        mediaCount: 2,
+        images: [
+          { src: `${T}/chocheco-racimo.jpg`, alt: 'Racimo de chocheco en la mata' },
+          { src: `${T}/chocheco-pilon.jpg`, alt: 'Chocheco cocido machacado en un pilón' },
+        ],
         paragraphs: [
-          'El chocheco es un producto reconocido en la cocina tradicional de Gramalote. Se utiliza en preparaciones como la arepa de chocheco y representa una conexión entre los productos del campo y las costumbres alimentarias de sus habitantes.',
-          'Su presencia en la gastronomía local permite reconocer cómo los ingredientes del territorio se convierten en parte de las recetas familiares y de los sabores que identifican a una comunidad.',
+          'El chocheco es un pequeño plátano que se da en solares y fincas de todo el territorio. En Norte de Santander es el nombre de un banano de fruto pequeño, y en Gramalote se volvió tan propio que se dice «más gramalotero que el chocheco» cuando alguien se siente muy de aquí.',
+          'Antes de 2010 se regalaba al visitante. Tras el éxodo, muchas familias tuvieron que comprarlo, y su ausencia en la mesa aumentó la añoranza por el pueblo.',
         ],
       },
       {
         type: 'collection',
         title: 'Los elementos naturales que nos representan',
-        columns: 3,
         items: [
-          { label: 'Los ceibos' },
-          { label: 'La dalia' },
-          { label: 'La chocheca' },
-        ],
-        paragraphs: [
-          'Los árboles, las flores y las aves hacen parte del paisaje, pero también pueden adquirir un significado cultural cuando la comunidad los reconoce como referentes de su entorno.',
+          { title: 'Los ceibos', text: 'Fieles compañeros de los cafetales, aportan fertilidad al suelo y se llenan de flores para anunciar la cosecha.', src: `${T}/ceibo.jpg`, alt: 'Ceibo en un potrero' },
+          { title: 'La dalia', text: 'Flor que resurge hermosa entre las ruinas, como el pueblo.', src: `${T}/dalia.jpg`, alt: 'Dalia de color salmón' },
+          { title: 'La chocheca', text: 'Ave de hábitos gregarios, conocida también como urraca verde, que recorre bosques, cultivos y potreros.', src: `${T}/chocheca.jpg`, alt: 'Chocheca posada en una rama' },
         ],
       },
+      { type: 'related', items: [related.tradiciones, related.naturaleza] },
+      {
+        type: 'strip',
+        image: { src: `${T}/paisaje.jpg`, alt: 'Montañas cubiertas de bosque' },
+        text: 'Los árboles, las flores y las aves hacen parte del paisaje, pero también adquieren un significado cultural cuando la comunidad los reconoce como símbolos propios, junto con el chocheco y el reloj lunar.',
+      },
     ],
-    closingTitle: 'Descubrir Gramalote a través de sus símbolos',
-    closingText:
-      'El café, la devoción a la Virgen de Monguí, el chocheco y los elementos naturales permiten acercarse a distintas expresiones de la identidad de Gramalote. Cada uno conecta aspectos de la vida cotidiana, las tradiciones y el territorio.',
+    closing: {
+      image: `${T}/cierre.jpg`,
+      title: 'Descubrir Gramalote a través de sus símbolos',
+      paragraphs: [
+        'El café, la bandera, el himno, la Virgen de Monguí y el chocheco conectan la vida cotidiana con la historia del municipio. Hay símbolos más discretos, como el reloj lunar, que acompañó las decisiones del campesino desde el 30 de junio de 1910.',
+      ],
+    },
   },
   tradiciones: {
     title: 'Tradiciones y celebraciones',
-    introTitle: 'Celebraciones que nos unen',
-    introText:
-      'Las celebraciones han sido espacios de encuentro para las familias, los vecinos y los visitantes de Gramalote. Las fiestas populares, las comparsas, las representaciones y las tradiciones religiosas contribuyeron a construir una vida cultural en la que la participación comunitaria tenía un papel central. Recordar estas festividades permite acercarse a las costumbres del antiguo Gramalote y comprender cómo los encuentros y las expresiones colectivas fortalecieron el sentido de pertenencia.',
-    content: [
+    tone: 'brown',
+    hero: `${R}/hero.jpg`,
+    heading: 'Celebraciones que nos unen',
+    intro:
+      'Las fiestas han sido un espacio de encuentro para las familias, los vecinos y los visitantes de Gramalote. Las fiestas populares se celebraban en agosto, cuando ya se había vendido la cosecha principal, pero era en diciembre cuando el pueblo se llenaba de aguinaldos, faroles y música. Recordar estas celebraciones permite acercarse a las costumbres del antiguo Gramalote y a la forma en que la comunidad se reunía.',
+    blocks: [
       {
         type: 'row',
+        side: 'left',
         title: 'Festinavidad: mucho más que una fiesta',
-        mediaSide: 'left',
+        images: [{ src: `${R}/festinavidad.jpg`, alt: 'Representación del viacrucis al aire libre' }],
         paragraphs: [
-          'Gramalote es un municipio de montañas y tradición agrícola, cuya identidad está ligada al trabajo campesino, las expresiones religiosas y el paisaje. El café fue uno de los productos que impulsó la economía de Gramalote y marcó la relación de sus habitantes con el trabajo del campo. Su cultivo contribuyó al desarrollo económico del municipio y al sustento de las familias campesinas, convirtiéndose en un referente de la historia y la identidad gramalotera.',
-          'Sus símbolos y referentes culturales permiten conocer las costumbres y los vínculos que han acompañado la historia de su comunidad.',
+          'La Festinavidad era la mezcla de celebraciones religiosas y populares con que Gramalote vivía el final del año. Duraba cerca de mes y medio y reunía misas, serenatas, desfiles, representaciones y juegos que movilizaban a todo el pueblo. Hasta el aroma de los tamales cocinándose entre hojas de plátano anunciaba que la temporada estaba por empezar.',
         ],
       },
       {
         type: 'featured',
-        eyebrow: '26 DE NOVIEMBRE',
+        eyebrow: '26 de noviembre',
         title: 'El regreso de la Virgen de Monguí',
-        text: 'Una fecha que marcaba el comienzo de la temporada festiva.',
+        text: 'Ese día la patrona volvía al casco urbano y comenzaba la temporada festiva.',
       },
       {
         type: 'row',
-        mediaSide: 'left',
+        side: 'right',
+        images: [{ src: `${T}/virgen-mongui.jpg`, alt: 'Cuadro de la Virgen de Monguí con el Niño', position: 'center 15%' }],
         paragraphs: [
-          'La temporada comenzaba el 26 de noviembre con el regreso de la imagen de la Virgen de Monguí al casco urbano, después de recorrer las veredas y visitar hogares campesinos. A partir de ese momento se desarrollaban encuentros familiares, comparsas, disfraces, canciones, representaciones teatrales y otras actividades que acompañaban la época navideña.',
+          'Durante varios meses, la imagen de la Virgen de Monguí recorría las veredas y visitaba casi un millar de hogares campesinos. El 26 de noviembre regresaba al pueblo, donde la recibían con oraciones, cánticos y campanas, y esa noche las escuelas de música y danza le ofrecían una serenata. Luego llegaban los faroles del 7 de diciembre y las novenas desde el día 15.',
         ],
       },
       {
         type: 'row',
+        side: 'left',
         title: 'Cuando el pueblo se convertía en escenario',
-        mediaSide: 'right',
+        images: [{ src: `${R}/comparsas.jpg`, alt: 'Comparsa de disfraces de colores en una calle' }],
         paragraphs: [
-          'Las comparsas y las representaciones en vivo transformaban las calles del antiguo Gramalote en espacios de encuentro y expresión cultural. Vecinos y amigos participaban en la preparación de disfraces, carrozas, canciones y escenas que hacían parte de las festividades.',
-          'Estas actividades reflejaban la creatividad y la colaboración de la comunidad. Su preparación requería tiempo y participación colectiva, y permitía que personas de distintas edades contribuyeran a mantener vivas las celebraciones.',
+          'Cada barrio, junto con algunas veredas, pasaba días confeccionando disfraces y escenografías para su comparsa. Al mediodía desfilaban frente al atrio de diez gradas, lleno de espectadores, y por la noche la plaza se llenaba de nuevo con la representación bíblica y los actos culturales de cada sector.',
+          'Las comparsas y representaciones se remontan a mediados del siglo XX y desde los años ochenta se organizaron con carrozas. El 24 de diciembre llegaban una tras otra a la plaza, donde miles de personas bailaban mientras esperaban el fallo del jurado.',
         ],
       },
       {
         type: 'row',
+        side: 'left',
         title: 'El Seis de Reyes: una tradición con historia',
-        mediaSide: 'right',
+        images: [{ src: `${R}/reyes.jpg`, alt: 'Figuras de los Reyes Magos en un pesebre' }],
         paragraphs: [
-          'El Seis de Reyes es recordado como una de las celebraciones tradicionales de Gramalote. La festividad incluía representaciones relacionadas con la llegada de los Reyes Magos y reunía a participantes y espectadores en una actividad que combinaba elementos religiosos y populares.',
-          'Su continuidad a lo largo de las generaciones muestra la importancia de las celebraciones tradicionales en la vida comunitaria y en la memoria cultural del municipio.',
+          'La representación de la llegada de los Reyes Magos cerraba oficialmente las festividades, con cerca de un centenar de actores en escena. Era el final de un mes y medio de fiestas y una celebración que se ha mantenido de forma continua por más de ochenta años.',
+          'Hoy, el fin de semana de Reyes reúne presentaciones de artistas, un concurso de murgas campesinas y la presentación en vivo de los Reyes Magos en la plaza principal.',
         ],
       },
+      { type: 'related', items: [related.sabores, related.territorio] },
       {
         type: 'row',
+        side: 'left',
         title: 'El 31 de diciembre y sus recuerdos',
-        mediaSide: 'right',
+        images: [{ src: `${R}/globos.jpg`, alt: 'Fuegos artificiales en el cielo nocturno' }],
         paragraphs: [
-          'El cierre del año también dejó recuerdos importantes en la vida festiva de Gramalote. Los relatos sobre el antiguo municipio evocan la música, los bailes, los encuentros familiares y los globos que acompañaban las celebraciones del 31 de diciembre.',
-          'Estas reuniones marcaban el final de un ciclo y ofrecían una oportunidad para compartir con familiares, vecinos y amigos. Hoy, los recuerdos de aquellas celebraciones permiten conocer cómo se vivían las fiestas y cómo contribuían a fortalecer los vínculos de la comunidad.',
+          'Después del Día de los Locos, cuando hombres y mujeres salían disfrazados de los personajes más extravagantes, llegaba el 31 de diciembre. Ese día subían al cielo los globos, que llevaban sueños, promesas y el recuerdo de quienes ya no estaban. Luego venía el baile de Año Nuevo.',
+          'La técnica de los globos se fortaleció a finales de los años sesenta, cuando los Clavijo la popularizaron y los jóvenes de Gramalote la masificaron. A finales de los noventa pasaron a ser exclusivos del 31 de diciembre, una fecha para compartir con familiares, vecinos y amigos.',
         ],
       },
     ],
-    closingTitle: null,
-    closingText:
-      'Las celebraciones permanecen en las fotografías, los relatos y los recuerdos de quienes participaron en ellas. A través de estas memorias es posible conocer cómo se organizaba la comunidad, qué actividades disfrutaba y cuáles eran los momentos más esperados del año.\n\nConservar estas historias permite transmitir a las nuevas generaciones una parte de la vida cultural de Gramalote y reconocer el valor de las tradiciones en la construcción de su identidad.',
+    closing: {
+      image: `${R}/cierre.jpg`,
+      paragraphs: [
+        'Las celebraciones permanecen en las fotografías, los relatos y los recuerdos de quienes participaron en ellas. En esas fechas regresaban los hijos ausentes y las familias volvían a reunirse alrededor de la misma mesa, y cada gramalotero renovaba su vínculo con el pueblo.',
+        'Hoy esa memoria se renueva cada diciembre con la misa de aguinaldos de las 4:00 a. m., las comparsas con papayera y el encendido del alumbrado navideño en el casco urbano.',
+      ],
+    },
   },
   sabores: {
     title: 'Sabores tradicionales',
-    introTitle: 'Sabores que cuentan nuestra historia',
-    introText:
-      'La gastronomía de Gramalote reúne productos del campo, recetas tradicionales y costumbres que se transmiten entre generaciones. En sus preparaciones se encuentran sabores relacionados con la vida campesina y con los momentos en que cocinar y compartir alrededor de la mesa se convierten en parte de la vida familiar.',
-    content: [
+    tone: 'coral',
+    hero: `${S}/hero.jpg`,
+    heading: 'Sabores que cuentan nuestra historia',
+    intro:
+      'La cocina de Gramalote nace de la huerta y del solar. Con plátano, yuca, ahuyama y mazorca tierna se alimentaba a familias numerosas y a quienes trabajaban en las fincas. De esa despensa salieron platos, bebidas y postres que todavía se preparan para los domingos, las fiestas y los encuentros familiares.',
+    blocks: [
       {
         type: 'row',
+        side: 'left',
+        tall: true,
         title: 'El chocheco, un sabor de nuestra tierra',
-        mediaSide: 'left',
+        images: [{ src: `${S}/chocheco.jpg`, alt: 'Racimo de chocheco verde' }],
         paragraphs: [
-          'El chocheco es uno de los productos asociados con la gastronomía tradicional de Gramalote. Se utiliza en preparaciones como la arepa de chocheco y en recetas que aprovechan sus características para crear platos con identidad local.',
-          'Su presencia en la cocina permite reconocer la importancia de los productos agrícolas y de los conocimientos que las familias han conservado para incorporarlos a su alimentación cotidiana.',
+          'El chocheco es un plátano pequeño que se da en cualquier suelo del territorio, en los solares y en las plantaciones mixtas de las fincas. Hace parte del bastimento y acompaña la cocina del pueblo desde sus orígenes.',
+          'Se consigue durante todo el año y cada familia lo cultiva en su propio solar. Por eso es un compañero frecuente de la mesa gramalotera y de la cocina cotidiana.',
         ],
       },
       {
-        type: 'collection',
-        title: 'Preparaciones que conservan la tradición',
-        columns: 2,
+        type: 'pair',
+        titleFirst: true,
         items: [
-          {
-            label: 'Sopa de ruyas',
-            text: 'La sopa de ruyas es una preparación tradicional de la región que se elabora con pequeñas porciones de masa, incorporadas a una sopa que puede llevar otros ingredientes de la cocina casera.',
-          },
-          {
-            label: 'La chocheca',
-            text: 'La jalea de pata de res es una preparación hecha a partir de la cocción de las patas de res, cuyo contenido de gelatina natural permite obtener una consistencia firme al enfriarse.',
-          },
+          { title: 'Ajiaco gramalotero', text: 'Plato típico de las casas gramaloteras, preparado en fogón de leña. Lleva plátano, yuca, apio, ahuyama, papa y mazorca tierna, junto con carne de res con hueso o costilla.', src: `${S}/ajiaco.jpg`, alt: 'Ajiaco gramalotero en un plato de madera' },
+          { title: 'Mute', text: 'Plato típico de la región que se prepara con vísceras de res, papa, apio, ahuyama, maíz blanco y garbanzo o arveja. Es muy representativo del departamento y se cocina con frecuencia en el pueblo.', src: `${S}/mute.jpg`, alt: 'Plato de mute' },
         ],
-        paragraphs: [
-          'Ambas recetas forman parte de las preparaciones gastronómicas documentadas en relación con Gramalote y permiten conocer técnicas culinarias transmitidas a través del tiempo.',
-        ],
+        note: {
+          title: 'Preparaciones que conservan la tradición',
+          text: 'Ambas recetas forman parte de las preparaciones gastronómicas documentadas en relación con Gramalote y permiten conocer técnicas culinarias transmitidas a través del tiempo.',
+        },
       },
+      { type: 'related', items: [related.tradiciones, related.territorio] },
       {
         type: 'collection',
-        title: 'Los amasijos: sabores para compartir',
-        columns: 3,
+        title: 'Sabores para compartir',
         items: [
-          { label: 'Arepa cariseca' },
-          { label: 'Arepa de chocheco' },
-          { label: 'Bollitos de maíz' },
-        ],
-        paragraphs: [
-          'Las preparaciones a base de maíz tienen presencia en la cocina tradicional. Entre las recetas asociadas con Gramalote se encuentran la arepa cariseca, la arepa de chocheco y los bollitos de maíz.',
-          'La arepa cariseca se distingue por su preparación a base de maíz y por su textura característica, mientras que la arepa de chocheco incorpora este producto a la receta. Los bollitos de maíz son otra forma de aprovechar este ingrediente en preparaciones sencillas de la cocina tradicional.',
-          'Estos alimentos muestran cómo los ingredientes cotidianos pueden transformarse en recetas que conservan conocimientos y costumbres familiares.',
+          { title: 'Helado de yuca', text: 'El helado de yuca es un postre artesanal de leche y yuca que se elabora en el Nuevo Gramalote. Aprovecha un producto de la huerta, le da valor agregado y lo convierte en un sabor propio del municipio.', src: `${S}/helado-yuca.jpg`, alt: 'Paleta de helado de yuca' },
+          { title: 'Masato', text: 'El masato es una bebida fermentada que se prepara con arroz cocido y licuado, endulzada con guarapo de piña o de panela. Se hace sobre todo a final de año y se comparte en las casas del pueblo y del campo.', src: `${S}/masato.jpg`, alt: 'Jarra de masato con canela' },
+          { title: 'Café', text: 'El café va del cultivo a la taza. Además de ser el grano de las fincas, se sirve a diario en las cafeterías del Nuevo Gramalote y en los hogares, y hoy es una fuente de ingresos para algunas familias.', src: `${S}/cafe.jpg`, alt: 'Taza de café sobre granos tostados' },
         ],
       },
       {
         type: 'row',
-        title: 'Bebidas tradicionales y encuentros familiares',
-        mediaSide: 'right',
+        side: 'right',
+        title: 'Mesas de domingo y de fiesta',
+        images: [{ src: `${S}/mesa.jpg`, alt: 'Mesa servida con ajiaco, mute, arroz y arepas' }],
         paragraphs: [
-          'Las bebidas tradicionales acompañan reuniones y celebraciones en distintas comunidades de la región. Las chichas y los guarapos aparecen relacionados con encuentros festivos, mientras que el masato forma parte de la oferta gastronómica registrada en un establecimiento de Gramalote.',
-          'La preparación de estas bebidas puede variar según los ingredientes y las costumbres de cada familia o productor. Compartirlas también hace parte de las experiencias en las que la comida y la bebida reúnen a las personas.',
+          'Cada plato tiene su momento. El ajiaco suele servirse los domingos y el mute, los domingos y en las fiestas. El masato se reserva para el final del año, cuando se prepara en las casas del pueblo y del campo para compartir en familia.',
+          'Estos platos también se cocinan para ayudar: los grupos escolares y los sectores del pueblo los preparan para reunir fondos y apoyar una causa particular, y así la comida se vuelve una forma de unirse.',
         ],
+      },
+      {
+        type: 'card',
+        title: 'La cocina también cuenta quiénes somos',
+        image: { src: `${S}/fogon.jpg`, alt: 'Fogón de leña con ollas' },
+        text: 'La cocina también guarda la huella de quienes llegaron. El ajiaco gramalotero conserva la influencia de los boyacenses que se establecieron en el territorio, y el masato llegó del altiplano cundiboyacense, donde se hacía con yuca; aquí se prepara con arroz.',
       },
     ],
-    closingTitle: 'La cocina también cuenta quiénes somos',
-    closingText:
-      'Las recetas tradicionales conservan conocimientos sobre ingredientes, técnicas y formas de preparar los alimentos. Muchas se aprenden observando y acompañando a quienes cocinan, por lo que su transmisión depende de las personas que mantienen vivas estas prácticas.\n\nEn Gramalote, la gastronomía permite acercarse a la memoria familiar y a la relación entre el campo y la cocina. Cada preparación ofrece una oportunidad para conocer los sabores del municipio y escuchar las historias que acompañan sus recetas.',
+    closing: {
+      image: `${S}/cierre.jpg`,
+      paragraphs: [
+        'La cocina de Gramalote sigue cambiando. Hoy el café pasa del cultivo a la agroindustria y a la taza, y la yuca se transforma en helado. Cada preparación conserva una historia de campo, de familia y de encuentro alrededor de la mesa.',
+      ],
+    },
   },
   naturaleza: {
     title: 'Naturaleza y vida',
-    introTitle: 'Una naturaleza llena de vida',
-    introText:
-      'Las montañas, los bosques y los paisajes rurales forman parte del entorno de Gramalote. Entre sus referencias naturales se encuentran árboles, flores, aves y animales silvestres que permiten descubrir la diversidad del territorio y la relación entre sus habitantes y la naturaleza.',
-    content: [
+    tone: 'green',
+    hero: `${N}/hero.jpg`,
+    heading: 'Una naturaleza llena de vida',
+    intro:
+      'Las montañas, los bosques y los paisajes rurales hacen parte del entorno de Gramalote. Entre sus referencias naturales hay árboles, flores y aves que permiten conocer la diversidad del territorio y entender cómo la naturaleza se ha unido a la identidad de su gente.',
+    blocks: [
       {
-        type: 'feature',
+        type: 'overlay',
         title: 'El Bojoso, un refugio natural',
+        image: { src: `${N}/bojoso.jpg`, alt: 'Bosque de niebla de la reserva El Bojoso' },
         paragraphs: [
-          'La Reserva Forestal Protectora Regional El Bojoso comprende áreas de Gramalote, Santiago y El Zulia, en Norte de Santander. Su importancia ambiental está relacionada con la conservación de los bosques, la protección de las fuentes de agua y el cuidado de los ecosistemas que sirven de hábitat para diferentes especies.',
-          'Este espacio permite reconocer el valor de las áreas naturales para el equilibrio ambiental de la región y la importancia de conservarlas.',
+          'La Reserva Forestal Protectora Regional El Bojoso abarca zonas de Gramalote, Santiago y El Zulia, en Norte de Santander. Protege bosques y fuentes de agua que abastecen a las comunidades de los tres municipios y cuida los ecosistemas asociados.',
+          'La idea de protegerlo comenzó a tomar forma en 1992 y fue declarado oficialmente en 2016, con más de mil hectáreas dedicadas a conservar el agua y el bosque.',
         ],
       },
       {
         type: 'row',
+        side: 'right',
         title: 'Los ceibos y su relación con los cafetales',
-        mediaSide: 'right',
+        images: [{ src: `${N}/ceibo.jpg`, alt: 'Copa de un ceibo vista desde abajo' }],
         paragraphs: [
-          'Los ceibos están vinculados con los paisajes rurales y los recuerdos de los antiguos cafetales de Gramalote. Su presencia forma parte de un entorno donde la vegetación y la actividad agrícola han acompañado la vida campesina.',
-          'Estos árboles permiten recordar la relación entre el paisaje, los ciclos naturales y el trabajo del campo, elementos que han tenido importancia en la historia del municipio.',
+          'Los ceibos acompañan a los cafetales desde hace décadas. Aportan fertilidad al suelo y, cuando se llenan de flores, anuncian que llega la cosecha.',
+          'Florecen dos veces al año, justo cuando el café está listo, y en las grandes haciendas servían de señal para saber qué lotes recoger primero.',
         ],
       },
       {
         type: 'row',
+        side: 'left',
         title: 'La dalia, una flor que representa renovación',
-        mediaSide: 'left',
+        images: [{ src: `${N}/dalia.jpg`, alt: 'Dalia de color salmón' }],
         paragraphs: [
-          'La dalia es una de las flores asociadas con los elementos naturales representativos de Gramalote. Por sus formas y colores, es una planta ornamental que puede destacar en jardines y espacios cultivados.',
-          'Dentro de las referencias simbólicas del municipio, su imagen se relaciona con la renovación y la capacidad de seguir adelante. Así, una flor puede convertirse en una representación de esperanza y transformación para la comunidad.',
+          'La dalia es una flor ornamental de colores intensos que se cultiva en jardines y espacios abiertos. En Gramalote se ha convertido en una de las flores asociadas con la identidad del municipio.',
+          'Se le relaciona con la renovación porque, como el pueblo, resurge hermosa entre las ruinas. Es una flor que se vuelve símbolo de esperanza y de la capacidad de seguir adelante.',
         ],
       },
       {
         type: 'row',
+        side: 'left',
         title: 'La chocheca, un ave de nuestro entorno',
-        mediaSide: 'left',
+        images: [{ src: `${N}/chocheca.jpg`, alt: 'Chocheca posada en una rama' }],
         paragraphs: [
-          'La chocheca, conocida también como urraca verde, es presentada en materiales educativos locales como un ave característica del entorno de Gramalote. Su plumaje combina tonos verdes, azules, amarillos y negros, y suele desplazarse en grupos ruidosos por bordes de bosque, cultivos y áreas arboladas.',
-          'Su alimentación incluye frutos, semillas, insectos y pequeños vertebrados. En los relatos populares, sus llamados también se han relacionado con interpretaciones y creencias de la comunidad. La chocheca permite conocer tanto la fauna del entorno como las historias con las que sus habitantes interpretan la naturaleza.',
+          'La chocheca, también llamada urraca verde, es un ave de plumaje verde brillante en el cuerpo, azul en las alas y la cola, y corona amarillenta, con una franja negra en la cara. Vive en bordes de bosque, cafetales, potreros arbolados y cultivos, y suele moverse en grupos ruidosos.',
+          'Come frutas, semillas, insectos y pequeños vertebrados, y al esparcir semillas ayuda a regenerar el bosque. Se la considera inteligente y capaz de imitar sonidos, y en la tradición popular sus gritos se han interpretado como mal agüero o como anuncio de visitas y cambios de clima.',
         ],
       },
+      { type: 'related', items: [related.lugares, related.territorio] },
       {
-        type: 'collection',
-        title: 'Animales que habitan los bosques de la región',
-        columns: 2,
+        type: 'pair',
+        title: 'Árboles y flores que acompañan al pueblo',
         items: [
-          { label: 'El tigrillo' },
-          { label: 'El oso mielero' },
-        ],
-        paragraphs: [
-          'El tigrillo y el oso mielero son animales silvestres asociados con los ambientes naturales de la región. El tigrillo es un felino de hábitos discretos que se alimenta de pequeños animales, mientras que el oso mielero es un mamífero que utiliza su lengua alargada para alimentarse principalmente de hormigas y termitas.',
-          'Estas especies muestran la variedad de formas de vida que pueden encontrarse en los ecosistemas naturales y la importancia de conservar los espacios donde los animales consiguen alimento, refugio y condiciones para sobrevivir.',
+          { title: 'El samán', text: 'Árbol de gran porte, con una copa extendida en forma de sombrilla. Ha estado presente en las plazas del pueblo, tanto en la antigua como en la actual Plaza de la Restauración.', src: `${N}/saman.jpg`, alt: 'Samán en medio de un potrero' },
+          { title: 'Las hortensias', text: 'Crecen en las veredas de clima frío, con flores de colores suaves: azules, violetas y blancas. Se dejaban crecer como arbustos para formar cercas y los domingos adornaban la casa de mercado, las casas y los templos.', src: `${N}/hortensias.jpg`, alt: 'Hortensias azules' },
         ],
       },
       {
         type: 'row',
+        side: 'left',
+        band: true,
         title: 'Cascadas Arco Iris, un paisaje por descubrir',
-        mediaSide: 'left',
-        mediaCount: 2,
-        paragraphs: [
-          'Las Cascadas Arco Iris se encuentran en la finca Limoncito, en la vereda Valderrama de Gramalote. Este atractivo natural ofrece una oportunidad para conocer el paisaje rural del municipio y disfrutar de un recorrido en contacto con la naturaleza.',
-          'La visita requiere ropa cómoda, calzado cerrado e hidratación. También es recomendable llevar protección solar y consultar previamente las condiciones de acceso, los horarios y las tarifas para planear el recorrido con mayor seguridad.',
+        images: [
+          { src: '/img/experiencias/cascadas/3.jpg', alt: 'Salto de agua sobre una roca oscura' },
+          { src: '/img/experiencias/cascadas/4.jpg', alt: 'Cascada que cae sobre una pared de roca' },
         ],
+        paragraphs: [
+          'Las Cascadas Arco Iris están en la finca Limoncito, en la vereda Valderrama, donde vivió sus últimos años el fundador del municipio. Cuando el sol entra entre la vegetación, cada gota de agua separa la luz en colores y forma pequeños arcoíris sobre la roca.',
+          'La quebrada se conoció siempre como Las Golondrinas, porque estas aves se posaban allí en las horas de la noche, lo que añade un motivo más para visitarla.',
+        ],
+        link: { to: '/que-hacer/cascadas-arco-iris', label: 'Ver la experiencia' },
       },
     ],
-    closingTitle: null,
-    closingMediaSide: 'right',
-    closingText:
-      'Los bosques, los árboles relacionados con los antiguos cafetales, las flores, las aves y los animales silvestres forman parte de las distintas maneras de conocer Gramalote. Sus paisajes permiten acercarse a la riqueza natural del territorio y comprender la importancia de cuidar los espacios que sostienen la vida.\n\nExplorar esta faceta del municipio es una invitación a observar con atención, aprender sobre el entorno y disfrutar de la naturaleza de manera responsable.',
+    closing: {
+      image: `${N}/cierre.jpg`,
+      paragraphs: [
+        'Los bosques, los árboles de los cafetales, las flores y las aves forman parte de las distintas maneras de conocer Gramalote. Sus paisajes permiten acercarse a la riqueza natural del territorio y entender la importancia de cuidar los espacios que sostienen el agua y la vida.',
+        'Explorar esta faceta del municipio es una invitación a observar con atención, aprender del entorno y disfrutar de la naturaleza de manera responsable.',
+      ],
+    },
   },
 }
 

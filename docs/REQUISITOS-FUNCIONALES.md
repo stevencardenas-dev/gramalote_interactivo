@@ -1,7 +1,8 @@
 # Requisitos funcionales evidenciados
 
-Revisión: **2026-10-22** · Alcance: SPA `frontend/` (React + Vite + React
-Router) y datos locales de `src/data/`.
+Revisión: **2026-10-22** · Actualizado **2026-10-31** (Fase 1 verificada en
+producción y Fase 2). Alcance: SPA `frontend/` (React + Vite + React Router),
+API `backend/` y datos locales de `src/data/`.
 
 Estados usados:
 
@@ -34,14 +35,15 @@ Estados usados:
 | RF-09 | Footer con CTA de Información práctica, navegación y redes | `Footer.jsx:30` | Implementado | El CTA se oculta en fichas y en Información práctica |
 | RF-10 | Diseño responsive con menú móvil y grids adaptables | `home.css:514`, `layout.css:190`, `pages.css:1600` | Implementado | Breakpoints 1024/720 px |
 | RF-11 | Anclas profundas a secciones de Información práctica (`#como-llegar`, `#seguridad`, `#contactos`, `#antes-de-salir`) | `InformacionPractica.jsx:28`, `site.js:34` | Implementado | Las secciones ya tienen `id` y `scroll-margin-top` |
-| RF-12 | Metadatos SEO por ruta | `index.html:10` | Parcial | Solo hay `title` y `description` globales; no cambian por vista |
+| RF-12 | Metadatos SEO por ruta | `lib/usePageTitle.js`, `Layout.jsx` | Parcial | El título de la pestaña cambia por vista y por ficha; `description` y Open Graph siguen siendo globales |
+| RF-12b | Instalable y usable sin conexión (PWA con descarga previa) | `pwa/`, `lib/offline.js`, `OfflineDownload.jsx` | Implementado | Manifest + service worker; “Descargar para usar sin conexión” en Información práctica. El mapa solo guarda las teselas ya vistas |
 
 ## 3. Inicio
 
 | ID | Requisito | Evidencia | Estado | Notas |
 | --- | --- | --- | --- | --- |
 | RF-13 | Hero con propuesta de valor y CTA a Qué hacer y Dónde ir | `Hero.jsx:4` | Implementado | |
-| RF-14 | Bloque de mapa con CTA a la vista Mapa | `MapBlock.jsx:19` | Parcial | El mapa es un `Placeholder`, no un mapa real |
+| RF-14 | Bloque de mapa con CTA a la vista Mapa | `MapBlock.jsx` | Implementado | `LiveMap` real con pines en escritorio (> 860 px); en móvil, foto de fondo por diseño |
 | RF-15 | Accesos rápidos a 5 categorías | `QuickAccess.jsx:4` | Implementado | |
 | RF-16 | Sección de experiencias destacadas | `ExperiencesSection.jsx:10`, `experiences.js` | Implementado | 3 registros locales |
 | RF-17 | Bloque “Abierto hoy” con establecimientos | `OpenToday.jsx:23`, `inicio.js` | Parcial | Muestra destacados fijos; no calcula horarios |
@@ -53,9 +55,9 @@ Estados usados:
 | --- | --- | --- | --- | --- |
 | RF-19 | Hub Dónde ir con mapa, comida, alojamiento y compras | `DondeIr.jsx:31` | Implementado | |
 | RF-20 | Listado de establecimientos por categoría | `DondeComer.jsx:36`, `DondeDormir.jsx:37`, `DondeComprar.jsx:40` | Implementado | Datos locales en `establishments.js` |
-| RF-21 | Filtro por tipo, servicios y precio | `FilterBar.jsx:17`, `DondeDormir.jsx:29`, `DondeComprar.jsx:27` | **Pendiente** | Los `<select>` no están controlados ni filtran |
-| RF-22 | Filtro “Abierto hoy” | `DondeComer.jsx:30` | **Pendiente** | `openNow` existe en los datos (`establishments.js:74`) pero no se usa |
-| RF-23 | Botón “Cargar más” | `DondeComer.jsx:42`, `DondeDormir.jsx:42`, `DondeComprar.jsx:46` | **Pendiente** | No tiene `onClick` ni paginación |
+| RF-21 | Filtro por tipo, servicios y precio | `FilterBar.jsx`, `lib/listing.js` | Implementado | Verificado en producción con datos reales (2026-10-31) |
+| RF-22 | Filtro “Abierto hoy” | `DondeComer.jsx`, `backend/src/opening-hours.js` | Implementado | Usa `openNow`, que calcula la API con los horarios; se editan por día en el panel (Información → Horario por día) |
+| RF-23 | Botón “Cargar más” | `DondeComer.jsx`, `DondeDormir.jsx`, `DondeComprar.jsx` | Implementado | 6 fichas por página |
 | RF-24 | Panel de mapa con CTA al mapa completo | `MapPanel.jsx:4` | Parcial | El CTA navega; el mapa es visual |
 | RF-25 | Secciones cruzadas (también puedes dormir / comprar / curiosidades) | `DondeComer.jsx:51`, `DondeDormir.jsx:49`, `DondeComprar.jsx:53` | Implementado | |
 | RF-26 | Ocultar establecimientos no publicados de los listados | `establishments.js:445` | Implementado | `origen-cocina-de-autor` está oculto pero accesible por URL |
@@ -70,14 +72,14 @@ Estados usados:
 | RF-30 | Ficha de alojamiento con check-in/out, ubicación, precio, galería y relacionados | `EstablecimientoDormir.jsx:10` | Implementado | |
 | RF-31 | Ficha de artesanía con horario, pago, productos y relacionados | `EstablecimientoComprar.jsx:10` | Implementado | |
 | RF-32 | Lugares relacionados navegables | `components/cards/RelatedPlaces.jsx:5` | Implementado | Filtra slugs inexistentes con `filter(Boolean)` |
-| RF-33 | Enlaces sociales de la ficha | `HeroFicha.jsx:47` | Parcial | Son iconos sin URL (`<span>`) |
+| RF-33 | Enlaces sociales de la ficha | `HeroFicha.jsx` | Implementado | URL reales de la API; “Compartir” es un botón |
 
 ## 6. Experiencias
 
 | ID | Requisito | Evidencia | Estado | Notas |
 | --- | --- | --- | --- | --- |
 | RF-34 | Vista Qué hacer con experiencia destacada, promo, collage, mapa e historia | `QueHacer.jsx:28` | Implementado | Contenido de ejemplo |
-| RF-35 | Carrusel de imágenes y dots | `QueHacer.jsx:33`, `QueHacer.jsx:112` | **Pendiente** | Botones y dots sin lógica |
+| RF-35 | Carrusel de imágenes y dots | `QueHacer.jsx`, `lib/useCarousel.js` | Implementado | Verificado en escritorio y móvil |
 | RF-36 | Detalle de experiencia con datos, galería y recomendaciones | `Experiencia.jsx:24` | Implementado | |
 | RF-37 | Enlace desde el detalle a información de acceso | `Experiencia.jsx:70` | Implementado | El ancla `#contactos` ya existe |
 
@@ -111,8 +113,8 @@ Estados usados:
 
 | ID | Requisito | Evidencia | Estado | Notas |
 | --- | --- | --- | --- | --- |
-| RF-49 | Formulario de acceso de administración | `Acceder.jsx:12` | Parcial | `preventDefault()`; no autentica |
-| RF-50 | Persistencia y consumo de API | `backend/README.md`, `backend/src/` | Parcial | API de lectura lista; el frontend aún usa `src/data/` |
+| RF-49 | Formulario de acceso de administración | `Acceder.jsx`, `backend/src/routes/auth.js` | Implementado | Login real con JWT + refresh en cookie httpOnly; `/admin` protegido por sesión |
+| RF-50 | Persistencia y consumo de API | `backend/src/`, `lib/contentApi.js` | Parcial | Los establecimientos y el mapa salen de la API; experiencias, curiosidades, historia e información práctica siguen en `src/data/` |
 | RF-51 | CRUD de establecimientos, experiencias y curiosidades | No hay UI | **No evidenciado** | La carpeta 06 de Drive está vacía |
 | RF-52 | Roles/permisos de administración | No hay UI | **No evidenciado** | |
 
@@ -124,7 +126,7 @@ Estados usados:
 | RF-54 | Experiencias con slug, categoría, resumen, datos y recomendaciones | `experiences.js:1` | Implementado | 3 experiencias |
 | RF-55 | Curiosidades con contenido estructurado por bloques | `curiosities.js:36` | Implementado | 4 facetas |
 | RF-56 | Información práctica con accesos, transporte, seguridad y contactos | `practical.js:1` | Implementado | Textos y teléfonos provisionales |
-| RF-57 | Imágenes reales en las fichas y secciones | `Placeholder.jsx` | **Pendiente** | Ver `IMAGENES.md` |
+| RF-57 | Imágenes reales en las fichas y secciones | `backend/database/media-seed/`, `scripts/media-import.js` | Implementado | Fotos de fichas en `/media` y tabla `media` (portada, encabezado, galería, platos y productos); el panel las cambia sin redeploy |
 
 ## 12. Fuera de alcance evidenciado
 

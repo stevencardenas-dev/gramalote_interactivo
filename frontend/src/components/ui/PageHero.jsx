@@ -27,11 +27,17 @@ export default function PageHero({
   breadcrumb,
   children,
   className = '',
+  image,
+  imagePosition,
+  credit,
 }) {
   const trail = breadcrumb ?? [{ label: 'Inicio', to: '/' }, { label: title }]
 
   return (
-    <section className={`page-hero${center ? ' page-hero--center' : ''} ${className}`.trim()}>
+    <section
+      className={`page-hero${center ? ' page-hero--center' : ''}${image ? ' page-hero--image' : ''} ${className}`.trim()}
+      style={image ? { '--hero-image': `url(${image})`, '--hero-position': imagePosition } : undefined}
+    >
       <div className="container">
         <Breadcrumb items={trail} />
         <div className="page-hero__inner">
@@ -41,6 +47,18 @@ export default function PageHero({
           {children}
         </div>
       </div>
+      {credit ? (
+        <p className="page-hero__credit">
+          <a href={credit.source} target="_blank" rel="noopener noreferrer">
+            Foto: {credit.author} (recortada)
+          </a>
+          {' · '}
+          <a href={credit.license.url} target="_blank" rel="noopener noreferrer">
+            {credit.license.label}
+          </a>
+          {' · Wikimedia Commons'}
+        </p>
+      ) : null}
     </section>
   )
 }

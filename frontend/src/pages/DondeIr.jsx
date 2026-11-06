@@ -1,17 +1,35 @@
+import PracticalInfo from '../components/home/PracticalInfo.jsx'
 import PageHero from '../components/ui/PageHero.jsx'
-import Placeholder from '../components/ui/Placeholder.jsx'
+import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
 import PlaceCard from '../components/cards/PlaceCard.jsx'
 import { MapExplorer } from '../components/ui/MapPanel.jsx'
-import { getEstablishmentsByCategory } from '../data/establishments.js'
+import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
 
 export default function DondeIr() {
-  const lodging = getEstablishmentsByCategory('dormir').slice(0, 4)
-  const shops = getEstablishmentsByCategory('comprar').slice(0, 3)
+  const { data: dormir, loading: loadingDormir, error: errorDormir } = useEstablishments('dormir')
+  const { data: comprar, loading: loadingComprar, error: errorComprar } = useEstablishments('comprar')
+
+  const lodging = orderBySlugs(dormir, [
+    'glamping-vista-antigua',
+    'hostal-campestre-camino-real',
+    'hostal-luna-azul',
+    'cabanas-el-penon',
+  ]).slice(0, 4)
+
+  const shops = orderBySlugs(comprar, [
+    'sombreros-techa',
+    'maestros-de-la-madera',
+    'creaciones-martina',
+  ]).slice(0, 3)
+
+  const loading = loadingDormir || loadingComprar
+  const error = errorDormir || errorComprar
 
   return (
     <>
       <PageHero
+        image="/img/home/hero-donde-ir.jpg"
         title="Dónde ir"
         breadcrumb={[
           { label: 'Inicio', to: '/' },
@@ -49,9 +67,9 @@ export default function DondeIr() {
               </Button>
             </div>
             <div className="photo-collage photo-collage--right">
-              <Placeholder className="photo-collage__tall" />
-              <Placeholder />
-              <Placeholder />
+              <Photo src="/img/home/colage-comer-1.jpg" alt="Carnes a la plancha" className="photo-collage__tall" />
+              <Photo src="/img/home/colage-comer-2.jpg" alt="Fresas con crema" />
+              <Photo src="/img/home/colage-comer-3.jpg" alt="Helados artesanales" />
             </div>
           </div>
 
@@ -60,16 +78,23 @@ export default function DondeIr() {
             <h2>Dónde dormir</h2>
           </div>
 
-          <div className="place-grid place-grid--four">
-            {lodging.map((item) => (
-              <PlaceCard
-                key={item.id}
-                title={item.name}
-                to={`/establecimiento/${item.slug}`}
-                summary={item.summary}
-              />
-            ))}
-          </div>
+          {error ? <p className="auth-error">{error}</p> : null}
+
+          {loading ? (
+            <p className="note">Cargando alojamientos…</p>
+          ) : (
+            <div className="place-grid place-grid--four">
+              {lodging.map((item) => (
+                <PlaceCard
+                  key={item.id}
+                  title={item.name}
+                  to={`/establecimiento/${item.slug}`}
+                  summary={item.summary}
+                  photo={item.photo}
+                />
+              ))}
+            </div>
+          )}
 
           <div className="center-action">
             <Button to="/donde-dormir" variant="secondary">
@@ -84,6 +109,7 @@ export default function DondeIr() {
                   title={shops[0].name}
                   to={`/establecimiento/${shops[0].slug}`}
                   summary={shops[0].summary}
+                  photo={shops[0].photo}
                 />
               ) : null}
             </div>
@@ -107,12 +133,15 @@ export default function DondeIr() {
                   title={item.name}
                   to={`/establecimiento/${item.slug}`}
                   summary={item.summary}
+                  photo={item.photo}
                 />
               ))}
             </div>
           </div>
         </div>
       </section>
+
+      <PracticalInfo />
     </>
   )
 }
