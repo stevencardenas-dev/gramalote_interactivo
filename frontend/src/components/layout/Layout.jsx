@@ -29,7 +29,7 @@ function StaticTitle({ pathname }) {
 }
 
 export default function Layout() {
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
   const overHero =
     pathname === '/' ||
     pathname.startsWith('/establecimiento/') ||
