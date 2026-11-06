@@ -13,6 +13,22 @@ COMPOSE_URL="${COMPOSE_URL:-}"
 mkdir -p "$APP_DIR"
 cd "$APP_DIR"
 
+# Limpieza ANTES de descargar: cada despliegue trae imágenes nuevas y, sin esto,
+# el disco se llena y el pull falla con "no space left on device". Las imágenes
+# en uso no se tocan; las anteriores siguen en ECR para volver atrás.
+DISK_MIN_MB="${DISK_MIN_MB:-1500}"
+docker image prune -af >/dev/null 2>&1 || true
+docker builder prune -af >/dev/null 2>&1 || true
+DISK_FREE_MB="$(df -Pm /var/lib/docker | awk 'NR==2 {print $4}')"
+echo "Disco libre: ${DISK_FREE_MB} MB"
+docker system df || true
+if [ "$DISK_FREE_MB" -lt "$DISK_MIN_MB" ]; then
+  echo "ERROR: quedan ${DISK_FREE_MB} MB libres tras limpiar imágenes (mínimo ${DISK_MIN_MB} MB)." >&2
+  df -h / >&2 || true
+  du -sh "$APP_DIR/media" /var/lib/docker/containers /var/lib/docker/volumes /var/log 2>/dev/null >&2 || true
+  exit 1
+fi
+
 # Variables del entorno (JWT, MySQL, admin). Vive solo en la instancia.
 if [ -f "$APP_DIR/.env" ]; then
   set -a
@@ -141,8 +157,8 @@ if [ -n "${ADMIN_EMAIL:-}" ] && [ -n "${ADMIN_PASSWORD:-}" ]; then
     node scripts/seed-admin.js || echo "AVISO: no se pudo sembrar la cuenta admin"
 fi
 
-# Limpieza de imágenes viejas (conserva la que está en uso).
-docker image prune -af --filter "until=168h" >/dev/null 2>&1 || true
+# Libera las imágenes que este despliegue acaba de reemplazar.
+docker image prune -af >/dev/null 2>&1 || true
 
 echo "Esperando al healthcheck..."
 for _ in $(seq 1 60); do

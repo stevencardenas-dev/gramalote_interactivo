@@ -1,15 +1,16 @@
 name: CI/CD · EC2
 
+# SOLO manual: se lanza con "Run workflow" en la pestaña Actions. Puede hacerlo
+# cualquier colaborador con permiso de escritura; ningún push ni merge a main
+# publica por sí solo. Cada despliegue deja quién lo pidió y el motivo.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "frontend/**"
-      - "backend/**"
-      - "docker-compose.yml"
-      - "deploy/**"
-      - ".github/workflows/deploy-ec2.yml"
   workflow_dispatch:
+    inputs:
+      motivo:
+        description: 'Motivo del despliegue (queda en el resumen de la ejecución)'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -35,6 +36,13 @@ jobs:
       api_image: ${{ steps.meta.outputs.api_image }}
       tag: ${{ steps.meta.outputs.tag }}
     steps:
+      - name: Comprobar que se despliega desde main
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Solo se despliega desde la rama main (se pidió $GITHUB_REF)."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -136,7 +144,7 @@ jobs:
         id: ssm
         env:
           IMAGE_TAG: ${{ needs.build.outputs.tag }}
-          RAW_BASE: https://raw.githubusercontent.com/${{ github.repository }}/main
+          RAW_BASE: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}
         run: |
           COMPOSE_URL="$RAW_BASE/docker-compose.yml"
           SCRIPT_URL="$RAW_BASE/deploy/deploy.sh"
@@ -153,17 +161,35 @@ jobs:
             --output text)
           echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
 
-      - name: Esperar resultado
-        run: aws ssm wait command-executed --command-id "${{ steps.ssm.outputs.command_id }}" --instance-id "$INSTANCE_ID"
-
-      - name: Mostrar salida del despliegue
-        if: always()
+      # Se sondea a mano (como deploy/remoto.sh de SINCOCO): `aws ssm wait` se
+      # rinde a los 100 s. La salida va en este mismo paso para que el error real
+      # de la instancia salga en el log del paso fallido.
+      - name: Esperar resultado y mostrar la salida
+        env:
+          COMMAND_ID: ${{ steps.ssm.outputs.command_id }}
         run: |
-          aws ssm get-command-invocation \
-            --command-id "${{ steps.ssm.outputs.command_id }}" \
-            --instance-id "$INSTANCE_ID" \
-            --query "{Status:Status,Salida:StandardOutputContent,Errores:StandardErrorContent}" \
-            --output json
+          ESTADO=Pending
+          for _ in $(seq 1 90); do
+            sleep 10
+            ESTADO=$(aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" \
+              --query Status --output text 2>/dev/null || echo Pending)
+            case "$ESTADO" in
+              Pending | InProgress | Delayed) ;;
+              *) break ;;
+            esac
+          done
+
+          echo "Estado: $ESTADO"
+          aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" \
+            --query StandardOutputContent --output text
+          ERRORES=$(aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" \
+            --query StandardErrorContent --output text)
+          [ -z "$ERRORES" ] || echo "$ERRORES" >&2
+
+          if [ "$ESTADO" != Success ]; then
+            echo "::error::El despliegue falló en la instancia (estado: $ESTADO)"
+            exit 1
+          fi
 
       - name: Invalidar caché de CloudFront
         run: |
@@ -177,3 +203,29 @@ jobs:
             --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
             --id "$INVALIDATION_ID"
           echo "Caché propagada"
+
+  resumen:
+    name: Resumen
+    needs: [build, deploy]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Escribir el resumen
+        env:
+          MOTIVO: ${{ inputs.motivo }}
+          BUILD: ${{ needs.build.result }}
+          DEPLOY: ${{ needs.deploy.result }}
+        run: |
+          {
+            echo "## Despliegue Gramalote"
+            echo ""
+            echo "| Campo | Valor |"
+            echo "|---|---|"
+            echo "| Lo pidió | @$GITHUB_ACTOR |"
+            echo "| Motivo | ${MOTIVO:-—} |"
+            echo "| Commit | \`$GITHUB_SHA\` |"
+            echo "| Lint e imágenes | $BUILD |"
+            echo "| Despliegue | $DEPLOY |"
+            echo ""
+            echo "Sitio: https://d2nm90ise1l8de.cloudfront.net"
+          } >> "$GITHUB_STEP_SUMMARY"

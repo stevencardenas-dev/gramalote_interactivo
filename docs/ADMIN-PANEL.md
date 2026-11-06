@@ -408,7 +408,7 @@ suba desde el panel: **actívalos cuando los administradores empiecen a usarlo.*
 ```bash
 # Activar: añade la variable al .env del servidor y vuelve a desplegar
 echo 'BACKUP_ENABLED=1' | sudo tee -a /opt/gramalote/.env
-gh workflow run deploy-ec2.yml        # o cualquier push a main
+gh workflow run deploy-ec2.yml        # o Actions → Run workflow
 # Desactivar: quita la línea (o pon BACKUP_ENABLED=0) y vuelve a desplegar
 ```
 

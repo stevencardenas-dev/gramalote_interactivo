@@ -47,8 +47,9 @@ sirve el `dist/` con fallback de SPA, gzip, cache de assets y `/healthz`.
 
 ## Despliegue continuo (EC2)
 
-`.github/workflows/deploy-ec2.yml` corre en cada push a `main` que toque
-`frontend/`, `docker-compose.yml` o `deploy/`:
+`.github/workflows/deploy-ec2.yml` se lanza a mano desde Actions → Run workflow
+(rama `main`); un push no despliega. Lo puede lanzar cualquier colaborador con
+permiso de escritura:
 
 1. **build**: lint + build de la imagen y push a Amazon ECR
    (`706637772877.dkr.ecr.us-east-2.amazonaws.com/gramalote-frontend`,
