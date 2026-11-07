@@ -1663,3 +1663,29 @@ button.social-dot {
   outline: 2px solid var(--c-primary);
   outline-offset: 2px;
 }
+
+.ficha-hero__dots {
+  align-items: center;
+}
+
+.ficha-hero__dots .ficha-hero__pause {
+  width: auto;
+  height: auto;
+  margin-left: 6px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.ficha-hero__dots .ficha-hero__pause:hover {
+  color: var(--c-white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ficha-hero__bg img:not(:only-child) {
+    transition: none;
+  }
+}

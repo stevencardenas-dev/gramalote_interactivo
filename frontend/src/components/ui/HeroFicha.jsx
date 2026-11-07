@@ -76,17 +76,17 @@ export default function HeroFicha({
   const canShare = Array.isArray(social) ? social.includes('share') : Boolean(social)
   const networks = links.filter((link) => NETWORKS[link.platform] && link.url)
 
-  // Con varios encabezados la ficha los va rotando (sin movimiento si el
-  // visitante pidió reducirlo).
+  // Con varios encabezados la ficha los va rotando solos; hay botón de pausa
+  // (y con «reducir movimiento» el cambio es instantáneo, sin fundido).
   const slides = images?.length ? images : image ? [image] : []
   const [current, setCurrent] = useState(0)
+  const [paused, setPaused] = useState(false)
   const active = slides.length ? current % slides.length : 0
   useEffect(() => {
-    if (slides.length < 2) return undefined
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined
+    if (slides.length < 2 || paused) return undefined
     const timer = setInterval(() => setCurrent((value) => value + 1), 6000)
     return () => clearInterval(timer)
-  }, [slides.length, current])
+  }, [slides.length, current, paused])
 
   return (
     <section className="ficha-hero">
@@ -145,6 +145,14 @@ export default function HeroFicha({
                   onClick={() => setCurrent(index)}
                 />
               ))}
+              <button
+                type="button"
+                className="ficha-hero__pause"
+                aria-label={paused ? 'Reanudar el cambio de fotos' : 'Pausar el cambio de fotos'}
+                onClick={() => setPaused((value) => !value)}
+              >
+                {paused ? '▶' : '❚❚'}
+              </button>
             </div>
           ) : null}
         </div>
