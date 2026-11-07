@@ -628,7 +628,6 @@ button.social-dot {
   left: 0;
   display: flex;
   width: calc((var(--n) + 1) * 100%);
-  animation: ficha-hero-pan var(--dur) linear infinite;
   will-change: transform;
 }
 
@@ -636,12 +635,6 @@ button.social-dot {
   position: static;
   flex: 0 0 calc(100% / (var(--n) + 1));
   min-width: 0;
-}
-
-@keyframes ficha-hero-pan {
-  to {
-    transform: translateX(calc(-100% * var(--n) / (var(--n) + 1)));
-  }
 }
 
 .ficha-hero::after {

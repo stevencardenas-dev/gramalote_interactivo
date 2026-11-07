@@ -85,34 +85,38 @@ export default function HeroFicha({
   const total = slides.length
   const multiple = total > 1
   const trackRef = useRef(null)
+  const progress = useRef(0)
   const [dot, setDot] = useState(0)
   const [paused, setPaused] = useState(false)
 
   // Carrusel continuo: las fotos se deslizan sin parar hacia la izquierda; al
   // terminar la última asoma otra vez la primera (hay una copia al final). El
-  // puntito cambia cuando una foto pasa de la mitad de su recorrido.
+  // puntito cambia cuando una foto pasa de la mitad de su recorrido. Se mueve
+  // con requestAnimationFrame y no con CSS porque la hoja global anula las
+  // animaciones CSS cuando el visitante pidió «reducir movimiento».
   useEffect(() => {
-    if (!multiple) return undefined
-    const cycle = total * SLIDE_SECONDS * 1000
-    const timer = setInterval(() => {
-      const animation = trackRef.current?.getAnimations?.()[0]
-      if (!animation) return
-      const progress = (Number(animation.currentTime) % cycle) / (SLIDE_SECONDS * 1000)
-      setDot(Math.round(progress) % total)
-    }, 150)
-    return () => clearInterval(timer)
-  }, [multiple, total])
-
-  useEffect(() => {
-    const animation = trackRef.current?.getAnimations?.()[0]
-    if (!animation) return
-    if (paused) animation.pause()
-    else animation.play()
-  }, [paused, multiple])
+    if (!multiple || paused) return undefined
+    let frame
+    let last = performance.now()
+    function tick(now) {
+      const step = (now - last) / (SLIDE_SECONDS * 1000)
+      last = now
+      progress.current = (progress.current + step) % total
+      if (trackRef.current) {
+        trackRef.current.style.transform = `translateX(-${(progress.current * 100) / (total + 1)}%)`
+      }
+      setDot(Math.round(progress.current) % total)
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [multiple, paused, total])
 
   function goTo(index) {
-    const animation = trackRef.current?.getAnimations?.()[0]
-    if (animation) animation.currentTime = index * SLIDE_SECONDS * 1000
+    progress.current = index
+    if (trackRef.current) {
+      trackRef.current.style.transform = `translateX(-${(index * 100) / (total + 1)}%)`
+    }
     setDot(index)
   }
 
@@ -125,7 +129,7 @@ export default function HeroFicha({
           <div
             ref={trackRef}
             className="ficha-hero__track"
-            style={{ '--n': total, '--dur': `${total * SLIDE_SECONDS}s` }}
+            style={{ '--n': total }}
           >
             {track.map((src, index) => (
               <img
