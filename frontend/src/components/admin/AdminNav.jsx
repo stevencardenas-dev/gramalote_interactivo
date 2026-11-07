@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import Logo from '../ui/Logo.jsx'
 import { apiRequest, ensureSession, getUser, logout } from '../../lib/auth.js'
 
 function formatBytes(bytes) {
@@ -39,7 +40,8 @@ export default function AdminNav() {
   return (
     <header className="admin-nav">
       <Link className="admin-nav__brand" to="/admin">
-        Gramalote <span>Panel</span>
+        <Logo variant="cube" className="admin-nav__logo" alt="Gramalote Interactivo" />
+        <span>Panel</span>
       </Link>
       <nav className="admin-nav__links" aria-label="Panel">
         <NavLink to="/admin" end>

@@ -102,7 +102,7 @@ export default function Admin() {
             <span>
               {dash ?? plural(summary.total, 'ficha', 'fichas')}
               {!loading && summary.drafts > 0 ? (
-                <em className="is-warn"> · {plural(summary.drafts, 'borrador', 'borradores')}</em>
+                <em className="is-warn"> · {plural(summary.drafts, 'no publicada', 'no publicadas')}</em>
               ) : null}
             </span>
             <span className="admin-tile__go">Abrir →</span>
@@ -146,7 +146,7 @@ export default function Admin() {
                 summary.published,
                 'publicada',
                 'publicadas',
-              )} · ${plural(summary.drafts, 'borrador', 'borradores')} · ${plural(
+              )} · ${plural(summary.drafts, 'no publicada', 'no publicadas')} · ${plural(
                 summary.featured,
                 'destacada',
                 'destacadas',

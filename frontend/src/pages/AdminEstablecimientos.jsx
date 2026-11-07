@@ -3,11 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 
 const STATUS_TABS = [
-  { key: 'all', label: 'Todas' },
   { key: 'published', label: 'Publicadas' },
-  { key: 'draft', label: 'Borradores' },
-  { key: 'nocover', label: 'Sin portada' },
-  { key: 'recent', label: 'Editadas recientemente' },
+  { key: 'draft', label: 'No publicadas' },
 ]
 
 function normalize(text) {
@@ -27,7 +24,7 @@ export default function AdminEstablecimientos() {
   const [items, setItems] = useState([])
   const [categories, setCategories] = useState([])
   const [query, setQuery] = useState(params.get('q') ?? '')
-  const [tab, setTab] = useState('all')
+  const [tab, setTab] = useState('published')
   const [category, setCategory] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -66,10 +63,8 @@ export default function AdminEstablecimientos() {
 
   const counts = useMemo(
     () => ({
-      all: items.length,
       published: items.filter((item) => item.published).length,
       draft: items.filter((item) => !item.published).length,
-      nocover: items.filter((item) => !item.cover).length,
     }),
     [items],
   )
@@ -79,25 +74,19 @@ export default function AdminEstablecimientos() {
     const filtered = items.filter((item) => {
       if (tab === 'published' && !item.published) return false
       if (tab === 'draft' && item.published) return false
-      if (tab === 'nocover' && item.cover) return false
-      if (tab === 'recent' && !item.updatedAt) return false
       if (category && item.category.slug !== category) return false
       if (!needle) return true
       return normalize(`${item.name} ${item.slug} ${item.zone?.name ?? ''}`).includes(needle)
     })
-    if (tab === 'recent') {
-      filtered.sort((a, b) => new Date(b.updatedAt ?? 0) - new Date(a.updatedAt ?? 0))
-    }
+    filtered.sort((a, b) => new Date(b.updatedAt ?? 0) - new Date(a.updatedAt ?? 0))
     return filtered
   }, [items, tab, category, query])
 
-  const hasFilters = Boolean(query || category || tab !== 'all')
-  const pendingCover = items.filter((item) => item.published && !item.cover).length
+  const hasFilters = Boolean(query || category)
 
   function clearFilters() {
     setQuery('')
     setCategory('')
-    setTab('all')
   }
 
   async function handleCreate(event) {
@@ -150,7 +139,7 @@ export default function AdminEstablecimientos() {
           </select>
           <button
             type="button"
-            className="admin-btn"
+            className="admin-btn admin-btn--primary"
             onClick={() => setShowNew((open) => !open)}
             aria-expanded={showNew}
           >
@@ -190,25 +179,9 @@ export default function AdminEstablecimientos() {
               </select>
             </div>
             <button type="submit" className="admin-btn admin-btn--primary" disabled={creating}>
-              {creating ? 'Creando…' : 'Crear borrador'}
+              {creating ? 'Creando…' : 'Crear ficha'}
             </button>
           </form>
-        ) : null}
-
-        {!loading && (counts.draft > 0 || pendingCover > 0) ? (
-          <div className="admin-alert" role="status">
-            <strong>Por revisar:</strong>
-            {counts.draft > 0 ? (
-              <button type="button" onClick={() => setTab('draft')}>
-                {counts.draft} {counts.draft === 1 ? 'borrador' : 'borradores'}
-              </button>
-            ) : null}
-            {pendingCover > 0 ? (
-              <button type="button" onClick={() => setTab('nocover')}>
-                {pendingCover} {pendingCover === 1 ? 'publicada' : 'publicadas'} sin portada
-              </button>
-            ) : null}
-          </div>
         ) : null}
 
         <div className="admin-tabs" role="tablist" aria-label="Filtrar por estado">
@@ -221,10 +194,7 @@ export default function AdminEstablecimientos() {
               className={`admin-tab${tab === entry.key ? ' is-active' : ''}`}
               onClick={() => setTab(entry.key)}
             >
-              {entry.label}
-              {entry.key === 'recent' ? null : (
-                <span className="admin-tab__count">{counts[entry.key]}</span>
-              )}
+              {entry.label} <span className="admin-tab__count">{counts[entry.key]}</span>
             </button>
           ))}
           {hasFilters ? (
@@ -262,7 +232,7 @@ export default function AdminEstablecimientos() {
                 <span
                   className={`admin-badge ${item.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
                 >
-                  {item.published ? 'Publicado' : 'Borrador'}
+                  {item.published ? 'Publicada' : 'No publicada'}
                 </span>
                 <Link className="admin-btn" to={`/admin/establecimientos/${item.id}`}>
                   Editar

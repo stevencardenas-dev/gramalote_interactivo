@@ -1,6 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import Button from '../components/ui/Button.jsx'
 import OpeningHoursEditor from '../components/admin/OpeningHoursEditor.jsx'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 import { MAP_ICONS, mapIconUrl, resolveMapIcon } from '../data/mapIcons.js'
@@ -11,6 +10,14 @@ const TABS = [
   { key: 'extras', label: 'Servicios y extras' },
   { key: 'publish', label: 'Publicación' },
 ]
+
+const AUDIT_PAGE = 8
+
+function formatStamp(value) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value ?? ''
+  return date.toLocaleString('es-CO', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
 
 const PLATFORMS = ['facebook', 'instagram', 'whatsapp', 'tiktok', 'youtube', 'x', 'website']
 const ROLE_LABELS = { cover: 'Portada', hero: 'Encabezado', gallery: 'Galería', logo: 'Logo' }
@@ -133,6 +140,7 @@ export default function AdminEstablecimiento() {
 
   const [tab, setTab] = useState('info')
   const [signal, setSignal] = useState({ open: false, n: 0 })
+  const [auditPage, setAuditPage] = useState(0)
   const [form, setForm] = useState(null)
   const [meta, setMeta] = useState(null)
   const [allEstablishments, setAllEstablishments] = useState([])
@@ -380,7 +388,7 @@ export default function AdminEstablecimiento() {
               <span
                 className={`admin-badge ${form.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
               >
-                {form.published ? 'Publicada' : 'Borrador'}
+                {form.published ? 'Publicada' : 'No publicada'}
               </span>
               {form.featured ? <span className="admin-badge">★ Destacada</span> : null}
               <small>
@@ -401,7 +409,7 @@ export default function AdminEstablecimiento() {
             </Link>
             <button
               type="button"
-              className="admin-btn"
+              className={`admin-btn ${form.published ? 'admin-btn--danger' : 'admin-btn--accent'}`}
               onClick={() => handlePublish(!form.published)}
               disabled={!form.published && user?.role !== 'admin'}
             >
@@ -695,20 +703,6 @@ export default function AdminEstablecimiento() {
                   onUseText={(hoursText) => update({ hoursText })}
                 />
               </Section>
-
-              <Section title="Visibilidad" signal={signal}>
-                <label className="admin-check admin-check--card">
-                  <input
-                    type="checkbox"
-                    checked={form.featured}
-                    onChange={(event) => update({ featured: event.target.checked })}
-                  />
-                  <span>
-                    <strong>Destacado en el inicio</strong>
-                    <small>Aparece primero en los listados.</small>
-                  </span>
-                </label>
-              </Section>
             </>
           ) : null}
 
@@ -718,10 +712,8 @@ export default function AdminEstablecimiento() {
                 <div>
                   <h2>Imágenes de la ficha</h2>
                   <p className="note">
-                    La portada es la que se ve en tarjetas y listados; el encabezado, la
-                    foto ancha de arriba de la ficha (sin él se usa la portada). Las
-                    fotos de platos y productos se eligen en “Más datos”. Se convierten
-                    a WebP automáticamente y se guardan en el disco del servidor.
+                    Portada: tarjetas y listados. Encabezado: foto ancha de la ficha (si falta,
+                    se usa la portada). Se convierten a WebP al subir.
                   </p>
                 </div>
                 <div>
@@ -734,14 +726,14 @@ export default function AdminEstablecimiento() {
                     hidden
                     onChange={handleUpload}
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
+                    className="admin-btn admin-btn--accent"
                     disabled={uploading}
                     onClick={() => fileInput.current?.click()}
                   >
-                    {uploading ? 'Subiendo…' : 'Subir imágenes'}
-                  </Button>
+                    {uploading ? 'Subiendo…' : '+ Subir imágenes'}
+                  </button>
                 </div>
               </div>
 
@@ -749,75 +741,78 @@ export default function AdminEstablecimiento() {
                 <p className="empty">Todavía no hay imágenes. Sube la primera como portada.</p>
               ) : (
                 <ul className="admin-media__grid">
-                  {form.images.map((image, index) => (
-                    <li key={image.imageId} className="admin-media__item">
-                      <img src={image.url} alt={image.alt} loading="lazy" />
-                      <div className="admin-media__meta">
-                        <span
-                          className={`admin-badge ${
-                            image.role === 'cover' || image.role === 'hero' ? 'admin-badge--ok' : ''
-                          }`}
-                        >
-                          {ROLE_LABELS[image.role] ?? image.role}
-                        </span>
-                        <span className="admin-media__dims">
-                          {image.width}×{image.height}
-                        </span>
-                      </div>
-                      <input
-                        className="admin-media__alt"
-                        defaultValue={image.alt}
-                        placeholder="Texto alternativo (accesibilidad)"
-                        onBlur={(event) => {
-                          if (event.target.value !== image.alt) {
-                            updateMediaAlt(image, event.target.value)
-                          }
-                        }}
-                      />
-                      <div className="admin-media__actions">
-                        {image.role !== 'cover' ? (
+                  {form.images.map((image, index) => {
+                    const roles = Object.keys(ROLE_LABELS).filter(
+                      (role) => role === image.role || (role !== 'logo' && !(image.role === 'cover' && role === 'gallery')),
+                    )
+                    return (
+                      <li key={image.imageId} className="admin-media__item">
+                        <div className="admin-media__shot">
+                          <img src={image.url} alt={image.alt} loading="lazy" />
+                          <span
+                            className={`admin-badge ${
+                              image.role === 'cover' || image.role === 'hero' ? 'admin-badge--ok' : ''
+                            }`}
+                          >
+                            {ROLE_LABELS[image.role] ?? image.role}
+                          </span>
+                          <span className="admin-media__dims">
+                            {image.width}×{image.height}
+                          </span>
+                        </div>
+                        <input
+                          className="admin-media__alt"
+                          aria-label="Texto alternativo"
+                          defaultValue={image.alt}
+                          placeholder="Texto alternativo (accesibilidad)"
+                          onBlur={(event) => {
+                            if (event.target.value !== image.alt) {
+                              updateMediaAlt(image, event.target.value)
+                            }
+                          }}
+                        />
+                        <div className="admin-media__actions">
+                          <select
+                            aria-label="Uso de la imagen"
+                            value={image.role}
+                            disabled={busyImage}
+                            onChange={(event) => patchImage(image, { role: event.target.value })}
+                          >
+                            {roles.map((role) => (
+                              <option key={role} value={role}>
+                                {ROLE_LABELS[role]}
+                              </option>
+                            ))}
+                          </select>
                           <button
                             type="button"
-                            disabled={busyImage}
-                            onClick={() => patchImage(image, { role: 'cover' })}
+                            aria-label="Mover antes"
+                            disabled={busyImage || index === 0}
+                            onClick={() => moveImage(index, -1)}
                           >
-                            Hacer portada
+                            ←
                           </button>
-                        ) : null}
-                        {image.role !== 'hero' ? (
                           <button
                             type="button"
-                            disabled={busyImage}
-                            onClick={() => patchImage(image, { role: 'hero' })}
+                            aria-label="Mover después"
+                            disabled={busyImage || index === form.images.length - 1}
+                            onClick={() => moveImage(index, 1)}
                           >
-                            Usar de encabezado
+                            →
                           </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          disabled={busyImage || index === 0}
-                          onClick={() => moveImage(index, -1)}
-                        >
-                          ←
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busyImage || index === form.images.length - 1}
-                          onClick={() => moveImage(index, 1)}
-                        >
-                          →
-                        </button>
-                        <button
-                          type="button"
-                          className="is-danger"
-                          disabled={busyImage}
-                          onClick={() => unlinkImage(image)}
-                        >
-                          Quitar
-                        </button>
-                      </div>
-                    </li>
-                  ))}
+                          <button
+                            type="button"
+                            className="is-danger"
+                            aria-label="Quitar de la ficha"
+                            disabled={busyImage}
+                            onClick={() => unlinkImage(image)}
+                          >
+                            Quitar
+                          </button>
+                        </div>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </div>
@@ -869,9 +864,9 @@ export default function AdminEstablecimiento() {
 
               <Section title="Platos y servicios destacados" signal={signal}
                 actions={
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
+                    className="admin-btn admin-btn--accent-outline"
                     onClick={() =>
                       addToList('features', {
                         title: '',
@@ -881,8 +876,8 @@ export default function AdminEstablecimiento() {
                       })
                     }
                   >
-                    Añadir tarjeta
-                  </Button>
+                    + Añadir tarjeta
+                  </button>
                 }>
                 {form.features.map((feature, index) => (
                   <div key={index} className="admin-row">
@@ -914,9 +909,9 @@ export default function AdminEstablecimiento() {
 
               <Section title="Productos" signal={signal}
                 actions={
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
+                    className="admin-btn admin-btn--accent-outline"
                     onClick={() =>
                       addToList('products', {
                         name: '',
@@ -926,8 +921,8 @@ export default function AdminEstablecimiento() {
                       })
                     }
                   >
-                    Añadir producto
-                  </Button>
+                    + Añadir producto
+                  </button>
                 }>
                 {form.products.map((product, index) => (
                   <div key={index} className="admin-row admin-row--product">
@@ -967,13 +962,13 @@ export default function AdminEstablecimiento() {
 
               <Section title="Redes sociales" signal={signal}
                 actions={
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
+                    className="admin-btn admin-btn--accent-outline"
                     onClick={() => addToList('social', { platform: 'instagram', url: '' })}
                   >
-                    Añadir red
-                  </Button>
+                    + Añadir red
+                  </button>
                 }>
                 {form.social.map((link, index) => (
                   <div key={index} className="admin-row">
@@ -1035,17 +1030,17 @@ export default function AdminEstablecimiento() {
               <p>
                 {form.published
                   ? 'La ficha es visible en el sitio público.'
-                  : 'La ficha está en borrador y no aparece en el sitio.'}
+                  : 'La ficha no está publicada y no aparece en el sitio.'}
               </p>
               <div className="admin-publish__actions">
-                <Button
+                <button
                   type="button"
-                  variant={form.published ? 'ghost' : 'primary'}
+                  className={`admin-btn ${form.published ? 'admin-btn--danger' : 'admin-btn--primary'}`}
                   onClick={() => handlePublish(!form.published)}
                   disabled={!form.published && user?.role !== 'admin'}
                 >
                   {form.published ? 'Despublicar' : 'Publicar ficha'}
-                </Button>
+                </button>
                 {user?.role !== 'admin' ? (
                   <span className="note">Solo un administrador puede publicar.</span>
                 ) : null}
@@ -1054,27 +1049,67 @@ export default function AdminEstablecimiento() {
                 Para publicar se exige al menos una portada con texto alternativo.
               </p>
 
-              <h2>Historial reciente</h2>
+              <h2>Destacar</h2>
+              <label className="admin-check admin-check--card">
+                <input
+                  type="checkbox"
+                  checked={form.featured}
+                  onChange={(event) => update({ featured: event.target.checked })}
+                />
+                <span>
+                  <strong>Destacada en el inicio</strong>
+                  <small>Aparece primero en los listados. Guarda para aplicar el cambio.</small>
+                </span>
+              </label>
+
+              <h2>Historial</h2>
               {form.audit.length === 0 ? (
                 <p className="note">Sin cambios registrados todavía.</p>
               ) : (
-                <ul className="admin-audit">
-                  {form.audit.map((entry) => (
-                    <li key={entry.id}>
-                      <span className="admin-audit__action">{entry.action}</span>
-                      <span>{entry.userName ?? 'Sistema'}</span>
-                      <span className="admin-audit__date">{entry.createdAt}</span>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <ul className="admin-audit">
+                    {form.audit
+                      .slice(auditPage * AUDIT_PAGE, (auditPage + 1) * AUDIT_PAGE)
+                      .map((entry) => (
+                        <li key={entry.id}>
+                          <span className="admin-audit__action">{entry.action}</span>
+                          <span>{entry.userName ?? 'Sistema'}</span>
+                          <span className="admin-audit__date">{formatStamp(entry.createdAt)}</span>
+                        </li>
+                      ))}
+                  </ul>
+                  {form.audit.length > AUDIT_PAGE ? (
+                    <div className="admin-pager">
+                      <button
+                        type="button"
+                        className="admin-btn"
+                        disabled={auditPage === 0}
+                        onClick={() => setAuditPage((page) => page - 1)}
+                      >
+                        ← Anterior
+                      </button>
+                      <span>
+                        Página {auditPage + 1} de {Math.ceil(form.audit.length / AUDIT_PAGE)}
+                      </span>
+                      <button
+                        type="button"
+                        className="admin-btn"
+                        disabled={(auditPage + 1) * AUDIT_PAGE >= form.audit.length}
+                        onClick={() => setAuditPage((page) => page + 1)}
+                      >
+                        Siguiente →
+                      </button>
+                    </div>
+                  ) : null}
+                </>
               )}
             </div>
           ) : null}
 
           <div className="admin-panel__footer">
-            <Button type="submit" disabled={saving}>
+            <button type="submit" className="admin-btn admin-btn--primary" disabled={saving}>
               {saving ? 'Guardando…' : 'Guardar cambios'}
-            </Button>
+            </button>
             {notice ? <span className="admin-notice">{notice}</span> : null}
           </div>
         </form>

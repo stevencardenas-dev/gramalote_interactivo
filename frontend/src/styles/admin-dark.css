@@ -3,22 +3,22 @@
    se carga después de admin.css para ganar en especificidad. */
 
 body:has(.admin-app) {
-  background: #0b1c29;
+  background: #121212;
 }
 
 .admin-app {
-  --a-bg: #0b1c29;
-  --a-sf: #12293b;
-  --a-sf2: #193650;
-  --a-ln: #27475f;
-  --a-tx: #fff2e3;
-  --a-mu: #a4b4c0;
+  --a-bg: #121212;
+  --a-sf: #1b1b1b;
+  --a-sf2: #262626;
+  --a-ln: #363636;
+  --a-tx: #f3efe9;
+  --a-mu: #a6a6a6;
   --a-ac: #eaa41e;
   --a-onac: #1a1204;
   --a-ok: #86d9a3;
-  --a-okb: #173a2a;
+  --a-okb: #1c3326;
   --a-wn: #f4c15f;
-  --a-wnb: #3b2d10;
+  --a-wnb: #3a2f15;
   --a-danger: #ff9a74;
 
   --c-white: var(--a-sf);
@@ -260,7 +260,7 @@ body:has(.admin-app) {
 
 .admin-app input::placeholder,
 .admin-app textarea::placeholder {
-  color: #6f8394;
+  color: #727272;
 }
 
 .admin-app .field label,
@@ -287,7 +287,7 @@ body:has(.admin-app) {
 
 .admin-app .auth-error {
   border-color: #7a3a2c;
-  background: #3a1f19;
+  background: #3a2019;
   color: var(--a-danger);
 }
 
@@ -814,7 +814,7 @@ a.admin-tile:hover {
 
 .admin-app .admin-panel__footer {
   border: 1px solid var(--a-ln);
-  background: rgba(18, 41, 59, 0.95);
+  background: rgba(27, 27, 27, 0.96);
   box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.35);
 }
 
@@ -838,6 +838,189 @@ a.admin-tile:hover {
 
 .admin-app .admin-link-box {
   background: var(--a-sf2);
+}
+
+/* Botones de acento (dorado de la marca) y de peligro */
+.admin-btn--accent {
+  border-color: var(--a-ac);
+  background: var(--a-ac);
+  color: var(--a-onac);
+  font-weight: 600;
+}
+
+.admin-btn--accent:hover:not(:disabled),
+.admin-btn--primary:hover:not(:disabled) {
+  border-color: #f5b63c;
+  background: #f5b63c;
+}
+
+.admin-btn--accent-outline {
+  border-color: var(--a-ac);
+  background: transparent;
+  color: var(--a-ac);
+}
+
+.admin-btn--accent-outline:hover:not(:disabled) {
+  background: var(--a-ac);
+  color: var(--a-onac);
+}
+
+.admin-btn--danger {
+  border-color: #c0392b;
+  background: #c0392b;
+  color: #fff;
+  font-weight: 600;
+}
+
+.admin-btn--danger:hover:not(:disabled) {
+  border-color: #dc4a3a;
+  background: #dc4a3a;
+}
+
+/* Logo de la barra: el isotipo del sitio, en blanco sobre el fondo oscuro */
+.admin-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-nav__logo {
+  width: 44px;
+  height: 44px;
+  margin-block: -6px;
+  filter: brightness(0) invert(1);
+}
+
+/* Acordeón: flecha a la izquierda y acciones a la derecha */
+.admin-app .admin-section__toggle {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.admin-app .admin-section__chevron {
+  margin-right: 0;
+}
+
+.admin-app .admin-section__bar .admin-btn {
+  min-height: 32px;
+  padding-inline: 12px;
+  font-size: 0.8rem;
+}
+
+/* Galería de imágenes */
+.admin-app .admin-media__head {
+  align-items: center;
+}
+
+.admin-app .admin-media__grid {
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.admin-app .admin-media__item {
+  gap: 8px;
+  padding: 8px;
+  transform: none;
+}
+
+.admin-app .admin-media__item:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #4a4a4a;
+}
+
+.admin-media__shot {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  background: var(--a-sf2);
+  overflow: hidden;
+}
+
+.admin-media__shot img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+  object-fit: cover;
+}
+
+.admin-media__shot .admin-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(18, 18, 18, 0.82);
+}
+
+.admin-media__shot .admin-badge--ok {
+  background: rgba(28, 51, 38, 0.92);
+}
+
+.admin-media__shot .admin-media__dims {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(18, 18, 18, 0.82);
+  color: var(--a-mu);
+}
+
+.admin-app .admin-media__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.admin-app .admin-media__actions select {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 8px;
+  font-size: 0.8rem;
+}
+
+.admin-app .admin-media__actions button {
+  flex: none;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.admin-app .admin-media__alt {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 0.8rem;
+}
+
+/* Historial paginado */
+.admin-app .admin-audit li {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+}
+
+.admin-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  color: var(--a-mu);
+  font-size: 0.82rem;
+}
+
+.admin-app .admin-publish h2 {
+  margin-top: 22px;
+  font-size: 1rem;
+}
+
+.admin-app .admin-publish h2:first-child {
+  margin-top: 0;
 }
 
 @media (max-width: 760px) {
