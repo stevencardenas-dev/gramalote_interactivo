@@ -1195,3 +1195,184 @@ a.admin-tile:hover {
     grid-template-columns: 44px minmax(0, 1fr) 18px;
   }
 }
+
+/* Usuarios */
+.admin-bar__lead {
+  flex: 1 1 240px;
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.admin-app .admin-new--users {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) 150px auto;
+  gap: 12px;
+  align-items: end;
+  padding: 14px 16px;
+  border-radius: 12px;
+}
+
+.admin-app .admin-new--users .field,
+.admin-app .admin-new--users .field label {
+  margin: 0;
+}
+
+.admin-app .admin-new--users .field {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-new--users .admin-btn {
+  min-height: 38px;
+}
+
+.admin-urow {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto 150px auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-top: 1px solid var(--a-ln);
+}
+
+.admin-urow:first-child {
+  border-top: 0;
+}
+
+.admin-urow.is-off {
+  opacity: 0.6;
+}
+
+.admin-urow__avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--a-sf2);
+  color: var(--a-ac-text);
+  font-weight: 600;
+}
+
+.admin-urow__main {
+  min-width: 0;
+}
+
+.admin-urow__main strong {
+  display: block;
+  font-weight: 600;
+}
+
+.admin-urow__main small {
+  display: block;
+  overflow: hidden;
+  color: var(--a-mu);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-urow__status {
+  display: flex;
+  gap: 6px;
+}
+
+.admin-app .admin-urow select {
+  min-height: 34px;
+  padding: 0 8px;
+  font-size: 0.85rem;
+}
+
+.admin-urow__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-urow .admin-btn {
+  min-height: 34px;
+  padding-inline: 12px;
+  font-size: 0.82rem;
+}
+
+.admin-btn--danger-outline {
+  color: var(--a-danger);
+  border-color: #7a3a2c;
+}
+
+.admin-btn--danger-outline:hover:not(:disabled) {
+  border-color: #d62d1c;
+  background: rgba(214, 45, 28, 0.12);
+}
+
+.admin-urow .admin-link-box {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  background: var(--a-sf2);
+  border-radius: 8px;
+}
+
+.admin-urow .admin-link-box code {
+  flex: 1 1 280px;
+  margin: 0;
+  color: var(--a-tx);
+}
+
+.admin-details {
+  border: 1px solid var(--a-ln);
+  border-radius: 12px;
+  background: var(--a-sf);
+}
+
+.admin-details summary {
+  padding: 12px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.admin-details[open] summary {
+  border-bottom: 1px solid var(--a-ln);
+}
+
+.admin-app .admin-details .admin-password {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  max-width: none;
+  padding: 16px 18px;
+}
+
+.admin-details .admin-password .field {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.admin-details .admin-password .auth-error,
+.admin-details .admin-password .admin-notice {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .admin-urow {
+    grid-template-columns: 36px minmax(0, 1fr) 140px;
+  }
+
+  .admin-urow__status {
+    display: none;
+  }
+
+  .admin-urow__actions {
+    grid-column: 1 / -1;
+  }
+
+  .admin-app .admin-new--users,
+  .admin-app .admin-details .admin-password {
+    grid-template-columns: 1fr;
+  }
+}
