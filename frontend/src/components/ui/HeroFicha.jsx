@@ -60,6 +60,9 @@ function Breadcrumb({ items = [] }) {
   )
 }
 
+const HOLD_MS = 5500
+const SLIDE_MS = 900
+
 export default function HeroFicha({
   breadcrumb,
   eyebrow,
@@ -79,27 +82,66 @@ export default function HeroFicha({
   // Con varios encabezados la ficha los va rotando solos; hay botón de pausa
   // (y con «reducir movimiento» el cambio es instantáneo, sin fundido).
   const slides = images?.length ? images : image ? [image] : []
-  const [current, setCurrent] = useState(0)
+  const total = slides.length
+  const multiple = total > 1
+  const [pos, setPos] = useState(0)
+  const [animate, setAnimate] = useState(true)
+  const [dot, setDot] = useState(0)
   const [paused, setPaused] = useState(false)
-  const active = slides.length ? current % slides.length : 0
+
+  // Carrusel: avanza siempre hacia la izquierda; tras la última vuelve a la
+  // primera por una copia al final, así nunca "rebobina". El puntito cambia
+  // cuando el desplazamiento pasa de la mitad.
   useEffect(() => {
-    if (slides.length < 2 || paused) return undefined
-    const timer = setInterval(() => setCurrent((value) => value + 1), 6000)
-    return () => clearInterval(timer)
-  }, [slides.length, current, paused])
+    if (!multiple || paused) return undefined
+    let half
+    const timer = setInterval(() => {
+      setAnimate(true)
+      setPos((value) => value + 1)
+      half = setTimeout(() => setDot((pos + 1) % total), SLIDE_MS / 2)
+    }, HOLD_MS)
+    return () => {
+      clearInterval(timer)
+      clearTimeout(half)
+    }
+  }, [multiple, paused, total, pos])
+
+  function handleTrackEnd() {
+    if (pos >= total) {
+      setAnimate(false)
+      setPos(0)
+    }
+  }
+
+  function goTo(index) {
+    setAnimate(true)
+    setPos(index)
+    setDot(index)
+  }
+
+  const track = multiple ? [...slides, slides[0]] : slides
 
   return (
     <section className="ficha-hero">
       <div className="ficha-hero__bg">
-        {slides.map((src, index) => (
-          <img
-            key={src}
-            src={src}
-            alt={index === active ? imageAlt : ''}
-            className={index === active ? 'is-active' : undefined}
-            loading={index === 0 ? undefined : 'lazy'}
-          />
-        ))}
+        {multiple ? (
+          <div
+            className={`ficha-hero__track${animate ? ' is-sliding' : ''}`}
+            style={{ transform: `translateX(-${pos * 100}%)` }}
+            onTransitionEnd={handleTrackEnd}
+          >
+            {track.map((src, index) => (
+              <img
+                key={`${src}-${index}`}
+                src={src}
+                alt={index === dot ? imageAlt : ''}
+                loading={index === 0 ? undefined : 'lazy'}
+              />
+            ))}
+          </div>
+        ) : image || slides[0] ? (
+          <img src={slides[0]} alt={imageAlt} />
+        ) : null}
       </div>
 
       <div className="container ficha-hero__inner">
@@ -139,10 +181,10 @@ export default function HeroFicha({
                 <button
                   key={src}
                   type="button"
-                  className={index === active ? 'is-active' : undefined}
+                  className={index === dot ? 'is-active' : undefined}
                   aria-label={`Ver foto ${index + 1} de ${slides.length}`}
-                  aria-current={index === active}
-                  onClick={() => setCurrent(index)}
+                  aria-current={index === dot}
+                  onClick={() => goTo(index)}
                 />
               ))}
               <button

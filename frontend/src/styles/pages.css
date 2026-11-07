@@ -621,13 +621,21 @@ button.social-dot {
   object-position: center 45%;
 }
 
-.ficha-hero__bg img:not(:only-child) {
-  opacity: 0;
-  transition: opacity 1.2s ease;
+.ficha-hero__track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  will-change: transform;
 }
 
-.ficha-hero__bg img.is-active {
-  opacity: 1;
+.ficha-hero__track.is-sliding {
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.ficha-hero__track img {
+  position: static;
+  flex: 0 0 100%;
+  min-width: 0;
 }
 
 .ficha-hero::after {
@@ -1685,7 +1693,7 @@ button.social-dot {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ficha-hero__bg img:not(:only-child) {
+  .ficha-hero__track.is-sliding {
     transition: none;
   }
 }
