@@ -98,14 +98,21 @@ export default function HeroFicha({
     if (!multiple || paused) return undefined
     let frame
     let last = performance.now()
+    let shown = -1
     function tick(now) {
-      const step = (now - last) / (SLIDE_SECONDS * 1000)
+      // Con la pestaña en segundo plano el navegador detiene los fotogramas; al
+      // volver, el salto de tiempo se recorta para no dar un tirón.
+      const step = Math.min(now - last, 50) / (SLIDE_SECONDS * 1000)
       last = now
       progress.current = (progress.current + step) % total
       if (trackRef.current) {
-        trackRef.current.style.transform = `translateX(-${(progress.current * 100) / (total + 1)}%)`
+        trackRef.current.style.transform = `translate3d(-${(progress.current * 100) / (total + 1)}%, 0, 0)`
       }
-      setDot(Math.round(progress.current) % total)
+      const next = Math.round(progress.current) % total
+      if (next !== shown) {
+        shown = next
+        setDot(next)
+      }
       frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
@@ -115,7 +122,7 @@ export default function HeroFicha({
   function goTo(index) {
     progress.current = index
     if (trackRef.current) {
-      trackRef.current.style.transform = `translateX(-${(index * 100) / (total + 1)}%)`
+      trackRef.current.style.transform = `translate3d(-${(index * 100) / (total + 1)}%, 0, 0)`
     }
     setDot(index)
   }
