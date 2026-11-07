@@ -188,18 +188,28 @@ export default function HeroFicha({
                   onClick={() => goTo(index)}
                 />
               ))}
-              <button
-                type="button"
-                className="ficha-hero__pause"
-                aria-label={paused ? 'Reanudar el cambio de fotos' : 'Pausar el cambio de fotos'}
-                onClick={() => setPaused((value) => !value)}
-              >
-                {paused ? '▶' : '❚❚'}
-              </button>
             </div>
           ) : null}
         </div>
       </div>
+      {multiple ? (
+        <button
+          type="button"
+          className="ficha-hero__pause"
+          aria-pressed={paused}
+          aria-label={paused ? 'Reanudar el movimiento de las fotos' : 'Pausar el movimiento de las fotos'}
+          onClick={() => setPaused((value) => !value)}
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            {paused ? (
+              <path d="M5 3.2v9.6L12.6 8z" />
+            ) : (
+              <path d="M4.5 3h2.6v10H4.5zM8.9 3h2.6v10H8.9z" />
+            )}
+          </svg>
+          {paused ? 'Reanudar' : 'Pausar'}
+        </button>
+      ) : null}
     </section>
   )
 }

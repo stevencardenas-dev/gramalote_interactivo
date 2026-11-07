@@ -1675,18 +1675,37 @@ button.social-dot {
   align-items: center;
 }
 
-.ficha-hero__dots .ficha-hero__pause {
-  width: auto;
-  height: auto;
-  margin-left: 6px;
-  padding: 2px 4px;
-  border-radius: 4px;
-  background: none;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.7rem;
-  line-height: 1;
+.ficha-hero__pause {
+  position: absolute;
+  right: max(20px, calc((100% - var(--container)) / 2));
+  bottom: 112px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(10, 14, 18, 0.38);
+  color: var(--c-white);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  opacity: 0.6;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: opacity 0.2s, background-color 0.2s;
 }
 
-.ficha-hero__dots .ficha-hero__pause:hover {
-  color: var(--c-white);
+.ficha-hero__pause svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.ficha-hero__pause:hover,
+.ficha-hero__pause:focus-visible {
+  opacity: 1;
+  background: rgba(10, 14, 18, 0.6);
 }
