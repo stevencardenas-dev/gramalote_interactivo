@@ -1307,16 +1307,19 @@ a.admin-tile:hover {
 .admin-urow .admin-link-box {
   grid-column: 1 / -1;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 14px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   background: var(--a-sf2);
   border-radius: 8px;
 }
 
 .admin-urow .admin-link-box code {
-  flex: 1 1 280px;
+  align-self: stretch;
   margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--a-bg);
   color: var(--a-tx);
 }
 
