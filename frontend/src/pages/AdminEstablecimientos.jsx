@@ -212,13 +212,13 @@ export default function AdminEstablecimientos() {
           <ul className="admin-rows">
             {visible.map((item) => (
               <li key={item.id} className="admin-row-item">
-                <Link className="admin-row-item__thumb" to={`/admin/establecimientos/${item.id}`}>
+                <span className="admin-row-item__thumb">
                   {item.cover ? (
                     <img src={item.cover.url} alt="" loading="lazy" />
                   ) : (
                     <span aria-hidden="true" />
                   )}
-                </Link>
+                </span>
                 <div className="admin-row-item__main">
                   <Link to={`/admin/establecimientos/${item.id}`}>{item.name}</Link>
                   <small>
@@ -234,9 +234,9 @@ export default function AdminEstablecimientos() {
                 >
                   {item.published ? 'Publicada' : 'No publicada'}
                 </span>
-                <Link className="admin-btn" to={`/admin/establecimientos/${item.id}`}>
-                  Editar
-                </Link>
+                <span className="admin-row-item__go" aria-hidden="true">
+                  ›
+                </span>
               </li>
             ))}
           </ul>

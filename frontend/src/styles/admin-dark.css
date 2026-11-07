@@ -1145,3 +1145,53 @@ a.admin-tile:hover {
     width: auto;
   }
 }
+
+/* Listado: toda la fila es el enlace de editar (el nombre se estira sobre ella) */
+.admin-row-item {
+  position: relative;
+  grid-template-columns: 52px minmax(0, 1fr) 112px 104px 18px;
+  padding-block: 10px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.admin-row-item__main a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.admin-app .admin-row-item__main a:focus-visible {
+  outline: none;
+}
+
+.admin-row-item:has(a:focus-visible) {
+  outline: 2px solid var(--a-ac);
+  outline-offset: -2px;
+}
+
+.admin-row-item:hover {
+  background: var(--a-sf2);
+}
+
+.admin-row-item:hover .admin-row-item__main a,
+.admin-row-item:hover .admin-row-item__go {
+  color: var(--a-ac-text);
+}
+
+.admin-row-item__date {
+  white-space: nowrap;
+}
+
+.admin-row-item__go {
+  color: var(--a-mu);
+  font-size: 1.6rem;
+  line-height: 1;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .admin-row-item {
+    grid-template-columns: 44px minmax(0, 1fr) 18px;
+  }
+}
