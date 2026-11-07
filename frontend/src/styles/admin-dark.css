@@ -13,8 +13,9 @@ body:has(.admin-app) {
   --a-ln: #363636;
   --a-tx: #f3efe9;
   --a-mu: #a6a6a6;
-  --a-ac: #eaa41e;
-  --a-onac: #1a1204;
+  --a-ac: #2f6fe0;
+  --a-ac-text: #7aa8ff;
+  --a-onac: #ffffff;
   --a-ok: #86d9a3;
   --a-okb: #1c3326;
   --a-wn: #f4c15f;
@@ -31,8 +32,8 @@ body:has(.admin-app) {
   --c-muted: var(--a-mu);
   --c-line: var(--a-ln);
   --c-navy: var(--a-tx);
-  --c-primary: var(--a-ac);
-  --c-primary-dark: #c98a12;
+  --c-primary: var(--a-ac-text);
+  --c-primary-dark: #1f56b8;
   --c-coral: #ff8a5c;
   --border: 1px solid var(--a-ln);
 
@@ -87,7 +88,7 @@ body:has(.admin-app) {
 
 .admin-nav__brand span {
   margin-left: 4px;
-  color: var(--a-ac);
+  color: var(--a-ac-text);
   font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 500;
@@ -113,7 +114,7 @@ body:has(.admin-app) {
 
 .admin-nav__links a.active {
   background: var(--a-sf2);
-  color: var(--a-ac);
+  color: var(--a-ac-text);
 }
 
 .admin-nav__end {
@@ -224,7 +225,7 @@ body:has(.admin-app) {
 }
 
 .admin-btn--primary:hover:not(:disabled) {
-  background: #f5b63c;
+  background: #4a85f0;
 }
 
 .admin-app .btn--primary {
@@ -233,7 +234,7 @@ body:has(.admin-app) {
 }
 
 .admin-app .btn--primary:hover {
-  background: #f5b63c;
+  background: #4a85f0;
 }
 
 .admin-app .btn--ghost {
@@ -282,7 +283,7 @@ body:has(.admin-app) {
 .admin-app textarea:focus {
   outline: none;
   border-color: var(--a-ac);
-  box-shadow: 0 0 0 3px rgba(234, 164, 30, 0.2);
+  box-shadow: 0 0 0 3px rgba(47, 111, 224, 0.2);
 }
 
 .admin-app .auth-error {
@@ -385,7 +386,7 @@ a.admin-tile:hover {
 
 .admin-tile .admin-tile__go {
   margin-top: 8px;
-  color: var(--a-ac);
+  color: var(--a-ac-text);
   font-weight: 600;
 }
 
@@ -499,7 +500,7 @@ a.admin-tile:hover {
 }
 
 .admin-app .admin-tab.is-active {
-  color: var(--a-ac);
+  color: var(--a-ac-text);
   border-bottom-color: var(--a-ac);
 }
 
@@ -580,7 +581,7 @@ a.admin-tile:hover {
 }
 
 .admin-row-item__main a:hover {
-  color: var(--a-ac);
+  color: var(--a-ac-text);
 }
 
 .admin-row-item__main small,
@@ -615,7 +616,7 @@ a.admin-tile:hover {
 }
 
 .admin-app .admin-back:hover {
-  color: var(--a-ac);
+  color: var(--a-ac-text);
 }
 
 .admin-head2__cover {
@@ -684,7 +685,7 @@ a.admin-tile:hover {
 .admin-app .admin-tool-btn:hover {
   border-color: var(--a-ac);
   background: transparent;
-  color: var(--a-ac);
+  color: var(--a-ac-text);
 }
 
 .admin-app .admin-section {
@@ -701,7 +702,7 @@ a.admin-tile:hover {
 }
 
 .admin-app .admin-section__toggle:hover .admin-section__chevron {
-  color: var(--a-ac);
+  color: var(--a-ac-text);
 }
 
 .admin-app .admin-section__title {
@@ -776,7 +777,7 @@ a.admin-tile:hover {
 
 .admin-app .admin-checks .admin-check:has(input:checked) {
   border-color: var(--a-ac);
-  background: rgba(234, 164, 30, 0.12);
+  background: rgba(47, 111, 224, 0.12);
   color: var(--a-tx);
 }
 
@@ -787,7 +788,7 @@ a.admin-tile:hover {
 
 .admin-app .admin-map-icon:has(input:checked) {
   border-color: var(--a-ac);
-  background: rgba(234, 164, 30, 0.12);
+  background: rgba(47, 111, 224, 0.12);
   box-shadow: inset 0 0 0 1px var(--a-ac);
 }
 
@@ -850,14 +851,14 @@ a.admin-tile:hover {
 
 .admin-btn--accent:hover:not(:disabled),
 .admin-btn--primary:hover:not(:disabled) {
-  border-color: #f5b63c;
-  background: #f5b63c;
+  border-color: #4a85f0;
+  background: #4a85f0;
 }
 
 .admin-btn--accent-outline {
   border-color: var(--a-ac);
   background: transparent;
-  color: var(--a-ac);
+  color: var(--a-ac-text);
 }
 
 .admin-btn--accent-outline:hover:not(:disabled) {
@@ -866,15 +867,15 @@ a.admin-tile:hover {
 }
 
 .admin-btn--danger {
-  border-color: #c0392b;
-  background: #c0392b;
+  border-color: #d62d1c;
+  background: #d62d1c;
   color: #fff;
   font-weight: 600;
 }
 
 .admin-btn--danger:hover:not(:disabled) {
-  border-color: #dc4a3a;
-  background: #dc4a3a;
+  border-color: #ec4130;
+  background: #ec4130;
 }
 
 /* Logo de la barra: el isotipo del sitio, en blanco sobre el fondo oscuro */
@@ -1061,4 +1062,25 @@ a.admin-tile:hover {
   .admin-search .admin-btn {
     padding-inline: 14px;
   }
+}
+
+/* Franja tricolor de la bandera de Gramalote bajo la barra */
+.admin-nav {
+  border-bottom: 0;
+  box-shadow: 0 1px 0 var(--a-ln);
+}
+
+.admin-nav::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 3px;
+  background: linear-gradient(90deg, #0b4fb8 0 33.33%, #ffffff 33.33% 66.66%, #f01800 66.66% 100%);
+}
+
+.admin-app .admin-btn--primary,
+.admin-app .admin-btn--accent {
+  border-color: var(--a-ac);
 }
