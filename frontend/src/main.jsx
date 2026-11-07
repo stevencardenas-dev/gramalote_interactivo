@@ -11,6 +11,7 @@ import './styles/home.css'
 import './styles/pages.css'
 import './styles/vistas.css'
 import './styles/admin.css'
+import './styles/admin-dark.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

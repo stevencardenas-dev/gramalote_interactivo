@@ -2,6 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import Navbar from './Navbar.jsx'
 import Footer from './Footer.jsx'
+import AdminNav from '../admin/AdminNav.jsx'
 import { usePageTitle } from '../../lib/usePageTitle.js'
 
 // Títulos de las vistas fijas. Las fichas y detalles ponen el suyo (el efecto
@@ -70,6 +71,21 @@ export default function Layout() {
       window.removeEventListener('offline', update)
     }
   }, [])
+
+  if (pathname.startsWith('/admin')) {
+    return (
+      <div className="admin-app">
+        <a className="skip-link" href="#contenido">
+          Saltar al contenido
+        </a>
+        <StaticTitle pathname={pathname} />
+        <AdminNav />
+        <main id="contenido" className="admin-main">
+          <Outlet />
+        </main>
+      </div>
+    )
+  }
 
   return (
     <>

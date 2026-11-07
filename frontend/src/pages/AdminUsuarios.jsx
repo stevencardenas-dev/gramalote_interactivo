@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import { apiRequest, changePassword, ensureSession, getUser } from '../lib/auth.js'
 
@@ -95,12 +94,9 @@ export default function AdminUsuarios() {
 
   return (
     <section className="admin-page">
-      <div className="container">
+      <div className="admin-wrap">
         <div className="admin-head">
           <div>
-            <p className="admin-breadcrumb">
-              <Link to="/admin">Panel</Link> / Usuarios
-            </p>
             <h1>Usuarios y contraseñas</h1>
             <p className="admin-lead">
               Los administradores publican fichas y gestionan cuentas; los editores solo editan

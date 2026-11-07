@@ -366,55 +366,62 @@ export default function AdminEstablecimiento() {
 
   return (
     <section className="admin-page">
-      <div className="container">
-        <p className="admin-breadcrumb">
-          <Link to="/admin">Panel</Link> /{' '}
-          <Link to="/admin/establecimientos">Establecimientos</Link> / {form.name}
-        </p>
-
-        <div className="admin-hero">
-          <div className="admin-hero__cover">
-            {cover ? (
-              <img src={cover.url} alt={cover.alt} />
-            ) : (
-              <span className="admin-list__placeholder">Sin portada</span>
-            )}
+      <div className="admin-wrap">
+        <div className="admin-head2">
+          <Link className="admin-back" to="/admin/establecimientos">
+            ← Establecimientos
+          </Link>
+          <div className="admin-head2__cover">
+            {cover ? <img src={cover.url} alt={cover.alt} /> : <span aria-hidden="true" />}
           </div>
-          <div className="admin-hero__body">
-            <div className="admin-hero__badges">
+          <div className="admin-head2__body">
+            <h1>{form.name}</h1>
+            <p>
               <span
                 className={`admin-badge ${form.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
               >
                 {form.published ? 'Publicada' : 'Borrador'}
               </span>
               {form.featured ? <span className="admin-badge">★ Destacada</span> : null}
-            </div>
-            <h1>{form.name}</h1>
-            <p className="admin-lead">
-              {form.categoryName}
-              {form.zoneName ? ` · ${form.zoneName}` : ''} · {form.images.length}{' '}
-              {form.images.length === 1 ? 'imagen' : 'imágenes'}
+              <small>
+                {form.categoryName}
+                {form.zoneName ? ` · ${form.zoneName}` : ''} · {form.images.length}{' '}
+                {form.images.length === 1 ? 'imagen' : 'imágenes'}
+              </small>
             </p>
           </div>
-          <div className="admin-head__actions">
+          <div className="admin-head2__actions">
             <Link
-              className="btn btn--ghost"
+              className="admin-btn"
               to={`/establecimiento/${form.slug}`}
               target="_blank"
               rel="noreferrer"
             >
               Ver ficha ↗
             </Link>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Guardando…' : 'Guardar cambios'}
-            </Button>
+            <button
+              type="button"
+              className="admin-btn"
+              onClick={() => handlePublish(!form.published)}
+              disabled={!form.published && user?.role !== 'admin'}
+            >
+              {form.published ? 'Despublicar' : 'Publicar'}
+            </button>
+            <button
+              type="button"
+              className="admin-btn admin-btn--primary"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? 'Guardando…' : 'Guardar'}
+            </button>
           </div>
         </div>
 
         {error ? <p className="auth-error">{error}</p> : null}
         {notice ? <p className="admin-notice">{notice}</p> : null}
 
-        <nav className="admin-tabs admin-tabs--pills" role="tablist">
+        <nav className="admin-tabs" role="tablist">
           {TABS.map((item) => (
             <button
               key={item.key}

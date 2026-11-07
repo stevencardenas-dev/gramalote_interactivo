@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import Button from '../components/ui/Button.jsx'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 
 const STATUS_TABS = [
@@ -8,11 +7,6 @@ const STATUS_TABS = [
   { key: 'published', label: 'Publicadas' },
   { key: 'draft', label: 'Borradores' },
   { key: 'nocover', label: 'Sin portada' },
-]
-
-const SORTS = [
-  { key: 'default', label: 'Destacadas primero' },
-  { key: 'name', label: 'Nombre (A–Z)' },
   { key: 'recent', label: 'Editadas recientemente' },
 ]
 
@@ -29,12 +23,12 @@ function formatDate(value) {
 
 export default function AdminEstablecimientos() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
   const [items, setItems] = useState([])
   const [categories, setCategories] = useState([])
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(params.get('q') ?? '')
   const [tab, setTab] = useState('all')
   const [category, setCategory] = useState('')
-  const [sort, setSort] = useState('default')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
@@ -86,19 +80,19 @@ export default function AdminEstablecimientos() {
       if (tab === 'published' && !item.published) return false
       if (tab === 'draft' && item.published) return false
       if (tab === 'nocover' && item.cover) return false
+      if (tab === 'recent' && !item.updatedAt) return false
       if (category && item.category.slug !== category) return false
       if (!needle) return true
       return normalize(`${item.name} ${item.slug} ${item.zone?.name ?? ''}`).includes(needle)
     })
-    if (sort === 'name') {
-      filtered.sort((a, b) => a.name.localeCompare(b.name, 'es'))
-    } else if (sort === 'recent') {
+    if (tab === 'recent') {
       filtered.sort((a, b) => new Date(b.updatedAt ?? 0) - new Date(a.updatedAt ?? 0))
     }
     return filtered
-  }, [items, tab, category, query, sort])
+  }, [items, tab, category, query])
 
   const hasFilters = Boolean(query || category || tab !== 'all')
+  const pendingCover = items.filter((item) => item.published && !item.cover).length
 
   function clearFilters() {
     setQuery('')
@@ -126,33 +120,48 @@ export default function AdminEstablecimientos() {
 
   return (
     <section className="admin-page">
-      <div className="container">
-        <div className="admin-head">
-          <div>
-            <p className="admin-breadcrumb">
-              <Link to="/admin">Panel</Link> / Establecimientos
-            </p>
-            <h1>Establecimientos</h1>
-            <p className="admin-lead">
-              Edita los datos y las imágenes de cada ficha. Los borradores no se ven en el
-              sitio público hasta que los publiques.
-            </p>
-          </div>
-          <div className="admin-head__actions">
-            <Button variant="ghost" onClick={() => navigate('/admin')}>
-              Volver al panel
-            </Button>
-            <Button onClick={() => setShowNew((open) => !open)} aria-expanded={showNew}>
-              {showNew ? 'Cerrar' : '+ Nueva ficha'}
-            </Button>
-          </div>
+      <div className="admin-wrap">
+        <div className="admin-bar">
+          <h1>Establecimientos</h1>
+          <label className="visually-hidden" htmlFor="admin-search">
+            Buscar
+          </label>
+          <input
+            id="admin-search"
+            type="search"
+            placeholder="Buscar por nombre, slug o zona…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <label className="visually-hidden" htmlFor="admin-category">
+            Categoría
+          </label>
+          <select
+            id="admin-category"
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+          >
+            <option value="">Todas las categorías</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.slug}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="admin-btn"
+            onClick={() => setShowNew((open) => !open)}
+            aria-expanded={showNew}
+          >
+            {showNew ? 'Cerrar' : '+ Nueva ficha'}
+          </button>
         </div>
 
         {error ? <p className="auth-error">{error}</p> : null}
 
         {showNew ? (
           <form className="admin-new" onSubmit={handleCreate}>
-            <strong>Nueva ficha</strong>
             <div className="field">
               <label htmlFor="new-name">Nombre</label>
               <input
@@ -180,10 +189,26 @@ export default function AdminEstablecimientos() {
                 ))}
               </select>
             </div>
-            <Button type="submit" disabled={creating}>
+            <button type="submit" className="admin-btn admin-btn--primary" disabled={creating}>
               {creating ? 'Creando…' : 'Crear borrador'}
-            </Button>
+            </button>
           </form>
+        ) : null}
+
+        {!loading && (counts.draft > 0 || pendingCover > 0) ? (
+          <div className="admin-alert" role="status">
+            <strong>Por revisar:</strong>
+            {counts.draft > 0 ? (
+              <button type="button" onClick={() => setTab('draft')}>
+                {counts.draft} {counts.draft === 1 ? 'borrador' : 'borradores'}
+              </button>
+            ) : null}
+            {pendingCover > 0 ? (
+              <button type="button" onClick={() => setTab('nocover')}>
+                {pendingCover} {pendingCover === 1 ? 'publicada' : 'publicadas'} sin portada
+              </button>
+            ) : null}
+          </div>
         ) : null}
 
         <div className="admin-tabs" role="tablist" aria-label="Filtrar por estado">
@@ -196,109 +221,52 @@ export default function AdminEstablecimientos() {
               className={`admin-tab${tab === entry.key ? ' is-active' : ''}`}
               onClick={() => setTab(entry.key)}
             >
-              {entry.label} <span className="admin-tab__count">{counts[entry.key]}</span>
+              {entry.label}
+              {entry.key === 'recent' ? null : (
+                <span className="admin-tab__count">{counts[entry.key]}</span>
+              )}
             </button>
           ))}
-        </div>
-
-        <div className="admin-filters">
-          <div className="field">
-            <label htmlFor="admin-search">Buscar</label>
-            <input
-              id="admin-search"
-              type="search"
-              placeholder="Nombre, slug o zona"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="admin-category">Categoría</label>
-            <select
-              id="admin-category"
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
-            >
-              <option value="">Todas</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.slug}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="admin-sort">Ordenar</label>
-            <select id="admin-sort" value={sort} onChange={(event) => setSort(event.target.value)}>
-              {SORTS.map((entry) => (
-                <option key={entry.key} value={entry.key}>
-                  {entry.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <p className="admin-results">
-          {loading
-            ? 'Cargando fichas…'
-            : `${visible.length} de ${items.length} fichas`}
           {hasFilters ? (
             <button type="button" className="admin-results__clear" onClick={clearFilters}>
               Limpiar filtros
             </button>
           ) : null}
-        </p>
+        </div>
 
-        {loading ? null : visible.length === 0 ? (
+        {loading ? (
+          <p className="note">Cargando fichas…</p>
+        ) : visible.length === 0 ? (
           <p className="empty">No hay fichas que coincidan con el filtro.</p>
         ) : (
-          <ul className="admin-cards">
+          <ul className="admin-rows">
             {visible.map((item) => (
-              <li key={item.id} className="admin-ficha">
-                <Link className="admin-ficha__thumb" to={`/admin/establecimientos/${item.id}`}>
+              <li key={item.id} className="admin-row-item">
+                <Link className="admin-row-item__thumb" to={`/admin/establecimientos/${item.id}`}>
                   {item.cover ? (
-                    <img src={item.cover.url} alt={item.cover.alt} loading="lazy" />
+                    <img src={item.cover.url} alt="" loading="lazy" />
                   ) : (
-                    <span className="admin-list__placeholder">Sin foto de portada</span>
+                    <span aria-hidden="true" />
                   )}
-                  <span
-                    className={`admin-badge admin-ficha__status ${
-                      item.published ? 'admin-badge--ok' : 'admin-badge--draft'
-                    }`}
-                  >
-                    {item.published ? 'Publicado' : 'Borrador'}
-                  </span>
-                  {item.featured ? <span className="admin-ficha__star">★ Destacado</span> : null}
                 </Link>
-                <div className="admin-ficha__body">
-                  <Link className="admin-ficha__name" to={`/admin/establecimientos/${item.id}`}>
-                    {item.name}
-                  </Link>
-                  <p className="admin-list__meta">
+                <div className="admin-row-item__main">
+                  <Link to={`/admin/establecimientos/${item.id}`}>{item.name}</Link>
+                  <small>
                     {item.category.name}
                     {item.zone ? ` · ${item.zone.name}` : ''}
-                  </p>
-                  <p className="admin-list__meta">
-                    {item.imagesCount} {item.imagesCount === 1 ? 'imagen' : 'imágenes'}
-                    {item.updatedAt ? ` · editado ${formatDate(item.updatedAt)}` : ''}
-                  </p>
+                    {item.featured ? ' · ★ Destacada' : ''}
+                    {item.cover ? '' : ' · sin portada'}
+                  </small>
                 </div>
-                <div className="admin-ficha__actions">
-                  <Link className="btn btn--ghost" to={`/admin/establecimientos/${item.id}`}>
-                    Editar
-                  </Link>
-                  {item.published ? (
-                    <a
-                      className="admin-link"
-                      href={`/establecimiento/${item.slug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Ver en el sitio ↗
-                    </a>
-                  ) : null}
-                </div>
+                <span className="admin-row-item__date">{formatDate(item.updatedAt)}</span>
+                <span
+                  className={`admin-badge ${item.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
+                >
+                  {item.published ? 'Publicado' : 'Borrador'}
+                </span>
+                <Link className="admin-btn" to={`/admin/establecimientos/${item.id}`}>
+                  Editar
+                </Link>
               </li>
             ))}
           </ul>
