@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from './Icon.jsx'
 import SocialIcon from './SocialIcon.jsx'
@@ -60,8 +60,8 @@ function Breadcrumb({ items = [] }) {
   )
 }
 
-const HOLD_MS = 5500
-const SLIDE_MS = 900
+// Segundos que tarda una foto en recorrer todo el ancho (deslizamiento continuo).
+const SLIDE_SECONDS = 12
 
 export default function HeroFicha({
   breadcrumb,
@@ -84,38 +84,35 @@ export default function HeroFicha({
   const slides = images?.length ? images : image ? [image] : []
   const total = slides.length
   const multiple = total > 1
-  const [pos, setPos] = useState(0)
-  const [animate, setAnimate] = useState(true)
+  const trackRef = useRef(null)
   const [dot, setDot] = useState(0)
   const [paused, setPaused] = useState(false)
 
-  // Carrusel: avanza siempre hacia la izquierda; tras la última vuelve a la
-  // primera por una copia al final, así nunca "rebobina". El puntito cambia
-  // cuando el desplazamiento pasa de la mitad.
+  // Carrusel continuo: las fotos se deslizan sin parar hacia la izquierda; al
+  // terminar la última asoma otra vez la primera (hay una copia al final). El
+  // puntito cambia cuando una foto pasa de la mitad de su recorrido.
   useEffect(() => {
-    if (!multiple || paused) return undefined
-    let half
+    if (!multiple) return undefined
+    const cycle = total * SLIDE_SECONDS * 1000
     const timer = setInterval(() => {
-      setAnimate(true)
-      setPos((value) => value + 1)
-      half = setTimeout(() => setDot((pos + 1) % total), SLIDE_MS / 2)
-    }, HOLD_MS)
-    return () => {
-      clearInterval(timer)
-      clearTimeout(half)
-    }
-  }, [multiple, paused, total, pos])
+      const animation = trackRef.current?.getAnimations?.()[0]
+      if (!animation) return
+      const progress = (Number(animation.currentTime) % cycle) / (SLIDE_SECONDS * 1000)
+      setDot(Math.round(progress) % total)
+    }, 150)
+    return () => clearInterval(timer)
+  }, [multiple, total])
 
-  function handleTrackEnd() {
-    if (pos >= total) {
-      setAnimate(false)
-      setPos(0)
-    }
-  }
+  useEffect(() => {
+    const animation = trackRef.current?.getAnimations?.()[0]
+    if (!animation) return
+    if (paused) animation.pause()
+    else animation.play()
+  }, [paused, multiple])
 
   function goTo(index) {
-    setAnimate(true)
-    setPos(index)
+    const animation = trackRef.current?.getAnimations?.()[0]
+    if (animation) animation.currentTime = index * SLIDE_SECONDS * 1000
     setDot(index)
   }
 
@@ -126,9 +123,9 @@ export default function HeroFicha({
       <div className="ficha-hero__bg">
         {multiple ? (
           <div
-            className={`ficha-hero__track${animate ? ' is-sliding' : ''}`}
-            style={{ transform: `translateX(-${pos * 100}%)` }}
-            onTransitionEnd={handleTrackEnd}
+            ref={trackRef}
+            className="ficha-hero__track"
+            style={{ '--n': total, '--dur': `${total * SLIDE_SECONDS}s` }}
           >
             {track.map((src, index) => (
               <img

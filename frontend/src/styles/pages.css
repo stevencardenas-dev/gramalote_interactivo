@@ -623,19 +623,25 @@ button.social-dot {
 
 .ficha-hero__track {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
+  width: calc((var(--n) + 1) * 100%);
+  animation: ficha-hero-pan var(--dur) linear infinite;
   will-change: transform;
-}
-
-.ficha-hero__track.is-sliding {
-  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 .ficha-hero__track img {
   position: static;
-  flex: 0 0 100%;
+  flex: 0 0 calc(100% / (var(--n) + 1));
   min-width: 0;
+}
+
+@keyframes ficha-hero-pan {
+  to {
+    transform: translateX(calc(-100% * var(--n) / (var(--n) + 1)));
+  }
 }
 
 .ficha-hero::after {
@@ -1690,10 +1696,4 @@ button.social-dot {
 
 .ficha-hero__dots .ficha-hero__pause:hover {
   color: var(--c-white);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ficha-hero__track.is-sliding {
-    transition: none;
-  }
 }
