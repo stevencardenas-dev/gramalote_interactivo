@@ -55,6 +55,7 @@ function photosOf(item) {
   return [
     adapted.photo,
     adapted.hero,
+    ...(adapted.heroes ?? []),
     ...(adapted.gallery ?? []),
     ...(adapted.features ?? []).map((feature) => feature.photo),
     ...(adapted.products ?? []).map((product) => product.photo),

@@ -291,12 +291,15 @@ router.get(
     const cover = imageList.find((image) => image.role === 'cover') ?? imageList[0] ?? null
     // Foto ancha del encabezado; sin ella la ficha usa la portada.
     const hero = imageList.find((image) => image.role === 'hero') ?? cover
+    const heroImages = imageList.filter((image) => image.role === 'hero')
+    const heroes = heroImages.length > 0 ? heroImages : cover ? [cover] : []
 
     res.json({
       data: {
         ...toEstablishmentSummary(row),
         cover,
         hero,
+        heroes,
         phoneSecondary: row.phone_secondary ?? null,
         openNow,
         images: imageList,

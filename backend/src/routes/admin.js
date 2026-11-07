@@ -28,7 +28,8 @@ const PLATFORMS = new Set([
 ])
 const IMAGE_ROLES = new Set(['cover', 'hero', 'gallery', 'logo'])
 // Roles de los que una ficha solo tiene una foto: la anterior pasa a galería.
-const SINGLE_ROLES = new Set(['cover', 'hero'])
+// El encabezado admite varias: la ficha pública las va rotando.
+const SINGLE_ROLES = new Set(['cover'])
 
 // ---------------------------------------------------------------------------
 // Utilidades

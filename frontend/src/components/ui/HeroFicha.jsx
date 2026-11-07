@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from './Icon.jsx'
 import SocialIcon from './SocialIcon.jsx'
@@ -66,6 +66,7 @@ export default function HeroFicha({
   title,
   summary,
   image,
+  images,
   imageAlt = '',
   pillTone = 'olive',
   social = ['share'],
@@ -75,10 +76,30 @@ export default function HeroFicha({
   const canShare = Array.isArray(social) ? social.includes('share') : Boolean(social)
   const networks = links.filter((link) => NETWORKS[link.platform] && link.url)
 
+  // Con varios encabezados la ficha los va rotando (sin movimiento si el
+  // visitante pidió reducirlo).
+  const slides = images?.length ? images : image ? [image] : []
+  const [current, setCurrent] = useState(0)
+  const active = slides.length ? current % slides.length : 0
+  useEffect(() => {
+    if (slides.length < 2) return undefined
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined
+    const timer = setInterval(() => setCurrent((value) => value + 1), 6000)
+    return () => clearInterval(timer)
+  }, [slides.length, current])
+
   return (
     <section className="ficha-hero">
       <div className="ficha-hero__bg">
-        {image ? <img src={image} alt={imageAlt} /> : null}
+        {slides.map((src, index) => (
+          <img
+            key={src}
+            src={src}
+            alt={index === active ? imageAlt : ''}
+            className={index === active ? 'is-active' : undefined}
+            loading={index === 0 ? undefined : 'lazy'}
+          />
+        ))}
       </div>
 
       <div className="container ficha-hero__inner">
@@ -112,10 +133,18 @@ export default function HeroFicha({
 
           {summary ? <p className="ficha-hero__summary">{summary}</p> : null}
 
-          {dots ? (
-            <div className="ficha-hero__dots" aria-hidden="true">
-              <span className="is-active" />
-              <span />
+          {dots && slides.length > 1 ? (
+            <div className="ficha-hero__dots">
+              {slides.map((src, index) => (
+                <button
+                  key={src}
+                  type="button"
+                  className={index === active ? 'is-active' : undefined}
+                  aria-label={`Ver foto ${index + 1} de ${slides.length}`}
+                  aria-current={index === active}
+                  onClick={() => setCurrent(index)}
+                />
+              ))}
             </div>
           ) : null}
         </div>

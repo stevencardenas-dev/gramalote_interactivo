@@ -48,6 +48,7 @@ export function adaptEstablishment(item) {
   if (!item) return null
   const cover = item.cover?.url ?? null
   const hero = item.hero?.url ?? cover
+  const heroes = (item.heroes ?? []).map((image) => image.url).filter(Boolean)
   const features = adaptFeatures(item, cover)
   const products = adaptProducts(item, cover)
   // Galería: las fotos con rol "galería" que no son de un plato o producto.
@@ -84,6 +85,7 @@ export function adaptEstablishment(item) {
     socialLinks: Array.isArray(item.social) ? item.social : [],
     photo: cover,
     hero,
+    heroes: heroes.length > 0 ? heroes : [hero].filter(Boolean),
     gallery,
     features,
     products,

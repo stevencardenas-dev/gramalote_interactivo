@@ -45,6 +45,7 @@ export default function EstablecimientoComer({ item }) {
         title={item.name}
         summary={item.summary}
         image={item.hero ?? '/img/home/hero.jpg'}
+        images={item.heroes}
         imageAlt={item.name}
         social={['share']}
         links={item.socialLinks}

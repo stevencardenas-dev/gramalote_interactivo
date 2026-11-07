@@ -19,6 +19,7 @@ export default function EstablecimientoComprar({ item }) {
         title={item.name}
         summary={item.summary}
         image={item.hero ?? '/img/home/hero.jpg'}
+        images={item.heroes}
         imageAlt={item.name}
         pillTone="gold"
         social={['share']}

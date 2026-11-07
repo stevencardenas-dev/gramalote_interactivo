@@ -1084,3 +1084,76 @@ a.admin-tile:hover {
 .admin-app .admin-btn--accent {
   border-color: var(--a-ac);
 }
+
+/* Imágenes: lista compacta, una fila por foto (miniatura, texto, uso, orden) */
+.admin-app .admin-media {
+  padding: 16px 18px;
+}
+
+.admin-app .admin-media__head {
+  margin-bottom: 12px;
+}
+
+.admin-app .admin-media__head h2 {
+  margin: 0 0 2px;
+  font-size: 1rem;
+}
+
+.admin-app .admin-media__head .note {
+  margin: 0;
+}
+
+.admin-app .admin-media__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.admin-app .admin-media__item {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 8px;
+  overflow: hidden;
+}
+
+.admin-app .admin-media__shot {
+  width: 64px;
+  aspect-ratio: 4 / 3;
+}
+
+.admin-app .admin-media__shot .admin-badge,
+.admin-app .admin-media__shot .admin-media__dims {
+  display: none;
+}
+
+.admin-app .admin-media__alt {
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-app .admin-media__actions select {
+  flex: none;
+  width: 130px;
+}
+
+@media (max-width: 760px) {
+  .admin-app .admin-media__item {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .admin-app .admin-media__shot {
+    width: 56px;
+  }
+
+  .admin-app .admin-media__actions {
+    grid-column: 1 / -1;
+  }
+
+  .admin-app .admin-media__actions select {
+    flex: 1;
+    width: auto;
+  }
+}
