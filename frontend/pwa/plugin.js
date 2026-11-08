@@ -15,7 +15,7 @@ function walk(root, dir = '') {
   })
 }
 
-export default function pwa({ tilesUrl }) {
+export default function pwa({ tilesUrl = '' } = {}) {
   let config
 
   return {

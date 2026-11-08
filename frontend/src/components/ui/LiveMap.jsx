@@ -9,27 +9,27 @@ import {
   setWorkerUrl,
 } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
+import { buildMapStyle } from '../../lib/mapStyle.js'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import '../../styles/mapa.css'
 import { getJson } from '../../lib/api.js'
 import { mapIconUrl, resolveMapIcon } from '../../data/mapIcons.js'
 
-// AVISO: las teselas públicas de openstreetmap.org son solo para desarrollo y
-// pruebas. Antes de publicar el sitio hay que cambiarlas (VITE_MAP_TILES_URL)
-// por teselas propias o de un proveedor con condiciones de uso claras.
-const TILES_URL =
-  import.meta.env.VITE_MAP_TILES_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-
 // Centro aproximado de Gramalote, en formato [longitud, latitud].
 const INITIAL_CENTER = [-72.79, 7.89]
 const INITIAL_ZOOM = 13
 
+// Límites aproximados de Norte de Santander: [[oeste, sur], [este, norte]].
+// Evitan pedir teselas de otras regiones y llenar el caché offline con ellas.
+const NORTE_DE_SANTANDER_BOUNDS = [
+  [-73.7, 6.9],
+  [-72.0, 9.3],
+]
+const MIN_ZOOM = 8
+
 // MapLibre busca su worker junto a su propio archivo, que Vite empaqueta en otro
 // lugar. Se le indica el worker que trae el paquete npm (sin CDN externo).
 setWorkerUrl(workerUrl)
-
-const ATTRIBUTION =
-  '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>'
 
 // Un grupo por tipo de punto. El color no es el único canal: cada grupo tiene
 // además un tamaño de círculo distinto, una leyenda con texto y un popup con
@@ -278,20 +278,10 @@ export default function LiveMap({
       container: containerRef.current,
       center: INITIAL_CENTER,
       zoom: INITIAL_ZOOM,
+      minZoom: MIN_ZOOM,
+      maxBounds: NORTE_DE_SANTANDER_BOUNDS,
       attributionControl: { compact: false },
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: 'raster',
-            tiles: [TILES_URL],
-            tileSize: 256,
-            maxzoom: 19,
-            attribution: ATTRIBUTION,
-          },
-        },
-        layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-      },
+      style: buildMapStyle(),
     })
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right')
     const versionControl = new IconVersionControl(setIconVersion)

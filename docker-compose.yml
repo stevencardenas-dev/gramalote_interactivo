@@ -14,6 +14,8 @@ services:
     volumes:
       # Imágenes subidas desde el panel: nginx las sirve en solo lectura.
       - ${MEDIA_DIR:-/opt/gramalote/media}:/srv/media:ro
+      # Mapa PMTiles de la región (docs/MAPA-TESELAS.md); no va en Git ni en la imagen.
+      - ${TILES_DIR:-/opt/gramalote/tiles}:/srv/tiles:ro
     depends_on:
       api:
         condition: service_healthy

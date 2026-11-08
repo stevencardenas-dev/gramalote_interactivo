@@ -1,10 +1,9 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import pwa from './pwa/plugin.js'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), 'VITE_')
+export default defineConfig(() => {
   // Para probar contra producción sin API local: VITE_API_TARGET=https://… npm run dev
   const apiTarget = process.env.VITE_API_TARGET || 'http://127.0.0.1:4000'
 
@@ -12,9 +11,7 @@ export default defineConfig(({ mode }) => {
     base: process.env.VITE_BASE || (process.env.GITHUB_ACTIONS ? '/gramalote_interactivo/' : '/'),
     plugins: [
       react(),
-      pwa({
-        tilesUrl: env.VITE_MAP_TILES_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-      }),
+      pwa(),
     ],
     server: {
       proxy: {
