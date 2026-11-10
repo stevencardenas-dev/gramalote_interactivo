@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import Logo from '../components/ui/Logo.jsx'
 import { AuthError, ensureSession, forgotPassword, login, logout } from '../lib/auth.js'
@@ -89,7 +89,12 @@ export default function Acceder() {
             <Button to="/admin">Ir al panel</Button>
             <Button variant="secondary" onClick={handleLogout} disabled={pending}>
               Cerrar sesión
-            </Button>undefined
+            </Button>
+            <p className="note">
+              <Link className="link-arrow" to="/">
+                Volver al inicio
+              </Link>
+            </p>
           </div>
         </div>
       </section>
