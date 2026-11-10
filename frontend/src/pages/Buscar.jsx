@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import PageHero from '../components/ui/PageHero.jsx'
 import { activities } from '../data/experiences.js'
 import { useEstablishments } from '../lib/contentApi.js'
+import { componentCatalog } from '../data/componentCatalog.jsx'
 
 // Ignora mayúsculas, tildes y ñ; `compact` también ignora los espacios.
 const fold = (value) =>
@@ -31,8 +32,20 @@ function score(item, query) {
 }
 
 export default function Buscar() {
-  const [params] = useSearchParams()
-  const query = (params.get('q') ?? '').trim()
+  const [params, setParams] = useSearchParams()
+  const rawQuery = params.get('q') ?? ''
+  const query = rawQuery.trim()
+  // Dos modos que no se mezclan: lugares y experiencias, o piezas de interfaz.
+  const mode = params.get('tipo') === 'componentes' ? 'componentes' : 'sitio'
+
+  function update(next) {
+    const merged = new URLSearchParams(params)
+    for (const [key, value] of Object.entries(next)) {
+      if (value) merged.set(key, value)
+      else merged.delete(key)
+    }
+    setParams(merged, { replace: true })
+  }
   const { data: establishments } = useEstablishments()
 
   const results = mode === 'componentes' ? [] : [
@@ -59,6 +72,21 @@ export default function Buscar() {
     .sort((a, b) => b.relevance - a.relevance)
     .map(({ item }) => item)
 
+  const components =
+    mode === 'componentes'
+      ? componentCatalog
+          .map((item) => ({
+            item,
+            relevance: score(
+              { title: item.name, type: item.keywords, text: item.description },
+              query,
+            ),
+          }))
+          .filter(({ relevance }) => relevance > 0)
+          .sort((a, b) => b.relevance - a.relevance)
+          .map(({ item }) => item)
+      : []
+
   return (
     <>
       <PageHero
@@ -75,7 +103,53 @@ export default function Buscar() {
 
       <section className="section">
         <div className="container">
-          {query && results.length === 0 ? (
+          <div className="search-tools">
+            <div className="search-switch" role="group" aria-label="Qué buscar">
+              <button
+                type="button"
+                aria-pressed={mode === 'sitio'}
+                className={mode === 'sitio' ? 'is-active' : undefined}
+                onClick={() => update({ tipo: null })}
+              >
+                Establecimientos y experiencias
+              </button>
+              <button
+                type="button"
+                aria-pressed={mode === 'componentes'}
+                className={mode === 'componentes' ? 'is-active' : undefined}
+                onClick={() => update({ tipo: 'componentes' })}
+              >
+                Componentes
+              </button>
+            </div>
+            <input
+              className="search-tools__input"
+              type="search"
+              value={rawQuery}
+              placeholder={
+                mode === 'componentes' ? 'Buscar componente…' : 'Buscar lugar o experiencia…'
+              }
+              aria-label="Buscar"
+              onChange={(event) => update({ q: event.target.value })}
+            />
+          </div>
+
+          {mode === 'componentes' ? (
+            components.length === 0 ? (
+              <p className="empty">No hay componentes que coincidan con “{query}”.</p>
+            ) : (
+              <div className="component-results">
+                {components.map((item) => (
+                  <article key={item.id} className="component-card">
+                    <span className="search-result__meta">Componente</span>
+                    <h2>{item.name}</h2>
+                    <p>{item.description}</p>
+                    <div className="component-card__stage">{item.preview()}</div>
+                  </article>
+                ))}
+              </div>
+            )
+          ) : query && results.length === 0 ? (
             <p className="empty">
               No encontramos resultados para “{query}”. Prueba con otra palabra.
             </p>
