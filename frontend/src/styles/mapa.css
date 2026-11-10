@@ -366,7 +366,7 @@
   position: absolute;
   left: 12px;
   right: 12px;
-  bottom: 28px;
+  bottom: 40px;
   z-index: 5;
   display: flex;
   gap: 14px;
@@ -699,5 +699,402 @@
   .mapa-version button {
     min-width: 40px;
     height: 40px;
+  }
+}
+
+/* Explorador adaptable: sin desbordes y panel más estrecho en pantallas medianas */
+.mapa-explorador > * {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .mapa-explorador {
+    grid-template-columns: minmax(240px, 300px) 1fr;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 860px) {
+  .mapa-explorador {
+    gap: 12px;
+  }
+
+  .mapa-panel {
+    padding: 12px;
+  }
+}
+
+@media (max-height: 560px) and (min-width: 861px) {
+  .mapa-explorador {
+    height: 480px;
+  }
+}
+
+/* ===== Móvil: el mapa ocupa la pantalla; buscador y filtros flotan encima ===== */
+.mapa-ver-lista {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .mapa-explorador {
+    position: relative;
+    display: block;
+    height: clamp(480px, calc(100svh - 96px), 760px);
+    overflow: hidden;
+    border-radius: var(--radius-md);
+  }
+
+  .mapa-escenario {
+    position: absolute;
+    inset: 0;
+    order: 0;
+    height: auto;
+  }
+
+  .mapa--explorador {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  /* El panel deja de ser una caja: sus piezas se colocan sobre el mapa. */
+  .mapa-panel {
+    display: contents;
+  }
+
+  .mapa-panel__buscar {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 4;
+    width: auto;
+    background: var(--c-white);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+  }
+
+  .mapa-rapidos {
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+    z-index: 4;
+    padding: 2px 10px 6px;
+    scrollbar-width: none;
+  }
+
+  .mapa-rapidos::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mapa-rapidos .mapa-filtro {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .mapa-activos {
+    position: absolute;
+    top: 122px;
+    left: 10px;
+    right: 10px;
+    z-index: 4;
+  }
+
+  .mapa-activo,
+  .mapa-limpiar {
+    background: var(--c-white);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .mapa-limpiar {
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
+  }
+
+  .mapa-panel__cuenta {
+    display: none;
+  }
+
+  .mapa-panel .note {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 72px;
+    z-index: 4;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--c-white);
+  }
+
+  /* Zoom por gestos: se ocultan los +/- y el control de iconos baja a una esquina. */
+  .mapa--explorador .maplibregl-ctrl-top-right {
+    display: none;
+  }
+
+  .mapa--explorador .maplibregl-ctrl-top-left {
+    display: none;
+  }
+
+  /* Lista como panel inferior */
+  .mapa-panel__lista {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 44px;
+    z-index: 6;
+    display: none;
+    max-height: 62%;
+    padding: 14px 12px 16px;
+    border-radius: 20px 20px 0 0;
+    background: var(--c-white);
+    box-shadow: 0 -10px 26px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+  }
+
+  .mapa-panel.is-list-open .mapa-panel__lista {
+    display: grid;
+  }
+
+  /* «Ver lista» va arriba, junto a «Filtros» */
+  .mapa-ver-lista {
+    margin-left: auto;
+  }
+
+  .mapa-rapidos {
+    align-items: center;
+  }
+
+  .mapa-ver-lista {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--c-olive);
+    color: var(--c-ink);
+    font: inherit;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+  }
+
+  .mapa-ficha {
+    bottom: 44px;
+  }
+
+  .mapa-panel .note {
+    bottom: 56px;
+  }
+}
+
+/* La atribución de OpenStreetMap nunca debe quedar tapada */
+.mapa .maplibregl-ctrl-bottom-right,
+.mapa .maplibregl-ctrl-bottom-left {
+  z-index: 8;
+}
+
+/* Selector de iconos: arriba del mapa, por fuera, a la izquierda */
+.mapa-barra {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.mapa-barra__opciones {
+  display: inline-flex;
+  padding: 3px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--c-white);
+}
+
+.mapa-barra__opciones button {
+  min-width: 40px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--c-navy);
+  font: inherit;
+  cursor: pointer;
+}
+
+.mapa-barra__opciones button[aria-pressed="true"] {
+  background: var(--c-navy);
+  color: var(--c-white);
+}
+
+.mapa-barra__opciones button:focus-visible {
+  outline: 2px solid var(--c-coral);
+  outline-offset: 2px;
+}
+
+/* Escritorio: los filtros van dentro del panel izquierdo, no en una ventana flotante */
+@media (min-width: 861px) {
+  .mapa-hoja {
+    position: static;
+    inset: auto;
+    z-index: auto;
+    display: block;
+    background: transparent;
+  }
+
+  .mapa-hoja__panel {
+    width: auto;
+    max-height: none;
+    padding: 12px;
+    gap: 8px;
+    border: var(--border);
+    border-radius: var(--radius-md);
+    background: var(--c-surface);
+    overflow: visible;
+  }
+
+  .mapa-hoja__panel h2 {
+    font-size: 1rem;
+  }
+
+  .mapa-hoja__pie {
+    position: static;
+    background: transparent;
+  }
+
+  .mapa-panel {
+    overflow-y: auto;
+  }
+
+  .mapa-panel__lista {
+    flex: 1 0 160px;
+  }
+}
+
+/* Escritorio: el selector de iconos vuelve a su sitio, dentro del mapa arriba a la izquierda */
+@media (min-width: 861px) {
+  .mapa-barra {
+    display: none;
+  }
+}
+
+/* «Filtrar lugares» retráctil: el encabezado siempre se ve y pliega el contenido */
+.mapa-hoja__titulo {
+  margin: 0;
+}
+
+.mapa-hoja__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.mapa-hoja__chevron {
+  transition: transform 0.2s ease;
+}
+
+.mapa-hoja.is-open .mapa-hoja__chevron {
+  transform: rotate(180deg);
+}
+
+.mapa-hoja__cuerpo {
+  display: grid;
+  gap: 10px;
+}
+
+@media (min-width: 861px) {
+  .mapa-hoja:not(.is-open) .mapa-hoja__cuerpo {
+    display: none;
+  }
+
+  /* Los filtros elegidos ya se ven dentro del panel y los lugares abajo: sin etiquetas ni «Ver lugares». */
+  .mapa-activos,
+  .mapa-hoja__pie .btn--primary {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .mapa-hoja:not(.is-open) {
+    display: none;
+  }
+}
+
+/* Escritorio: un solo botón de filtros, el de «Filtrar lugares», en azul */
+@media (min-width: 861px) {
+  .mapa-rapidos {
+    display: none;
+  }
+
+  .mapa-hoja__cabecera {
+    padding: 11px 18px;
+    border-radius: var(--radius-pill);
+    background: var(--c-navy);
+    color: var(--c-white);
+    font-weight: 700;
+  }
+
+  .mapa-hoja__cabecera:hover {
+    background: var(--c-navy-dark);
+  }
+}
+
+/* Categorías: «Todas» arriba y las 4 opciones en cuadrícula de 2 x 2 */
+.mapa-hoja__opciones--cuadricula {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mapa-hoja__opciones--cuadricula .mapa-filtro {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.mapa-hoja__opciones--cuadricula .mapa-filtro:first-child {
+  grid-column: 1 / -1;
+  justify-content: center;
+}
+
+/* El punto de color nunca se deforma (antes se achataba en «Dónde comprar») */
+.mapa-filtro__punto {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+}
+
+/* Escritorio: el botón es una franja azul que forma una sola pieza con el recuadro de filtros */
+@media (min-width: 861px) {
+  .mapa-hoja__panel {
+    gap: 0;
+    padding: 0;
+    border: 1px solid var(--c-navy);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .mapa-hoja__cabecera {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 0;
+  }
+
+  .mapa-hoja__cuerpo {
+    padding: 12px 14px 14px;
   }
 }
