@@ -21,7 +21,7 @@ function Value({ value }) {
 
 export default function InfoBar({ items = [], overlap = true }) {
   return (
-    <div className={`info-bar${overlap ? ' info-bar--overlap' : ''}`}>
+    <div className={`info-bar${overlap ? ' info-bar--overlap' : ''}${items.length < 4 ? ' info-bar--few' : ''}`}>
       {items.map((item) => (
         <div key={item.label} className="info-bar__item">
           <span className="info-bar__icon">

@@ -193,10 +193,18 @@
 }
 
 .tips__grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(20px, 3vw, 44px);
+  --tips-cols: 4;
+  --tips-gap: clamp(20px, 3vw, 44px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--tips-gap);
   width: 100%;
+}
+
+/* Flex en vez de grid para que 1–3 consejos queden centrados. */
+.tips__grid > .tip {
+  width: calc((100% - (var(--tips-cols) - 1) * var(--tips-gap)) / var(--tips-cols));
 }
 
 .tip {
@@ -1071,6 +1079,10 @@
     grid-column: span 1;
   }
 
+  .tips__grid {
+    --tips-cols: 2;
+  }
+
   .tips__grid,
   .preparation__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1144,6 +1156,10 @@
 }
 
 @media (max-width: 480px) {
+  .tips__grid {
+    --tips-cols: 1;
+  }
+
   .tips__grid,
   .preparation__grid {
     grid-template-columns: 1fr;
