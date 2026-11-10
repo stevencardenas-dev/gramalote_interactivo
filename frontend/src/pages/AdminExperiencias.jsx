@@ -312,7 +312,7 @@ export function AdminExperiencia() {
 
           {tab === 'info' ? (
             <>
-              <AdminSection title="Identidad" hint="Cómo se llama y dónde aparece la experiencia en el sitio." defaultOpen signal={signal}>
+              <AdminSection title="Identidad" hint="Cómo se llama y dónde aparece la experiencia en el sitio." signal={signal}>
                 <div className="admin-grid">
                   <Field label="Título">
                     <input required value={form.title} onChange={set('title')} maxLength={180} />
@@ -332,7 +332,7 @@ export function AdminExperiencia() {
                 </div>
               </AdminSection>
 
-              <AdminSection title="Tarjeta" hint="Lo que se ve en «Qué hacer» y en el inicio." defaultOpen signal={signal}>
+              <AdminSection title="Tarjeta" hint="Lo que se ve en «Qué hacer» y en el inicio." signal={signal}>
                 <div className="admin-grid">
                   <Field label="Texto de la tarjeta" hint="Qué se puede hacer, en 1–2 frases.">
                     <textarea rows={3} value={form.cardText} onChange={set('cardText')} maxLength={600} />
@@ -343,7 +343,7 @@ export function AdminExperiencia() {
                 </div>
               </AdminSection>
 
-              <AdminSection title="Descripción" hint="El resumen sale bajo el título; la descripción, en la ficha." defaultOpen signal={signal}>
+              <AdminSection title="Descripción" hint="El resumen sale bajo el título; la descripción, en la ficha." signal={signal}>
                 <div className="admin-grid">
                   <Field label="Resumen">
                     <textarea rows={3} value={form.summary} onChange={set('summary')} maxLength={320} />
@@ -517,23 +517,25 @@ export function AdminExperiencia() {
                   ? 'La experiencia es visible en «Qué hacer» y en el mapa.'
                   : 'La experiencia no está publicada y no aparece en el sitio.'}
               </p>
+              <div className="admin-publish__checks">
               <label className="admin-check admin-check--card">
                 <input type="checkbox" checked={form.published} onChange={set('published')} />
                 <span>
                   <strong>Publicada</strong>
-                  Se guarda al pulsar «Guardar cambios».
+                  <small>Se guarda al pulsar «Guardar cambios».</small>
                 </span>
               </label>
               <label className="admin-check admin-check--card">
                 <input type="checkbox" checked={form.openDaily} onChange={set('openDaily')} />
                 <span>
                   <strong>Abre todos los días</strong>
-                  Aparece en el filtro «Abierto hoy».
+                  <small>Aparece en el filtro «Abierto hoy».</small>
                 </span>
               </label>
+              </div>
 
               <h2>Orden</h2>
-              <div className="admin-grid">
+              <div className="admin-publish__field">
                 <Field label="Posición en «Qué hacer»" hint="Los números menores salen primero.">
                   <input type="number" value={form.sortOrder} onChange={set('sortOrder')} />
                 </Field>

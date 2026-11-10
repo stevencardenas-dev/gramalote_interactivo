@@ -440,7 +440,7 @@ export default function AdminEstablecimiento() {
 
           {tab === 'info' ? (
             <>
-              <Section title="Identidad" hint="Cómo se llama y dónde aparece la ficha en el sitio." defaultOpen signal={signal}>
+              <Section title="Identidad" hint="Cómo se llama y dónde aparece la ficha en el sitio." signal={signal}>
               <div className="admin-grid">
                 <Field label="Nombre">
                   <input
@@ -506,7 +506,7 @@ export default function AdminEstablecimiento() {
               </div>
               </Section>
 
-              <Section title="Descripción" hint="El resumen sale en tarjetas y listados; la descripción, en la ficha." defaultOpen signal={signal}>
+              <Section title="Descripción" hint="El resumen sale en tarjetas y listados; la descripción, en la ficha." signal={signal}>
               <Field label="Resumen" hint={`${form.summary.length}/320 caracteres`}>
                 <textarea
                   rows={2}
@@ -785,7 +785,7 @@ export default function AdminEstablecimiento() {
 
           {tab === 'extras' ? (
             <div className="admin-extras">
-              <Section title="Servicios" defaultOpen signal={signal}>
+              <Section title="Servicios" signal={signal}>
                 <div className="admin-checks">
                   {(meta?.services ?? []).map((service) => (
                     <label key={service.id} className="admin-check">

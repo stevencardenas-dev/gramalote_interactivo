@@ -1393,3 +1393,19 @@ a.admin-tile:hover {
   grid-template-columns: minmax(120px, 0.6fr) minmax(0, 1fr) minmax(0, 1.6fr) auto;
   align-items: center;
 }
+
+/* Publicación de experiencias: casillas apiladas y campo de orden estrecho. */
+.admin-publish__checks {
+  display: grid;
+  gap: 10px;
+  max-width: 520px;
+  margin-top: 12px;
+}
+
+.admin-publish__checks .admin-check--card {
+  display: flex;
+}
+
+.admin-publish__field {
+  max-width: 220px;
+}
