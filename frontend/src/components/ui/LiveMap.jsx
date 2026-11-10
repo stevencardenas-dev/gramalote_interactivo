@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Map as MapLibreMap,
   Marker,
@@ -14,6 +14,9 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import '../../styles/mapa.css'
 import { getJson } from '../../lib/api.js'
 import { mapIconUrl, resolveMapIcon } from '../../data/mapIcons.js'
+import { StarsRow } from './RatingStars.jsx'
+
+const TOP_RATING = 4.5
 
 // Centro aproximado de Gramalote, en formato [longitud, latitud].
 const INITIAL_CENTER = [-72.79, 7.89]
@@ -83,6 +86,9 @@ function toPlaces(data) {
           group,
         }),
         photo: item.cover?.url ?? null,
+        openNow: item.openNow ?? null,
+        rating: item.rating ?? { average: 0, votes: 0 },
+        mapsUrl: item.mapsUrl ?? null,
         longitude: item.coordinates.longitude,
         latitude: item.coordinates.latitude,
       }
@@ -213,6 +219,10 @@ export default function LiveMap({
   const [activeType, setActiveType] = useState(initialType)
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState('')
+  const [onlyOpen, setOnlyOpen] = useState(false)
+  const [onlyTop, setOnlyTop] = useState(false)
+  const [minRating, setMinRating] = useState(0)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [iconVersion, setIconVersion] = useState(readIconVersion)
   const iconVersionRef = useRef(iconVersion)
   const versionControlRef = useRef(null)
@@ -224,9 +234,25 @@ export default function LiveMap({
       (place) =>
         (!activeGroup || place.group === activeGroup) &&
         (!activeType || place.type === activeType) &&
+        (!onlyOpen || place.openNow === true) &&
+        (!onlyTop || place.rating.average >= TOP_RATING) &&
+        (!minRating || place.rating.average >= minRating) &&
         (!term || normalize(`${place.name}${place.type ?? ''}`).includes(term)),
     )
-  }, [allPlaces, activeGroup, activeType, search])
+  }, [allPlaces, activeGroup, activeType, search, onlyOpen, onlyTop, minRating])
+
+  const selectedPlace = places.find((place) => place.id === selectedId) ?? null
+  const filterCount =
+    (activeGroup ? 1 : 0) + (activeType ? 1 : 0) + (minRating ? 1 : 0) + (onlyOpen ? 1 : 0) + (onlyTop ? 1 : 0)
+
+  function clearFilters() {
+    setActiveGroup('')
+    setActiveType('')
+    setMinRating(0)
+    setOnlyOpen(false)
+    setOnlyTop(false)
+    setSelectedId('')
+  }
 
   // Tipos disponibles dentro del grupo elegido (o de todos) para el segundo filtro.
   const typeOptions = useMemo(() => {
@@ -335,7 +361,7 @@ export default function LiveMap({
       const marker = new Marker({
         element: createPin(place, iconVersionRef.current, (item) => {
           setSelectedId(item.id)
-          showPopup(readyMap, item)
+          if (!explorer) showPopup(readyMap, item)
         }),
         anchor: 'center',
       })
@@ -389,7 +415,53 @@ export default function LiveMap({
       zoom: Math.max(readyMap.getZoom(), 16),
       duration: 800,
     })
-    showPopup(readyMap, place)
+    if (!explorer) showPopup(readyMap, place)
+  }
+
+  // Ficha del lugar elegido (tarjeta inferior del modo explorador).
+  function renderCard(place) {
+    const href = place.kind === 'experience' ? `/que-hacer/${place.slug}` : `/establecimiento/${place.slug}`
+    const route =
+      place.mapsUrl ||
+      `https://www.google.com/maps/dir/?api=1&destination=${place.latitude},${place.longitude}`
+    const { average, votes } = place.rating
+    return (
+      <div className="mapa-ficha" role="dialog" aria-label={`Ficha de ${place.name}`}>
+        <button type="button" className="mapa-ficha__cerrar" aria-label="Cerrar" onClick={() => setSelectedId('')}>
+          ×
+        </button>
+        {place.photo ? (
+          <img className="mapa-ficha__foto" src={place.photo} alt="" />
+        ) : (
+          <span
+            className="mapa-ficha__foto mapa-ficha__foto--vacia"
+            style={{ background: GROUP_BY_KEY[place.group].color }}
+            aria-hidden="true"
+          />
+        )}
+        <div className="mapa-ficha__texto">
+          <h3>{place.name}</h3>
+          <span className="mapa-ficha__sub">{placeSubtitle(place)}</span>
+          <span className="mapa-ficha__estrellas">
+            <StarsRow value={average} />
+            {votes ? `${average.toFixed(1).replace('.', ',')} (${votes})` : 'Sin calificaciones'}
+          </span>
+          {place.openNow === null ? null : (
+            <span className={place.openNow ? 'mapa-ficha__estado is-open' : 'mapa-ficha__estado'}>
+              {place.openNow ? 'Abierto ahora' : 'Cerrado ahora'}
+            </span>
+          )}
+          <div className="mapa-ficha__acciones">
+            <Link className="btn btn--primary btn--sm" to={href}>
+              Ver ficha
+            </Link>
+            <a className="btn btn--ghost btn--sm" href={route} target="_blank" rel="noreferrer">
+              Cómo llegar
+            </a>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const visibleGroups = groups ? GROUPS.filter((group) => groups.includes(group.key)) : GROUPS
@@ -440,25 +512,71 @@ export default function LiveMap({
               setSelectedId('')
             }}
           />
-          <div className="mapa-filtros__grupos" role="group" aria-label="Filtrar por categoría">
-            {[{ key: '', label: 'Todos' }, ...visibleGroups].map((group) => (
-              <button
-                key={group.key}
-                type="button"
-                className="mapa-filtro"
-                aria-pressed={activeGroup === group.key}
-                onClick={() => chooseGroup(group.key)}
-              >
-                {group.color ? (
-                  <span className="mapa-filtro__punto" style={{ background: group.color }} aria-hidden="true" />
-                ) : null}
-                {group.label}
-              </button>
-            ))}
+          <div className="mapa-rapidos" role="group" aria-label="Filtros rápidos">
+            <button
+              type="button"
+              className="mapa-filtro mapa-filtro--rapido"
+              aria-pressed={onlyOpen}
+              onClick={() => setOnlyOpen((value) => !value)}
+            >
+              Abierto ahora
+            </button>
+            <button
+              type="button"
+              className="mapa-filtro mapa-filtro--rapido"
+              aria-pressed={onlyTop}
+              onClick={() => setOnlyTop((value) => !value)}
+            >
+              ★ Mejor calificados
+            </button>
+            <button type="button" className="mapa-filtro mapa-filtro--mas" onClick={() => setSheetOpen(true)}>
+              Filtros
+              {filterCount ? <span className="mapa-filtro__cuenta">{filterCount}</span> : null}
+            </button>
           </div>
-          {typeSelect}
+          {filterCount ? (
+            <div className="mapa-activos" aria-label="Filtros aplicados">
+              {activeGroup ? (
+                <span className="mapa-activo">
+                  {GROUP_BY_KEY[activeGroup]?.label}
+                  <button type="button" aria-label="Quitar categoría" onClick={() => chooseGroup('')}>×</button>
+                </span>
+              ) : null}
+              {activeType ? (
+                <span className="mapa-activo">
+                  {activeType}
+                  <button type="button" aria-label="Quitar tipo" onClick={() => setActiveType('')}>×</button>
+                </span>
+              ) : null}
+              {minRating ? (
+                <span className="mapa-activo">
+                  {String(minRating).replace('.', ',')}★ o más
+                  <button type="button" aria-label="Quitar calificación mínima" onClick={() => setMinRating(0)}>×</button>
+                </span>
+              ) : null}
+              {onlyOpen ? (
+                <span className="mapa-activo">
+                  Abierto ahora
+                  <button type="button" aria-label="Quitar abierto ahora" onClick={() => setOnlyOpen(false)}>×</button>
+                </span>
+              ) : null}
+              {onlyTop ? (
+                <span className="mapa-activo">
+                  Mejor calificados
+                  <button type="button" aria-label="Quitar mejor calificados" onClick={() => setOnlyTop(false)}>×</button>
+                </span>
+              ) : null}
+              <button type="button" className="mapa-limpiar" onClick={clearFilters}>
+                Limpiar todo
+              </button>
+            </div>
+          ) : null}
           <p className="mapa-panel__cuenta" aria-live="polite">
-            {places.length === 1 ? '1 lugar' : `${places.length} lugares`}
+            {places.length === 0 && filterCount
+              ? 'Sin resultados con estos filtros'
+              : places.length === 1
+                ? '1 lugar'
+                : `${places.length} lugares`}
           </p>
           {statusNotes}
           <ul className="mapa-panel__lista" ref={listRef}>
@@ -488,12 +606,80 @@ export default function LiveMap({
             ))}
           </ul>
         </aside>
-        <div
-          ref={containerRef}
-          className="mapa mapa--explorador"
-          role="region"
-          aria-label={label}
-        />
+        <div className="mapa-escenario">
+          <div
+            ref={containerRef}
+            className="mapa mapa--explorador"
+            role="region"
+            aria-label={label}
+          />
+          {selectedPlace ? renderCard(selectedPlace) : null}
+        </div>
+
+        {sheetOpen ? (
+          <div
+            className="mapa-hoja"
+            onMouseDown={(event) => event.target === event.currentTarget && setSheetOpen(false)}
+          >
+            <div className="mapa-hoja__panel" role="dialog" aria-modal="true" aria-label="Filtros del mapa">
+              <span className="mapa-hoja__asa" aria-hidden="true" />
+              <h2>Filtrar lugares</h2>
+
+              <h3>Categoría</h3>
+              <div className="mapa-hoja__opciones" role="group" aria-label="Categoría">
+                {[{ key: '', label: 'Todas' }, ...visibleGroups].map((group) => (
+                  <button
+                    key={group.key}
+                    type="button"
+                    className="mapa-filtro"
+                    aria-pressed={activeGroup === group.key}
+                    onClick={() => chooseGroup(group.key)}
+                  >
+                    {group.color ? (
+                      <span className="mapa-filtro__punto" style={{ background: group.color }} aria-hidden="true" />
+                    ) : null}
+                    {group.label}
+                  </button>
+                ))}
+              </div>
+
+              {typeSelect}
+
+              <label className="mapa-hoja__fila">
+                <span>Abierto ahora</span>
+                <input type="checkbox" checked={onlyOpen} onChange={(event) => setOnlyOpen(event.target.checked)} />
+              </label>
+
+              <h3>Calificación mínima</h3>
+              <div className="mapa-hoja__opciones" role="group" aria-label="Calificación mínima">
+                {[
+                  [0, 'Todas'],
+                  [4, '4★ o más'],
+                  [4.5, '4,5★ o más'],
+                ].map(([value, text]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className="mapa-filtro"
+                    aria-pressed={minRating === value}
+                    onClick={() => setMinRating(value)}
+                  >
+                    {text}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mapa-hoja__pie">
+                <button type="button" className="btn btn--ghost" onClick={clearFilters}>
+                  Limpiar
+                </button>
+                <button type="button" className="btn btn--primary" onClick={() => setSheetOpen(false)}>
+                  Ver {places.length} {places.length === 1 ? 'lugar' : 'lugares'}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     )
   }

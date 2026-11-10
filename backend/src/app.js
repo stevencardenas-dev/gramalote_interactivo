@@ -13,6 +13,7 @@ import historyRouter from './routes/history.js'
 import mapRouter from './routes/map.js'
 import metaRouter from './routes/meta.js'
 import practicalRouter from './routes/practical.js'
+import ratingsRouter from './routes/ratings.js'
 import searchRouter from './routes/search.js'
 import usersRouter from './routes/users.js'
 
@@ -74,6 +75,8 @@ app.get('/api', (_req, res) => {
       'GET /api/practical',
       'GET /api/map',
       'GET /api/search?q=',
+      'GET /api/ratings/top',
+      'GET|POST /api/ratings/:kind/:slug (establecimiento|experiencia)',
       'GET /api/admin/establishments',
       'GET /api/admin/establishments/:id',
       'PATCH /api/admin/establishments/:id',
@@ -112,6 +115,7 @@ app.use(
   curiositiesRouter,
   historyRouter,
   practicalRouter,
+  ratingsRouter,
   mapRouter,
   searchRouter,
 )

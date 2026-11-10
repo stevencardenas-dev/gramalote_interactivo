@@ -47,6 +47,7 @@ export default function Experiencia() {
         eyebrow={item.category}
         pillTone={item.category === 'Naturaleza' ? 'leaf' : 'brown'}
         title={item.title}
+        rating={{ kind: 'experiencia', slug: item.slug }}
         summary={item.summary ?? item.text}
         image={item.hero ?? item.photo}
         social={[]}

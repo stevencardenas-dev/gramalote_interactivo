@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from './Icon.jsx'
+import RatingStars from './RatingStars.jsx'
 import SocialIcon from './SocialIcon.jsx'
 
 const NETWORKS = {
@@ -75,6 +76,7 @@ export default function HeroFicha({
   social = ['share'],
   links = [],
   dots = true,
+  rating,
 }) {
   const canShare = Array.isArray(social) ? social.includes('share') : Boolean(social)
   const networks = links.filter((link) => NETWORKS[link.platform] && link.url)
@@ -182,6 +184,8 @@ export default function HeroFicha({
           <h1>{title}</h1>
 
           {summary ? <p className="ficha-hero__summary">{summary}</p> : null}
+
+          {rating ? <RatingStars kind={rating.kind} slug={rating.slug} title={title} /> : null}
 
           {dots && slides.length > 1 ? (
             <div className="ficha-hero__dots">

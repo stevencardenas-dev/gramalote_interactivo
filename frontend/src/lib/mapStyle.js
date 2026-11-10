@@ -24,6 +24,42 @@ function absolute(url) {
   return new URL(url, window.location.origin + import.meta.env.BASE_URL).href
 }
 
+// Variante del estilo claro con más contraste: el fondo más claro, las casas en
+// un tono cálido con borde y las calles blancas con borde marcado, para que no se
+// confundan entre sí al acercar el mapa.
+const flavor = {
+  ...namedFlavor('light'),
+  earth: '#f4f1ea',
+  buildings: '#d9bfa0',
+  minor_a: '#ffffff',
+  minor_b: '#ffffff',
+  minor_casing: '#b9b1a3',
+  link: '#ffffff',
+  link_casing: '#b9b1a3',
+  major: '#ffffff',
+  major_casing_early: '#b9b1a3',
+  major_casing_late: '#a79f90',
+  minor_service: '#ffffff',
+  minor_service_casing: '#b9b1a3',
+  other: '#d8c9ad',
+  pedestrian: '#ece7d8',
+  highway: '#fff3d6',
+  highway_casing_early: '#c9a96a',
+  highway_casing_late: '#c9a96a',
+}
+
+const BUILDING_OUTLINE = {
+  id: 'buildings_outline',
+  type: 'line',
+  source: 'protomaps',
+  'source-layer': 'buildings',
+  minzoom: 14,
+  paint: {
+    'line-color': '#a98a66',
+    'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.4, 18, 1.2],
+  },
+}
+
 export function buildMapStyle() {
   registerProtocol()
   const base = import.meta.env.BASE_URL
@@ -38,6 +74,8 @@ export function buildMapStyle() {
         attribution: ATTRIBUTION,
       },
     },
-    layers: layers('protomaps', namedFlavor('light'), { lang: 'es' }),
+    layers: layers('protomaps', flavor, { lang: 'es' }).flatMap((layer) =>
+      layer.id === 'buildings' ? [layer, BUILDING_OUTLINE] : [layer],
+    ),
   }
 }

@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { query } from '../db.js'
 import { asyncHandler, stringParam } from '../http.js'
 import { coverFromRow, toNumber } from '../serializers.js'
+import { listExtras } from './establishments.js'
 
 const router = Router()
 
@@ -56,7 +57,7 @@ router.get(
     const kind = stringParam(req.query.kind, { max: 20 }) ?? 'all'
     const establishmentFilters = buildWhere(req.query, 'name')
     const experienceFilters = buildWhere(req.query, 'title')
-    const mapEstablishment = (row) => ({
+    const mapEstablishment = (row, extra, stats) => ({
       kind: 'establishment',
       id: toNumber(row.id),
       slug: row.slug,
@@ -64,6 +65,9 @@ router.get(
       category: { slug: row.category_slug, name: row.category_name },
       type: row.type_name ?? null,
       mapIcon: row.map_icon ?? null,
+      mapsUrl: row.maps_url ?? null,
+      openNow: extra?.openNow ?? null,
+      rating: stats ?? { average: 0, votes: 0 },
       zone: row.zone_slug ? { slug: row.zone_slug, name: row.zone_name } : null,
       coordinates: {
         latitude: Number(row.latitude),
@@ -71,11 +75,12 @@ router.get(
       },
       cover: coverFromRow(row),
     })
-    const mapExperience = (row) => ({
+    const mapExperience = (row, stats) => ({
       kind: 'experience',
       id: toNumber(row.id),
       slug: row.slug,
       name: row.title,
+      rating: stats ?? { average: 0, votes: 0 },
       category: row.category_slug
         ? { slug: row.category_slug, name: row.category_name }
         : null,
@@ -108,10 +113,23 @@ router.get(
           ),
     ])
 
+    const [extras, stats] = await Promise.all([
+      listExtras(establishments.map((row) => row.id)),
+      query('SELECT target_type, target_id, average, votes FROM rating_stats'),
+    ])
+    const statsOf = (type, id) => {
+      const row = stats.find(
+        (item) => item.target_type === type && Number(item.target_id) === Number(id),
+      )
+      return row ? { average: Number(row.average), votes: Number(row.votes) } : null
+    }
+
     res.json({
       data: {
-        establishments: establishments.map(mapEstablishment),
-        experiences: experiences.map(mapExperience),
+        establishments: establishments.map((row) =>
+          mapEstablishment(row, extras.get(Number(row.id)), statsOf('establishment', row.id)),
+        ),
+        experiences: experiences.map((row) => mapExperience(row, statsOf('experience', row.id))),
       },
     })
   }),

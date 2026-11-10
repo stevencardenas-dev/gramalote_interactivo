@@ -185,11 +185,15 @@ export default function Navbar({ over = false }) {
         </nav>
 
         <div className="site-header__actions">
-          <Link className="site-login" to={loginTo}>
-            <Icon name="lock" />
-            {loginLabel}
-          </Link>
           <SearchForm inputId="site-search" />
+          <Link
+            className="site-login"
+            to={loginTo}
+            aria-label={loginLabel}
+            title={loginLabel}
+          >
+            <Icon name="lock" />
+          </Link>
           <button
             ref={menuButtonRef}
             className="menu-toggle"

@@ -11,7 +11,7 @@ services:
       MYSQL_USER: ${MYSQL_USER:-gramalote}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Define MYSQL_PASSWORD en backend/.env}
       TZ: America/Bogota
-    command: --default-time-zone=-05:00
+    command: --default-time-zone=-05:00 --log-bin-trust-function-creators=1
     ports:
       - "${MYSQL_PORT:-3307}:3306"
     volumes:

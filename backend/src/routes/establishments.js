@@ -87,7 +87,7 @@ function filtersFromQuery(queryParams) {
 
 // Horario y servicios de varias fichas con tres consultas, para que el listado
 // pueda filtrar "Abierto hoy" y servicios sin pedir cada ficha por separado.
-async function listExtras(ids) {
+export async function listExtras(ids) {
   const result = new Map()
   if (ids.length === 0) return result
 
