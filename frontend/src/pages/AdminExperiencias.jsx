@@ -63,41 +63,41 @@ export function AdminExperiencias() {
   return (
     <section className="admin-page">
       <div className="admin-wrap">
-        <p>
-          <Link to="/admin">← Panel</Link>
-        </p>
-        <h1>Experiencias · Qué hacer</h1>
-        <p className="admin-lead">
-          Lo que edites aquí aparece en «Qué hacer», en la ficha de cada experiencia y en el mapa
-          (filtro Experiencias) cuando tiene coordenadas.
-        </p>
-        <p>
+        <div className="admin-bar">
+          <h1>Experiencias</h1>
           <Link className="admin-btn admin-btn--primary" to="/admin/experiencias/nueva">
             + Nueva experiencia
           </Link>
-        </p>
-        {error ? <p className="admin-notice">{error}</p> : null}
-        {items === null && !error ? <p>Cargando…</p> : null}
-        <div className="admin-rows">
-          {(items ?? []).map((item) => (
-            <Link key={item.id} className="admin-row-item" to={`/admin/experiencias/${item.id}`}>
-              {item.cover ? (
-                <img className="admin-row-item__thumb" src={item.cover} alt="" />
-              ) : (
-                <span className="admin-row-item__thumb" />
-              )}
-              <span className="admin-row-item__main">
-                <strong>{item.title}</strong>
-                <span>
-                  {item.category ?? 'Sin categoría'}
-                  {item.published ? '' : ' · No publicada'}
-                  {item.onMap ? ' · En el mapa' : ' · Sin coordenadas'}
-                </span>
-              </span>
-              <span className="admin-row-item__go">Editar →</span>
-            </Link>
-          ))}
         </div>
+        {error ? <p className="auth-error">{error}</p> : null}
+        {items === null && !error ? <p className="note">Cargando experiencias…</p> : null}
+        {items !== null && items.length === 0 ? (
+          <p className="empty">Aún no hay experiencias.</p>
+        ) : null}
+        <ul className="admin-rows">
+          {(items ?? []).map((item) => (
+            <li key={item.id} className="admin-row-item">
+              <span className="admin-row-item__thumb">
+                {item.cover ? <img src={item.cover} alt="" loading="lazy" /> : <span aria-hidden="true" />}
+              </span>
+              <div className="admin-row-item__main">
+                <Link to={`/admin/experiencias/${item.id}`}>{item.title}</Link>
+                <small>
+                  {item.category ?? 'Sin categoría'}
+                  {item.onMap ? ' · En el mapa' : ' · Sin coordenadas'}
+                </small>
+              </div>
+              <span
+                className={`admin-badge ${item.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
+              >
+                {item.published ? 'Publicada' : 'No publicada'}
+              </span>
+              <span className="admin-row-item__go" aria-hidden="true">
+                ›
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   )
@@ -206,15 +206,30 @@ export function AdminExperiencia() {
   return (
     <section className="admin-page">
       <div className="admin-wrap">
-        <p>
-          <Link to="/admin/experiencias">← Experiencias</Link>
-        </p>
-        <h1>{isNew ? 'Nueva experiencia' : form.title}</h1>
-        {!isNew && form.published ? (
-          <p>
-            <Link to={`/que-hacer/${form.slug}`}>Ver en el sitio →</Link>
-          </p>
-        ) : null}
+        <div className="admin-head2">
+          <Link className="admin-back" to="/admin/experiencias">
+            ← Experiencias
+          </Link>
+          <div className="admin-head2__body">
+            <h1>{isNew ? 'Nueva experiencia' : form.title}</h1>
+            {!isNew ? (
+              <p>
+                <span
+                  className={`admin-badge ${form.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
+                >
+                  {form.published ? 'Publicada' : 'No publicada'}
+                </span>
+              </p>
+            ) : null}
+          </div>
+          {!isNew && form.published ? (
+            <div className="admin-head2__actions">
+              <Link className="admin-btn" to={`/que-hacer/${form.slug}`} target="_blank">
+                Ver en el sitio ↗
+              </Link>
+            </div>
+          ) : null}
+        </div>
 
         <form className="admin-panel" onSubmit={save}>
           <h2>Tarjeta en «Qué hacer»</h2>
