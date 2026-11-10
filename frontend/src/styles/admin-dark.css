@@ -1379,3 +1379,17 @@ a.admin-tile:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* Experiencias: filas de consejos y alineación de campos con distinta altura. */
+.admin-field {
+  align-content: start;
+}
+
+.admin-grid {
+  align-items: start;
+}
+
+.admin-row.admin-row--tip {
+  grid-template-columns: minmax(120px, 0.6fr) minmax(0, 1fr) minmax(0, 1.6fr) auto;
+  align-items: center;
+}
