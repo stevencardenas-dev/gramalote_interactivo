@@ -10,6 +10,7 @@ import './styles/layout.css'
 import './styles/home.css'
 import './styles/pages.css'
 import './styles/vistas.css'
+import './styles/mejoras.css'
 import './styles/admin.css'
 import './styles/admin-dark.css'
 

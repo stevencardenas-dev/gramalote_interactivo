@@ -91,6 +91,7 @@ services:
     # buffer pool pequeño, MySQL queda en ~250 MB.
     command:
       - --default-time-zone=-05:00
+      - --log-bin-trust-function-creators=1
       - --innodb-buffer-pool-size=96M
       - --performance-schema=OFF
       - --mysqlx=0

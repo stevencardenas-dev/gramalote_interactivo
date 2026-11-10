@@ -17,6 +17,7 @@ export default function EstablecimientoComprar({ item }) {
       <HeroFicha
         eyebrow={item.type}
         title={item.name}
+        rating={{ kind: 'establecimiento', slug: item.slug }}
         summary={item.summary}
         image={item.hero ?? '/img/home/hero.jpg'}
         images={item.heroes}
@@ -69,6 +70,8 @@ export default function EstablecimientoComprar({ item }) {
 
       <RelatedPlaces
         items={item.relatedItems}
+        exclude={item.slug}
+        category={item.category}
         title={info.relationTitle}
         text={info.relationText}
       />

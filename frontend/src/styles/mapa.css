@@ -354,3 +354,350 @@
   outline: 2px solid var(--c-coral);
   outline-offset: 2px;
 }
+
+/* Escenario del mapa con la tarjeta de ficha encima */
+.mapa-escenario {
+  position: relative;
+  min-height: 0;
+  height: 100%;
+}
+
+.mapa-ficha {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 28px;
+  z-index: 5;
+  display: flex;
+  gap: 14px;
+  max-width: 460px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--c-white);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+.mapa-ficha__foto {
+  flex: none;
+  width: 92px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.mapa-ficha__texto {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  align-content: start;
+}
+
+.mapa-ficha__texto h3 {
+  margin: 0;
+  padding-right: 26px;
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.mapa-ficha__sub {
+  color: var(--c-ink-soft);
+  font-size: var(--fs-xs);
+}
+
+.mapa-ficha__estrellas {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-ink-soft);
+  font-size: var(--fs-xs);
+}
+
+.mapa-ficha__estrellas .stars__star,
+.mapa-ficha__estrellas .stars__fill svg {
+  width: 15px;
+  height: 15px;
+}
+
+.mapa-ficha__estrellas .stars__star svg {
+  fill: var(--c-cream-deep);
+}
+
+.mapa-ficha__estrellas .stars__fill svg {
+  fill: var(--c-gold);
+}
+
+.mapa-ficha__estado {
+  color: var(--c-brick);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.mapa-ficha__estado.is-open {
+  color: var(--c-green);
+}
+
+.mapa-ficha__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.mapa-ficha__cerrar {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--c-ink-soft);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Filtros rápidos, etiquetas activas y hoja de filtros */
+.mapa-rapidos {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.mapa-filtro--rapido {
+  flex: none;
+  white-space: nowrap;
+}
+
+.mapa-filtro--rapido[aria-pressed='true'] {
+  border-color: var(--c-olive);
+  background: var(--c-olive);
+  color: var(--c-ink);
+}
+
+.mapa-filtro--mas {
+  flex: none;
+  border-color: var(--c-navy);
+  background: var(--c-navy);
+  color: var(--c-white);
+  font-weight: 700;
+}
+
+.mapa-filtro__cuenta {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: var(--c-gold);
+  color: var(--c-ink);
+  font-size: 0.75rem;
+}
+
+.mapa-activos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+}
+
+.mapa-activo {
+  padding: 3px 4px 3px 10px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--c-cream);
+}
+
+.mapa-activo button {
+  min-width: 24px;
+  border: 0;
+  background: transparent;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.mapa-limpiar {
+  border: 0;
+  background: transparent;
+  color: var(--c-coral);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mapa-hoja {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  align-items: end;
+  background: rgba(60, 60, 64, 0.6);
+}
+
+.mapa-hoja__panel {
+  display: grid;
+  gap: 10px;
+  max-height: 88svh;
+  padding: 10px 18px 18px;
+  border-radius: 22px 22px 0 0;
+  background: var(--c-white);
+  overflow-y: auto;
+}
+
+.mapa-hoja__panel h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+}
+
+.mapa-hoja__panel h3 {
+  margin: 6px 0 0;
+  font-size: var(--fs-sm);
+}
+
+.mapa-hoja__asa {
+  justify-self: center;
+  width: 42px;
+  height: 5px;
+  border-radius: 9px;
+  background: var(--c-line);
+}
+
+.mapa-hoja__opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mapa-hoja__fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  border-bottom: var(--border);
+}
+
+.mapa-hoja__fila input {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--c-navy);
+}
+
+.mapa-hoja__pie {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  padding-top: 8px;
+  background: var(--c-white);
+}
+
+.mapa-hoja__pie .btn:last-child {
+  flex: 1;
+}
+
+@media (min-width: 861px) {
+  .mapa-hoja {
+    align-items: center;
+    justify-items: center;
+  }
+
+  .mapa-hoja__panel {
+    width: min(460px, 92vw);
+    border-radius: var(--radius-lg);
+  }
+
+  .mapa-hoja__asa {
+    display: none;
+  }
+}
+
+/* Móvil: mapa alto, controles táctiles de 44 px y filtros en una fila deslizable */
+@media (max-width: 860px) {
+  .mapa-escenario {
+    order: -1;
+    height: auto;
+  }
+
+  .mapa--explorador {
+    height: clamp(340px, 62svh, 560px);
+  }
+
+  .mapa-ficha {
+    left: 8px;
+    right: 8px;
+    bottom: 26px;
+    max-width: none;
+  }
+
+  .mapa-ficha__acciones .btn {
+    min-height: 44px;
+  }
+
+  .mapa-rapidos .mapa-filtro {
+    min-height: 44px;
+  }
+
+  .mapa-panel__lista {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .mapa-panel__buscar,
+  .mapa-filtros__tipo select {
+    min-height: 44px;
+    font-size: 1rem; /* evita el zoom automático de iOS al enfocar */
+  }
+
+  .mapa-filtros__grupos {
+    flex-wrap: nowrap;
+    margin-inline: -4px;
+    padding: 2px 4px 6px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mapa-filtro {
+    flex: none;
+    min-height: 44px;
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+
+  .mapa-lugar {
+    min-height: 64px;
+    padding: 10px;
+  }
+
+  .mapa-lugar__foto {
+    width: 52px;
+    height: 52px;
+  }
+
+  .mapa .maplibregl-ctrl-group button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .mapa .maplibregl-popup-close-button {
+    width: 36px;
+    height: 36px;
+    font-size: 1.5rem;
+  }
+
+  .mapa-popup__enlace {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .mapa-version button {
+    min-width: 40px;
+    height: 40px;
+  }
+}

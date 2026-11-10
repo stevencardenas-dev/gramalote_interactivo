@@ -35,7 +35,7 @@ export default function Buscar() {
   const query = (params.get('q') ?? '').trim()
   const { data: establishments } = useEstablishments()
 
-  const results = [
+  const results = mode === 'componentes' ? [] : [
     ...establishments.map((item) => ({
       id: item.id,
       title: item.name,
@@ -67,7 +67,9 @@ export default function Buscar() {
         intro={
           query
             ? `Resultados para “${query}”.`
-            : 'Escribe un lugar, producto o contenido histórico en el buscador.'
+            : mode === 'componentes'
+              ? 'Escribe el nombre de una pieza de interfaz: botón, estrellas, etiqueta…'
+              : 'Escribe un lugar, producto o contenido histórico en el buscador.'
         }
       />
 
