@@ -45,7 +45,7 @@ export default function RelatedPlaces({
                 {item.votes ? (
                   <span className="related-card__rating">
                     <StarsRow value={item.average} />
-                    {item.average.toFixed(1).replace('.', ',')} ({item.votes})
+                    {item.average.toFixed(1).replace('.', ',')}
                   </span>
                 ) : null}
                 <span className="related-card__link">

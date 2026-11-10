@@ -1,25 +1,87 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { site } from '../../data/site.js'
 import { getUser, subscribe } from '../../lib/auth.js'
+import { loadSearchIndex, suggest } from '../../lib/searchIndex.js'
 import Icon from '../ui/Icon.jsx'
 import Logo from '../ui/Logo.jsx'
 
 function SearchForm({ onSubmitted, inputId = 'site-search' }) {
   const navigate = useNavigate()
+  const listId = useId()
   const [value, setValue] = useState('')
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(-1)
+  const [loaded, setLoaded] = useState(false)
+  // En pantallas pequeñas caben menos sugerencias (3 o 4).
+  const [compactScreen, setCompactScreen] = useState(
+    () => window.matchMedia('(max-width: 900px)').matches,
+  )
 
-  function handleSubmit(event) {
-    event.preventDefault()
-    const term = value.trim()
-    if (!term) return
-    navigate(`/buscar?q=${encodeURIComponent(term)}`)
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 900px)')
+    const update = () => setCompactScreen(query.matches)
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
+
+  // `loaded` fuerza el recálculo cuando llega el índice de establecimientos.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const options = useMemo(() => suggest(value, compactScreen ? 4 : 7), [value, loaded, compactScreen])
+
+  function finish() {
     setValue('')
+    setOpen(false)
+    setActive(-1)
     onSubmitted?.()
   }
 
+  function go(to) {
+    navigate(to)
+    finish()
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault()
+    if (active >= 0 && options[active]) {
+      go(options[active].to)
+      return
+    }
+    const term = value.trim()
+    if (!term) return
+    navigate(`/buscar?q=${encodeURIComponent(term)}`)
+    finish()
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === 'Escape') {
+      setOpen(false)
+      setActive(-1)
+    } else if (event.key === 'ArrowDown' && options.length > 0) {
+      event.preventDefault()
+      setOpen(true)
+      setActive((index) => (index + 1) % options.length)
+    } else if (event.key === 'ArrowUp' && options.length > 0) {
+      event.preventDefault()
+      setOpen(true)
+      setActive((index) => (index <= 0 ? options.length - 1 : index - 1))
+    }
+  }
+
+  const showList = open && options.length > 0
+
   return (
-    <form className="search-field" role="search" onSubmit={handleSubmit}>
+    <form
+      className="search-field"
+      role="search"
+      onSubmit={handleSubmit}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setOpen(false)
+          setActive(-1)
+        }
+      }}
+    >
       <Icon name="search" className="search-field__icon" />
       <label className="visually-hidden" htmlFor={inputId}>
         Buscar en el sitio
@@ -29,8 +91,46 @@ function SearchForm({ onSubmitted, inputId = 'site-search' }) {
         type="search"
         placeholder="Buscar en el sitio…"
         value={value}
-        onChange={(event) => setValue(event.target.value)}
+        autoComplete="off"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={showList}
+        aria-controls={listId}
+        aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
+        onFocus={() => {
+          setOpen(true)
+          loadSearchIndex().then(() => setLoaded(true))
+        }}
+        onKeyDown={handleKeyDown}
+        onChange={(event) => {
+          setValue(event.target.value)
+          setOpen(true)
+          setActive(-1)
+        }}
       />
+      {showList ? (
+        <ul className="search-suggest" id={listId} role="listbox" aria-label="Sugerencias">
+          {options.map((option, index) => (
+            <li
+              key={option.id}
+              id={`${listId}-${index}`}
+              role="option"
+              aria-selected={index === active}
+              className={index === active ? 'is-active' : undefined}
+              onMouseEnter={() => setActive(index)}
+              onMouseDown={(event) => {
+                event.preventDefault()
+                go(option.to)
+              }}
+            >
+              <span className="search-suggest__title">{option.title}</span>
+              <span className={`search-suggest__tag search-suggest__tag--${option.meta === 'Sección' ? 'seccion' : 'lugar'}`}>
+                {option.meta}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </form>
   )
 }

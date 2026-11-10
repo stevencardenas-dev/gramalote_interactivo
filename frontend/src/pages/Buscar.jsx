@@ -1,54 +1,31 @@
-import { Link, useSearchParams } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import PageHero from '../components/ui/PageHero.jsx'
+import IconMask from '../components/ui/IconMask.jsx'
+import Photo from '../components/ui/Photo.jsx'
+import { componentCatalog } from '../data/componentCatalog.js'
 import { activities } from '../data/experiences.js'
 import { useEstablishments } from '../lib/contentApi.js'
-import { componentCatalog } from '../data/componentCatalog.jsx'
-
-// Ignora mayúsculas, tildes y ñ; `compact` también ignora los espacios.
-const fold = (value) =>
-  String(value ?? '')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-const compact = (value) => fold(value).replace(/\s+/g, '')
-const words = (value) => fold(value).split(/[^a-z0-9]+/).filter(Boolean)
-
-// Relevancia de un resultado (0 = no coincide):
-// 3 el nombre empieza por lo escrito, 2 lo contiene, 1 coincide al inicio de
-// palabras del tipo o la descripción (solo desde 3 letras, para no traer ruido).
-function score(item, query) {
-  const term = compact(query)
-  if (!term) return 1
-  const title = compact(item.title)
-  if (title.startsWith(term)) return 3
-  if (title.includes(term)) return 2
-  if (term.length < 3) return 0
-  const wanted = words(query)
-  const matches = (text) => {
-    const tokens = words(text)
-    return wanted.every((word) => tokens.some((token) => token.startsWith(word)))
-  }
-  return matches(item.type) || matches(item.text) ? 1 : 0
-}
+import { compact, score } from '../lib/searchIndex.js'
 
 export default function Buscar() {
   const [params, setParams] = useSearchParams()
+  const navigate = useNavigate()
   const rawQuery = params.get('q') ?? ''
   const query = rawQuery.trim()
-  // Dos modos que no se mezclan: lugares y experiencias, o piezas de interfaz.
-  const mode = params.get('tipo') === 'componentes' ? 'componentes' : 'sitio'
-
-  function update(next) {
-    const merged = new URLSearchParams(params)
-    for (const [key, value] of Object.entries(next)) {
-      if (value) merged.set(key, value)
-      else merged.delete(key)
-    }
-    setParams(merged, { replace: true })
-  }
   const { data: establishments } = useEstablishments()
 
-  const results = mode === 'componentes' ? [] : [
+  // Si lo escrito es exactamente el nombre de una sección («Dónde comer»,
+  // «Información práctica»…), se va directo a ella sin pasar por resultados.
+  const exactSection = query
+    ? componentCatalog.find((item) => compact(item.name) === compact(query))
+    : null
+
+  useEffect(() => {
+    if (exactSection) navigate(exactSection.to, { replace: true })
+  }, [exactSection, navigate])
+
+  const results = [
     ...establishments.map((item) => ({
       id: item.id,
       title: item.name,
@@ -72,20 +49,22 @@ export default function Buscar() {
     .sort((a, b) => b.relevance - a.relevance)
     .map(({ item }) => item)
 
-  const components =
-    mode === 'componentes'
-      ? componentCatalog
-          .map((item) => ({
-            item,
-            relevance: score(
-              { title: item.name, type: item.keywords, text: item.description },
-              query,
-            ),
-          }))
-          .filter(({ relevance }) => relevance > 0)
-          .sort((a, b) => b.relevance - a.relevance)
-          .map(({ item }) => item)
-      : []
+  // Las secciones del sitio se buscan siempre, sin tener que elegir un modo.
+  const sections = query
+    ? componentCatalog
+        .map((item) => ({
+          item,
+          relevance: score(
+            { title: item.name, type: item.keywords, text: item.description },
+            query,
+          ),
+        }))
+        .filter(({ relevance }) => relevance > 0)
+        .sort((a, b) => b.relevance - a.relevance)
+        .map(({ item }) => item)
+    : []
+
+  const nothing = query && results.length === 0 && sections.length === 0
 
   return (
     <>
@@ -95,86 +74,89 @@ export default function Buscar() {
         intro={
           query
             ? `Resultados para “${query}”.`
-            : mode === 'componentes'
-              ? 'Escribe el nombre de una pieza de interfaz: botón, estrellas, etiqueta…'
-              : 'Escribe un lugar, producto o contenido histórico en el buscador.'
+            : 'Escribe un lugar, una sección o contenido histórico en el buscador.'
         }
       />
 
       <section className="section">
         <div className="container">
           <div className="search-tools">
-            <div className="search-switch" role="group" aria-label="Qué buscar">
-              <button
-                type="button"
-                aria-pressed={mode === 'sitio'}
-                className={mode === 'sitio' ? 'is-active' : undefined}
-                onClick={() => update({ tipo: null })}
-              >
-                Establecimientos y experiencias
-              </button>
-              <button
-                type="button"
-                aria-pressed={mode === 'componentes'}
-                className={mode === 'componentes' ? 'is-active' : undefined}
-                onClick={() => update({ tipo: 'componentes' })}
-              >
-                Componentes
-              </button>
-            </div>
             <input
               className="search-tools__input"
               type="search"
               value={rawQuery}
-              placeholder={
-                mode === 'componentes' ? 'Buscar componente…' : 'Buscar lugar o experiencia…'
-              }
+              placeholder="Buscar un lugar, experiencia o sección…"
               aria-label="Buscar"
-              onChange={(event) => update({ q: event.target.value })}
+              onChange={(event) => {
+                const merged = new URLSearchParams(params)
+                if (event.target.value) merged.set('q', event.target.value)
+                else merged.delete('q')
+                setParams(merged, { replace: true })
+              }}
             />
           </div>
 
-          {mode === 'componentes' ? (
-            components.length === 0 ? (
-              <p className="empty">No hay componentes que coincidan con “{query}”.</p>
-            ) : (
-              <div className="component-results">
-                {components.map((item) => (
-                  <article key={item.id} className="component-card">
-                    <span className="search-result__meta">Componente</span>
-                    <h2>{item.name}</h2>
-                    <p>{item.description}</p>
-                    <div className="component-card__stage">{item.preview()}</div>
-                  </article>
-                ))}
-              </div>
-            )
-          ) : query && results.length === 0 ? (
+          {nothing ? (
             <p className="empty">
               No encontramos resultados para “{query}”. Prueba con otra palabra.
             </p>
-          ) : (
-            <div className="search-results">
-              {results.map((item) => (
-                <Link key={`${item.meta}-${item.id}`} className="search-result" to={item.to}>
-                  {item.photo && (
-                    <img
-                      className="search-result__photo"
-                      src={item.photo}
-                      alt=""
-                      loading="lazy"
-                    />
-                  )}
-                  <div className="search-result__body">
-                    <span className="search-result__meta">{item.meta}</span>
-                    <strong>{item.title}</strong>
-                    <span className="search-result__meta">{item.text}</span>
-                  </div>
-                  <span className="link-arrow">Abrir</span>
-                </Link>
-              ))}
-            </div>
-          )}
+          ) : null}
+
+          {sections.length > 0 ? (
+            <>
+              <h2 className="search-group">Secciones</h2>
+              <div className="component-results">
+                {sections.map((item) =>
+                  item.design === 'quick' ? (
+                    <Link key={item.id} className="quick-card" to={item.to}>
+                      <Photo src={item.photo} alt={item.name} />
+                      <span>{item.name}</span>
+                    </Link>
+                  ) : (
+                    <Link key={item.id} className="feature-card" to={item.to}>
+                      {item.illustration ? (
+                        <img className="feature-card__art" src={item.illustration} alt="" loading="lazy" />
+                      ) : (
+                        <span className="feature-card__icon">
+                          <IconMask icon={`icono-${item.icon}`} size={58} />
+                        </span>
+                      )}
+                      <h3 className="feature-card__title">{item.name}</h3>
+                      <p>{item.description}</p>
+                    </Link>
+                  ),
+                )}
+              </div>
+            </>
+          ) : null}
+
+          {results.length > 0 ? (
+            <>
+              {sections.length > 0 ? (
+                <h2 className="search-group">Establecimientos y experiencias</h2>
+              ) : null}
+              <div className="search-results">
+                {results.map((item) => (
+                  <Link key={`${item.meta}-${item.id}`} className="search-result" to={item.to}>
+                    {item.photo && (
+                      <img
+                        className="search-result__photo"
+                        src={item.photo}
+                        alt=""
+                        loading="lazy"
+                      />
+                    )}
+                    <div className="search-result__body">
+                      <span className="search-result__meta">{item.meta}</span>
+                      <strong>{item.title}</strong>
+                      <span className="search-result__meta">{item.text}</span>
+                    </div>
+                    <span className="link-arrow">Abrir</span>
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : null}
         </div>
       </section>
     </>

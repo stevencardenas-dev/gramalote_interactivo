@@ -179,9 +179,7 @@ export default function RatingStars({ kind, slug, title }) {
 
   const votes = stats?.votes ?? 0
   const average = stats?.average ?? 0
-  const label = votes
-    ? `${average.toFixed(1).replace('.', ',')} · ${votes} ${votes === 1 ? 'voto' : 'votos'}`
-    : 'Sé el primero en calificar'
+  const label = votes ? average.toFixed(1).replace('.', ',') : ''
 
   return (
     <div className="stars">
@@ -190,11 +188,13 @@ export default function RatingStars({ kind, slug, title }) {
         className={`stars__button${votes ? '' : ' is-empty'}`}
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
-        aria-label={`${votes ? `Calificación ${average.toFixed(1)} de 5 con ${votes} votos. ` : ''}Toca para calificar`}
+        aria-label={`${votes ? `Calificación ${average.toFixed(1)} de 5. ` : ''}Toca para calificar`}
       >
         <StarsRow value={average} />
-        <span className="stars__text">{label}</span>
-        <span className="stars__cta">Toca para calificar</span>
+        {label ? <span className="stars__text">{label}</span> : null}
+      </button>
+      <button type="button" className="stars__cta" onClick={() => setOpen(true)}>
+        Toca para calificar
       </button>
       {open ? (
         <RatingDialog
