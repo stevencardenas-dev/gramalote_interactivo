@@ -122,6 +122,13 @@ export function toExperienceSummary(row) {
     durationMinutes: toNumber(row.duration_minutes),
     difficulty: row.difficulty ?? null,
     price: row.price_text ?? null,
+    cardText: row.card_text ?? null,
+    meta: row.meta_text ?? null,
+    access: row.access_text ?? null,
+    difficultyText: row.difficulty_text ?? null,
+    openDaily: Boolean(row.open_daily),
+    mapsUrl: row.maps_url ?? null,
+    mapIcon: row.map_icon ?? null,
     featured: Boolean(row.is_featured),
     cover: coverFromRow(row),
   }

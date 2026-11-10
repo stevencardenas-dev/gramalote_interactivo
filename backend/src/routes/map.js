@@ -80,6 +80,8 @@ router.get(
       id: toNumber(row.id),
       slug: row.slug,
       name: row.title,
+      mapIcon: row.map_icon ?? null,
+      mapsUrl: row.maps_url ?? null,
       rating: stats ?? { average: 0, votes: 0 },
       category: row.category_slug
         ? { slug: row.category_slug, name: row.category_name }

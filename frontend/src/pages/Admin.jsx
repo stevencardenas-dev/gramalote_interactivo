@@ -107,6 +107,11 @@ export default function Admin() {
             </span>
             <span className="admin-tile__go">Abrir →</span>
           </Link>
+          <Link className="admin-tile" to="/admin/experiencias">
+            <strong>Experiencias</strong>
+            <span>Qué hacer y pines del mapa</span>
+            <span className="admin-tile__go">Abrir →</span>
+          </Link>
           {isAdmin ? (
             <Link className="admin-tile" to="/admin/usuarios">
               <strong>Usuarios</strong>

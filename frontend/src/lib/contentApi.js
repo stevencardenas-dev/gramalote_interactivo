@@ -164,3 +164,73 @@ export function orderBySlugs(items, slugs) {
   const rest = items.filter((item) => !preferred.includes(item))
   return [...preferred, ...rest]
 }
+
+// Experiencias de «Qué hacer» (editables en /admin/experiencias). Si la API
+// falla se usa la copia de src/data/experiences.js.
+export function adaptActivity(item) {
+  if (!item?.slug) return null
+  const images = Array.isArray(item.images) ? item.images : []
+  const cover = item.cover?.url ?? images[0]?.url ?? null
+  const gallery = images
+    .filter((image) => image.role === 'gallery')
+    .map((image) => ({ src: image.url, alt: image.alt ?? item.title }))
+  return {
+    slug: item.slug,
+    title: item.title,
+    category: item.category?.name ?? '',
+    text: item.cardText ?? item.summary,
+    meta: item.meta ?? '',
+    photo: gallery[0]?.src ?? cover,
+    hero: cover,
+    openDaily: Boolean(item.openDaily),
+    summary: item.summary,
+    description: item.description,
+    info: {
+      access: item.access,
+      difficulty: item.difficultyText,
+      hours: item.hours,
+      location: item.address,
+      fee: item.price,
+      phone: item.phone,
+    },
+    gallery,
+    tips: (item.tips ?? []).map((tip) => ({
+      icon: tip.icon ?? 'info',
+      title: tip.title,
+      text: tip.description ?? '',
+    })),
+  }
+}
+
+export function useActivities(fallback) {
+  const [data, setData] = useState(fallback)
+  useEffect(() => {
+    const controller = new AbortController()
+    request('/experiences?limit=60', controller.signal)
+      .then((payload) => {
+        const items = (payload.data ?? []).map((item) => {
+          const adapted = adaptActivity(item)
+          // La tarjeta usa la portada.
+          return adapted && { ...adapted, photo: adapted.hero ?? adapted.photo }
+        })
+        setData(items.filter(Boolean))
+      })
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
+  return data
+}
+
+export function useActivity(slug, fallback) {
+  const [state, setState] = useState({ data: fallback, loading: true })
+  useEffect(() => {
+    const controller = new AbortController()
+    request(`/experiences/${encodeURIComponent(slug)}`, controller.signal)
+      .then((payload) => setState({ data: adaptActivity(payload.data), loading: false }))
+      .catch((error) => {
+        if (error.name !== 'AbortError') setState({ data: fallback, loading: false })
+      })
+    return () => controller.abort()
+  }, [slug, fallback])
+  return state
+}

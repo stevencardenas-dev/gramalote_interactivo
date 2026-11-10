@@ -3,6 +3,7 @@ import Layout from './components/layout/Layout.jsx'
 import Inicio from './pages/Inicio.jsx'
 import QueHacer from './pages/QueHacer.jsx'
 import Experiencia from './pages/Experiencia.jsx'
+import { AdminExperiencia, AdminExperiencias } from './pages/AdminExperiencias.jsx'
 import DondeIr from './pages/DondeIr.jsx'
 import DondeComer from './pages/DondeComer.jsx'
 import DondeDormir from './pages/DondeDormir.jsx'
@@ -67,6 +68,22 @@ export default function App() {
           element={
             <RequireAdmin>
               <AdminEstablecimiento />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/experiencias"
+          element={
+            <RequireAdmin>
+              <AdminExperiencias />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/experiencias/:id"
+          element={
+            <RequireAdmin>
+              <AdminExperiencia />
             </RequireAdmin>
           }
         />

@@ -6,6 +6,7 @@ import IconMask from '../components/ui/IconMask.jsx'
 import Button from '../components/ui/Button.jsx'
 import PracticalInfo from '../components/home/PracticalInfo.jsx'
 import { getActivity } from '../data/experiences.js'
+import { useActivity } from '../lib/contentApi.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
 
 const INFO_FIELDS = [
@@ -19,8 +20,10 @@ const INFO_FIELDS = [
 
 export default function Experiencia() {
   const { slug } = useParams()
-  const item = getActivity(slug)
-  usePageTitle(item?.title ?? 'Experiencia no encontrada')
+  const { data: item, loading } = useActivity(slug, getActivity(slug))
+  usePageTitle(item?.title ?? (loading ? 'Qué hacer' : 'Experiencia no encontrada'))
+
+  if (!item && loading) return <section className="section"><div className="container">Cargando…</div></section>
 
   if (!item) {
     return (

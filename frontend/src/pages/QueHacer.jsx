@@ -7,10 +7,12 @@ import PhotoBanner from '../components/ui/PhotoBanner.jsx'
 import PracticalInfo from '../components/home/PracticalInfo.jsx'
 import { FilterToggle } from '../components/ui/FilterBar.jsx'
 import { MapExplorer } from '../components/ui/MapPanel.jsx'
-import { activities } from '../data/experiences.js'
+import { activities as staticActivities } from '../data/experiences.js'
+import { useActivities } from '../lib/contentApi.js'
 
 export default function QueHacer() {
   const [openToday, setOpenToday] = useState(false)
+  const activities = useActivities(staticActivities)
   const visible = openToday ? activities.filter((item) => item.openDaily) : activities
 
   return (

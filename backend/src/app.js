@@ -5,6 +5,7 @@ import { ping } from './db.js'
 import { errorHandler, notFoundHandler } from './http.js'
 import { mediaRoot } from './media.js'
 import adminRouter from './routes/admin.js'
+import adminExperiencesRouter from './routes/admin-experiences.js'
 import authRouter from './routes/auth.js'
 import curiositiesRouter from './routes/curiosities.js'
 import establishmentsRouter from './routes/establishments.js'
@@ -108,6 +109,7 @@ app.use(
   '/api',
   authRouter,
   adminRouter,
+  adminExperiencesRouter,
   usersRouter,
   metaRouter,
   establishmentsRouter,
