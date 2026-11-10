@@ -1,9 +1,10 @@
 name: CI/CD · EC2
 
-# SOLO manual: se lanza con "Run workflow" en la pestaña Actions. Puede hacerlo
-# cualquier colaborador con permiso de escritura; ningún push ni merge a main
-# publica por sí solo. Cada despliegue deja quién lo pidió y el motivo.
+# Se despliega solo con cada push o merge a main. También se puede lanzar a mano
+# con "Run workflow" en la pestaña Actions (queda quién lo pidió y el motivo).
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       motivo:
