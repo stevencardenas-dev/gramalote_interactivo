@@ -16,6 +16,18 @@ export default function Footer() {
 
   return (
     <footer className="site-footer">
+      <div className="footer-suggest">
+        <div className="container footer-suggest__inner">
+          <p>
+            <strong>¿Conoces un lugar que debería estar aquí?</strong>
+            <span>Sugiere un restaurante, alojamiento, tienda o atractivo de Gramalote.</span>
+          </p>
+          <Link className="btn btn--primary" to="/sugerir">
+            Sugerir un establecimiento
+          </Link>
+        </div>
+      </div>
+
       <div className="footer-logos">
         <img src="/brand/logo-rect.svg" alt="Gramalote Interactivo" />
         <span className="footer-logos__rule" aria-hidden="true" />

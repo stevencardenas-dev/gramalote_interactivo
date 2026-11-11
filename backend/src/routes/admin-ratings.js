@@ -32,7 +32,8 @@ async function targetFrom(params) {
 async function listFor(target) {
   const [rows, stats] = await Promise.all([
     query(
-      `SELECT id, voter_name, voter_email, stars, created_at, updated_at
+      `SELECT id, voter_name, voter_email, stars, status, pending_stars, confirm_expires_at,
+              created_at, updated_at
        FROM ratings WHERE target_type = ? AND target_id = ?
        ORDER BY updated_at DESC, id DESC`,
       [target.type, target.id],
@@ -50,6 +51,11 @@ async function listFor(target) {
       name: row.voter_name,
       email: row.voter_email,
       stars: Number(row.stars),
+      // pending: aún no abre el enlace del correo (no cuenta en el promedio).
+      // pendingStars: ya confirmado, pero votó otra vez y falta confirmar.
+      pending: row.status === 'pending',
+      pendingStars: row.pending_stars === null ? null : Number(row.pending_stars),
+      confirmExpiresAt: row.confirm_expires_at ?? null,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     })),

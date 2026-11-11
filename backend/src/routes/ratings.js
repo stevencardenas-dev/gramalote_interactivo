@@ -1,6 +1,11 @@
+// Calificaciones públicas. Con el correo configurado (Panel › Correo) cada voto
+// queda pendiente hasta que la persona abre el enlace que le llega; sin correo,
+// cuenta de inmediato.
 import { Router } from 'express'
+import { createHash, randomBytes } from 'node:crypto'
 import { query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, stringParam } from '../http.js'
+import { getMailSettings, mailReady, renderEmail, sendMail } from '../mailer.js'
 
 const router = Router()
 
@@ -8,27 +13,44 @@ const TARGETS = {
   establecimiento: {
     type: 'establishment',
     table: 'establishments',
+    nameColumn: 'name',
     notFound: 'Establecimiento no encontrado',
   },
   experiencia: {
     type: 'experience',
     table: 'experiences',
+    nameColumn: 'title',
     notFound: 'Experiencia no encontrada',
   },
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+const CONFIRM_HOURS = 48
+
+const tokenHashOf = (token) => createHash('sha256').update(token).digest('hex')
+
+// Límite en memoria por hora: evita usar el formulario para mandar correos a
+// direcciones ajenas en masa.
+const hits = new Map()
+function tooMany(key, max) {
+  const now = Date.now()
+  const recent = (hits.get(key) ?? []).filter((time) => now - time < 60 * 60 * 1000)
+  recent.push(now)
+  hits.set(key, recent)
+  if (hits.size > 2000) hits.clear()
+  return recent.length > max
+}
 
 async function targetFrom(params) {
   const target = TARGETS[params.kind]
   if (!target) throw new ApiError(404, 'NOT_FOUND', 'Tipo de ficha no válido')
   const row = await queryOne(
-    `SELECT id FROM ${target.table}
+    `SELECT id, ${target.nameColumn} AS name FROM ${target.table}
      WHERE slug = ? AND is_published = 1 AND deleted_at IS NULL`,
     [params.slug],
   )
   if (!row) throw new ApiError(404, 'NOT_FOUND', target.notFound)
-  return { type: target.type, id: row.id }
+  return { type: target.type, id: row.id, name: row.name }
 }
 
 async function statsFor(target) {
@@ -90,7 +112,9 @@ router.get(
   '/ratings/:kind/:slug',
   asyncHandler(async (req, res) => {
     const target = await targetFrom(req.params)
-    res.json({ data: await statsFor(target) })
+    const settings = await getMailSettings()
+    // confirm: el voto se confirma por correo (el sitio lo avisa en el diálogo).
+    res.json({ data: { ...(await statsFor(target)), confirm: settings.ratingConfirmation && mailReady(settings) } })
   }),
 )
 
@@ -112,14 +136,132 @@ router.post(
       throw new ApiError(400, 'INVALID_STARS', 'La calificación va de 1 a 5 estrellas')
     }
 
+    const settings = await getMailSettings()
+    const mustConfirm = settings.ratingConfirmation && mailReady(settings)
+
+    if (!mustConfirm) {
+      // Sin correo configurado (o con la confirmación apagada) el voto cuenta
+      // de inmediato, como antes.
+      await query(
+        `INSERT INTO ratings (target_type, target_id, voter_name, voter_email, stars, status, confirmed_at)
+         VALUES (?, ?, ?, ?, ?, 'confirmed', NOW())
+         ON DUPLICATE KEY UPDATE voter_name = VALUES(voter_name), stars = VALUES(stars),
+           status = 'confirmed', pending_stars = NULL, pending_name = NULL,
+           confirm_token_hash = NULL, confirm_expires_at = NULL, confirmed_at = NOW()`,
+        [target.type, target.id, name, email, stars],
+      )
+      res.status(201).json({ data: { ...(await statsFor(target)), pending: false } })
+      return
+    }
+
+    const ip = (req.ip ?? '').slice(0, 45) || 'sin-ip'
+    if (tooMany(`ip:${ip}`, 12) || tooMany(`mail:${email}`, 4)) {
+      throw new ApiError(429, 'TOO_MANY', 'Enviaste muchas calificaciones seguidas; intenta de nuevo en un rato.')
+    }
+
+    // Limpieza perezosa de votos que nunca se confirmaron.
     await query(
-      `INSERT INTO ratings (target_type, target_id, voter_name, voter_email, stars)
-       VALUES (?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE voter_name = VALUES(voter_name), stars = VALUES(stars)`,
-      [target.type, target.id, name, email, stars],
+      `DELETE FROM ratings WHERE status = 'pending' AND confirm_expires_at < NOW() - INTERVAL 1 DAY`,
     )
 
-    res.status(201).json({ data: await statsFor(target) })
+    const token = randomBytes(32).toString('hex')
+    const tokenHash = tokenHashOf(token)
+    const existing = await queryOne(
+      'SELECT id, status FROM ratings WHERE target_type = ? AND target_id = ? AND voter_email = ?',
+      [target.type, target.id, email],
+    )
+    let createdId = null
+    if (existing?.status === 'confirmed') {
+      // El voto anterior sigue contando hasta que se confirme el nuevo.
+      await query(
+        `UPDATE ratings SET pending_stars = ?, pending_name = ?, confirm_token_hash = ?,
+           confirm_expires_at = NOW() + INTERVAL ${CONFIRM_HOURS} HOUR
+         WHERE id = ?`,
+        [stars, name, tokenHash, existing.id],
+      )
+    } else if (existing) {
+      await query(
+        `UPDATE ratings SET voter_name = ?, stars = ?, pending_stars = NULL, pending_name = NULL,
+           confirm_token_hash = ?, confirm_expires_at = NOW() + INTERVAL ${CONFIRM_HOURS} HOUR
+         WHERE id = ?`,
+        [name, stars, tokenHash, existing.id],
+      )
+    } else {
+      const result = await query(
+        `INSERT INTO ratings (target_type, target_id, voter_name, voter_email, stars, status,
+           confirm_token_hash, confirm_expires_at)
+         VALUES (?, ?, ?, ?, ?, 'pending', ?, NOW() + INTERVAL ${CONFIRM_HOURS} HOUR)`,
+        [target.type, target.id, name, email, stars, tokenHash],
+      )
+      createdId = result.insertId
+    }
+
+    const url = `${settings.siteUrl}/confirmar-calificacion?token=${token}`
+    const { html, text } = renderEmail({
+      title: 'Confirma tu calificación',
+      paragraphs: [
+        `${name.split(' ')[0]}:`,
+        `Gracias por calificar ${target.name} con ${stars} ${stars === 1 ? 'estrella' : 'estrellas'}. Para que tu voto cuente, confírmalo con el botón. Así evitamos votos falsos.`,
+        `El enlace vence en ${CONFIRM_HOURS} horas. Si calificas otra vez con este correo, cuenta solo tu último voto.`,
+      ],
+      action: { label: 'Confirmar mi calificación', url },
+      footer: 'Si no calificaste nada en Gramalote Interactivo, ignora este correo y el voto no se contará.',
+    })
+    try {
+      await sendMail({ to: email, subject: `Confirma tu calificación de ${target.name}`, html, text, kind: 'rating_confirm' })
+    } catch (failure) {
+      if (createdId) await query('DELETE FROM ratings WHERE id = ?', [createdId])
+      else if (existing?.status === 'confirmed') {
+        await query(
+          'UPDATE ratings SET pending_stars = NULL, pending_name = NULL, confirm_token_hash = NULL, confirm_expires_at = NULL WHERE id = ?',
+          [existing.id],
+        )
+      }
+      console.error('[mail] confirmación de calificación:', failure.message)
+      throw new ApiError(502, 'MAIL_FAILED', 'No pudimos enviarte el correo de confirmación. Intenta de nuevo más tarde.')
+    }
+
+    res.status(202).json({ data: { ...(await statsFor(target)), pending: true } })
+  }),
+)
+
+// Abre el enlace del correo: el voto pasa a contar.
+router.post(
+  '/ratings/confirm',
+  asyncHandler(async (req, res) => {
+    const token = stringParam(req.body?.token, { max: 128 })
+    if (!token) throw new ApiError(400, 'VALIDATION', 'Falta el enlace de confirmación')
+    const row = await queryOne(
+      `SELECT r.id, r.target_type, r.target_id, r.stars, r.pending_stars, r.pending_name,
+              r.confirm_expires_at, r.status,
+              COALESCE(e.slug, x.slug) AS slug, COALESCE(e.name, x.title) AS title
+       FROM ratings r
+       LEFT JOIN establishments e ON r.target_type = 'establishment' AND e.id = r.target_id
+       LEFT JOIN experiences x ON r.target_type = 'experience' AND x.id = r.target_id
+       WHERE r.confirm_token_hash = ?`,
+      [tokenHashOf(token)],
+    )
+    if (!row || new Date(row.confirm_expires_at).getTime() <= Date.now()) {
+      throw new ApiError(400, 'INVALID_TOKEN', 'El enlace no es válido o ya venció. Vuelve a calificar para recibir uno nuevo.')
+    }
+    const stars = row.pending_stars ?? row.stars
+    await query(
+      `UPDATE ratings SET stars = ?, voter_name = COALESCE(pending_name, voter_name), status = 'confirmed',
+         pending_stars = NULL, pending_name = NULL, confirm_token_hash = NULL, confirm_expires_at = NULL,
+         confirmed_at = NOW()
+       WHERE id = ?`,
+      [stars, row.id],
+    )
+    const target = { type: row.target_type, id: row.target_id }
+    res.json({
+      data: {
+        kind: row.target_type === 'experience' ? 'experiencia' : 'establecimiento',
+        slug: row.slug,
+        title: row.title,
+        stars: Number(stars),
+        ...(await statsFor(target)),
+      },
+    })
   }),
 )
 

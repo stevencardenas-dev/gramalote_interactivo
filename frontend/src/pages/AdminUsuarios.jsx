@@ -73,10 +73,13 @@ export default function AdminUsuarios() {
     run(() => apiRequest(`/admin/users/${user.id}`, { method: 'PATCH', body: changes }))
   }
 
-  function makeLink(user) {
+  function makeLink(user, send = false) {
     run(async () => {
-      const reset = await apiRequest(`/admin/users/${user.id}/reset-link`, { method: 'POST' })
-      setLinks((current) => ({ ...current, [user.id]: reset }))
+      const reset = await apiRequest(`/admin/users/${user.id}/reset-link`, {
+        method: 'POST',
+        body: send ? { send: true } : undefined,
+      })
+      setLinks((current) => ({ ...current, [user.id]: { ...reset, requestedMail: send } }))
     })
   }
 
@@ -149,7 +152,7 @@ export default function AdminUsuarios() {
               </select>
             </div>
             <button type="submit" className="admin-btn admin-btn--primary" disabled={busy}>
-              Crear y generar enlace
+              Crear e invitar
             </button>
           </form>
         ) : null}
@@ -203,6 +206,15 @@ export default function AdminUsuarios() {
                         type="button"
                         className="admin-btn"
                         disabled={busy}
+                        onClick={() => makeLink(user, true)}
+                        title="Genera un enlace nuevo y lo envía al correo de la cuenta"
+                      >
+                        Enviar enlace por correo
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-btn"
+                        disabled={busy}
                         onClick={() => makeLink(user)}
                       >
                         Enlace de contraseña
@@ -218,8 +230,12 @@ export default function AdminUsuarios() {
                     </div>
                     {link ? (
                       <div className="admin-link-box">
-                        Entrega este enlace a {user.name}. Funciona una sola vez y vence el{' '}
-                        {formatDate(link.expiresAt)}; no se vuelve a mostrar.
+                        {link.mailed
+                          ? `Se envió el enlace a ${user.email}. Si no le llega, entrégale este. `
+                          : link.requestedMail || link.mailError
+                            ? `No se pudo enviar el correo (${link.mailError ?? 'sin configurar'}). Entrega este enlace a ${user.name}. `
+                            : `Entrega este enlace a ${user.name}. `}
+                        Funciona una sola vez y vence el {formatDate(link.expiresAt)}; no se vuelve a mostrar.
                         <code>{fullLink(link)}</code>
                         <button
                           type="button"

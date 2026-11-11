@@ -48,7 +48,7 @@ export default function Restablecer() {
             </>
           ) : !token ? (
             <>
-              <p className="auth-error">Este enlace está incompleto. Pide uno nuevo a un administrador.</p>
+              <p className="auth-error">Este enlace está incompleto. Pide uno nuevo desde «¿Olvidaste tu contraseña?».</p>
               <Link className="link-arrow" to="/acceder">
                 Volver a acceder
               </Link>

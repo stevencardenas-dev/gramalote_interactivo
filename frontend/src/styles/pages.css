@@ -1723,3 +1723,33 @@ button.social-dot {
   opacity: 1;
   background: rgba(10, 14, 18, 0.6);
 }
+
+/* Sugerir un establecimiento */
+.suggest-page__inner {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+}
+
+.suggest-page__frame {
+  width: 100%;
+  max-width: 760px;
+  height: min(1900px, 240vh);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--c-white);
+}
+
+.suggest-page__alt,
+.suggest-page__empty p {
+  color: var(--c-ink-soft);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+
+.suggest-page__empty {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding-block: 24px;
+}

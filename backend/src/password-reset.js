@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
-import { query } from './db.js'
+import { query, queryOne } from './db.js'
+import { getMailSettings, renderEmail, sendMail, trySendMail } from './mailer.js'
 
 export function resetTokenHash(token) {
   return createHash('sha256').update(token).digest('hex')
@@ -21,4 +22,76 @@ export async function createResetToken(userId, { createdBy = null, hours = 1 } =
     [userId, resetTokenHash(token), expiresAt, createdBy],
   )
   return { token, path: `/restablecer?token=${token}`, expiresAt: expiresAt.toISOString() }
+}
+
+function formatExpiry(iso) {
+  return new Date(iso).toLocaleString('es-CO', {
+    timeZone: 'America/Bogota',
+    day: 'numeric',
+    month: 'long',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+// reason: 'forgot' (lo pidió la persona), 'admin' (lo generó un admin) o
+// 'invite' (cuenta nueva). Lanza si el envío falla.
+export async function sendResetEmail(user, reset, reason = 'admin') {
+  const settings = await getMailSettings()
+  const url = `${settings.siteUrl}${reset.path}`
+  const first = (user.name ?? '').split(' ')[0] || 'Hola'
+  const copy = {
+    forgot: {
+      subject: 'Restablece tu contraseña del panel',
+      title: 'Crea una contraseña nueva',
+      lead: 'Recibimos una solicitud para restablecer la contraseña de tu cuenta del panel de Gramalote Interactivo.',
+      label: 'Crear contraseña nueva',
+      footer: 'Si no lo pediste, ignora este correo: tu contraseña actual sigue funcionando.',
+    },
+    admin: {
+      subject: 'Enlace para cambiar tu contraseña del panel',
+      title: 'Crea una contraseña nueva',
+      lead: 'Un administrador generó un enlace para que definas una contraseña nueva en el panel de Gramalote Interactivo.',
+      label: 'Crear contraseña nueva',
+      footer: 'Si no esperabas este correo, avisa a un administrador del sitio.',
+    },
+    invite: {
+      subject: 'Te dieron acceso al panel de Gramalote Interactivo',
+      title: 'Bienvenida al panel',
+      lead: 'Te crearon una cuenta en el panel de Gramalote Interactivo. Para entrar, primero define tu contraseña.',
+      label: 'Definir mi contraseña',
+      footer: 'Después podrás entrar en /acceder con este correo y tu contraseña.',
+    },
+  }[reason]
+
+  const { html, text } = renderEmail({
+    title: copy.title,
+    paragraphs: [
+      `${first}:`,
+      copy.lead,
+      `El enlace funciona una sola vez y vence el ${formatExpiry(reset.expiresAt)}.`,
+    ],
+    action: { label: copy.label, url },
+    footer: copy.footer,
+  })
+  await sendMail({ to: user.email, subject: copy.subject, html, text, kind: `password_${reason}` })
+}
+
+// Aviso de seguridad tras cambiar la contraseña. No bloquea ni lanza.
+export function sendPasswordChangedEmail(userId) {
+  ;(async () => {
+    const user = await queryOne('SELECT name, email FROM admin_users WHERE id = ?', [userId])
+    if (!user) return
+    const settings = await getMailSettings()
+    const { html, text } = renderEmail({
+      title: 'Tu contraseña cambió',
+      paragraphs: [
+        `${(user.name ?? '').split(' ')[0] || 'Hola'}:`,
+        'La contraseña de tu cuenta del panel de Gramalote Interactivo se acaba de cambiar.',
+        'Si fuiste tú, no tienes que hacer nada. Si no, pide de inmediato un enlace nuevo desde «¿Olvidaste tu contraseña?» y avisa a un administrador.',
+      ],
+      action: { label: 'Ir al panel', url: `${settings.siteUrl}/acceder` },
+    })
+    await trySendMail({ to: user.email, subject: 'Tu contraseña del panel cambió', html, text, kind: 'password_changed' })
+  })().catch((failure) => console.error('[mail] aviso de contraseña:', failure.message))
 }

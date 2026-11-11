@@ -14,7 +14,13 @@ import {
 import { config } from '../config.js'
 import { query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, stringParam } from '../http.js'
-import { resetTokenHash } from '../password-reset.js'
+import { isMailReady } from '../mailer.js'
+import {
+  createResetToken,
+  resetTokenHash,
+  sendPasswordChangedEmail,
+  sendResetEmail,
+} from '../password-reset.js'
 
 const router = Router()
 
@@ -149,17 +155,18 @@ function tooManyForgot(key) {
   return recent.length > 5
 }
 
-// No hay correo saliente configurado: la solicitud queda registrada y un
-// administrador ve el aviso en Usuarios para generar el enlace. La respuesta es
-// siempre la misma para no revelar qué correos existen.
+// Con correo configurado (Panel › Correo) se envía el enlace directamente. Sin
+// correo, la solicitud queda registrada y un administrador ve el aviso en
+// Usuarios para generar el enlace. La respuesta no revela qué correos existen.
 router.post(
   '/auth/forgot',
   asyncHandler(async (req, res) => {
     const email = stringParam(req.body?.email, { max: 190 })?.toLowerCase()
     const ip = (req.ip ?? '').slice(0, 45) || null
+    const mailOn = await isMailReady()
     if (email && !tooManyForgot(`${ip}|${email}`)) {
       const user = await queryOne(
-        'SELECT id FROM admin_users WHERE email = ? AND is_active = 1 AND deleted_at IS NULL',
+        'SELECT id, name, email FROM admin_users WHERE email = ? AND is_active = 1 AND deleted_at IS NULL',
         [email],
       )
       if (user) {
@@ -168,12 +175,20 @@ router.post(
            VALUES (NULL, 'password_reset_requested', 'admin_user', ?, ?)`,
           [user.id, ip],
         )
+        if (mailOn) {
+          // Sin await: responder igual de rápido exista o no la cuenta. Un fallo
+          // queda en el registro de correos del panel y en el aviso de Usuarios.
+          createResetToken(user.id, { hours: 1 })
+            .then((reset) => sendResetEmail(user, reset, 'forgot'))
+            .catch((failure) => console.error('[mail] restablecer contraseña:', failure.message))
+        }
       }
     }
     res.json({
       data: {
-        message:
-          'Si el correo pertenece a una cuenta activa, un administrador recibió el aviso y te enviará un enlace para crear una contraseña nueva.',
+        message: mailOn
+          ? 'Si el correo pertenece a una cuenta activa, te enviamos un enlace para crear una contraseña nueva. Vence en 1 hora; revisa también la carpeta de spam.'
+          : 'Si el correo pertenece a una cuenta activa, un administrador recibió el aviso y te enviará un enlace para crear una contraseña nueva.',
       },
     })
   }),
@@ -219,6 +234,7 @@ router.post(
        VALUES (?, 'password_reset', 'admin_user', ?, ?)`,
       [reset.user_id, reset.user_id, (req.ip ?? '').slice(0, 45) || null],
     )
+    sendPasswordChangedEmail(reset.user_id)
     res.status(204).end()
   }),
 )
@@ -243,6 +259,7 @@ router.post(
       await hashPassword(next),
       user.id,
     ])
+    sendPasswordChangedEmail(user.id)
     res.status(204).end()
   }),
 )

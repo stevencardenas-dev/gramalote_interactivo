@@ -1,0 +1,401 @@
+import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import AdminSection from '../components/admin/AdminSection.jsx'
+import AdminToast from '../components/admin/AdminToast.jsx'
+import scriptTemplate from '../data/sugerir-establecimiento.gs?raw'
+import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
+
+// Panel › Correo (solo administradores): la cuenta de Gmail que envía los
+// correos del sitio (restablecer contraseña, invitaciones, confirmar
+// calificaciones, avisos de sugerencias) y el formulario de Google.
+
+const KIND_LABEL = {
+  test: 'Prueba',
+  password_forgot: 'Restablecer contraseña',
+  password_admin: 'Enlace de contraseña',
+  password_invite: 'Invitación al panel',
+  password_changed: 'Aviso: contraseña cambiada',
+  rating_confirm: 'Confirmar calificación',
+  suggestion_notify: 'Aviso de sugerencia',
+  suggestion_thanks: 'Gracias por sugerir',
+}
+
+const EMPTY = {
+  enabled: false,
+  fromEmail: '',
+  fromName: 'Gramalote Interactivo',
+  user: '',
+  password: '',
+  host: 'smtp.gmail.com',
+  port: 465,
+  replyTo: '',
+  notifyEmail: '',
+  siteUrl: '',
+  ratingConfirmation: true,
+  formUrl: '',
+}
+
+function formatStamp(value) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
+
+function formFrom(data) {
+  return {
+    enabled: data.enabled,
+    fromEmail: data.fromEmail ?? '',
+    fromName: data.fromName ?? '',
+    user: data.user ?? '',
+    password: '',
+    host: data.host ?? 'smtp.gmail.com',
+    port: data.port ?? 465,
+    replyTo: data.replyTo ?? '',
+    notifyEmail: data.notifyEmail ?? '',
+    siteUrl: data.siteUrl ?? '',
+    ratingConfirmation: data.ratingConfirmation,
+    formUrl: data.formUrl ?? '',
+  }
+}
+
+export default function AdminCorreo() {
+  const me = getUser()
+  const isAdmin = me?.role === 'admin'
+  const [saved, setSaved] = useState(null)
+  const [form, setForm] = useState(EMPTY)
+  const [log, setLog] = useState([])
+  const [busy, setBusy] = useState(false)
+  const [testTo, setTestTo] = useState('')
+  const [toast, setToast] = useState(null)
+
+  const notify = useCallback((tone, title, message) => {
+    setToast({ key: Date.now(), tone, title, message })
+  }, [])
+
+  const load = useCallback(async () => {
+    const [settings, entries] = await Promise.all([
+      apiRequest('/admin/mail-settings'),
+      apiRequest('/admin/mail-log').catch(() => []),
+    ])
+    setSaved(settings)
+    setForm(formFrom(settings))
+    setLog(entries ?? [])
+  }, [])
+
+  useEffect(() => {
+    if (!isAdmin) return
+    ensureSession().then((session) => {
+      if (session) load().catch((err) => notify('error', 'No se pudo cargar', err.message))
+    })
+  }, [isAdmin, load, notify])
+
+  const set = (key) => (event) => {
+    const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value
+    setForm((current) => {
+      const next = { ...current, [key]: value }
+      // El usuario SMTP de Gmail es el mismo correo: se copia mientras coincidan.
+      if (key === 'fromEmail' && (!current.user || current.user === current.fromEmail)) next.user = value
+      return next
+    })
+  }
+
+  function body() {
+    const port = Number(form.port)
+    return { ...form, port, secure: port === 465 }
+  }
+
+  async function save(event) {
+    event.preventDefault()
+    setBusy(true)
+    try {
+      const data = await apiRequest('/admin/mail-settings', { method: 'PUT', body: body() })
+      setSaved(data)
+      setForm(formFrom(data))
+      notify('ok', 'Configuración guardada', data.ready ? 'El sitio ya envía correos.' : 'El correo sigue desactivado.')
+    } catch (err) {
+      notify('error', 'No se pudo guardar', err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function sendTest() {
+    setBusy(true)
+    try {
+      const data = await apiRequest('/admin/mail-settings/test', {
+        method: 'POST',
+        body: { to: testTo.trim() || undefined, draft: body() },
+      })
+      notify('ok', 'Correo de prueba enviado', `Revisa la bandeja de ${data.to} (y la carpeta de spam).`)
+    } catch (err) {
+      notify('error', 'La prueba falló', err.message)
+    } finally {
+      setBusy(false)
+      apiRequest('/admin/mail-log').then((entries) => setLog(entries ?? [])).catch(() => {})
+    }
+  }
+
+  async function newSecret() {
+    if (
+      saved?.formSecret &&
+      !window.confirm('¿Cambiar el secreto? El formulario dejará de llegar hasta que pegues el script nuevo en Apps Script.')
+    ) {
+      return
+    }
+    setBusy(true)
+    try {
+      setSaved(await apiRequest('/admin/mail-settings/form-secret', { method: 'POST' }))
+      notify('ok', 'Secreto generado', 'Copia el script y pégalo en Apps Script.')
+    } catch (err) {
+      notify('error', 'No se pudo generar', err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function copyScript() {
+    const script = scriptTemplate
+      .replace('__WEBHOOK_URL__', saved.webhookUrl)
+      .replace('__SECRET__', saved.formSecret)
+    navigator.clipboard
+      ?.writeText(script)
+      .then(() => notify('ok', 'Script copiado', 'Pégalo en un proyecto nuevo de script.google.com.'))
+      .catch(() => notify('error', 'No se pudo copiar', 'Tu navegador bloqueó el portapapeles.'))
+  }
+
+  if (!isAdmin) {
+    return (
+      <section className="admin-page">
+        <div className="admin-wrap">
+          <h1>Correo</h1>
+          <p className="auth-error">Solo un administrador puede configurar el correo del sitio.</p>
+        </div>
+      </section>
+    )
+  }
+
+  const gmail = form.host.trim().toLowerCase() === 'smtp.gmail.com'
+
+  return (
+    <section className="admin-page">
+      <div className="admin-wrap">
+        <div className="admin-bar">
+          <h1>Correo</h1>
+          <p className="admin-lead admin-bar__lead">
+            Cuenta que envía los correos del sitio: restablecer contraseñas, invitaciones al panel,
+            confirmación de calificaciones y avisos de sugerencias.
+          </p>
+          {saved ? (
+            <span className={`admin-badge ${saved.ready ? 'admin-badge--ok' : 'admin-badge--draft'}`}>
+              {saved.ready ? 'Enviando correos' : saved.enabled ? 'Incompleto' : 'Desactivado'}
+            </span>
+          ) : null}
+        </div>
+
+        {!saved ? (
+          <p className="note">Cargando…</p>
+        ) : (
+          <form className="admin-mail" onSubmit={save}>
+            {saved.passwordUnreadable ? (
+              <p className="auth-error">
+                La contraseña guardada no se puede leer (cambió la llave del servidor). Escríbela de nuevo.
+              </p>
+            ) : null}
+
+            <AdminSection title="Cuenta de envío" hint="Remitente y acceso SMTP" defaultOpen>
+              <label className="admin-check">
+                <input type="checkbox" checked={form.enabled} onChange={set('enabled')} />
+                Enviar correos desde esta cuenta
+              </label>
+              <div className="admin-grid">
+                <label className="admin-field">
+                  <span>Correo remitente</span>
+                  <input type="email" value={form.fromEmail} onChange={set('fromEmail')} placeholder="cuenta@gmail.com" />
+                </label>
+                <label className="admin-field">
+                  <span>Nombre que verá quien recibe</span>
+                  <input value={form.fromName} onChange={set('fromName')} maxLength={120} />
+                </label>
+                <label className="admin-field">
+                  <span>Contraseña de aplicación</span>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    value={form.password}
+                    onChange={set('password')}
+                    placeholder={saved.hasPassword ? '•••• guardada (escribe para cambiarla)' : 'xxxx xxxx xxxx xxxx'}
+                  />
+                  <small>No es la contraseña normal de la cuenta. Nunca se muestra después de guardarla.</small>
+                </label>
+                <label className="admin-field">
+                  <span>Responder a (opcional)</span>
+                  <input type="email" value={form.replyTo} onChange={set('replyTo')} placeholder="Si las respuestas deben ir a otro correo" />
+                </label>
+              </div>
+              {gmail ? (
+                <div className="admin-mail__help">
+                  <strong>Cómo sacar la contraseña de aplicación de Gmail</strong>
+                  <ol>
+                    <li>
+                      Entra con la cuenta remitente a{' '}
+                      <a href="https://myaccount.google.com/signinoptions/two-step-verification" target="_blank" rel="noreferrer">
+                        Verificación en dos pasos
+                      </a>{' '}
+                      y actívala (Google lo exige).
+                    </li>
+                    <li>
+                      Abre{' '}
+                      <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer">
+                        Contraseñas de aplicaciones
+                      </a>
+                      , escribe «Gramalote» y pulsa Crear.
+                    </li>
+                    <li>Copia las 16 letras aquí (con o sin espacios), guarda y envía una prueba.</li>
+                  </ol>
+                </div>
+              ) : null}
+              <details className="admin-details">
+                <summary>Servidor SMTP (otro proveedor)</summary>
+                <div className="admin-grid">
+                  <label className="admin-field">
+                    <span>Servidor</span>
+                    <input value={form.host} onChange={set('host')} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Puerto</span>
+                    <select value={form.port} onChange={set('port')}>
+                      <option value={465}>465 (SSL)</option>
+                      <option value={587}>587 (STARTTLS)</option>
+                    </select>
+                  </label>
+                  <label className="admin-field">
+                    <span>Usuario SMTP</span>
+                    <input value={form.user} onChange={set('user')} />
+                    <small>En Gmail es el mismo correo remitente.</small>
+                  </label>
+                </div>
+              </details>
+            </AdminSection>
+
+            <AdminSection title="Avisos y enlaces" hint="Quién recibe los avisos internos" defaultOpen>
+              <div className="admin-grid">
+                <label className="admin-field">
+                  <span>Correos del equipo</span>
+                  <input value={form.notifyEmail} onChange={set('notifyEmail')} placeholder="uno@correo.com, otro@correo.com" />
+                  <small>Reciben el aviso de cada sugerencia nueva. Varios, separados por coma.</small>
+                </label>
+                <label className="admin-field">
+                  <span>Dirección del sitio</span>
+                  <input value={form.siteUrl} onChange={set('siteUrl')} placeholder="https://…" />
+                  <small>Base de los enlaces de los correos (restablecer, confirmar…).</small>
+                </label>
+              </div>
+            </AdminSection>
+
+            <AdminSection title="Calificaciones" hint="Confirmación por correo">
+              <label className="admin-check">
+                <input type="checkbox" checked={form.ratingConfirmation} onChange={set('ratingConfirmation')} />
+                Pedir confirmación por correo antes de contar una calificación
+              </label>
+              <p className="note">
+                Quien califica recibe un enlace en el correo que escribió; el voto cuenta solo al abrirlo
+                (vence en 48 horas). Sin correo activo, los votos cuentan de inmediato.
+              </p>
+            </AdminSection>
+
+            <AdminSection title="Formulario de sugerencias" hint="Google Forms → Panel › Sugerencias">
+              <p className="note">
+                El sitio muestra el formulario en <Link to="/sugerir">/sugerir</Link>. Cada respuesta llega a{' '}
+                <Link to="/admin/sugerencias">Sugerencias</Link> y avisa a los correos del equipo.
+              </p>
+              <ol className="admin-mail__steps">
+                <li>
+                  {saved.formSecret ? 'Secreto listo.' : 'Genera el secreto que identifica al formulario.'}{' '}
+                  <button type="button" className="admin-btn" onClick={newSecret} disabled={busy}>
+                    {saved.formSecret ? 'Cambiar secreto' : 'Generar secreto'}
+                  </button>
+                </li>
+                <li>
+                  Copia el script (ya lleva la dirección y el secreto){' '}
+                  <button type="button" className="admin-btn admin-btn--accent" onClick={copyScript} disabled={!saved.formSecret}>
+                    Copiar script
+                  </button>{' '}
+                  y pégalo en un proyecto nuevo de{' '}
+                  <a href="https://script.google.com/home/projects/create" target="_blank" rel="noreferrer">
+                    script.google.com
+                  </a>{' '}
+                  con la cuenta del sitio.
+                </li>
+                <li>Ejecuta «configurar» y acepta los permisos: crea el formulario y escribe su enlace en el registro.</li>
+                <li>Pega aquí ese enlace y guarda.</li>
+              </ol>
+              <div className="admin-grid">
+                <label className="admin-field">
+                  <span>Enlace público del formulario</span>
+                  <input value={form.formUrl} onChange={set('formUrl')} placeholder="https://docs.google.com/forms/d/e/…/viewform" />
+                </label>
+                <label className="admin-field">
+                  <span>Dirección que recibe las respuestas</span>
+                  <input value={saved.webhookUrl} readOnly onFocus={(event) => event.target.select()} />
+                </label>
+              </div>
+            </AdminSection>
+
+            <div className="admin-mail__actions">
+              <button type="submit" className="admin-btn admin-btn--primary" disabled={busy}>
+                Guardar
+              </button>
+              <span className="admin-mail__test">
+                <input
+                  type="email"
+                  value={testTo}
+                  onChange={(event) => setTestTo(event.target.value)}
+                  placeholder={me?.email ?? 'destinatario'}
+                  aria-label="Enviar la prueba a"
+                />
+                <button type="button" className="admin-btn" onClick={sendTest} disabled={busy}>
+                  Enviar prueba
+                </button>
+              </span>
+            </div>
+          </form>
+        )}
+
+        {log.length ? (
+          <details className="admin-details">
+            <summary>Últimos envíos ({log.length})</summary>
+            <div className="admin-ratings__table admin-mail__log" role="table" aria-label="Últimos envíos">
+              <div className="admin-ratings__row admin-ratings__row--head" role="row">
+                <span role="columnheader">Fecha</span>
+                <span role="columnheader">Tipo</span>
+                <span role="columnheader">Para</span>
+                <span role="columnheader">Estado</span>
+              </div>
+              {log.map((entry) => (
+                <div key={entry.id} className="admin-ratings__row" role="row" title={entry.error ?? entry.subject}>
+                  <span role="cell">{formatStamp(entry.createdAt)}</span>
+                  <span role="cell">{KIND_LABEL[entry.kind] ?? entry.kind}</span>
+                  <span role="cell">{entry.to}</span>
+                  <span role="cell">
+                    <span className={`admin-badge ${entry.status === 'sent' ? 'admin-badge--ok' : 'admin-badge--draft'}`}>
+                      {entry.status === 'sent' ? 'Enviado' : 'Falló'}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </details>
+        ) : null}
+      </div>
+      {toast ? (
+        <AdminToast
+          key={toast.key}
+          tone={toast.tone}
+          title={toast.title}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      ) : null}
+    </section>
+  )
+}

@@ -52,6 +52,10 @@ services:
       MYSQL_USER: ${MYSQL_USER:-gramalote}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Define MYSQL_PASSWORD en /opt/gramalote/.env}
       DB_POOL_SIZE: ${DB_POOL_SIZE:-5}
+      # Correo (Panel › Correo). Opcionales: base de los enlaces de los correos y
+      # llave propia para cifrar la contraseña SMTP (si no, se deriva de JWT_SECRET).
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://d2nm90ise1l8de.cloudfront.net}
+      MAIL_SECRET_KEY: ${MAIL_SECRET_KEY:-}
       MEDIA_ROOT: /app/media
       MEDIA_PUBLIC_BASE: /media
       MEDIA_MAX_UPLOAD_MB: ${MEDIA_MAX_UPLOAD_MB:-8}

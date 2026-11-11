@@ -21,6 +21,8 @@ const TITLES = {
   '/buscar': 'Buscar',
   '/acceder': 'Acceder',
   '/restablecer': 'Nueva contraseña',
+  '/sugerir': 'Sugerir un establecimiento',
+  '/confirmar-calificacion': 'Confirmar calificación',
 }
 
 function StaticTitle({ pathname }) {

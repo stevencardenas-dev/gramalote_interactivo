@@ -5,6 +5,7 @@ import { ping } from './db.js'
 import { errorHandler, notFoundHandler } from './http.js'
 import { mediaRoot } from './media.js'
 import adminRouter from './routes/admin.js'
+import adminMailRouter from './routes/admin-mail.js'
 import adminExperiencesRouter from './routes/admin-experiences.js'
 import adminRatingsRouter from './routes/admin-ratings.js'
 import authRouter from './routes/auth.js'
@@ -18,6 +19,7 @@ import pagesRouter from './routes/pages.js'
 import practicalRouter from './routes/practical.js'
 import ratingsRouter from './routes/ratings.js'
 import searchRouter from './routes/search.js'
+import suggestionsRouter from './routes/suggestions.js'
 import usersRouter from './routes/users.js'
 
 const app = express()
@@ -80,6 +82,15 @@ app.get('/api', (_req, res) => {
       'GET /api/search?q=',
       'GET /api/ratings/top',
       'GET|POST /api/ratings/:kind/:slug (establecimiento|experiencia)',
+      'POST /api/ratings/confirm',
+      'GET /api/suggestions/form',
+      'POST /api/suggestions/google-form (Apps Script, con secreto)',
+      'GET|PUT /api/admin/mail-settings',
+      'POST /api/admin/mail-settings/test',
+      'POST /api/admin/mail-settings/form-secret',
+      'GET /api/admin/mail-log',
+      'GET /api/admin/suggestions',
+      'PATCH|DELETE /api/admin/suggestions/:id',
       'GET /api/pages/:page',
       'GET /api/admin/pages',
       'PUT|DELETE /api/admin/pages/:page',
@@ -119,6 +130,8 @@ app.use(
   adminRouter,
   adminExperiencesRouter,
   adminRatingsRouter,
+  adminMailRouter,
+  suggestionsRouter,
   pagesRouter,
   usersRouter,
   metaRouter,

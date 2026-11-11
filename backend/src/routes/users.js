@@ -3,7 +3,8 @@ import { randomBytes } from 'node:crypto'
 import { hashPassword, requireAuth } from '../auth.js'
 import { query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, stringParam } from '../http.js'
-import { createResetToken } from '../password-reset.js'
+import { isMailReady } from '../mailer.js'
+import { createResetToken, sendResetEmail } from '../password-reset.js'
 
 const router = Router()
 const ROLES = new Set(['admin', 'editor'])
@@ -32,6 +33,17 @@ function userRow(row) {
 
 function clientIp(req) {
   return (req.ip ?? '').slice(0, 45) || null
+}
+
+// { mailed: true } si salió el correo; { mailed: false, mailError } si no.
+async function mailResetLink(user, reset, reason) {
+  if (!(await isMailReady())) return { mailed: false, mailError: 'El correo saliente no está configurado' }
+  try {
+    await sendResetEmail(user, reset, reason)
+    return { mailed: true }
+  } catch (failure) {
+    return { mailed: false, mailError: failure.message }
+  }
 }
 
 async function activeAdmins() {
@@ -99,7 +111,10 @@ router.post(
       'SELECT id, name, email, role, is_active, last_login_at, created_at FROM admin_users WHERE id = ?',
       [id],
     )
-    res.status(201).json({ data: { user: userRow(row), reset } })
+    // Con correo configurado, la invitación llega sola; el enlace se devuelve
+    // igual por si el correo no llega.
+    const mailed = await mailResetLink(row, reset, 'invite')
+    res.status(201).json({ data: { user: userRow(row), reset: { ...reset, ...mailed } } })
   }),
 )
 
@@ -168,7 +183,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const id = Number.parseInt(req.params.id, 10)
     const target = await queryOne(
-      'SELECT id FROM admin_users WHERE id = ? AND deleted_at IS NULL',
+      'SELECT id, name, email FROM admin_users WHERE id = ? AND deleted_at IS NULL',
       [id],
     )
     if (!target) throw new ApiError(404, 'NOT_FOUND', 'Usuario no encontrado')
@@ -179,7 +194,9 @@ router.post(
        VALUES (?, 'password_reset_link', 'admin_user', ?, ?)`,
       [req.admin.id, id, clientIp(req)],
     )
-    res.status(201).json({ data: reset })
+    // send: true → además de mostrarlo, se envía al correo de la cuenta.
+    const mailed = req.body?.send ? await mailResetLink(target, reset, 'admin') : {}
+    res.status(201).json({ data: { ...reset, ...mailed } })
   }),
 )
 

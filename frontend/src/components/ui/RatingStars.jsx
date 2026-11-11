@@ -32,7 +32,7 @@ export function StarsRow({ value = 0 }) {
   )
 }
 
-function RatingDialog({ kind, slug, title, onClose, onSaved }) {
+function RatingDialog({ kind, slug, title, confirm, onClose, onSaved }) {
   const titleId = useId()
   const nameRef = useRef(null)
   const [stars, setStars] = useState(0)
@@ -42,6 +42,7 @@ function RatingDialog({ kind, slug, title, onClose, onSaved }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
+  const [pending, setPending] = useState(false)
 
   useEffect(() => {
     function onKey(event) {
@@ -65,6 +66,7 @@ function RatingDialog({ kind, slug, title, onClose, onSaved }) {
         stars,
       })
       onSaved(stats)
+      setPending(Boolean(stats?.pending))
       setDone(true)
     } catch (failure) {
       setError(failure.message)
@@ -86,11 +88,24 @@ function RatingDialog({ kind, slug, title, onClose, onSaved }) {
         </button>
         {done ? (
           <div className="rating-modal__done">
-            <h2 id={titleId}>¡Gracias por calificar!</h2>
-            <p>
-              Tu calificación de {stars} {stars === 1 ? 'estrella' : 'estrellas'} ya cuenta para{' '}
-              {title}.
-            </p>
+            {pending ? (
+              <>
+                <h2 id={titleId}>Revisa tu correo</h2>
+                <p>
+                  Te enviamos un enlace a <strong>{email.trim()}</strong>. Ábrelo para que tu
+                  calificación de {stars} {stars === 1 ? 'estrella' : 'estrellas'} cuente para {title}.
+                  Si no lo ves en unos minutos, busca en spam o promociones.
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 id={titleId}>¡Gracias por calificar!</h2>
+                <p>
+                  Tu calificación de {stars} {stars === 1 ? 'estrella' : 'estrellas'} ya cuenta para{' '}
+                  {title}.
+                </p>
+              </>
+            )}
             <button type="button" className="btn btn--primary" onClick={onClose}>
               Cerrar
             </button>
@@ -98,7 +113,10 @@ function RatingDialog({ kind, slug, title, onClose, onSaved }) {
         ) : (
           <form onSubmit={submit} noValidate>
             <h2 id={titleId}>Califica {title}</h2>
-            <p className="rating-modal__hint">Toca una estrella. No se reciben comentarios.</p>
+            <p className="rating-modal__hint">
+              Toca una estrella. No se reciben comentarios.
+              {confirm ? ' Te enviaremos un correo para confirmar tu voto.' : ''}
+            </p>
             <div
               className="rating-modal__stars"
               role="radiogroup"
@@ -201,8 +219,9 @@ export default function RatingStars({ kind, slug, title }) {
           kind={kind}
           slug={slug}
           title={title}
+          confirm={Boolean(stats?.confirm)}
           onClose={() => setOpen(false)}
-          onSaved={setStats}
+          onSaved={(next) => setStats((current) => ({ ...current, ...next }))}
         />
       ) : null}
     </div>

@@ -448,3 +448,39 @@
   text-align: center;
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
 }
+
+/* Invitación a sugerir un establecimiento (formulario de Google en /sugerir) */
+.footer-suggest {
+  padding-block: 26px;
+  background: var(--c-navy);
+  color: #fff;
+}
+
+.footer-suggest__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 28px;
+  flex-wrap: wrap;
+}
+
+.footer-suggest p {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.footer-suggest strong {
+  font-size: 1.15rem;
+}
+
+.footer-suggest span {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: var(--fs-sm);
+}
+
+.footer-suggest .btn--primary {
+  background: var(--c-gold);
+  border-color: var(--c-gold);
+  color: var(--c-navy-dark);
+}

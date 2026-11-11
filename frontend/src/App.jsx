@@ -17,6 +17,10 @@ import Mapa from './pages/Mapa.jsx'
 import Buscar from './pages/Buscar.jsx'
 import Acceder from './pages/Acceder.jsx'
 import Restablecer from './pages/Restablecer.jsx'
+import ConfirmarCalificacion from './pages/ConfirmarCalificacion.jsx'
+import Sugerir from './pages/Sugerir.jsx'
+import AdminCorreo from './pages/AdminCorreo.jsx'
+import AdminSugerencias from './pages/AdminSugerencias.jsx'
 import Admin from './pages/Admin.jsx'
 import AdminUsuarios from './pages/AdminUsuarios.jsx'
 import AdminPaginas from './pages/AdminPaginas.jsx'
@@ -48,6 +52,8 @@ export default function App() {
         <Route path="buscar" element={<Buscar />} />
         <Route path="acceder" element={<Acceder />} />
         <Route path="restablecer" element={<Restablecer />} />
+        <Route path="confirmar-calificacion" element={<ConfirmarCalificacion />} />
+        <Route path="sugerir" element={<Sugerir />} />
         <Route
           path="admin"
           element={
@@ -101,6 +107,22 @@ export default function App() {
           element={
             <RequireAdmin>
               <AdminUsuarios />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/sugerencias"
+          element={
+            <RequireAdmin>
+              <AdminSugerencias />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/correo"
+          element={
+            <RequireAdmin>
+              <AdminCorreo />
             </RequireAdmin>
           }
         />

@@ -115,6 +115,15 @@ export default function RatingsPanel({ kind, id, name, onNotify }) {
               </span>
               <span role="cell">
                 <Stars value={rating.stars} />
+                {rating.pending ? (
+                  <span className="admin-badge admin-badge--draft" title="Aún no abre el enlace del correo; no cuenta en el promedio">
+                    Sin confirmar
+                  </span>
+                ) : rating.pendingStars ? (
+                  <span className="admin-badge admin-badge--draft" title="Volvió a calificar y falta confirmar el voto nuevo">
+                    → {rating.pendingStars} ★ sin confirmar
+                  </span>
+                ) : null}
               </span>
               <span role="cell">
                 <button
@@ -132,7 +141,8 @@ export default function RatingsPanel({ kind, id, name, onNotify }) {
         </div>
       ) : null}
       <p className="note">
-        Si alguien vuelve a calificar con el mismo correo, se actualiza su voto y su fecha.
+        Si alguien vuelve a calificar con el mismo correo, se actualiza su voto y su fecha. Con el
+        correo activo, cada voto cuenta solo cuando la persona lo confirma desde su bandeja.
       </p>
     </div>
   )
