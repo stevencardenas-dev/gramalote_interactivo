@@ -9,17 +9,14 @@ import { getActivity } from '../data/experiences.js'
 import { useActivity } from '../lib/contentApi.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
 
-// Datos de la ficha que se editan en la sección «Visita» del panel, en este
-// orden. Los cuatro primeros son los del diseño; «Cómo llegar» y «Dificultad»
-// van detrás porque hay fichas que solo tienen esos dos y, sin ellos, la franja
-// desaparece entera.
+// Datos de la franja de la ficha, en el orden del diseño: son cuatro y solo
+// cuatro. «Cómo llegar» y «Dificultad» no van aquí; su sitio es la tarjeta del
+// listado y las tarjetas de «Ten en cuenta».
 const INFO_FIELDS = [
   { key: 'hours', icon: 'horario', label: 'Horario' },
   { key: 'location', icon: 'ubicacion', label: 'Ubicación' },
   { key: 'fee', icon: 'billetera', label: 'Tarifa' },
   { key: 'phone', icon: 'telefono', label: 'Teléfono' },
-  { key: 'access', icon: 'huellas', label: 'Cómo llegar' },
-  { key: 'difficulty', icon: 'camino', label: 'Dificultad' },
 ]
 
 export default function Experiencia() {
@@ -47,6 +44,18 @@ export default function Experiencia() {
     value: item.info[field.key],
   }))
   const gallery = item.gallery ?? []
+
+  // La franja lleva solo los cuatro datos del diseño. «Cómo llegar» y
+  // «Dificultad» se suman a «Ten en cuenta» para no perderlos, salvo que la
+  // ficha ya tenga una tarjeta de ese tema.
+  const tips = [...(item.tips ?? [])]
+  const hasTip = (word) => tips.some((tip) => String(tip.title ?? '').toLowerCase().includes(word))
+  if (item.info.access && !hasTip('llegar')) {
+    tips.push({ icon: 'huellas', title: 'Cómo llegar', text: item.info.access })
+  }
+  if (item.info.difficulty && !hasTip('dificultad')) {
+    tips.push({ icon: 'camino', title: 'Dificultad', text: item.info.difficulty })
+  }
 
   return (
     <>
@@ -82,7 +91,7 @@ export default function Experiencia() {
         <section className="tips" aria-labelledby="tips-title">
           <h2 id="tips-title">Ten en cuenta</h2>
           <div className="tips__grid">
-            {item.tips.map((tip) => (
+            {tips.map((tip) => (
               <article key={tip.title} className="tip">
                 <IconMask icon={`icono-${tip.icon}`} size={64} className="tip__icon" />
                 <h3>{tip.title}</h3>

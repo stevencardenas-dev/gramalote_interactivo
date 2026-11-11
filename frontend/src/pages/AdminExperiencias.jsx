@@ -637,7 +637,7 @@ export function AdminExperiencia() {
 
               <AdminSection
                 title="Visita"
-                hint="Los cuatro datos de la ficha, con el icono que llevan en el sitio."
+                hint="Los cuatro datos de la franja; «Cómo llegar» y «Dificultad» salen en «Ten en cuenta»."
                 signal={signal}
               >
                 <div className="admin-grid">
@@ -653,7 +653,7 @@ export function AdminExperiencia() {
                   <Field label="Teléfono" icon="telefono">
                     <input value={form.phone} onChange={set('phone')} placeholder="310 7881532" />
                   </Field>
-                  <Field label="Cómo llegar" icon="huellas" hint="Opcional: si la ficha lo trae, sale detrás de los cuatro.">
+                  <Field label="Cómo llegar" icon="huellas" hint="Opcional: aparece como tarjeta en «Ten en cuenta».">
                     <input value={form.access} onChange={set('access')} placeholder="15 min en vehículo" />
                   </Field>
                   <Field label="Dificultad" icon="camino" hint="Opcional, en texto libre.">
