@@ -884,8 +884,7 @@ a.banner-carousel__media:hover .banner-carousel__cta {
   background: var(--c-white);
 }
 
-.banner-carousel .carousel-arrow:focus-visible,
-.banner-carousel .carousel-dots button:focus-visible {
+.banner-carousel .carousel-arrow:focus-visible {
   outline: 2px solid var(--c-coral);
   outline-offset: 2px;
 }
@@ -898,19 +897,22 @@ a.banner-carousel__media:hover .banner-carousel__cta {
   padding-top: 14px;
 }
 
-.banner-carousel__controls .carousel-dots {
-  padding-top: 0;
+/* Puntos: solo indican en cuál va (no son botones) */
+.banner-carousel__dots {
+  display: flex;
+  gap: 7px;
 }
 
-.banner-carousel .carousel-dots button {
+.banner-carousel__dots span {
   width: 8px;
   height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--c-line);
   transition: width 0.25s ease, background 0.25s ease;
 }
 
-.banner-carousel .carousel-dots button.is-active {
+.banner-carousel__dots span.is-active {
   width: 24px;
-  border-radius: var(--radius-pill);
   background: var(--c-navy);
 }
 
@@ -964,9 +966,15 @@ a.banner-carousel__media:hover .banner-carousel__cta {
   }
 }
 
+/* Con «reducir movimiento» las diapositivas cambian sin deslizar, pero la
+   barra conserva su duración (global.css acorta todas las animaciones). */
 @media (prefers-reduced-motion: reduce) {
   .banner-carousel__track {
     transition: none;
+  }
+
+  .banner-carousel__progress-bar {
+    animation-duration: var(--bar-duration, 7s) !important;
   }
 }
 
@@ -991,15 +999,6 @@ a.banner-carousel__media:hover .banner-carousel__cta {
     min-height: 32px;
     padding: 5px 12px;
     font-size: var(--fs-xs);
-  }
-
-  .banner-carousel .carousel-dots button {
-    width: 10px;
-    height: 10px;
-  }
-
-  .banner-carousel .carousel-dots button.is-active {
-    width: 26px;
   }
 
   .banner-carousel__progress {

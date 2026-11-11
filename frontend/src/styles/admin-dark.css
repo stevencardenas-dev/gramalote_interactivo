@@ -2628,14 +2628,6 @@ a.admin-tile:hover {
 }
 
 /* La vista previa usa los colores del sitio, no los del tema del panel */
-.admin-carousel-preview .banner-carousel .carousel-dots button {
-  border: 0;
-  background: var(--c-line);
-}
-
-.admin-carousel-preview .banner-carousel .carousel-dots button.is-active {
-  background: var(--c-navy);
-}
 
 .admin-carousel-preview .banner-carousel__count {
   color: var(--c-muted);

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CarouselArrows, CarouselDots } from '../ui/Carousel.jsx'
+import { CarouselArrows } from '../ui/Carousel.jsx'
 import { intervalSeconds, visibleSlides } from '../../lib/carousel.js'
 import { resolveLink } from '../../lib/pageContent.js'
 
@@ -14,7 +14,8 @@ import { resolveLink } from '../../lib/pageContent.js'
 //   oculta (la barra se congela y sigue donde iba).
 // - Si la persona cambia de diapositiva a mano (flechas, puntos, teclado o
 //   deslizando), el avance automático se apaga el resto de la sesión.
-// - Con «reducir movimiento» no avanza solo.
+// - Con «reducir movimiento» también avanza, pero cambia sin deslizar (CSS).
+// - Los puntos son solo indicadores; se navega con flechas, teclado o el dedo.
 // Las diapositivas ocultas no reciben foco (inert).
 
 // Los banners del diseño tienen una copia de 1280 px para pantallas pequeñas.
@@ -22,9 +23,6 @@ function srcSetOf(url) {
   if (!/^\/img\/carrusel\/[a-z0-9-]+\.webp$/.test(url ?? '')) return undefined
   return `${url.replace(/\.webp$/, '-1280.webp')} 1280w, ${url} 2560w`
 }
-
-const reducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 // Tras una interacción manual el carrusel no vuelve a moverse solo en la sesión.
 const STOP_KEY = 'gramalote:carrusel-manual'
@@ -125,7 +123,7 @@ export default function BannerCarousel({ content, preview = false }) {
   const drag = useRef(null)
   const moved = useRef(false)
 
-  const autoplay = content?.autoplay !== false && count > 1 && !reducedMotion() && !stopped
+  const autoplay = content?.autoplay !== false && count > 1 && !stopped
   const held = hover || focus || touching || !inView || !pageVisible
   const delay = intervalSeconds(content?.interval) * 1000
 
@@ -283,6 +281,7 @@ export default function BannerCarousel({ content, preview = false }) {
                   className="banner-carousel__progress-bar"
                   style={{
                     animationDuration: `${delay}ms`,
+                    '--bar-duration': `${delay}ms`,
                     animationPlayState: running ? 'running' : 'paused',
                   }}
                 />
@@ -294,7 +293,11 @@ export default function BannerCarousel({ content, preview = false }) {
 
         {count > 1 ? (
           <div className="banner-carousel__controls">
-            <CarouselDots count={count} index={current} onGo={goManual} />
+            <span className="banner-carousel__dots" aria-hidden="true">
+              {slides.map((slide, position) => (
+                <span key={slide.id} className={position === current ? 'is-active' : undefined} />
+              ))}
+            </span>
             <span className="banner-carousel__count">
               {current + 1} / {count}
             </span>
