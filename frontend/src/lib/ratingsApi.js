@@ -48,12 +48,16 @@ export async function confirmRating(token) {
   return payload.data
 }
 
-// Enlace del formulario de Google para sugerir establecimientos (Panel › Correo).
-export async function fetchSuggestionForm(signal) {
-  const response = await fetch(`${API_URL}/suggestions/form`, {
-    headers: { Accept: 'application/json' },
-    signal,
+// Envía una sugerencia de establecimiento (formulario de /sugerir).
+export async function sendSuggestion(body) {
+  const response = await fetch(`${API_URL}/suggestions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(body),
   })
-  if (!response.ok) throw new Error(`La API respondió ${response.status}`)
-  return (await response.json()).data
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(payload?.error?.message || 'No pudimos enviar tu sugerencia. Intenta de nuevo.')
+  }
+  return payload.data
 }

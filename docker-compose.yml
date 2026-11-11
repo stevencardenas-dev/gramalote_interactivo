@@ -45,6 +45,9 @@ services:
       AUTH_ACCESS_TTL: ${AUTH_ACCESS_TTL:-30m}
       AUTH_REFRESH_TTL_DAYS: ${AUTH_REFRESH_TTL_DAYS:-7}
       TRUST_PROXY: ${TRUST_PROXY:-1}
+      # CloudFront → nginx → API: 2 saltos para que req.ip sea la IP del
+      # visitante (el puerto 80 de la instancia solo acepta a CloudFront).
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-2}
       CORS_ORIGIN: ${CORS_ORIGIN:-https://d2nm90ise1l8de.cloudfront.net}
       MYSQL_HOST: db
       MYSQL_PORT: "3306"

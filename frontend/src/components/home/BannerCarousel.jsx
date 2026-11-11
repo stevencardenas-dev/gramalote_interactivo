@@ -129,6 +129,28 @@ export default function BannerCarousel({ content, preview = false }) {
   const held = hover || focus || touching || !inView || !pageVisible
   const delay = intervalSeconds(content?.interval) * 1000
 
+  // Reloj del avance: cuenta solo mientras corre y conserva lo que faltaba al
+  // pausar. La barra es solo el reflejo visual (su animación se congela igual).
+  const remaining = useRef(delay)
+  const timedSlide = useRef(current)
+  const running = autoplay && !held && dragX === 0
+  useEffect(() => {
+    if (timedSlide.current !== current) {
+      timedSlide.current = current
+      remaining.current = delay
+    }
+    if (!running) return undefined
+    const startedAt = performance.now()
+    const timer = window.setTimeout(() => {
+      remaining.current = delay
+      setIndex((value) => (Math.min(value, count - 1) + 1) % count)
+    }, Math.max(0, remaining.current))
+    return () => {
+      window.clearTimeout(timer)
+      remaining.current = Math.max(0, remaining.current - (performance.now() - startedAt))
+    }
+  }, [running, current, delay, count])
+
   useEffect(() => {
     const onVisibility = () => setPageVisible(!document.hidden)
     document.addEventListener('visibilitychange', onVisibility)
@@ -155,7 +177,6 @@ export default function BannerCarousel({ content, preview = false }) {
       if (!preview) saveStopped()
     }
   }
-  const advance = () => setIndex((value) => wrap(Math.min(value, count - 1) + 1))
 
   // Fotos de celular solo si todas las visibles la tienen (mismo alto para todas).
   const artMobile = slides.every((slide) => slide.imageMobile)
@@ -257,15 +278,13 @@ export default function BannerCarousel({ content, preview = false }) {
             </div>
             {autoplay ? (
               <div className={`banner-carousel__progress${held ? ' is-held' : ''}`} aria-hidden="true">
-                {/* La barra lleva el tiempo: al terminar su animación pasa a la siguiente. */}
                 <span
                   key={`${current}-${delay}`}
                   className="banner-carousel__progress-bar"
                   style={{
                     animationDuration: `${delay}ms`,
-                    animationPlayState: held || dragging ? 'paused' : 'running',
+                    animationPlayState: running ? 'running' : 'paused',
                   }}
-                  onAnimationEnd={advance}
                 />
               </div>
             ) : null}

@@ -51,6 +51,7 @@ export function errorHandler(error, req, res, next) {
   }
 
   if (error instanceof ApiError) {
+    if (error.retryAfter) res.set('Retry-After', String(error.retryAfter))
     res.status(error.status).json({
       error: { code: error.code, message: error.message },
     })

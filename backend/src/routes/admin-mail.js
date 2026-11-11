@@ -1,8 +1,6 @@
 // Panel › Correo (solo administradores): cuenta que envía los correos del
-// sitio, a quién llegan los avisos internos, la confirmación de calificaciones
-// y el formulario de Google de sugerencias.
+// sitio, a quién llegan los avisos internos y la confirmación de calificaciones.
 import { Router } from 'express'
-import { randomBytes } from 'node:crypto'
 import { requireAuth } from '../auth.js'
 import { query } from '../db.js'
 import { ApiError, asyncHandler, stringParam } from '../http.js'
@@ -43,10 +41,6 @@ function publicView(settings) {
     notifyEmail: settings.notifyEmail,
     siteUrl: settings.siteUrl,
     ratingConfirmation: settings.ratingConfirmation,
-    formUrl: settings.formUrl,
-    // El secreto se muestra al admin: lo necesita para pegarlo en Apps Script.
-    formSecret: settings.formSecret,
-    webhookUrl: `${settings.siteUrl}/api/suggestions/google-form`,
     updatedAt: settings.updatedAt,
   }
 }
@@ -92,7 +86,6 @@ function fieldsFrom(body, current) {
     notify_email: emailList(body.notifyEmail),
     site_url: optionalUrl(body.siteUrl, 'URL del sitio'),
     rating_confirmation: body.ratingConfirmation === undefined ? true : Boolean(body.ratingConfirmation),
-    form_url: optionalUrl(body.formUrl, 'Enlace del formulario'),
   }
   if (typeof body.password === 'string' && body.password.trim()) {
     // Las contraseñas de aplicación de Google se muestran con espacios.
@@ -194,28 +187,6 @@ router.post(
       throw new ApiError(502, 'MAIL_FAILED', failure.message)
     }
     res.json({ data: { to } })
-  }),
-)
-
-// Genera (o cambia) el secreto que Apps Script manda con cada respuesta.
-router.post(
-  '/admin/mail-settings/form-secret',
-  requireAuth,
-  requireAdminRole,
-  asyncHandler(async (req, res) => {
-    const secret = randomBytes(24).toString('hex')
-    await query(
-      `INSERT INTO mail_settings (id, form_secret_enc, updated_by) VALUES (1, ?, ?)
-       ON DUPLICATE KEY UPDATE form_secret_enc = VALUES(form_secret_enc), updated_by = VALUES(updated_by)`,
-      [seal(secret), req.admin.id],
-    )
-    await query(
-      `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, ip_address)
-       VALUES (?, 'regenerate_form_secret', 'mail_settings', 1, ?)`,
-      [req.admin.id, (req.ip ?? '').slice(0, 45) || null],
-    )
-    invalidateMailSettings()
-    res.json({ data: publicView(await getMailSettings()) })
   }),
 )
 

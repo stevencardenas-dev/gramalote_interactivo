@@ -6,6 +6,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import { query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, stringParam } from '../http.js'
 import { getMailSettings, mailReady, renderEmail, sendMail } from '../mailer.js'
+import { consume, limitByIp } from '../rate-limit.js'
 
 const router = Router()
 
@@ -29,17 +30,8 @@ const CONFIRM_HOURS = 48
 
 const tokenHashOf = (token) => createHash('sha256').update(token).digest('hex')
 
-// Límite en memoria por hora: evita usar el formulario para mandar correos a
-// direcciones ajenas en masa.
-const hits = new Map()
-function tooMany(key, max) {
-  const now = Date.now()
-  const recent = (hits.get(key) ?? []).filter((time) => now - time < 60 * 60 * 1000)
-  recent.push(now)
-  hits.set(key, recent)
-  if (hits.size > 2000) hits.clear()
-  return recent.length > max
-}
+const HOUR = 60 * 60 * 1000
+const RATING_LIMIT_MESSAGE = 'Enviaste muchas calificaciones seguidas; intenta de nuevo en un rato.'
 
 async function targetFrom(params) {
   const target = TARGETS[params.kind]
@@ -118,8 +110,14 @@ router.get(
   }),
 )
 
+// Por IP: 10 calificaciones por hora y 30 por día (cada una puede mandar un
+// correo). Por correo destino: 4 por hora (ver abajo).
 router.post(
   '/ratings/:kind/:slug',
+  limitByIp('rating', [
+    { windowMs: HOUR, max: 10, message: RATING_LIMIT_MESSAGE },
+    { windowMs: 24 * HOUR, max: 30, message: RATING_LIMIT_MESSAGE },
+  ]),
   asyncHandler(async (req, res) => {
     const target = await targetFrom(req.params)
     const name = stringParam(req.body?.name, { max: 80 })
@@ -154,10 +152,7 @@ router.post(
       return
     }
 
-    const ip = (req.ip ?? '').slice(0, 45) || 'sin-ip'
-    if (tooMany(`ip:${ip}`, 12) || tooMany(`mail:${email}`, 4)) {
-      throw new ApiError(429, 'TOO_MANY', 'Enviaste muchas calificaciones seguidas; intenta de nuevo en un rato.')
-    }
+    consume('rating-email', email, { windowMs: HOUR, max: 4, message: RATING_LIMIT_MESSAGE })
 
     // Limpieza perezosa de votos que nunca se confirmaron.
     await query(
@@ -228,6 +223,7 @@ router.post(
 // Abre el enlace del correo: el voto pasa a contar.
 router.post(
   '/ratings/confirm',
+  limitByIp('rating-confirm', [{ windowMs: HOUR, max: 30 }]),
   asyncHandler(async (req, res) => {
     const token = stringParam(req.body?.token, { max: 128 })
     if (!token) throw new ApiError(400, 'VALIDATION', 'Falta el enlace de confirmación')

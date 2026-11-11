@@ -27,7 +27,7 @@ const app = express()
 app.disable('x-powered-by')
 
 if (config.auth.trustProxy) {
-  app.set('trust proxy', 1)
+  app.set('trust proxy', config.auth.trustProxy)
 }
 
 app.use(
@@ -83,11 +83,9 @@ app.get('/api', (_req, res) => {
       'GET /api/ratings/top',
       'GET|POST /api/ratings/:kind/:slug (establecimiento|experiencia)',
       'POST /api/ratings/confirm',
-      'GET /api/suggestions/form',
-      'POST /api/suggestions/google-form (Apps Script, con secreto)',
+      'POST /api/suggestions',
       'GET|PUT /api/admin/mail-settings',
       'POST /api/admin/mail-settings/test',
-      'POST /api/admin/mail-settings/form-secret',
       'GET /api/admin/mail-log',
       'GET /api/admin/suggestions',
       'PATCH|DELETE /api/admin/suggestions/:id',

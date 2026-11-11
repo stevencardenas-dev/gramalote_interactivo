@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 
-// Panel › Sugerencias: lo que llega del formulario de Google «Sugerir un
-// establecimiento». Se marca como revisada, agregada o descartada.
+// Panel › Sugerencias: lo que llega del formulario «Sugerir un establecimiento»
+// del sitio (/sugerir). Se marca como revisada, agregada o descartada.
 
 const STATUS = {
   nueva: { label: 'Nueva', badge: 'admin-badge--draft' },
@@ -91,11 +91,10 @@ export default function AdminSugerencias() {
         <div className="admin-bar">
           <h1>Sugerencias</h1>
           <p className="admin-lead admin-bar__lead">
-            Establecimientos que los visitantes sugieren desde el formulario de Google en{' '}
-            <Link to="/sugerir">/sugerir</Link>.
+            Establecimientos que los visitantes sugieren desde <Link to="/sugerir">/sugerir</Link>.
             {isAdmin ? (
               <>
-                {' '}El formulario se conecta en <Link to="/admin/correo">Correo</Link>.
+                {' '}Quién recibe el aviso por correo se configura en <Link to="/admin/correo">Correo</Link>.
               </>
             ) : null}
           </p>

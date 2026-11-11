@@ -39,8 +39,6 @@ export async function getMailSettings() {
     notifyEmail: row?.notify_email ?? '',
     siteUrl: (row?.site_url || defaultSiteUrl()).replace(/\/$/, ''),
     ratingConfirmation: row ? Boolean(row.rating_confirmation) : true,
-    formUrl: row?.form_url ?? '',
-    formSecret: open(row?.form_secret_enc),
     updatedAt: row?.updated_at ?? null,
   }
   cache = { at: Date.now(), value }

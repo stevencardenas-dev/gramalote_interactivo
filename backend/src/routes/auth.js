@@ -15,6 +15,7 @@ import { config } from '../config.js'
 import { query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, stringParam } from '../http.js'
 import { isMailReady } from '../mailer.js'
+import { assertNotBlocked, clientIp, limitByIp, recordFailure, reset } from '../rate-limit.js'
 import {
   createResetToken,
   resetTokenHash,
@@ -54,10 +55,20 @@ async function issueSession(req, res, user) {
   }
 }
 
+// Inicio de sesión: como mucho 20 intentos cada 15 min y 60 por hora por IP;
+// además, 5 contraseñas erradas seguidas para el mismo correo desde la misma
+// IP bloquean ese par 15 minutos (y 15 fallos por correo desde cualquier IP).
+const LOGIN_WINDOW = 15 * 60 * 1000
+const LOCK_MESSAGE = 'Demasiados intentos fallidos. Espera 15 minutos o usa «¿Olvidaste tu contraseña?».'
+
 router.post(
   '/auth/login',
+  limitByIp('login', [
+    { windowMs: LOGIN_WINDOW, max: 20 },
+    { windowMs: 60 * 60 * 1000, max: 60 },
+  ]),
   asyncHandler(async (req, res) => {
-    const email = stringParam(req.body?.email, { max: 190 })
+    const email = stringParam(req.body?.email, { max: 190 })?.toLowerCase()
     const password =
       typeof req.body?.password === 'string' && req.body.password.length > 0
         ? req.body.password.slice(0, 256)
@@ -66,6 +77,10 @@ router.post(
     if (!email || !password) {
       throw new ApiError(400, 'VALIDATION', 'Correo y contraseña son obligatorios')
     }
+
+    const pairKey = `${clientIp(req)}|${email}`
+    assertNotBlocked('login-fail', pairKey, { max: 5, message: LOCK_MESSAGE })
+    assertNotBlocked('login-fail-email', email, { max: 15, message: LOCK_MESSAGE })
 
     const user = await queryOne(
       `SELECT id, name, email, password_hash, role, is_active, last_login_at
@@ -78,9 +93,12 @@ router.post(
     const valid = await verifyPassword(password, hash)
 
     if (!user || !user.is_active || !valid) {
+      recordFailure('login-fail', pairKey, { windowMs: LOGIN_WINDOW })
+      recordFailure('login-fail-email', email, { windowMs: LOGIN_WINDOW })
       throw new ApiError(401, 'INVALID_CREDENTIALS', 'Correo o contraseña incorrectos')
     }
 
+    reset('login-fail', pairKey)
     await query('UPDATE admin_users SET last_login_at = NOW() WHERE id = ?', [user.id])
     res.json({ data: await issueSession(req, res, user) })
   }),
@@ -144,27 +162,32 @@ router.post(
   }),
 )
 
-// Límite sencillo en memoria para no inundar el aviso de "olvidé mi clave".
-const forgotHits = new Map()
-function tooManyForgot(key) {
-  const now = Date.now()
-  const recent = (forgotHits.get(key) ?? []).filter((time) => now - time < 15 * 60 * 1000)
-  recent.push(now)
-  forgotHits.set(key, recent)
-  if (forgotHits.size > 500) forgotHits.clear()
-  return recent.length > 5
-}
-
 // Con correo configurado (Panel › Correo) se envía el enlace directamente. Sin
 // correo, la solicitud queda registrada y un administrador ve el aviso en
 // Usuarios para generar el enlace. La respuesta no revela qué correos existen.
+// Olvidé mi contraseña: 5 por IP cada 15 min y 20 por día (cada una puede
+// mandar un correo). Por correo, 3 por hora: las de más se ignoran en silencio.
+const forgotPerEmail = new Map()
+function tooManyForgot(email) {
+  const now = Date.now()
+  const recent = (forgotPerEmail.get(email) ?? []).filter((time) => now - time < 60 * 60 * 1000)
+  recent.push(now)
+  forgotPerEmail.set(email, recent)
+  if (forgotPerEmail.size > 1000) forgotPerEmail.clear()
+  return recent.length > 3
+}
+
 router.post(
   '/auth/forgot',
+  limitByIp('forgot', [
+    { windowMs: 15 * 60 * 1000, max: 5 },
+    { windowMs: 24 * 60 * 60 * 1000, max: 20 },
+  ]),
   asyncHandler(async (req, res) => {
     const email = stringParam(req.body?.email, { max: 190 })?.toLowerCase()
     const ip = (req.ip ?? '').slice(0, 45) || null
     const mailOn = await isMailReady()
-    if (email && !tooManyForgot(`${ip}|${email}`)) {
+    if (email && !tooManyForgot(email)) {
       const user = await queryOne(
         'SELECT id, name, email FROM admin_users WHERE email = ? AND is_active = 1 AND deleted_at IS NULL',
         [email],
@@ -196,6 +219,7 @@ router.post(
 
 router.post(
   '/auth/reset',
+  limitByIp('reset', [{ windowMs: 15 * 60 * 1000, max: 20 }]),
   asyncHandler(async (req, res) => {
     const token = stringParam(req.body?.token, { max: 128 })
     const password = typeof req.body?.password === 'string' ? req.body.password : ''
@@ -242,6 +266,7 @@ router.post(
 router.post(
   '/auth/change-password',
   requireAuth,
+  limitByIp('change-password', [{ windowMs: 15 * 60 * 1000, max: 10 }]),
   asyncHandler(async (req, res) => {
     const current = typeof req.body?.currentPassword === 'string' ? req.body.currentPassword : ''
     const next = typeof req.body?.newPassword === 'string' ? req.body.newPassword : ''

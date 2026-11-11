@@ -46,8 +46,12 @@ export const config = {
     accessTtl: process.env.AUTH_ACCESS_TTL ?? '30m',
     refreshTtlDays: integer(process.env.AUTH_REFRESH_TTL_DAYS, 7),
     cookieName: process.env.AUTH_COOKIE_NAME ?? 'gramalote_refresh',
-    trustProxy: ['1', 'true', 'yes'].includes(
-      (process.env.TRUST_PROXY ?? '').toLowerCase(),
+    // Cuántos proxies hay delante de la API. En producción son 2 (CloudFront
+    // → nginx): con eso req.ip es la IP real del visitante, base del límite
+    // de peticiones. TRUST_PROXY=1 (antiguo) equivale a 1 salto.
+    trustProxy: integer(
+      process.env.TRUST_PROXY_HOPS,
+      ['1', 'true', 'yes'].includes((process.env.TRUST_PROXY ?? '').toLowerCase()) ? 1 : 0,
     ),
   },
   media: {

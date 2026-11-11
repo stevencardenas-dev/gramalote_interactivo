@@ -1,47 +1,33 @@
-// Sugerencias de establecimientos nuevos. Los visitantes llenan un formulario de
-// Google (enlace en Panel › Correo); un Apps Script del formulario reenvía cada
-// respuesta a POST /api/suggestions/google-form con un secreto compartido. Aquí
-// se guardan, se avisa por correo al equipo y se agradece a quien sugirió.
+// Sugerencias de establecimientos nuevos. Los visitantes llenan el formulario
+// de /sugerir; aquí se validan, se guardan, se avisa por correo al equipo y se
+// agradece a quien sugirió. El panel las revisa en Sugerencias.
 import { Router } from 'express'
-import { timingSafeEqual } from 'node:crypto'
 import { requireAuth } from '../auth.js'
 import { query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, stringParam } from '../http.js'
 import { EMAIL, getMailSettings, notifyList, renderEmail, trySendMail } from '../mailer.js'
+import { clientIp, consume, limitByIp } from '../rate-limit.js'
 import { parseJson } from '../serializers.js'
 
 const router = Router()
 const STATUSES = ['nueva', 'revisada', 'agregada', 'descartada']
+const HOUR = 60 * 60 * 1000
 
-function sameSecret(given, expected) {
-  if (!given || !expected) return false
-  const a = Buffer.from(String(given))
-  const b = Buffer.from(String(expected))
-  return a.length === b.length && timingSafeEqual(a, b)
-}
-
-// Enlace para incrustar: Google acepta ?embedded=true en /viewform.
-function embedUrl(url) {
-  if (!url) return null
-  try {
-    const parsed = new URL(url)
-    if (!/(^|\.)google\.com$/.test(parsed.hostname) || !parsed.pathname.includes('/forms/')) return null
-    if (parsed.hostname === 'forms.gle') return null
-    parsed.searchParams.set('embedded', 'true')
-    return parsed.toString()
-  } catch {
-    return null
-  }
-}
-
-function text(value, max) {
-  if (Array.isArray(value)) value = value.filter(Boolean).join(', ')
-  return stringParam(typeof value === 'string' ? value : value == null ? '' : String(value), { max })
-}
+// Mismas opciones que muestra el formulario del sitio.
+export const SUGGESTION_TYPES = [
+  'Dónde comer',
+  'Dónde dormir',
+  'Dónde comprar',
+  'Dónde ir',
+  'Experiencia o actividad',
+  'Otro',
+]
+const OWNER = ['Sí', 'No']
 
 function row(item) {
   return {
     id: Number(item.id),
+    source: item.source,
     businessName: item.business_name,
     businessType: item.business_type,
     address: item.address,
@@ -59,56 +45,75 @@ function row(item) {
   }
 }
 
-router.get(
-  '/suggestions/form',
-  asyncHandler(async (_req, res) => {
-    const settings = await getMailSettings()
-    res.set('Cache-Control', 'public, max-age=300')
-    res.json({ data: { url: settings.formUrl || null, embedUrl: embedUrl(settings.formUrl) } })
-  }),
-)
+function field(body, key, label, { max, required = false, min = 0 }) {
+  const value = stringParam(body?.[key], { max })
+  if (!value) {
+    if (required) throw new ApiError(400, 'VALIDATION', `${label}: este campo es obligatorio`)
+    return null
+  }
+  if (value.length < min) throw new ApiError(400, 'VALIDATION', `${label}: escribe un poco más`)
+  return value
+}
 
+// Por IP: 5 sugerencias por hora y 15 por día. Además, una trampa para bots
+// (campo «website» oculto) y un tiempo mínimo de llenado.
 router.post(
-  '/suggestions/google-form',
+  '/suggestions',
+  limitByIp('suggestion', [
+    { windowMs: HOUR, max: 5, message: 'Ya enviaste varias sugerencias; intenta de nuevo en una hora.' },
+    { windowMs: 24 * HOUR, max: 15, message: 'Llegaste al máximo de sugerencias por hoy. ¡Gracias!' },
+  ]),
   asyncHandler(async (req, res) => {
-    const settings = await getMailSettings()
-    const given = req.get('x-gramalote-secret') ?? req.body?.secret
-    if (!sameSecret(given, settings.formSecret)) {
-      throw new ApiError(401, 'UNAUTHORIZED', 'Secreto del formulario no válido')
-    }
-
-    const answers = req.body?.answers ?? {}
-    const businessName = text(answers.nombre, 190)
-    if (!businessName) throw new ApiError(400, 'VALIDATION', 'Falta el nombre del establecimiento')
-    const suggesterEmail = text(answers.correo ?? req.body?.respondentEmail, 190)?.toLowerCase() ?? null
-    const submitted = new Date(req.body?.submittedAt ?? Date.now())
-
-    const fields = {
-      response_id: text(req.body?.responseId, 190),
-      business_name: businessName,
-      business_type: text(answers.tipo, 120),
-      address: text(answers.direccion, 500),
-      phone: text(answers.telefono, 120),
-      links: text(answers.redes, 500),
-      reason: text(answers.motivo, 4000),
-      is_owner: text(answers.esDueno, 40),
-      suggester_name: text(answers.sugeridoPor, 160),
-      suggester_email: suggesterEmail && EMAIL.test(suggesterEmail) ? suggesterEmail : null,
-      raw_answers: JSON.stringify(req.body?.raw ?? answers).slice(0, 60_000),
-      submitted_at: Number.isNaN(submitted.getTime()) ? new Date() : submitted,
-    }
-    const columns = Object.keys(fields)
-    const result = await query(
-      `INSERT IGNORE INTO establishment_suggestions (${columns.join(', ')})
-       VALUES (${columns.map(() => '?').join(', ')})`,
-      columns.map((column) => fields[column]),
-    )
-    // Reenvío de la misma respuesta (Apps Script reintenta): no se duplica.
-    if (!result.affectedRows) {
-      res.json({ data: { duplicate: true } })
+    const body = req.body ?? {}
+    const elapsed = Number(body.elapsedMs)
+    // Los bots llenan el campo oculto o envían en menos de 3 s: se responde
+    // como si nada para no darles pistas, pero no se guarda.
+    if (stringParam(body.website, { max: 200 }) || (Number.isFinite(elapsed) && elapsed < 3000)) {
+      res.status(201).json({ data: { ok: true } })
       return
     }
 
+    const businessType = field(body, 'tipo', 'Tipo de lugar', { max: 120, required: true })
+    if (!SUGGESTION_TYPES.includes(businessType)) {
+      throw new ApiError(400, 'VALIDATION', 'Tipo de lugar: elige una de las opciones')
+    }
+    const isOwner = field(body, 'esDueno', '¿Eres el dueño?', { max: 10 })
+    if (isOwner && !OWNER.includes(isOwner)) throw new ApiError(400, 'VALIDATION', '¿Eres el dueño?: responde Sí o No')
+    const email = field(body, 'correo', 'Tu correo', { max: 190 })?.toLowerCase() ?? null
+    if (email && !EMAIL.test(email)) throw new ApiError(400, 'VALIDATION', 'Tu correo: escribe un correo válido')
+
+    const fields = {
+      source: 'web',
+      business_name: field(body, 'nombre', 'Nombre del establecimiento', { max: 190, required: true, min: 2 }),
+      business_type: businessType,
+      address: field(body, 'direccion', 'Dirección', { max: 500 }),
+      phone: field(body, 'telefono', 'Teléfono', { max: 120 }),
+      links: field(body, 'redes', 'Redes o web', { max: 500 }),
+      reason: field(body, 'motivo', '¿Por qué lo recomiendas?', { max: 2000, required: true, min: 10 }),
+      is_owner: isOwner,
+      suggester_name: field(body, 'sugeridoPor', 'Tu nombre', { max: 160 }),
+      suggester_email: email,
+      ip_address: clientIp(req),
+      submitted_at: new Date(),
+    }
+    // Un correo de agradecimiento por dirección cada hora como mucho.
+    let thank = Boolean(email)
+    if (email) {
+      try {
+        consume('suggestion-email', email, { windowMs: HOUR, max: 2 })
+      } catch {
+        thank = false
+      }
+    }
+
+    const columns = Object.keys(fields)
+    const result = await query(
+      `INSERT INTO establishment_suggestions (${columns.join(', ')})
+       VALUES (${columns.map(() => '?').join(', ')})`,
+      columns.map((column) => fields[column]),
+    )
+
+    const settings = await getMailSettings()
     const rows = [
       ['Establecimiento', fields.business_name],
       ['Tipo', fields.business_type],
@@ -121,9 +126,9 @@ router.post(
     ]
     const team = notifyList(settings)
     if (team.length) {
-      const { html, text: plain } = renderEmail({
+      const { html, text } = renderEmail({
         title: `Nueva sugerencia: ${fields.business_name}`,
-        paragraphs: ['Llegó una sugerencia de establecimiento desde el formulario de Google.'],
+        paragraphs: ['Llegó una sugerencia de establecimiento desde el sitio.'],
         rows,
         action: { label: 'Revisar en el panel', url: `${settings.siteUrl}/admin/sugerencias` },
       })
@@ -131,13 +136,13 @@ router.post(
         to: team,
         subject: `Nueva sugerencia: ${fields.business_name}`,
         html,
-        text: plain,
+        text,
         kind: 'suggestion_notify',
         replyTo: fields.suggester_email ?? undefined,
       })
     }
-    if (fields.suggester_email) {
-      const { html, text: plain } = renderEmail({
+    if (thank) {
+      const { html, text } = renderEmail({
         title: '¡Gracias por tu sugerencia!',
         paragraphs: [
           `${(fields.suggester_name ?? '').split(' ')[0] || 'Hola'}:`,
@@ -149,12 +154,12 @@ router.post(
         to: fields.suggester_email,
         subject: 'Recibimos tu sugerencia · Gramalote Interactivo',
         html,
-        text: plain,
+        text,
         kind: 'suggestion_thanks',
       })
     }
 
-    res.status(201).json({ data: { id: Number(result.insertId) } })
+    res.status(201).json({ data: { ok: true, id: Number(result.insertId) } })
   }),
 )
 
@@ -188,7 +193,7 @@ router.patch(
     await query(
       `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, changes, ip_address)
        VALUES (?, 'update', 'suggestion', ?, ?, ?)`,
-      [req.admin.id, id, JSON.stringify({ status }), (req.ip ?? '').slice(0, 45) || null],
+      [req.admin.id, id, JSON.stringify({ status }), clientIp(req)],
     )
     res.json({ data: row(await queryOne('SELECT * FROM establishment_suggestions WHERE id = ?', [id])) })
   }),
@@ -204,7 +209,7 @@ router.delete(
     await query(
       `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, ip_address)
        VALUES (?, 'delete', 'suggestion', ?, ?)`,
-      [req.admin.id, id, (req.ip ?? '').slice(0, 45) || null],
+      [req.admin.id, id, clientIp(req)],
     )
     res.status(204).end()
   }),

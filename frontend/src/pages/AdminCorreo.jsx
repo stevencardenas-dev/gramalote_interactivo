@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
-import scriptTemplate from '../data/sugerir-establecimiento.gs?raw'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 
 // Panel › Correo (solo administradores): la cuenta de Gmail que envía los
 // correos del sitio (restablecer contraseña, invitaciones, confirmar
-// calificaciones, avisos de sugerencias) y el formulario de Google.
+// calificaciones, avisos de sugerencias).
 
 const KIND_LABEL = {
   test: 'Prueba',
@@ -32,7 +30,6 @@ const EMPTY = {
   notifyEmail: '',
   siteUrl: '',
   ratingConfirmation: true,
-  formUrl: '',
 }
 
 function formatStamp(value) {
@@ -54,7 +51,6 @@ function formFrom(data) {
     notifyEmail: data.notifyEmail ?? '',
     siteUrl: data.siteUrl ?? '',
     ratingConfirmation: data.ratingConfirmation,
-    formUrl: data.formUrl ?? '',
   }
 }
 
@@ -133,34 +129,6 @@ export default function AdminCorreo() {
       setBusy(false)
       apiRequest('/admin/mail-log').then((entries) => setLog(entries ?? [])).catch(() => {})
     }
-  }
-
-  async function newSecret() {
-    if (
-      saved?.formSecret &&
-      !window.confirm('¿Cambiar el secreto? El formulario dejará de llegar hasta que pegues el script nuevo en Apps Script.')
-    ) {
-      return
-    }
-    setBusy(true)
-    try {
-      setSaved(await apiRequest('/admin/mail-settings/form-secret', { method: 'POST' }))
-      notify('ok', 'Secreto generado', 'Copia el script y pégalo en Apps Script.')
-    } catch (err) {
-      notify('error', 'No se pudo generar', err.message)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  function copyScript() {
-    const script = scriptTemplate
-      .replace('__WEBHOOK_URL__', saved.webhookUrl)
-      .replace('__SECRET__', saved.formSecret)
-    navigator.clipboard
-      ?.writeText(script)
-      .then(() => notify('ok', 'Script copiado', 'Pégalo en un proyecto nuevo de script.google.com.'))
-      .catch(() => notify('error', 'No se pudo copiar', 'Tu navegador bloqueó el portapapeles.'))
   }
 
   if (!isAdmin) {
@@ -301,44 +269,6 @@ export default function AdminCorreo() {
                 Quien califica recibe un enlace en el correo que escribió; el voto cuenta solo al abrirlo
                 (vence en 48 horas). Sin correo activo, los votos cuentan de inmediato.
               </p>
-            </AdminSection>
-
-            <AdminSection title="Formulario de sugerencias" hint="Google Forms → Panel › Sugerencias">
-              <p className="note">
-                El sitio muestra el formulario en <Link to="/sugerir">/sugerir</Link>. Cada respuesta llega a{' '}
-                <Link to="/admin/sugerencias">Sugerencias</Link> y avisa a los correos del equipo.
-              </p>
-              <ol className="admin-mail__steps">
-                <li>
-                  {saved.formSecret ? 'Secreto listo.' : 'Genera el secreto que identifica al formulario.'}{' '}
-                  <button type="button" className="admin-btn" onClick={newSecret} disabled={busy}>
-                    {saved.formSecret ? 'Cambiar secreto' : 'Generar secreto'}
-                  </button>
-                </li>
-                <li>
-                  Copia el script (ya lleva la dirección y el secreto){' '}
-                  <button type="button" className="admin-btn admin-btn--accent" onClick={copyScript} disabled={!saved.formSecret}>
-                    Copiar script
-                  </button>{' '}
-                  y pégalo en un proyecto nuevo de{' '}
-                  <a href="https://script.google.com/home/projects/create" target="_blank" rel="noreferrer">
-                    script.google.com
-                  </a>{' '}
-                  con la cuenta del sitio.
-                </li>
-                <li>Ejecuta «configurar» y acepta los permisos: crea el formulario y escribe su enlace en el registro.</li>
-                <li>Pega aquí ese enlace y guarda.</li>
-              </ol>
-              <div className="admin-grid">
-                <label className="admin-field">
-                  <span>Enlace público del formulario</span>
-                  <input value={form.formUrl} onChange={set('formUrl')} placeholder="https://docs.google.com/forms/d/e/…/viewform" />
-                </label>
-                <label className="admin-field">
-                  <span>Dirección que recibe las respuestas</span>
-                  <input value={saved.webhookUrl} readOnly onFocus={(event) => event.target.select()} />
-                </label>
-              </div>
             </AdminSection>
 
             <div className="admin-mail__actions">
