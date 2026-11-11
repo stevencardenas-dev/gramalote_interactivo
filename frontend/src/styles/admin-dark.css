@@ -2637,10 +2637,8 @@ a.admin-tile:hover {
   background: var(--c-navy);
 }
 
-.admin-carousel-preview .banner-carousel__pause {
-  border: 1px solid var(--c-line);
-  background: var(--c-white);
-  color: var(--c-navy);
+.admin-carousel-preview .banner-carousel__count {
+  color: var(--c-muted);
 }
 
 .admin-carousel-preview .banner-carousel .carousel-arrow {

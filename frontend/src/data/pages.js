@@ -179,7 +179,7 @@ export const RELATED_COUNT = {
 // `imageMobile` (opcional, 4:3) solo se usa si todas las visibles la tienen.
 // Enlaces: además de los de las tarjetas, { kind: 'none' }, { kind: 'url', url }
 // y { kind: 'whatsapp', phone, message }.
-export const CAROUSEL_LIMITS = { slides: 10, minInterval: 3, maxInterval: 15 }
+export const CAROUSEL_LIMITS = { slides: 10, minInterval: 6, maxInterval: 15 }
 
 const banner = (id, title, alt) => ({
   id,
@@ -196,7 +196,7 @@ const banner = (id, title, alt) => ({
 PAGE_DEFAULTS.carrusel = {
   enabled: true,
   autoplay: true,
-  interval: 6,
+  interval: 7,
   label: 'Eventos y celebraciones en Gramalote',
   slides: [
     banner(

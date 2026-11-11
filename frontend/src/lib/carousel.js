@@ -21,6 +21,6 @@ export function visibleSlides(slides, today = todayKey()) {
 
 export function intervalSeconds(value) {
   const seconds = Number(value)
-  if (!Number.isFinite(seconds)) return 6
+  if (!Number.isFinite(seconds)) return 7
   return Math.min(CAROUSEL_LIMITS.maxInterval, Math.max(CAROUSEL_LIMITS.minInterval, Math.round(seconds)))
 }

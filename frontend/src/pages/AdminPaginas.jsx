@@ -1065,7 +1065,7 @@ function CarruselEditor({ draft, update, sources, groups, openPicker, signal, up
           </label>
           <Field
             label={`Cambia cada ${intervalSeconds(draft.interval)} segundos`}
-            hint="Se detiene al pasar el ratón, con el foco del teclado o con el botón de pausa."
+            hint="Mínimo 6 s. Se detiene mientras el ratón o un dedo está encima, y deja de avanzar solo cuando la persona cambia de diapositiva a mano."
           >
             <input
               type="range"

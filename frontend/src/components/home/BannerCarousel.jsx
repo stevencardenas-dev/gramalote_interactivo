@@ -7,9 +7,15 @@ import { resolveLink } from '../../lib/pageContent.js'
 // Carrusel de eventos de Inicio (Páginas › Carrusel en el panel). Cada
 // diapositiva es un banner completo (8:3) con el texto ya dibujado.
 //
-// Accesibilidad: avanza solo cada N segundos pero se detiene al pasar el
-// ratón o el foco y con el botón de pausa; con «reducir movimiento» empieza
-// pausado. Las diapositivas ocultas no reciben foco (inert).
+// Reglas del avance automático (no hay botón de pausa):
+// - Cambia cada N segundos (mínimo 6) y una barra inferior muestra cuánto falta.
+// - Se detiene al instante con el ratón encima, el foco del teclado o un dedo
+//   sobre la tarjeta, cuando el carrusel sale de la pantalla y con la pestaña
+//   oculta (la barra se congela y sigue donde iba).
+// - Si la persona cambia de diapositiva a mano (flechas, puntos, teclado o
+//   deslizando), el avance automático se apaga el resto de la sesión.
+// - Con «reducir movimiento» no avanza solo.
+// Las diapositivas ocultas no reciben foco (inert).
 
 // Los banners del diseño tienen una copia de 1280 px para pantallas pequeñas.
 function srcSetOf(url) {
@@ -19,6 +25,28 @@ function srcSetOf(url) {
 
 const reducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+// Tras una interacción manual el carrusel no vuelve a moverse solo en la sesión.
+const STOP_KEY = 'gramalote:carrusel-manual'
+
+function readStopped() {
+  try {
+    return window.sessionStorage.getItem(STOP_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function saveStopped() {
+  try {
+    window.sessionStorage.setItem(STOP_KEY, '1')
+  } catch {
+    // Sin almacenamiento: dura lo que la página.
+  }
+}
+
+// Fracción del ancho que hay que arrastrar para pasar de diapositiva.
+const SWIPE_THRESHOLD = 0.18
 
 function SlideImage({ slide, artMobile, eager }) {
   return (
@@ -40,12 +68,13 @@ function SlideImage({ slide, artMobile, eager }) {
 function SlideBody({ slide, artMobile, eager, preview, swallowClick }) {
   const link = resolveLink(slide.link)
   const image = <SlideImage slide={slide} artMobile={artMobile} eager={eager} />
-  const cta = slide.cta?.trim() && link.available ? (
-    <span className="banner-carousel__cta">
-      {slide.cta.trim()}
-      <span aria-hidden="true"> →</span>
-    </span>
-  ) : null
+  const cta =
+    slide.cta?.trim() && link.available ? (
+      <span className="banner-carousel__cta">
+        {slide.cta.trim()}
+        <span aria-hidden="true"> →</span>
+      </span>
+    ) : null
 
   if (!link.available || preview) {
     return (
@@ -57,7 +86,13 @@ function SlideBody({ slide, artMobile, eager, preview, swallowClick }) {
   }
   if (link.external) {
     return (
-      <a className="banner-carousel__media" href={link.to} target="_blank" rel="noopener noreferrer" onClickCapture={swallowClick}>
+      <a
+        className="banner-carousel__media"
+        href={link.to}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClickCapture={swallowClick}
+      >
         {image}
         {cta}
         <span className="visually-hidden"> (se abre en otra pestaña)</span>
@@ -77,43 +112,84 @@ export default function BannerCarousel({ content, preview = false }) {
   const count = slides.length
   const [index, setIndex] = useState(0)
   const current = count > 0 ? Math.min(index, count - 1) : 0
-  const [paused, setPaused] = useState(reducedMotion)
-  const [hold, setHold] = useState(false)
+  // En la vista previa del panel no se recuerda la parada entre visitas.
+  const [stopped, setStopped] = useState(() => !preview && readStopped())
+  const [hover, setHover] = useState(false)
+  const [focus, setFocus] = useState(false)
+  const [touching, setTouching] = useState(false)
+  const [inView, setInView] = useState(true)
+  const [pageVisible, setPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden)
+  const [dragX, setDragX] = useState(0)
+  const sectionRef = useRef(null)
+  const viewportRef = useRef(null)
   const drag = useRef(null)
   const moved = useRef(false)
 
-  const autoplay = content?.autoplay !== false && count > 1
-  const playing = autoplay && !paused && !hold
+  const autoplay = content?.autoplay !== false && count > 1 && !reducedMotion() && !stopped
+  const held = hover || focus || touching || !inView || !pageVisible
   const delay = intervalSeconds(content?.interval) * 1000
 
   useEffect(() => {
-    if (!playing) return undefined
-    const timer = window.setTimeout(() => setIndex((current + 1) % count), delay)
-    return () => window.clearTimeout(timer)
-  }, [playing, current, count, delay])
+    const onVisibility = () => setPageVisible(!document.hidden)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
+
+  useEffect(() => {
+    const node = sectionRef.current
+    if (!node || typeof IntersectionObserver === 'undefined') return undefined
+    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.35 })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [count])
 
   if (!content?.enabled || count === 0) return null
 
-  const go = (position) => setIndex(((position % count) + count) % count)
+  const wrap = (position) => ((position % count) + count) % count
+
+  // Cambio hecho por la persona: apaga el avance automático en la sesión.
+  const goManual = (position) => {
+    setIndex(wrap(position))
+    if (!stopped) {
+      setStopped(true)
+      if (!preview) saveStopped()
+    }
+  }
+  const advance = () => setIndex((value) => wrap(Math.min(value, count - 1) + 1))
+
   // Fotos de celular solo si todas las visibles la tienen (mismo alto para todas).
   const artMobile = slides.every((slide) => slide.imageMobile)
 
-  // Deslizar con el dedo (el desplazamiento vertical sigue funcionando: touch-action).
+  // Deslizar con el dedo: la tarjeta sigue al dedo y al soltar pasa o vuelve.
   const onPointerDown = (event) => {
-    if (event.pointerType === 'mouse' || count < 2) return
-    drag.current = { x: event.clientX, y: event.clientY }
+    if (event.pointerType === 'mouse') return
+    setTouching(true)
+    if (count < 2) return
+    drag.current = {
+      x: event.clientX,
+      y: event.clientY,
+      width: viewportRef.current?.offsetWidth || 1,
+      axis: null,
+    }
     moved.current = false
   }
-  const onPointerUp = (event) => {
+  const onPointerMove = (event) => {
     const start = drag.current
-    drag.current = null
     if (!start) return
     const dx = event.clientX - start.x
     const dy = event.clientY - start.y
-    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
-      moved.current = true
-      go(current + (dx < 0 ? 1 : -1))
-    }
+    if (!start.axis && Math.abs(dx) + Math.abs(dy) > 8) start.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+    if (start.axis === 'x') setDragX(dx)
+  }
+  const endDrag = (event, cancelled = false) => {
+    const start = drag.current
+    drag.current = null
+    setTouching(false)
+    setDragX(0)
+    if (!start || start.axis !== 'x') return
+    const dx = cancelled ? 0 : event.clientX - start.x
+    if (Math.abs(dx) > 8) moved.current = true
+    if (Math.abs(dx) > start.width * SWIPE_THRESHOLD) goManual(current + (dx < 0 ? 1 : -1))
   }
   const swallowClick = (event) => {
     if (moved.current) {
@@ -121,9 +197,20 @@ export default function BannerCarousel({ content, preview = false }) {
       moved.current = false
     }
   }
+  const onKeyDown = (event) => {
+    if (event.key === 'ArrowRight') goManual(current + 1)
+    else if (event.key === 'ArrowLeft') goManual(current - 1)
+  }
+
+  const dragging = dragX !== 0
+  const trackStyle = {
+    transform: `translateX(calc(${-current * 100}% + ${dragX}px))`,
+    transition: dragging ? 'none' : undefined,
+  }
 
   return (
     <section
+      ref={sectionRef}
       className={`banner-carousel${artMobile ? ' banner-carousel--art-mobile' : ''}${preview ? ' banner-carousel--preview' : ''}`}
       aria-roledescription="carrusel"
       aria-label={content.label || 'Eventos en Gramalote'}
@@ -131,26 +218,23 @@ export default function BannerCarousel({ content, preview = false }) {
       <div className={preview ? undefined : 'container'}>
         <div
           className="banner-carousel__frame"
-          onMouseEnter={() => setHold(true)}
-          onMouseLeave={() => setHold(false)}
-          onFocus={() => setHold(true)}
+          onPointerEnter={(event) => event.pointerType === 'mouse' && setHover(true)}
+          onPointerLeave={(event) => event.pointerType === 'mouse' && setHover(false)}
+          onFocus={() => setFocus(true)}
           onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget)) setHold(false)
+            if (!event.currentTarget.contains(event.relatedTarget)) setFocus(false)
           }}
+          onKeyDown={onKeyDown}
         >
           <div
+            ref={viewportRef}
             className="banner-carousel__viewport"
             onPointerDown={onPointerDown}
-            onPointerUp={onPointerUp}
-            onPointerCancel={() => {
-              drag.current = null
-            }}
+            onPointerMove={onPointerMove}
+            onPointerUp={(event) => endDrag(event)}
+            onPointerCancel={(event) => endDrag(event, true)}
           >
-            <div
-              className="banner-carousel__track"
-              style={{ transform: `translateX(-${current * 100}%)` }}
-              aria-live={playing ? 'off' : 'polite'}
-            >
+            <div className="banner-carousel__track" style={trackStyle} aria-live={autoplay && !held ? 'off' : 'polite'}>
               {slides.map((slide, position) => (
                 <div
                   key={slide.id}
@@ -171,25 +255,30 @@ export default function BannerCarousel({ content, preview = false }) {
                 </div>
               ))}
             </div>
+            {autoplay ? (
+              <div className={`banner-carousel__progress${held ? ' is-held' : ''}`} aria-hidden="true">
+                {/* La barra lleva el tiempo: al terminar su animación pasa a la siguiente. */}
+                <span
+                  key={`${current}-${delay}`}
+                  className="banner-carousel__progress-bar"
+                  style={{
+                    animationDuration: `${delay}ms`,
+                    animationPlayState: held || dragging ? 'paused' : 'running',
+                  }}
+                  onAnimationEnd={advance}
+                />
+              </div>
+            ) : null}
           </div>
-          <CarouselArrows count={count} onPrev={() => go(current - 1)} onNext={() => go(current + 1)} />
+          <CarouselArrows count={count} onPrev={() => goManual(current - 1)} onNext={() => goManual(current + 1)} />
         </div>
 
         {count > 1 ? (
           <div className="banner-carousel__controls">
-            {autoplay ? (
-              <button
-                type="button"
-                className="banner-carousel__pause"
-                aria-label={paused ? 'Reanudar el carrusel' : 'Pausar el carrusel'}
-                onClick={() => setPaused((value) => !value)}
-              >
-                <svg viewBox="0 0 16 16" aria-hidden="true">
-                  {paused ? <path d="M5 3.5v9l7-4.5z" /> : <path d="M5 3.5h2v9H5zM9 3.5h2v9H9z" />}
-                </svg>
-              </button>
-            ) : null}
-            <CarouselDots count={count} index={current} onGo={go} />
+            <CarouselDots count={count} index={current} onGo={goManual} />
+            <span className="banner-carousel__count">
+              {current + 1} / {count}
+            </span>
           </div>
         ) : null}
       </div>
