@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import Logo from '../ui/Logo.jsx'
 import { apiRequest, ensureSession, getUser, logout } from '../../lib/auth.js'
+import { useAdminTheme } from '../../lib/adminTheme.js'
 
 function formatBytes(bytes) {
   if (!bytes) return '0 MB'
@@ -13,6 +14,7 @@ export default function AdminNav() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const user = getUser()
+  const { theme, toggle } = useAdminTheme()
   const [media, setMedia] = useState(null)
 
   // Se vuelve a pedir al cambiar de pantalla: así refleja las fotos recién subidas.
@@ -60,6 +62,14 @@ export default function AdminNav() {
             Imágenes {formatBytes(media.usedBytes)} de {formatBytes(media.quotaBytes)}
           </span>
         ) : null}
+        <button
+          type="button"
+          className="admin-nav__theme"
+          onClick={toggle}
+          aria-pressed={theme === 'light'}
+        >
+          {theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
+        </button>
         <Link className="admin-nav__site" to="/">
           Ver sitio ↗
         </Link>

@@ -1,0 +1,103 @@
+/* Tema claro del panel de administración.
+   Se carga después de admin-dark.css y solo aplica con
+   <html data-admin-theme="light">, que pone src/lib/adminTheme.js. El tema
+   oscuro (el de siempre) queda intacto; aquí solo se redefinen las variables
+   del panel y las pocas reglas que llevan color fijo a mano. El fondo es un
+   blanco cálido, no un blanco puro, para no cansar la vista en sesiones largas. */
+
+html[data-admin-theme='light'] body:has(.admin-app) {
+  background: #f4f1eb;
+}
+
+html[data-admin-theme='light'] .admin-app {
+  --a-bg: #f4f1eb;
+  --a-sf: #fbf9f6;
+  --a-sf2: #ece7df;
+  --a-ln: #e1d9ce;
+  --a-tx: #1d1b18;
+  --a-mu: #6a6157;
+  --a-ac: #2f6fe0;
+  --a-ac-text: #1f56b8;
+  --a-onac: #ffffff;
+  --a-ok: #1f6b43;
+  --a-okb: #e3f1e8;
+  --a-wn: #8a5a10;
+  --a-wnb: #fbf0dd;
+  --a-danger: #a83820;
+
+  --c-ink-soft: #4b3b2f;
+  --c-primary-dark: #1f56b8;
+  --c-coral: #db5319;
+
+  color-scheme: light;
+}
+
+/* Campos y botones: los hover del acento tienen que oscurecer, no aclarar. */
+html[data-admin-theme='light'] .admin-app input::placeholder,
+html[data-admin-theme='light'] .admin-app textarea::placeholder {
+  color: #8b8279;
+}
+
+html[data-admin-theme='light'] .admin-btn--primary:hover:not(:disabled),
+html[data-admin-theme='light'] .admin-btn--accent:hover:not(:disabled),
+html[data-admin-theme='light'] .admin-app .btn--primary:hover {
+  border-color: #245fc9;
+  background: #245fc9;
+}
+
+html[data-admin-theme='light'] .admin-app .admin-media__item:hover {
+  border-color: #c9c1b5;
+}
+
+/* Avisos */
+html[data-admin-theme='light'] .admin-app .auth-error {
+  border-color: #e3b7a8;
+  background: #fdeee8;
+  color: var(--a-danger);
+}
+
+html[data-admin-theme='light'] .admin-app .admin-notice {
+  border-color: #b5d6c2;
+}
+
+html[data-admin-theme='light'] .admin-alert {
+  border-color: #e2c891;
+}
+
+html[data-admin-theme='light'] .admin-app .admin-media__actions .is-danger {
+  border-color: #e3b7a8;
+}
+
+html[data-admin-theme='light'] .admin-btn--danger-outline {
+  border-color: #e3b7a8;
+}
+
+html[data-admin-theme='light'] .admin-meter i.is-warn {
+  background: var(--c-coral);
+}
+
+/* Barra de guardado fija al pie del editor */
+html[data-admin-theme='light'] .admin-app .admin-panel__footer {
+  background: rgba(251, 249, 246, 0.96);
+  box-shadow: 0 -6px 16px rgba(29, 27, 24, 0.08);
+}
+
+/* Insignias sobre las miniaturas de la galería */
+html[data-admin-theme='light'] .admin-media__shot .admin-badge {
+  background: rgba(251, 249, 246, 0.9);
+  color: var(--a-mu);
+}
+
+html[data-admin-theme='light'] .admin-media__shot .admin-badge--ok {
+  background: rgba(227, 241, 232, 0.94);
+  color: var(--a-ok);
+}
+
+html[data-admin-theme='light'] .admin-media__shot .admin-media__dims {
+  background: rgba(251, 249, 246, 0.9);
+}
+
+/* El isotipo va en blanco sobre el fondo oscuro; en claro se deja el original. */
+html[data-admin-theme='light'] .admin-nav__logo {
+  filter: none;
+}

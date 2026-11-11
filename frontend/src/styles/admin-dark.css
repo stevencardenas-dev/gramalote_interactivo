@@ -125,7 +125,8 @@ body:has(.admin-app) {
 }
 
 .admin-nav__site,
-.admin-nav__out {
+.admin-nav__out,
+.admin-nav__theme {
   border: 0;
   background: none;
   padding: 0;
@@ -136,7 +137,8 @@ body:has(.admin-app) {
 }
 
 .admin-nav__site:hover,
-.admin-nav__out:hover {
+.admin-nav__out:hover,
+.admin-nav__theme:hover {
   color: var(--a-tx);
 }
 
