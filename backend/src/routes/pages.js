@@ -127,12 +127,14 @@ router.get(
 )
 
 // Fotos que el panel ofrece en el selector: las galerías de cada ficha (con su
-// estado de publicación) y las subidas solo para páginas.
+// estado de publicación) y las subidas solo para páginas. Las fichas salen en
+// el mismo orden que usa el sitio cuando la página no tiene uno guardado.
 async function imageSources() {
   const [experiences, experienceImages, establishments, establishmentImages, uploads] = await Promise.all([
     query(
       `SELECT x.id, x.slug, x.title, x.is_published, x.sort_order
-       FROM experiences x WHERE x.deleted_at IS NULL ORDER BY x.sort_order, x.title`,
+       FROM experiences x WHERE x.deleted_at IS NULL
+       ORDER BY x.is_featured DESC, x.sort_order, x.title`,
     ),
     query(
       `SELECT i.experience_id AS owner_id, i.role, m.public_url, m.alt_text
@@ -143,7 +145,8 @@ async function imageSources() {
     query(
       `SELECT e.id, e.slug, e.name, e.is_published, c.slug AS category
        FROM establishments e JOIN establishment_categories c ON c.id = e.category_id
-       WHERE e.deleted_at IS NULL ORDER BY c.sort_order, e.name`,
+       WHERE e.deleted_at IS NULL
+       ORDER BY c.sort_order, e.is_featured DESC, e.sort_order, e.name`,
     ),
     query(
       `SELECT i.establishment_id AS owner_id, i.role, m.public_url,

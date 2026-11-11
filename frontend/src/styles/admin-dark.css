@@ -2005,19 +2005,19 @@ a.admin-tile:hover {
 }
 
 /* Tarjetas editables (Inicio) */
-.admin-cards {
+.admin-pcards {
   display: grid;
   gap: 12px;
   margin-bottom: 12px;
 }
 
-.admin-card {
+.admin-pcard {
   border: 1px solid var(--a-ln);
   border-radius: 12px;
   background: var(--a-bg);
 }
 
-.admin-card__head {
+.admin-pcard__head {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -2026,7 +2026,7 @@ a.admin-tile:hover {
   border-bottom: 1px solid var(--a-ln);
 }
 
-.admin-card__head strong {
+.admin-pcard__head strong {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -2035,23 +2035,23 @@ a.admin-tile:hover {
   white-space: nowrap;
 }
 
-.admin-card__head .admin-btn {
+.admin-pcard__head .admin-btn {
   min-height: 30px;
   padding-inline: 10px;
 }
 
-.admin-card__body {
+.admin-pcard__body {
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);
   gap: 12px 18px;
   padding: 12px;
 }
 
-.admin-card__body > .admin-imgfield {
+.admin-pcard__body > .admin-imgfield {
   grid-row: span 2;
 }
 
-.admin-cards--compact .admin-card__body {
+.admin-pcards--compact .admin-pcard__body {
   grid-template-columns: 180px minmax(0, 1fr);
 }
 
@@ -2287,13 +2287,13 @@ a.admin-tile:hover {
 }
 
 @media (max-width: 760px) {
-  .admin-card__body,
-  .admin-cards--compact .admin-card__body,
+  .admin-pcard__body,
+  .admin-pcards--compact .admin-pcard__body,
   .admin-linkfield {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .admin-card__body > .admin-imgfield {
+  .admin-pcard__body > .admin-imgfield {
     grid-row: auto;
     max-width: 260px;
   }

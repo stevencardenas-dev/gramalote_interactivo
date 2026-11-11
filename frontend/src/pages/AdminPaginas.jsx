@@ -363,10 +363,10 @@ function InicioEditor({ draft, update, sources, groups, openPicker }) {
         hint="Tres tarjetas: la primera es la grande. Imagen, orden, título, texto y enlace."
         defaultOpen
       >
-        <div className="admin-cards">
+        <div className="admin-pcards">
           {draft.experiences.map((card, index) => (
-            <article key={card.id} className="admin-card">
-              <header className="admin-card__head">
+            <article key={card.id} className="admin-pcard">
+              <header className="admin-pcard__head">
                 <span className="admin-order__pos">{index + 1}</span>
                 <strong>{index === 0 ? 'Tarjeta destacada' : `Tarjeta ${index + 1}`}</strong>
                 <MoveButtons
@@ -376,7 +376,7 @@ function InicioEditor({ draft, update, sources, groups, openPicker }) {
                   onMove={moveCard('experiences')}
                 />
               </header>
-              <div className="admin-card__body">
+              <div className="admin-pcard__body">
                 <ImageField
                   label="Imagen"
                   photo={card.photo}
@@ -415,10 +415,10 @@ function InicioEditor({ draft, update, sources, groups, openPicker }) {
         hint="Tarjetas del bloque «Abierto hoy en Gramalote»: orden, título, fondo y la ficha a la que llevan."
         defaultOpen
       >
-        <div className="admin-cards admin-cards--compact">
+        <div className="admin-pcards admin-pcards--compact">
           {draft.highlights.map((card, index) => (
-            <article key={card.id} className="admin-card">
-              <header className="admin-card__head">
+            <article key={card.id} className="admin-pcard">
+              <header className="admin-pcard__head">
                 <span className="admin-order__pos">{index + 1}</span>
                 <strong>{card.title || 'Nueva tarjeta'}</strong>
                 <MoveButtons
@@ -439,7 +439,7 @@ function InicioEditor({ draft, update, sources, groups, openPicker }) {
                   Quitar
                 </button>
               </header>
-              <div className="admin-card__body">
+              <div className="admin-pcard__body">
                 <ImageField
                   label="Fondo"
                   photo={card.photo}
@@ -483,7 +483,7 @@ function InicioEditor({ draft, update, sources, groups, openPicker }) {
 
 // ---------------------------------------------------------------- Qué hacer
 function QueHacerEditor({ draft, update, sources, groups, openPicker }) {
-  const experiences = [...(sources?.experiences ?? [])].sort((a, b) => a.sortOrder - b.sortOrder)
+  const experiences = sources?.experiences ?? []
 
   return (
     <AdminSection
