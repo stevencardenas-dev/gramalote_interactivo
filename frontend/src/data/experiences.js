@@ -1,36 +1,4 @@
-// Tarjetas de "Experiencias que no olvidarás" en Inicio.
-export const experiences = [
-  {
-    id: 'cascadas-escondidas',
-    slug: 'cascadas-arco-iris',
-    title: 'Cascadas escondidas entre la niebla',
-    category: 'Naturaleza',
-    description:
-      'El sonido del agua te guía por el sendero. Al final, la recompensa es fría y transparente.',
-    photo: '/img/home/exp-1.jpg',
-    to: '/que-hacer/cascadas-arco-iris',
-  },
-  {
-    id: 'sabores-de-gramalote',
-    slug: 'sabores-de-gramalote',
-    title: 'Sabores de Gramalote',
-    category: 'Gastronomía',
-    description:
-      'Descubre la gastronomía local y los sabores tradicionales del municipio.',
-    photo: '/img/home/exp-2b.jpg',
-    to: '/donde-comer',
-  },
-  {
-    id: 'artesanias-con-identidad-local',
-    slug: 'artesanias-con-identidad-local',
-    title: 'Artesanías con identidad local',
-    category: 'Cultura',
-    description:
-      'Conoce los productos y las creaciones de los artesanos de Gramalote.',
-    photo: '/img/home/exp-3b.jpg',
-    to: '/donde-comprar',
-  },
-]
+// Las tarjetas de «Experiencias que no olvidarás» (Inicio) viven en data/pages.js.
 
 // Experiencias de "Qué hacer" (frame QUE HACER, 1 de noviembre) y sus fichas.
 // Es la copia que usa el sitio si la API no responde: los datos oficiales viven

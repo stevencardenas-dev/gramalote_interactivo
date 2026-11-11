@@ -237,6 +237,25 @@ export default function Navbar({ over = false }) {
   const loggedIn = Boolean(useSyncExternalStore(subscribe, getUser))
   const loginTo = loggedIn ? '/admin' : '/acceder'
   const loginLabel = loggedIn ? 'Panel' : 'Acceder'
+  const loginRef = useRef(null)
+
+  // Shift+V vuelve al panel (o a /acceder sin sesión): equivale a pulsar el
+  // candado. Igual que en el panel, se ignora mientras se escribe en un campo.
+  useEffect(() => {
+    function onShortcut(event) {
+      if (!event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return
+      if (event.key.toLowerCase() !== 'v') return
+      const target = event.target
+      const typing =
+        target instanceof HTMLElement &&
+        (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+      if (typing) return
+      event.preventDefault()
+      loginRef.current?.click()
+    }
+    window.addEventListener('keydown', onShortcut)
+    return () => window.removeEventListener('keydown', onShortcut)
+  }, [])
 
   const solid = !over || scrolled || open
   const headerClass = [
@@ -287,10 +306,12 @@ export default function Navbar({ over = false }) {
         <div className="site-header__actions">
           <SearchForm inputId="site-search" />
           <Link
+            ref={loginRef}
             className="site-login"
             to={loginTo}
             aria-label={loginLabel}
-            title={loginLabel}
+            aria-keyshortcuts="Shift+V"
+            title={`${loginLabel} (Shift + V)`}
           >
             <Icon name="lock" />
           </Link>

@@ -1,9 +1,9 @@
 // Horario de apertura de una experiencia.
 //
-// La interfaz ofrece cinco modos sencillos, pero todos escriben el mismo valor
-// canónico:
+// La interfaz ofrece cuatro modos sencillos, pero todos escriben el mismo valor
+// canónico ('always' solo queda en horarios antiguos y se edita como 'days'):
 //
-//   { mode: 'always' | 'days' | 'days-close' | 'multi' | 'per-day',
+//   { mode: 'days' | 'days-close' | 'multi' | 'per-day',
 //     days: { '1'..'7': [{ opensAt, closesAt }] } }
 //
 // Un día que no está en `days` está cerrado. Un día con lista vacía abre, pero
@@ -20,9 +20,8 @@ const MAX_RANGES = 3
 
 // Del más simple al más detallado: cada modo solo enseña lo que necesita.
 const MODES = [
-  { key: 'always', label: 'Abre todos los días', hint: 'Los siete días, sin hora fija.' },
-  { key: 'days', label: 'Abre algunos días', hint: 'Elige los días, sin hora.' },
-  { key: 'days-close', label: 'Cierra a una hora', hint: 'Elige los días y a qué hora cierra.' },
+  { key: 'days', label: 'Abre algunos días', hint: 'Elige los días (o «Todos»), sin hora.' },
+  { key: 'days-close', label: 'Abre y cierra a una hora', hint: 'Elige los días y a qué hora abre y cierra.' },
   { key: 'multi', label: 'Varios turnos al día', hint: 'Los mismos turnos en los días que elijas.' },
   { key: 'per-day', label: 'Horario por día', hint: 'Cada día con su propio horario.' },
 ]
@@ -109,12 +108,11 @@ function RangeInputs({ label, range, onChange, onRemove }) {
 }
 
 export default function ScheduleEditor({ value, fallbackDaily = false, onChange, onUseText }) {
+  // «Abre todos los días» era lo mismo que «Abre algunos días» con los siete
+  // marcados: los horarios guardados con ese modo se muestran así.
   const schedule =
-    value ??
-    (fallbackDaily
-      ? { mode: 'always', days: allDaysWith([]) }
-      : { mode: 'days', days: {} })
-  const mode = schedule.mode ?? 'always'
+    value ?? (fallbackDaily ? { mode: 'days', days: allDaysWith([]) } : { mode: 'days', days: {} })
+  const mode = !schedule.mode || schedule.mode === 'always' ? 'days' : schedule.mode
   const days = schedule.days ?? {}
   const selected = DAY_KEYS.filter((day) => day in days)
 
@@ -122,6 +120,8 @@ export default function ScheduleEditor({ value, fallbackDaily = false, onChange,
   // primer día elegido y lo reparten al resto: una sola pieza reutilizable.
   const shared = days[selected[0]] ?? []
   const closing = hhmm(shared[0]?.closesAt) || DEFAULT_CLOSING
+  const opening = hhmm(shared[0]?.opensAt) || DEFAULT_RANGE.opensAt
+  const sharedRange = { opensAt: opening, closesAt: closing }
 
   const emit = (nextDays, nextMode = mode) => onChange({ mode: nextMode, days: nextDays })
 
@@ -138,7 +138,7 @@ export default function ScheduleEditor({ value, fallbackDaily = false, onChange,
     if (day in nextDays) {
       delete nextDays[day]
     } else if (mode === 'days-close') {
-      nextDays[day] = [{ opensAt: null, closesAt: closing }]
+      nextDays[day] = [{ ...sharedRange }]
     } else if (mode === 'multi') {
       nextDays[day] = cloneRanges(shared.length ? shared : [DEFAULT_RANGE])
     } else {
@@ -152,7 +152,7 @@ export default function ScheduleEditor({ value, fallbackDaily = false, onChange,
     for (const day of list) {
       nextDays[day] =
         mode === 'days-close'
-          ? [{ opensAt: null, closesAt: closing }]
+          ? [{ ...sharedRange }]
           : mode === 'multi'
             ? cloneRanges(shared.length ? shared : [DEFAULT_RANGE])
             : cloneRanges(days[day] ?? [])
@@ -162,18 +162,11 @@ export default function ScheduleEditor({ value, fallbackDaily = false, onChange,
 
   // Cambiar de modo no borra lo que ya había: completa lo que falte.
   function setMode(next) {
-    if (next === 'always') {
-      const nextDays = allDaysWith([])
-      DAY_KEYS.forEach((day) => {
-        if (days[day]) nextDays[day] = cloneRanges(days[day])
-      })
-      return emit(nextDays, 'always')
-    }
     const base = selected.length ? selected : WEEKDAYS
     const nextDays = {}
     for (const day of base) {
       const current = days[day] ?? []
-      if (next === 'days-close') nextDays[day] = [{ opensAt: null, closesAt: closing }]
+      if (next === 'days-close') nextDays[day] = [{ ...sharedRange }]
       else if (next === 'multi') nextDays[day] = cloneRanges(shared.length ? shared : [DEFAULT_RANGE])
       else if (next === 'per-day') nextDays[day] = cloneRanges(current.filter((range) => hhmm(range.closesAt)))
       else nextDays[day] = []
@@ -228,46 +221,39 @@ export default function ScheduleEditor({ value, fallbackDaily = false, onChange,
         ))}
       </div>
 
-      {mode === 'always' ? null : (
-        <div className="admin-schedule__days" role="group" aria-label="Días que abre">
-          {DAY_KEYS.map((day, index) => (
-            <button
-              key={day}
-              type="button"
-              className={`admin-schedule__day${day in days ? ' is-on' : ''}`}
-              aria-pressed={day in days}
-              aria-label={DAY_NAMES[index]}
-              title={DAY_NAMES[index]}
-              onClick={() => toggleDay(day)}
-            >
-              {DAY_LETTERS[index]}
-            </button>
-          ))}
-          <button type="button" className="admin-schedule__quick" onClick={() => selectDays(WEEKDAYS)}>
-            Lunes a viernes
+      <div className="admin-schedule__days" role="group" aria-label="Días que abre">
+        {DAY_KEYS.map((day, index) => (
+          <button
+            key={day}
+            type="button"
+            className={`admin-schedule__day${day in days ? ' is-on' : ''}`}
+            aria-pressed={day in days}
+            aria-label={DAY_NAMES[index]}
+            title={DAY_NAMES[index]}
+            onClick={() => toggleDay(day)}
+          >
+            {DAY_LETTERS[index]}
           </button>
-          <button type="button" className="admin-schedule__quick" onClick={() => selectDays(DAY_KEYS)}>
-            Todos
-          </button>
-        </div>
-      )}
+        ))}
+        <button type="button" className="admin-schedule__quick" onClick={() => selectDays(WEEKDAYS)}>
+          Lunes a viernes
+        </button>
+        <button type="button" className="admin-schedule__quick" onClick={() => selectDays(DAY_KEYS)}>
+          Todos
+        </button>
+      </div>
 
-      {mode !== 'always' && !selected.length ? (
+      {!selected.length ? (
         <p className="admin-schedule__empty">Elige al menos un día para continuar.</p>
       ) : null}
 
       {mode === 'days-close' && selected.length ? (
         <div className="admin-schedule__shared">
-          <label className="admin-field admin-schedule__closing">
-            <span>Cierra a las</span>
-            <input
-              type="time"
-              value={closing}
-              onChange={(event) =>
-                applyToSelected([{ opensAt: null, closesAt: event.target.value }])
-              }
-            />
-          </label>
+          <RangeInputs
+            label="Horario"
+            range={sharedRange}
+            onChange={(patch) => applyToSelected([{ ...sharedRange, ...patch }])}
+          />
           <p className="note">Se aplica a los días elegidos.</p>
         </div>
       ) : null}
@@ -348,7 +334,7 @@ export default function ScheduleEditor({ value, fallbackDaily = false, onChange,
         <button type="button" disabled={!text} onClick={() => onUseText?.(text)}>
           Usar como texto de la ficha
         </button>
-        {hiddenDays.length && mode !== 'always' ? (
+        {hiddenDays.length ? (
           <button
             type="button"
             onClick={() => {

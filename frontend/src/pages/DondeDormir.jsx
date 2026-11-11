@@ -8,14 +8,19 @@ import MapPanel from '../components/ui/MapPanel.jsx'
 import HistoryBlock from '../components/home/HistoryBlock.jsx'
 import { categories } from '../data/establishments.js'
 import { useState } from 'react'
-import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
+import { useEstablishments } from '../lib/contentApi.js'
+import { arrange, pickRelated, usePageContent } from '../lib/pageContent.js'
+import { RELATED_COUNT } from '../data/pages.js'
 import { usePagedList } from '../lib/listing.js'
 
 export default function DondeDormir() {
   const meta = categories.dormir
   const [type, setType] = useState(meta.filterAll)
   const [service, setService] = useState(meta.serviceAll)
-  const { data: places, loading, error } = useEstablishments('dormir')
+  const { data: lodging, loading, error } = useEstablishments('dormir')
+  // Orden, fotos y referencia a Dónde comprar: Páginas › Dónde dormir.
+  const page = usePageContent('donde-dormir')
+  const places = arrange(lodging, page.order, page.covers)
   const filtered = places.filter(
     (item) =>
       (type === meta.filterAll || item.filterGroup === type) &&
@@ -23,7 +28,7 @@ export default function DondeDormir() {
   )
   const { visible, hasMore, loadMore } = usePagedList(filtered, `${type}|${service}`)
   const { data: comprar } = useEstablishments('comprar')
-  const shops = orderBySlugs(comprar, ['maestros-de-la-madera', 'creaciones-martina']).slice(0, 2)
+  const shops = pickRelated(comprar, page.related, RELATED_COUNT['donde-dormir'])
 
   return (
     <>
@@ -84,9 +89,9 @@ export default function DondeDormir() {
 
           <div className="cross-section">
             <div className="section-head section-head--center">
-              <p className="eyebrow">Artesanías y productos locales</p>
-              <h2>{meta.relationTitle}</h2>
-              <p>{meta.relationText}</p>
+              {page.related.eyebrow ? <p className="eyebrow">{page.related.eyebrow}</p> : null}
+              <h2>{page.related.title}</h2>
+              {page.related.text ? <p>{page.related.text}</p> : null}
             </div>
 
             <div className="place-grid place-grid--two">

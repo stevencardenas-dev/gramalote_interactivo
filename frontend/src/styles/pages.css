@@ -324,6 +324,12 @@ button.social-dot {
   margin-bottom: clamp(24px, 3vw, 36px);
 }
 
+/* En Dónde dormir el banner de historia va justo después de «Lugares
+   relacionados»: sin este aire, su botón quedaba pegado al borde del banner. */
+.cross-section + .history-banner {
+  margin-top: clamp(48px, 6vw, 80px);
+}
+
 .lodging-head {
   margin-block: clamp(36px, 5vw, 56px) clamp(22px, 3vw, 32px);
 }

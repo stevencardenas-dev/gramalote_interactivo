@@ -85,6 +85,19 @@
   grid-column: span 3;
 }
 
+/* Con más o menos experiencias, ninguna tarjeta queda sola en una esquina:
+   la última de una fila incompleta ocupa todo el ancho y, si solo hay dos,
+   se reparten la fila. */
+.activity-card:only-child,
+.activity-card:nth-child(n + 4):nth-child(even):last-child {
+  grid-column: 1 / -1;
+}
+
+.activity-card:first-child:nth-last-child(2),
+.activity-card:first-child:nth-last-child(2) ~ .activity-card {
+  grid-column: span 3;
+}
+
 .activity-card .photo {
   height: 200px;
   border-radius: 0;
@@ -1075,8 +1088,19 @@
   }
 
   .activity-card,
-  .activity-card:nth-child(n + 4) {
+  .activity-card:nth-child(n + 4),
+  .activity-card:first-child:nth-last-child(2),
+  .activity-card:first-child:nth-last-child(2) ~ .activity-card {
     grid-column: span 1;
+  }
+
+  .activity-card:nth-child(odd):last-child,
+  .activity-card:nth-child(n + 4):nth-child(even):last-child {
+    grid-column: span 1;
+  }
+
+  .activity-card:nth-child(odd):last-child {
+    grid-column: 1 / -1;
   }
 
   .tips__grid {

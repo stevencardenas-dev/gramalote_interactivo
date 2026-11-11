@@ -1,15 +1,9 @@
 import { Link } from 'react-router-dom'
 import Photo from '../ui/Photo.jsx'
+import { PAGE_DEFAULTS } from '../../data/pages.js'
 
-const shortcuts = [
-  { label: 'Que hacer', to: '/que-hacer', photo: '/img/home/que-hacer.jpg' },
-  { label: 'Dónde comer', to: '/donde-comer', photo: '/img/home/comer.jpg' },
-  { label: 'Dónde dormir', to: '/donde-dormir', photo: '/img/home/dormir.jpg' },
-  { label: 'Su historia', to: '/historia', photo: '/img/home/historia.jpg' },
-  { label: 'Dónde comprar', to: '/donde-comprar', photo: '/img/home/comprar.jpg' },
-]
-
-export default function QuickAccess() {
+// Las cinco secciones son fijas; desde el panel solo cambia su foto.
+export default function QuickAccess({ items = PAGE_DEFAULTS.inicio.quickAccess }) {
   return (
     <section className="quick-access" aria-labelledby="quick-title">
       <div className="container">
@@ -23,8 +17,8 @@ export default function QuickAccess() {
         </div>
 
         <div className="quick-grid">
-          {shortcuts.map((item) => (
-            <Link key={item.to} className="quick-card" to={item.to}>
+          {items.map((item) => (
+            <Link key={item.id} className="quick-card" to={item.to}>
               <Photo src={item.photo} alt={item.label} />
               <span>{item.label}</span>
             </Link>

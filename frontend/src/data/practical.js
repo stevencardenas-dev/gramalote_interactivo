@@ -124,6 +124,6 @@ export const usefulContacts = [
     title: 'Hospital San Vicente de Paúl',
     text: 'Atención médica y orientación sobre servicios de salud y urgencias.',
     phone: '3112585373',
-    logo: null,
+    logo: '/img/info/logo-hospital.png',
   },
 ]

@@ -19,6 +19,7 @@ import Acceder from './pages/Acceder.jsx'
 import Restablecer from './pages/Restablecer.jsx'
 import Admin from './pages/Admin.jsx'
 import AdminUsuarios from './pages/AdminUsuarios.jsx'
+import AdminPaginas from './pages/AdminPaginas.jsx'
 import AdminEstablecimientos from './pages/AdminEstablecimientos.jsx'
 import AdminEstablecimiento from './pages/AdminEstablecimiento.jsx'
 import RequireAdmin from './components/admin/RequireAdmin.jsx'
@@ -84,6 +85,14 @@ export default function App() {
           element={
             <RequireAdmin>
               <AdminExperiencia />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/paginas"
+          element={
+            <RequireAdmin>
+              <AdminPaginas />
             </RequireAdmin>
           }
         />

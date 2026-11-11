@@ -1,7 +1,15 @@
-import { experiences } from '../../data/experiences.js'
 import ExperienceCard from '../cards/ExperienceCard.jsx'
+import { PAGE_DEFAULTS } from '../../data/pages.js'
+import { resolveLink } from '../../lib/pageContent.js'
 
-export default function ExperiencesSection() {
+// Tarjetas editables en Páginas › Inicio. Una tarjeta que enlaza a una ficha
+// despublicada no se muestra.
+export default function ExperiencesSection({ items = PAGE_DEFAULTS.inicio.experiences }) {
+  const cards = items
+    .map((item) => ({ ...item, ...resolveLink(item.link) }))
+    .filter((item) => item.available)
+  if (cards.length === 0) return null
+
   return (
     <section className="experiences" aria-labelledby="experiences-title">
       <div className="container">
@@ -11,10 +19,10 @@ export default function ExperiencesSection() {
         </div>
 
         <div className="experiences__grid">
-          {experiences.map((experience, index) => (
+          {cards.map((card, index) => (
             <ExperienceCard
-              key={experience.id}
-              experience={experience}
+              key={card.id}
+              experience={{ title: card.title, description: card.text, photo: card.photo, to: card.to }}
               featured={index === 0}
             />
           ))}

@@ -32,6 +32,7 @@ async function main() {
     UNION SELECT media_id FROM experience_images
     UNION SELECT media_id FROM curiosity_block_media
     UNION SELECT media_id FROM history_images
+    UNION SELECT media_id FROM page_images
   `)
   const referencedIds = new Set(referenced.map((row) => Number(row.media_id)))
 

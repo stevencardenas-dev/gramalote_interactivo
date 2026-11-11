@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import OpeningHoursEditor from '../components/admin/OpeningHoursEditor.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import RatingsPanel from '../components/admin/RatingsPanel.jsx'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 import { resolveMapIcon } from '../data/mapIcons.js'
 
@@ -11,6 +12,7 @@ const TABS = [
   { key: 'images', label: 'Imágenes' },
   { key: 'extras', label: 'Servicios y extras' },
   { key: 'publish', label: 'Publicación' },
+  { key: 'ratings', label: 'Calificaciones' },
   { key: 'history', label: 'Historial' },
 ]
 
@@ -1058,6 +1060,18 @@ export default function AdminEstablecimiento() {
               </label>
 
             </div>
+          ) : null}
+
+          {tab === 'ratings' ? (
+            <RatingsPanel
+              kind="establishments"
+              id={id}
+              name={form.name}
+              onNotify={(tone, title, message) => {
+                setError(tone === 'error' ? message || title : '')
+                setNotice(tone === 'error' ? '' : title)
+              }}
+            />
           ) : null}
 
           {tab === 'history' ? (

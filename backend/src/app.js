@@ -6,6 +6,7 @@ import { errorHandler, notFoundHandler } from './http.js'
 import { mediaRoot } from './media.js'
 import adminRouter from './routes/admin.js'
 import adminExperiencesRouter from './routes/admin-experiences.js'
+import adminRatingsRouter from './routes/admin-ratings.js'
 import authRouter from './routes/auth.js'
 import curiositiesRouter from './routes/curiosities.js'
 import establishmentsRouter from './routes/establishments.js'
@@ -13,6 +14,7 @@ import experiencesRouter from './routes/experiences.js'
 import historyRouter from './routes/history.js'
 import mapRouter from './routes/map.js'
 import metaRouter from './routes/meta.js'
+import pagesRouter from './routes/pages.js'
 import practicalRouter from './routes/practical.js'
 import ratingsRouter from './routes/ratings.js'
 import searchRouter from './routes/search.js'
@@ -78,6 +80,12 @@ app.get('/api', (_req, res) => {
       'GET /api/search?q=',
       'GET /api/ratings/top',
       'GET|POST /api/ratings/:kind/:slug (establecimiento|experiencia)',
+      'GET /api/pages/:page',
+      'GET /api/admin/pages',
+      'PUT|DELETE /api/admin/pages/:page',
+      'POST /api/admin/pages/media',
+      'GET|DELETE /api/admin/:kind/:id/ratings (establishments|experiences)',
+      'DELETE /api/admin/:kind/:id/ratings/:ratingId',
       'GET /api/admin/establishments',
       'GET /api/admin/establishments/:id',
       'PATCH /api/admin/establishments/:id',
@@ -110,6 +118,8 @@ app.use(
   authRouter,
   adminRouter,
   adminExperiencesRouter,
+  adminRatingsRouter,
+  pagesRouter,
   usersRouter,
   metaRouter,
   establishmentsRouter,

@@ -1,0 +1,139 @@
+import { useEffect, useState } from 'react'
+import { apiRequest } from '../../lib/auth.js'
+
+// Pestaña «Calificaciones» de una ficha: quién votó, cuándo y cuántas
+// estrellas. Cada voto se puede borrar, o todos a la vez (con confirmación).
+// kind: 'establishments' | 'experiences'.
+
+function formatStamp(value) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleString('es-CO', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function Stars({ value }) {
+  return (
+    <span className="admin-stars" role="img" aria-label={`${value} de 5 estrellas`}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <span key={star} className={star <= value ? 'is-on' : ''} aria-hidden="true">
+          ★
+        </span>
+      ))}
+    </span>
+  )
+}
+
+export default function RatingsPanel({ kind, id, name, onNotify }) {
+  const [data, setData] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let alive = true
+    apiRequest(`/admin/${kind}/${id}/ratings`)
+      .then((result) => alive && setData(result))
+      .catch((err) => alive && setError(err.message))
+    return () => {
+      alive = false
+    }
+  }, [kind, id])
+
+  async function remove(path, ok) {
+    setBusy(true)
+    try {
+      setData(await apiRequest(path, { method: 'DELETE' }))
+      onNotify?.('ok', ok)
+    } catch (err) {
+      onNotify?.('error', 'No se pudo borrar', err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const removeOne = (rating) => {
+    if (!window.confirm(`¿Borrar la calificación de ${rating.name} (${rating.stars} ★)?`)) return
+    remove(`/admin/${kind}/${id}/ratings/${rating.id}`, 'Calificación borrada.')
+  }
+
+  const removeAll = () => {
+    const count = data?.items.length ?? 0
+    if (
+      !window.confirm(
+        `¿Borrar las ${count} calificaciones de «${name}»? El promedio vuelve a cero y no se puede deshacer.`,
+      )
+    ) {
+      return
+    }
+    remove(`/admin/${kind}/${id}/ratings`, 'Se borraron todas las calificaciones.')
+  }
+
+  return (
+    <div className="admin-publish admin-ratings">
+      <div className="admin-ratings__head">
+        <div>
+          <h2>Calificaciones</h2>
+          <p className="note">
+            {data
+              ? data.votes
+                ? `Promedio ${data.average.toFixed(1).replace('.', ',')} de 5 · ${data.votes} ${data.votes === 1 ? 'voto' : 'votos'}`
+                : 'Todavía nadie ha calificado esta ficha.'
+              : error || 'Cargando…'}
+          </p>
+        </div>
+        {data?.items.length ? (
+          <button type="button" className="admin-btn admin-btn--danger-outline" onClick={removeAll} disabled={busy}>
+            Borrar todas
+          </button>
+        ) : null}
+      </div>
+
+      {data?.items.length ? (
+        <div className="admin-ratings__table" role="table" aria-label="Calificaciones">
+          <div className="admin-ratings__row admin-ratings__row--head" role="row">
+            <span role="columnheader">Fecha</span>
+            <span role="columnheader">Nombre</span>
+            <span role="columnheader">Correo</span>
+            <span role="columnheader">Calificación</span>
+            <span role="columnheader">
+              <span className="visually-hidden">Acciones</span>
+            </span>
+          </div>
+          {data.items.map((rating) => (
+            <div key={rating.id} className="admin-ratings__row" role="row">
+              <span role="cell" title={rating.updatedAt !== rating.createdAt ? `Primera vez: ${formatStamp(rating.createdAt)}` : undefined}>
+                {formatStamp(rating.updatedAt)}
+              </span>
+              <span role="cell">{rating.name}</span>
+              <span role="cell">
+                <a href={`mailto:${rating.email}`}>{rating.email}</a>
+              </span>
+              <span role="cell">
+                <Stars value={rating.stars} />
+              </span>
+              <span role="cell">
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--danger-outline"
+                  onClick={() => removeOne(rating)}
+                  disabled={busy}
+                  aria-label={`Borrar la calificación de ${rating.name}`}
+                >
+                  Borrar
+                </button>
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      <p className="note">
+        Si alguien vuelve a calificar con el mismo correo, se actualiza su voto y su fecha.
+      </p>
+    </div>
+  )
+}

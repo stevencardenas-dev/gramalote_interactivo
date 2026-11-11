@@ -8,13 +8,17 @@ import MapPanel from '../components/ui/MapPanel.jsx'
 import { categories } from '../data/establishments.js'
 import { useState } from 'react'
 import { useEstablishments } from '../lib/contentApi.js'
+import { arrange, usePageContent } from '../lib/pageContent.js'
 import { matchesPriceRange, usePagedList } from '../lib/listing.js'
 
 export default function DondeComprar() {
   const meta = categories.comprar
   const [type, setType] = useState(meta.filterAll)
   const [price, setPrice] = useState(meta.priceAll)
-  const { data: places, loading, error } = useEstablishments('comprar')
+  const { data: shops, loading, error } = useEstablishments('comprar')
+  // Orden y fotos de las tarjetas y de las referencias: Páginas › Dónde comprar.
+  const page = usePageContent('donde-comprar')
+  const places = arrange(shops, page.order, page.covers)
   const priceIndex = meta.prices.indexOf(price)
   const filtered = places.filter(
     (item) =>
@@ -94,9 +98,14 @@ export default function DondeComprar() {
               </Button>
             </div>
             <div className="photo-collage photo-collage--right">
-              <Photo src="/img/home/platos-1.jpg" alt="Sopa tradicional" className="photo-collage__tall" />
-              <Photo src="/img/home/platos-2.jpg" alt="Arepas" />
-              <Photo src="/img/home/platos-3.jpg" alt="Café y pan" />
+              {page.platos.images.slice(0, 3).map((image, index) => (
+                <Photo
+                  key={image.id ?? index}
+                  src={image.photo}
+                  alt={image.alt ?? ''}
+                  className={index === 0 ? 'photo-collage__tall' : undefined}
+                />
+              ))}
             </div>
           </div>
 
@@ -107,11 +116,11 @@ export default function DondeComprar() {
                 Explora los restaurantes, cafeterías y otros establecimientos
                 gastronómicos de Gramalote en el mapa interactivo.
               </p>
-              <Button to="/donde-comer" icon="arrow">
-                Ver restaurantes
+              <Button to="/mapa?categoria=comer" icon="arrow">
+                Ver restaurantes en el mapa
               </Button>
             </div>
-            <Photo src="/img/home/donde-comer-bar.jpg" alt="Barra de un restaurante de Gramalote" className="split-feature__media" />
+            <Photo src={page.mapa.photo} alt={page.mapa.alt ?? ''} className="split-feature__media" />
           </div>
         </div>
       </section>

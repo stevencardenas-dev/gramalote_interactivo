@@ -43,6 +43,7 @@ export default function AdminNav() {
         </NavLink>
         <NavLink to="/admin/establecimientos">Establecimientos</NavLink>
         <NavLink to="/admin/experiencias">Experiencias</NavLink>
+        <NavLink to="/admin/paginas">Páginas</NavLink>
         {user?.role === 'admin' ? <NavLink to="/admin/usuarios">Usuarios</NavLink> : null}
       </nav>
       <ThemeToggle />

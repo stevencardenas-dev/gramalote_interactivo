@@ -9,10 +9,13 @@ import { FilterToggle } from '../components/ui/FilterBar.jsx'
 import { MapExplorer } from '../components/ui/MapPanel.jsx'
 import { activities as staticActivities } from '../data/experiences.js'
 import { useActivities } from '../lib/contentApi.js'
+import { arrange, usePageContent } from '../lib/pageContent.js'
 
 export default function QueHacer() {
   const [openToday, setOpenToday] = useState(false)
-  const activities = useActivities(staticActivities)
+  // Orden y foto de cada tarjeta: Páginas › Qué hacer, en el panel.
+  const page = usePageContent('que-hacer')
+  const activities = arrange(useActivities(staticActivities), page.order, page.covers)
   const visible = openToday ? activities.filter((item) => item.openDaily) : activities
 
   return (

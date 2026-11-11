@@ -5,15 +5,18 @@ import ExperiencesSection from '../components/home/ExperiencesSection.jsx'
 import OpenToday from '../components/home/OpenToday.jsx'
 import HistoryBlock from '../components/home/HistoryBlock.jsx'
 import PracticalInfo from '../components/home/PracticalInfo.jsx'
+import { usePageContent } from '../lib/pageContent.js'
 
 export default function Inicio() {
+  const content = usePageContent('inicio')
+
   return (
     <>
       <Hero />
       <MapBlock />
-      <QuickAccess />
-      <ExperiencesSection />
-      <OpenToday />
+      <QuickAccess items={content.quickAccess} />
+      <ExperiencesSection items={content.experiences} />
+      <OpenToday items={content.highlights} />
       <HistoryBlock />
       <PracticalInfo />
     </>

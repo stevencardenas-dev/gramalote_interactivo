@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminDialog from '../components/admin/AdminDialog.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import RatingsPanel from '../components/admin/RatingsPanel.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
 import ScheduleEditor from '../components/admin/ScheduleEditor.jsx'
 import IconMask from '../components/ui/IconMask.jsx'
@@ -14,6 +15,7 @@ const TABS = [
   { key: 'images', label: 'Imágenes' },
   { key: 'tips', label: 'Ten en cuenta' },
   { key: 'publish', label: 'Publicación' },
+  { key: 'ratings', label: 'Calificaciones' },
   { key: 'history', label: 'Historial' },
 ]
 
@@ -815,27 +817,25 @@ export function AdminExperiencia() {
               {form.published ? (
                 <p className="note">Para borrar la experiencia, primero despublica.</p>
               ) : null}
-              <div className="admin-publish__checks">
-              <label className="admin-check admin-check--card">
-                <input type="checkbox" checked={form.published} onChange={set('published')} />
-                <span>
-                  <strong>Publicada</strong>
-                  <small>Se guarda al pulsar «Guardar cambios».</small>
-                </span>
-              </label>
-              </div>
               <p className="note">
                 «Abierto hoy» se calcula con el horario de la pestaña Información.
               </p>
               <p className="note">{MINIMUM_HINT}</p>
 
               <h2>Orden</h2>
-              <div className="admin-publish__field">
-                <Field label="Posición en «Qué hacer»" hint="Los números menores salen primero.">
-                  <input type="number" value={form.sortOrder} onChange={set('sortOrder')} />
-                </Field>
-              </div>
+              <p className="note">
+                El orden y la foto de la tarjeta en «Qué hacer» se cambian en{' '}
+                <Link to="/admin/paginas?pagina=que-hacer">Páginas › Qué hacer</Link>.
+              </p>
             </div>
+          ) : null}
+
+          {tab === 'ratings' ? (
+            isNew ? (
+              <p className="empty">Guarda la experiencia para ver sus calificaciones.</p>
+            ) : (
+              <RatingsPanel kind="experiences" id={id} name={form.title} onNotify={notify} />
+            )
           ) : null}
 
           {tab === 'history' ? (

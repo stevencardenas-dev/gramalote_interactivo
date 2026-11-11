@@ -8,7 +8,9 @@ import MapPanel from '../components/ui/MapPanel.jsx'
 import PhotoBanner from '../components/ui/PhotoBanner.jsx'
 import { categories } from '../data/establishments.js'
 import { useState } from 'react'
-import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
+import { useEstablishments } from '../lib/contentApi.js'
+import { arrange, pickRelated, usePageContent } from '../lib/pageContent.js'
+import { RELATED_COUNT } from '../data/pages.js'
 import { usePagedList } from '../lib/listing.js'
 
 export default function DondeComer() {
@@ -18,14 +20,9 @@ export default function DondeComer() {
   const { data: comer, loading, error } = useEstablishments('comer')
   const { data: dormir } = useEstablishments('dormir')
 
-  const places = orderBySlugs(comer, [
-    'bambu',
-    'dona-claudia',
-    'dulce-paseo',
-    'fresas-con-crema-carvajal',
-    'la-sazon-de-la-tia',
-    'la-comarca',
-  ])
+  // Orden, fotos y referencia a Dónde dormir: Páginas › Dónde comer.
+  const page = usePageContent('donde-comer')
+  const places = arrange(comer, page.order, page.covers)
 
   const filtered = places.filter(
     (item) =>
@@ -34,12 +31,7 @@ export default function DondeComer() {
   )
   const { visible, hasMore, loadMore } = usePagedList(filtered, `${type}|${openOnly}`)
 
-  const lodging = orderBySlugs(dormir, [
-    'glamping-vista-antigua',
-    'hostal-campestre-camino-real',
-    'hostal-luna-azul',
-    'cabanas-el-penon',
-  ]).slice(0, 4)
+  const lodging = pickRelated(dormir, page.related, RELATED_COUNT['donde-comer'])
 
   return (
     <>
@@ -100,8 +92,9 @@ export default function DondeComer() {
 
           <div className="cross-section">
             <div className="section-head section-head--center">
-              <p className="eyebrow">Alojamientos en Gramalote</p>
-              <h2>Dónde dormir</h2>
+              {page.related.eyebrow ? <p className="eyebrow">{page.related.eyebrow}</p> : null}
+              <h2>{page.related.title}</h2>
+              {page.related.text ? <p>{page.related.text}</p> : null}
             </div>
 
             <div className="place-grid place-grid--four">

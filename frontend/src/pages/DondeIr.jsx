@@ -4,24 +4,19 @@ import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
 import PlaceCard from '../components/cards/PlaceCard.jsx'
 import { MapExplorer } from '../components/ui/MapPanel.jsx'
-import { orderBySlugs, useEstablishments } from '../lib/contentApi.js'
+import { useEstablishments } from '../lib/contentApi.js'
+import { pickRelated, usePageContent } from '../lib/pageContent.js'
+import { RELATED_COUNT } from '../data/pages.js'
 
 export default function DondeIr() {
   const { data: dormir, loading: loadingDormir, error: errorDormir } = useEstablishments('dormir')
   const { data: comprar, loading: loadingComprar, error: errorComprar } = useEstablishments('comprar')
 
-  const lodging = orderBySlugs(dormir, [
-    'glamping-vista-antigua',
-    'hostal-campestre-camino-real',
-    'hostal-luna-azul',
-    'cabanas-el-penon',
-  ]).slice(0, 4)
-
-  const shops = orderBySlugs(comprar, [
-    'sombreros-techa',
-    'maestros-de-la-madera',
-    'creaciones-martina',
-  ]).slice(0, 3)
+  // Textos, fotos y fichas de cada bloque: Páginas › Dónde ir, en el panel.
+  const page = usePageContent('donde-ir')
+  const lodging = pickRelated(dormir, page.dormir, RELATED_COUNT['donde-ir.dormir'])
+  const shops = pickRelated(comprar, page.comprar, RELATED_COUNT['donde-ir.comprar'])
+  const collage = page.comer.images
 
   const loading = loadingDormir || loadingComprar
   const error = errorDormir || errorComprar
@@ -56,26 +51,28 @@ export default function DondeIr() {
 
           <div className="category-spotlight">
             <div className="category-spotlight__body">
-              <p className="eyebrow">Gastronomía local</p>
-              <h2>Dónde comer</h2>
-              <p>
-                Descubre restaurantes, cafeterías, comidas típicas y sabores de
-                Gramalote.
-              </p>
+              {page.comer.eyebrow ? <p className="eyebrow">{page.comer.eyebrow}</p> : null}
+              <h2>{page.comer.title}</h2>
+              {page.comer.text ? <p>{page.comer.text}</p> : null}
               <Button to="/donde-comer" variant="secondary">
                 Ver restaurantes
               </Button>
             </div>
             <div className="photo-collage photo-collage--right">
-              <Photo src="/img/home/colage-comer-1.jpg" alt="Carnes a la plancha" className="photo-collage__tall" />
-              <Photo src="/img/home/colage-comer-2.jpg" alt="Fresas con crema" />
-              <Photo src="/img/home/colage-comer-3.jpg" alt="Helados artesanales" />
+              {collage.slice(0, 3).map((image, index) => (
+                <Photo
+                  key={image.id ?? index}
+                  src={image.photo}
+                  alt={image.alt ?? ''}
+                  className={index === 0 ? 'photo-collage__tall' : undefined}
+                />
+              ))}
             </div>
           </div>
 
           <div className="section-head section-head--center lodging-head">
-            <p className="eyebrow">Alojamientos en Gramalote</p>
-            <h2>Dónde dormir</h2>
+            {page.dormir.eyebrow ? <p className="eyebrow">{page.dormir.eyebrow}</p> : null}
+            <h2>{page.dormir.title}</h2>
           </div>
 
           {error ? <p className="auth-error">{error}</p> : null}
@@ -115,12 +112,9 @@ export default function DondeIr() {
             </div>
 
             <div className="shops-block__intro">
-              <p className="eyebrow">Artesanías y productos locales</p>
-              <h2>Dónde comprar</h2>
-              <p>
-                Conoce a los artesanos de Gramalote y descubre tejidos,
-                bisutería, decoración y productos hechos a mano.
-              </p>
+              {page.comprar.eyebrow ? <p className="eyebrow">{page.comprar.eyebrow}</p> : null}
+              <h2>{page.comprar.title}</h2>
+              {page.comprar.text ? <p>{page.comprar.text}</p> : null}
               <Button to="/donde-comprar" variant="secondary">
                 Ver sitios
               </Button>
