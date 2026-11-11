@@ -2395,3 +2395,125 @@ a.admin-tile:hover {
     font-size: 0.78rem;
   }
 }
+
+/* Redes sociales (Páginas › Redes sociales) */
+.admin-order__item.admin-social {
+  grid-template-columns: 26px auto 36px minmax(0, 1fr) auto;
+}
+
+.admin-social__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: #c4481b;
+  color: #fff;
+}
+
+.admin-social.is-off .admin-social__icon {
+  background: var(--a-sf2);
+  color: var(--a-mu);
+}
+
+.admin-social__url {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-social__url strong {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.admin-social__url input {
+  width: 100%;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--a-ln);
+  border-radius: 8px;
+  background: var(--a-bg);
+  color: var(--a-tx);
+  font: inherit;
+}
+
+.admin-social__url input:focus {
+  border-color: var(--a-ac);
+  outline: none;
+}
+
+.admin-social__url input[aria-invalid='true'] {
+  border-color: var(--a-danger);
+}
+
+.admin-social__error {
+  color: var(--a-danger);
+  font-size: 0.76rem;
+}
+
+/* Interruptor activar/desactivar */
+.admin-toggle {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 92px;
+  color: var(--a-mu);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-toggle input {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  margin: 0;
+  border: 1px solid var(--a-ln);
+  border-radius: 999px;
+  background: var(--a-sf2);
+  appearance: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.admin-toggle input::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--a-mu);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.admin-toggle input:checked {
+  border-color: var(--a-ac);
+  background: var(--a-ac);
+}
+
+.admin-toggle input:checked::after {
+  background: #fff;
+  transform: translateX(16px);
+}
+
+.admin-toggle input:focus-visible {
+  outline: 2px solid var(--a-ac-text);
+  outline-offset: 2px;
+}
+
+.admin-toggle input:checked + span {
+  color: var(--a-tx);
+}
+
+@media (max-width: 760px) {
+  .admin-order__item.admin-social {
+    grid-template-columns: 26px auto 36px minmax(0, 1fr);
+  }
+
+  .admin-social .admin-toggle {
+    grid-column: 3 / -1;
+  }
+}

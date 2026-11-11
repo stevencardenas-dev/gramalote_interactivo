@@ -25,6 +25,7 @@ export default function DondeIr() {
     <>
       <PageHero
         image="/img/home/hero-donde-ir.jpg"
+        imagePosition="center 58%"
         title="Dónde ir"
         breadcrumb={[
           { label: 'Inicio', to: '/' },

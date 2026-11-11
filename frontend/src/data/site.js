@@ -26,16 +26,7 @@ export const site = {
     { label: 'Curiosidades', to: '/curiosidades' },
     { label: 'Contactos útiles', to: '/informacion-practica#contactos' },
   ],
-  // Redes con iconos entregados por diseño en /brand/social.
-  // TODO: reemplazar los enlaces provisionales por las cuentas reales.
-  // Ya existen también facebook.svg, email.svg y linktree.svg listos para usar.
-  social: [
-    { label: 'Instagram', icon: 'instagram', href: 'https://www.instagram.com/' },
-    { label: 'WhatsApp', icon: 'whatsapp', href: 'https://www.whatsapp.com/' },
-    { label: 'TikTok', icon: 'tiktok', href: 'https://www.tiktok.com/' },
-    { label: 'YouTube', icon: 'youtube', href: 'https://www.youtube.com/' },
-    { label: 'X', icon: 'x', href: 'https://x.com/' },
-  ],
+  // Las redes sociales del pie se editan en el panel (data/pages.js › redes).
   practical: [
     {
       title: 'Cómo llegar',

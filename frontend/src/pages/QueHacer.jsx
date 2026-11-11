@@ -22,6 +22,7 @@ export default function QueHacer() {
     <>
       <PageHero
         image="/img/que-hacer/hero.jpg"
+        imagePosition="center 72%"
         title="Qué hacer"
         breadcrumb={[
           { label: 'Inicio', to: '/' },

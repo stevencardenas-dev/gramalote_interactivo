@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import ImagePicker from '../components/admin/ImagePicker.jsx'
-import { PAGE_DEFAULTS, PAGE_LINKS, RELATED_COUNT } from '../data/pages.js'
+import { PAGE_DEFAULTS, PAGE_LINKS, RELATED_COUNT, SOCIAL_NETWORKS, isSocialUrl } from '../data/pages.js'
+import SocialIcon from '../components/ui/SocialIcon.jsx'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 import { orderBySlugs } from '../lib/contentApi.js'
 import { mergeContent } from '../lib/pageContent.js'
@@ -16,6 +17,7 @@ const TABS = [
   { key: 'inicio', label: 'Inicio', pages: ['inicio'] },
   { key: 'que-hacer', label: 'Qué hacer', pages: ['que-hacer'] },
   { key: 'donde-ir', label: 'Dónde ir', pages: ['donde-ir', 'donde-comer', 'donde-dormir', 'donde-comprar'] },
+  { key: 'redes', label: 'Redes sociales', pages: ['redes'] },
 ]
 
 const PAGE_INFO = {
@@ -25,6 +27,22 @@ const PAGE_INFO = {
   'donde-comer': { label: 'Dónde comer', path: '/donde-comer' },
   'donde-dormir': { label: 'Dónde dormir', path: '/donde-dormir' },
   'donde-comprar': { label: 'Dónde comprar', path: '/donde-comprar' },
+  redes: { label: 'Redes sociales', path: '/' },
+}
+
+// Redes en el orden guardado; las que aún no estaban guardadas, al final.
+function socialRows(list) {
+  const known = (list ?? []).filter((item) => SOCIAL_NETWORKS.some((network) => network.id === item.id))
+  const missing = SOCIAL_NETWORKS.filter((network) => !known.some((item) => item.id === network.id)).map(
+    (network) => ({ id: network.id, url: '', enabled: false }),
+  )
+  return [...known, ...missing]
+}
+
+function invalidSocial(draft) {
+  return socialRows(draft?.social)
+    .filter((item) => item.enabled && !isSocialUrl(item.url))
+    .map((item) => SOCIAL_NETWORKS.find((network) => network.id === item.id)?.label ?? item.id)
 }
 
 const CATEGORY_OF_PAGE = { '/donde-comer': 'comer', '/donde-dormir': 'dormir', '/donde-comprar': 'comprar' }
@@ -753,6 +771,71 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker })
   )
 }
 
+// ---------------------------------------------------------------- Redes
+function RedesEditor({ draft, update }) {
+  const rows = socialRows(draft.social)
+  const setRow = (index, patch) =>
+    update((page) => {
+      page.social = socialRows(page.social).map((item, i) => (i === index ? { ...item, ...patch } : item))
+    })
+
+  return (
+    <AdminSection
+      title="Redes sociales del pie de página"
+      hint="Activa o desactiva cada icono, cambia a dónde lleva y su orden."
+      defaultOpen
+    >
+      <ol className="admin-order">
+        {rows.map((item, index) => {
+          const network = SOCIAL_NETWORKS.find((entry) => entry.id === item.id)
+          const bad = item.enabled && !isSocialUrl(item.url)
+          return (
+            <li key={item.id} className={`admin-order__item admin-social${item.enabled ? '' : ' is-off'}`}>
+              <span className="admin-order__pos">{index + 1}</span>
+              <MoveButtons
+                index={index}
+                length={rows.length}
+                label={network.label}
+                onMove={(from, delta) =>
+                  update((page) => {
+                    page.social = move(socialRows(page.social), from, delta)
+                  })
+                }
+              />
+              <span className="admin-social__icon">
+                <SocialIcon name={item.id} size={18} />
+              </span>
+              <label className="admin-social__url">
+                <span className="visually-hidden">Enlace de {network.label}</span>
+                <strong>{network.label}</strong>
+                <input
+                  type="url"
+                  value={item.url}
+                  placeholder={network.placeholder}
+                  aria-invalid={bad}
+                  onChange={(event) => setRow(index, { url: event.target.value })}
+                />
+                {bad ? <small className="admin-social__error">Escribe un enlace completo (https://… o mailto:…).</small> : null}
+              </label>
+              <label className="admin-toggle">
+                <input
+                  type="checkbox"
+                  checked={item.enabled}
+                  onChange={(event) => setRow(index, { enabled: event.target.checked })}
+                />
+                <span>{item.enabled ? 'Activa' : 'Oculta'}</span>
+              </label>
+            </li>
+          )
+        })}
+      </ol>
+      <p className="note">
+        Solo se muestran las redes activas con un enlace válido. WhatsApp admite enlaces como https://wa.me/57300…
+      </p>
+    </AdminSection>
+  )
+}
+
 // ---------------------------------------------------------------- Página
 export default function AdminPaginas() {
   const [params, setParams] = useSearchParams()
@@ -860,6 +943,11 @@ export default function AdminPaginas() {
   }
 
   async function save() {
+    const invalid = pageKey === 'redes' ? invalidSocial(drafts.redes) : []
+    if (invalid.length) {
+      notify('error', 'Revisa los enlaces', `Falta un enlace válido en: ${invalid.join(', ')}.`)
+      return
+    }
     setBusy(true)
     try {
       const saved = await apiRequest(`/admin/pages/${pageKey}`, { method: 'PUT', body: { value: drafts[pageKey] } })
@@ -977,6 +1065,7 @@ export default function AdminPaginas() {
 
             {pageKey === 'inicio' ? <InicioEditor {...editorProps} /> : null}
             {pageKey === 'que-hacer' ? <QueHacerEditor {...editorProps} /> : null}
+            {pageKey === 'redes' ? <RedesEditor {...editorProps} /> : null}
             {pageKey.startsWith('donde-') ? <CategoryEditor key={pageKey} pageKey={pageKey} {...editorProps} /> : null}
 
             <div className="admin-panel__footer">

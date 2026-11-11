@@ -133,6 +133,37 @@ export const PAGE_DEFAULTS = {
   },
 }
 
+// Redes del pie de página: se activan, desactivan y enlazan en Páginas › Redes
+// sociales. Los iconos están en public/brand/social.
+export const SOCIAL_NETWORKS = [
+  { id: 'instagram', label: 'Instagram', placeholder: 'https://www.instagram.com/usuario' },
+  { id: 'facebook', label: 'Facebook', placeholder: 'https://www.facebook.com/pagina' },
+  { id: 'whatsapp', label: 'WhatsApp', placeholder: 'https://wa.me/573001234567' },
+  { id: 'tiktok', label: 'TikTok', placeholder: 'https://www.tiktok.com/@usuario' },
+  { id: 'youtube', label: 'YouTube', placeholder: 'https://www.youtube.com/@canal' },
+  { id: 'x', label: 'X', placeholder: 'https://x.com/usuario' },
+  { id: 'linktree', label: 'Linktree', placeholder: 'https://linktr.ee/usuario' },
+  { id: 'email', label: 'Correo', placeholder: 'mailto:contacto@gramalote.gov.co' },
+]
+
+PAGE_DEFAULTS.redes = {
+  social: [
+    { id: 'instagram', url: 'https://www.instagram.com/', enabled: true },
+    { id: 'whatsapp', url: 'https://www.whatsapp.com/', enabled: true },
+    { id: 'tiktok', url: 'https://www.tiktok.com/', enabled: true },
+    { id: 'youtube', url: 'https://www.youtube.com/', enabled: true },
+    { id: 'x', url: 'https://x.com/', enabled: true },
+    { id: 'facebook', url: '', enabled: false },
+    { id: 'linktree', url: '', enabled: false },
+    { id: 'email', url: '', enabled: false },
+  ],
+}
+
+// Enlace válido para una red: web (http/https) o correo (mailto:).
+export function isSocialUrl(url) {
+  return typeof url === 'string' && /^(https?:\/\/[^\s]+|mailto:[^\s@]+@[^\s@]+)$/i.test(url.trim())
+}
+
 // Cuántas tarjetas muestra cada bloque de referencias.
 export const RELATED_COUNT = {
   'donde-ir.dormir': 4,

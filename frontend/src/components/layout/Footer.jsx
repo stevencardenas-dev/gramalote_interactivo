@@ -1,10 +1,19 @@
 import { Link } from 'react-router-dom'
 import { site } from '../../data/site.js'
+import { SOCIAL_NETWORKS, isSocialUrl } from '../../data/pages.js'
+import { usePageContent } from '../../lib/pageContent.js'
 import SocialIcon from '../ui/SocialIcon.jsx'
 
 const year = new Date().getFullYear()
 
 export default function Footer() {
+  // Redes activas y sus enlaces: Páginas › Redes sociales, en el panel.
+  const { social } = usePageContent('redes')
+  const networks = social
+    .filter((item) => item.enabled && isSocialUrl(item.url))
+    .map((item) => ({ ...item, label: SOCIAL_NETWORKS.find((n) => n.id === item.id)?.label ?? item.id }))
+    .filter((item) => SOCIAL_NETWORKS.some((n) => n.id === item.id))
+
   return (
     <footer className="site-footer">
       <div className="footer-logos">
@@ -27,19 +36,21 @@ export default function Footer() {
             ))}
           </nav>
 
-          <div className="footer-social">
-            {site.social.map((network) => (
-              <a
-                key={network.label}
-                href={network.href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={network.label}
-              >
-                <SocialIcon name={network.icon} />
-              </a>
-            ))}
-          </div>
+          {networks.length ? (
+            <div className="footer-social">
+              {networks.map((network) => (
+                <a
+                  key={network.id}
+                  href={network.url.trim()}
+                  target={network.id === 'email' ? undefined : '_blank'}
+                  rel="noreferrer"
+                  aria-label={network.label}
+                >
+                  <SocialIcon name={network.id} />
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
 
