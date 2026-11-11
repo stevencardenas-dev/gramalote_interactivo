@@ -2553,7 +2553,6 @@ a.admin-tile:hover {
 
 .admin-slide__images {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 112px;
   gap: 12px;
   align-content: start;
 }
@@ -2564,16 +2563,6 @@ a.admin-tile:hover {
 
 .admin-imgfield--banner {
   grid-column: 1 / -1;
-}
-
-.admin-imgfield--mobile .admin-imgfield__shot {
-  aspect-ratio: 4 / 3;
-}
-
-.admin-imgfield--mobile {
-  grid-template-columns: 112px minmax(0, 1fr);
-  grid-column: 1 / -1;
-  align-items: center;
 }
 
 .admin-slide__fields,
@@ -2627,10 +2616,21 @@ a.admin-tile:hover {
   }
 }
 
-/* La vista previa usa los colores del sitio, no los del tema del panel */
-
-.admin-carousel-preview .banner-carousel__count {
-  color: var(--c-muted);
+/* La vista previa usa los colores del sitio, no los del tema del panel
+   (.admin-app redefine --c-navy, --c-white, --c-line… para el modo oscuro). */
+.admin-carousel-preview {
+  --c-white: #ffffff;
+  --c-cream: #fff2e3;
+  --c-ink: #141414;
+  --c-ink-soft: #4b3b2f;
+  --c-muted: #6b6158;
+  --c-line: #e6d7c8;
+  --c-navy: #00426b;
+  --c-navy-dark: #00324f;
+  --c-coral: #db5319;
+  --c-primary: #00426b;
+  color: var(--c-ink);
+  color-scheme: light;
 }
 
 .admin-carousel-preview .banner-carousel .carousel-arrow {

@@ -176,17 +176,24 @@ export const RELATED_COUNT = {
 // Cada diapositiva es un banner completo de 8:3 (2560×960) con el texto ya
 // dibujado; `alt` lo repite para lectores de pantalla. Fechas en AAAA-MM-DD
 // (vacías = siempre): fuera de ese rango la diapositiva no se muestra.
-// `imageMobile` (opcional, 4:3) solo se usa si todas las visibles la tienen.
 // Enlaces: además de los de las tarjetas, { kind: 'none' }, { kind: 'url', url }
 // y { kind: 'whatsapp', phone, message }.
-export const CAROUSEL_LIMITS = { slides: 10, minInterval: 6, maxInterval: 15 }
+// Tiempos (segundos, editables en el panel): `interval` por diapositiva,
+// `touchResume` de pausa tras soltar el dedo y `manualResume` para volver a
+// avanzar solo tras un cambio manual.
+export const CAROUSEL_LIMITS = {
+  slides: 10,
+  minInterval: 6,
+  maxInterval: 15,
+  touchResume: { min: 1, max: 15, fallback: 5 },
+  manualResume: { min: 3, max: 60, fallback: 10 },
+}
 
 const banner = (id, title, alt) => ({
   id,
   title,
   alt,
   image: `/img/carrusel/${id}.webp`,
-  imageMobile: '',
   link: { kind: 'none' },
   active: true,
   startsAt: '',
@@ -197,6 +204,8 @@ PAGE_DEFAULTS.carrusel = {
   enabled: true,
   autoplay: true,
   interval: 7,
+  touchResume: 5,
+  manualResume: 10,
   label: 'Eventos y celebraciones en Gramalote',
   slides: [
     banner(

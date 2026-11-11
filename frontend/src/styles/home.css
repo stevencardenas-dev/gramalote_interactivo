@@ -818,6 +818,8 @@
   box-shadow: var(--shadow-card);
   aspect-ratio: 8 / 3;
   touch-action: pan-y;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .banner-carousel__track {
@@ -985,10 +987,6 @@ a.banner-carousel__media:hover .banner-carousel__cta {
 
   .banner-carousel__viewport {
     border-radius: var(--radius-md);
-  }
-
-  .banner-carousel--art-mobile .banner-carousel__viewport {
-    aspect-ratio: 4 / 3;
   }
 
   .banner-carousel .carousel-arrow {

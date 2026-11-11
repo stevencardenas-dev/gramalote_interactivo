@@ -24,3 +24,11 @@ export function intervalSeconds(value) {
   if (!Number.isFinite(seconds)) return 7
   return Math.min(CAROUSEL_LIMITS.maxInterval, Math.max(CAROUSEL_LIMITS.minInterval, Math.round(seconds)))
 }
+
+// Segundos de `touchResume` o `manualResume`, dentro de sus límites.
+export function timingSeconds(value, key) {
+  const { min, max, fallback } = CAROUSEL_LIMITS[key]
+  const seconds = Number(value)
+  if (value === undefined || value === null || value === '' || !Number.isFinite(seconds)) return fallback
+  return Math.min(max, Math.max(min, Math.round(seconds)))
+}

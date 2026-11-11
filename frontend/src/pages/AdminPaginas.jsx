@@ -14,7 +14,7 @@ import {
   whatsappUrl,
 } from '../data/pages.js'
 import BannerCarousel from '../components/home/BannerCarousel.jsx'
-import { intervalSeconds, todayKey, visibleSlides } from '../lib/carousel.js'
+import { intervalSeconds, timingSeconds, todayKey, visibleSlides } from '../lib/carousel.js'
 import SocialIcon from '../components/ui/SocialIcon.jsx'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 import { orderBySlugs } from '../lib/contentApi.js'
@@ -854,8 +854,6 @@ function RedesEditor({ draft, update, signal }) {
 // ---------------------------------------------------------------- Carrusel
 const BANNER_HINT =
   'Banner completo en 8:3 con el texto dentro de la imagen (ideal 2560×960 px; mínimo 1440×540). JPG, PNG o WebP de hasta 8 MB.'
-const MOBILE_HINT =
-  'Opcional: versión 4:3 (1200×900 px) con el texto más grande para celulares. Solo se usa si todas las diapositivas visibles tienen una.'
 
 function formatDay(value) {
   const [year, month, day] = String(value).split('-').map(Number)
@@ -960,23 +958,35 @@ function SlideLinkField({ link, onChange, sources }) {
   )
 }
 
-function BannerField({ label, size, photo, onOpen, onClear, mobile = false }) {
+function BannerField({ label, size, photo, onOpen }) {
   return (
-    <div className={`admin-imgfield ${mobile ? 'admin-imgfield--mobile' : 'admin-imgfield--banner'}`}>
+    <div className="admin-imgfield admin-imgfield--banner">
       <button type="button" className="admin-imgfield__shot" onClick={onOpen} aria-label={`Cambiar: ${label}`}>
         {photo ? <img src={photo} alt="" loading="lazy" /> : <span className="admin-imgfield__empty" aria-hidden="true" />}
-        <span className="admin-imgfield__cta">{photo ? 'Cambiar' : mobile ? 'Añadir' : 'Elegir banner'}</span>
+        <span className="admin-imgfield__cta">{photo ? 'Cambiar' : 'Elegir banner'}</span>
       </button>
       <span className="admin-imgfield__label">
         <strong>{label}</strong>
         <small>{size}</small>
-        {photo && onClear ? (
-          <button type="button" className="admin-slide__clear" onClick={onClear}>
-            Quitar
-          </button>
-        ) : null}
       </span>
     </div>
+  )
+}
+
+// Selector de segundos (rango + valor) para los tiempos del carrusel.
+function SecondsField({ label, hint, value, min, max, disabled, onChange }) {
+  return (
+    <Field label={`${label}: ${value} s`} hint={hint}>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={1}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
+    </Field>
   )
 }
 
@@ -1001,23 +1011,19 @@ function CarruselEditor({ draft, update, sources, groups, openPicker, signal, up
       Object.assign(page, patch)
     })
 
-  const pickBanner = (index, mobile = false) => {
+  const pickBanner = (index) => {
     const slide = draft.slides[index]
     const original = defaults.slides.find((item) => item.id === slide.id)
     openPicker({
-      title: `${mobile ? 'Versión para celular' : 'Banner'} · ${slide.title || `Diapositiva ${index + 1}`}`,
-      hint: mobile ? MOBILE_HINT : BANNER_HINT,
-      groups: mobile ? [groups.uploads] : [groups.uploads, designGroup],
-      current: mobile ? slide.imageMobile : slide.image,
-      defaultPhoto: mobile ? undefined : original?.image,
-      onUpload: (file) => uploadImage(file, mobile ? undefined : 'banner'),
+      title: `Banner · ${slide.title || `Diapositiva ${index + 1}`}`,
+      hint: BANNER_HINT,
+      groups: [groups.uploads, designGroup],
+      current: slide.image,
+      defaultPhoto: original?.image,
+      onUpload: (file) => uploadImage(file, 'banner'),
       onPick: ({ url, alt }) =>
         update((page) => {
           const target = page.slides[index]
-          if (mobile) {
-            target.imageMobile = url
-            return
-          }
           target.image = url
           // Al volver a un banner del diseño se recupera también su texto alternativo.
           const design = defaults.slides.find((item) => item.image === url)
@@ -1034,7 +1040,6 @@ function CarruselEditor({ draft, update, sources, groups, openPicker, signal, up
         title: '',
         alt: '',
         image: null,
-        imageMobile: '',
         cta: '',
         link: { kind: 'none' },
         active: true,
@@ -1061,22 +1066,35 @@ function CarruselEditor({ draft, update, sources, groups, openPicker, signal, up
               checked={draft.autoplay !== false}
               onChange={(event) => setPage({ autoplay: event.target.checked })}
             />
-            <span>{draft.autoplay !== false ? 'Avanza solo' : 'Solo con flechas y puntos'}</span>
+            <span>{draft.autoplay !== false ? 'Avanza solo' : 'Solo con flechas o deslizando'}</span>
           </label>
-          <Field
-            label={`Cambia cada ${intervalSeconds(draft.interval)} segundos`}
-            hint="Mínimo 6 s. Se detiene mientras el ratón o un dedo está encima, y deja de avanzar solo cuando la persona cambia de diapositiva a mano."
-          >
-            <input
-              type="range"
-              min={CAROUSEL_LIMITS.minInterval}
-              max={CAROUSEL_LIMITS.maxInterval}
-              step={1}
-              value={intervalSeconds(draft.interval)}
-              disabled={draft.autoplay === false}
-              onChange={(event) => setPage({ interval: Number(event.target.value) })}
-            />
-          </Field>
+          <SecondsField
+            label="Tiempo por diapositiva"
+            hint="Lo que marca la barra de progreso. Mínimo 6 s."
+            value={intervalSeconds(draft.interval)}
+            min={CAROUSEL_LIMITS.minInterval}
+            max={CAROUSEL_LIMITS.maxInterval}
+            disabled={draft.autoplay === false}
+            onChange={(interval) => setPage({ interval })}
+          />
+          <SecondsField
+            label="Pausa al soltar el dedo"
+            hint="En celular, tras mantener presionado el banner, la barra sigue pausada este tiempo antes de continuar."
+            value={timingSeconds(draft.touchResume, 'touchResume')}
+            min={CAROUSEL_LIMITS.touchResume.min}
+            max={CAROUSEL_LIMITS.touchResume.max}
+            disabled={draft.autoplay === false}
+            onChange={(touchResume) => setPage({ touchResume })}
+          />
+          <SecondsField
+            label="Reanudar tras cambio manual"
+            hint="Si alguien cambia de diapositiva con las flechas o deslizando, la barra se oculta y el avance vuelve tras este tiempo sin tocarlo."
+            value={timingSeconds(draft.manualResume, 'manualResume')}
+            min={CAROUSEL_LIMITS.manualResume.min}
+            max={CAROUSEL_LIMITS.manualResume.max}
+            disabled={draft.autoplay === false}
+            onChange={(manualResume) => setPage({ manualResume })}
+          />
           <Field label="Nombre del carrusel" hint="Lo anuncian los lectores de pantalla; no se ve en la página.">
             <input value={draft.label ?? ''} maxLength={80} onChange={(event) => setPage({ label: event.target.value })} />
           </Field>
@@ -1151,14 +1169,6 @@ function CarruselEditor({ draft, update, sources, groups, openPicker, signal, up
                       size="8:3 · 2560×960 px"
                       photo={slide.image}
                       onOpen={() => pickBanner(index)}
-                    />
-                    <BannerField
-                      mobile
-                      label="Celular (opcional)"
-                      size="4:3 · 1200×900 px"
-                      photo={slide.imageMobile}
-                      onOpen={() => pickBanner(index, true)}
-                      onClear={() => setSlide(index, { imageMobile: '' })}
                     />
                   </div>
                   <div className="admin-slide__fields">
