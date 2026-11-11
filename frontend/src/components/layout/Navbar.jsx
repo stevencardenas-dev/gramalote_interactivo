@@ -352,7 +352,18 @@ export default function Navbar({ over = false }) {
             ))}
           </ul>
         </nav>
-        <SearchForm inputId="site-search-mobile" onSubmitted={closeMenu} />
+        <div className="mobile-panel__pie">
+          <SearchForm inputId="site-search-mobile" onSubmitted={closeMenu} />
+          <Link
+            className="mobile-panel__acceso"
+            to={loginTo}
+            aria-label={loginLabel}
+            title={loginLabel}
+            onClick={closeMenu}
+          >
+            <Icon name="lock" />
+          </Link>
+        </div>
       </div>
     </header>
   )

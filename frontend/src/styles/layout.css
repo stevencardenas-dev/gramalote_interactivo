@@ -289,8 +289,12 @@
     padding-inline: 16px;
   }
 
-  /* El candado de acceso sigue visible en la esquina, junto al menú. */
+  /* El candado de acceso vive dentro del menú, junto al buscador. */
   .site-nav {
+    display: none;
+  }
+
+  .site-login {
     display: none;
   }
 

@@ -410,6 +410,40 @@ button.stars__button:focus-visible {
   .site-header__actions {
     gap: 12px;
   }
+
+  /* En móvil el acceso va dentro del menú, no en la cabecera. */
+  .site-login {
+    display: none;
+  }
+}
+
+/* Pie del menú móvil: buscador y candado de acceso, uno al lado del otro */
+.mobile-panel__pie {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.mobile-panel__pie .search-field {
+  flex: 1;
+  margin-top: 0;
+}
+
+.mobile-panel__acceso {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+  color: var(--c-white);
+}
+
+.mobile-panel__acceso:hover {
+  border-color: var(--c-gold);
+  color: var(--c-gold);
 }
 
 /* Enlace de texto sin flecha (p. ej. «¿Olvidaste tu contraseña?») */
