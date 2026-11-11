@@ -311,50 +311,6 @@
   transform: scale(1.3);
 }
 
-/* Control "Iconos 1 | 2" dentro del mapa */
-.maplibregl-ctrl.mapa-version {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 4px 4px 10px;
-  border-radius: 999px;
-  background: var(--c-white);
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
-  color: var(--c-ink);
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
-
-.mapa-version span {
-  margin-right: 4px;
-}
-
-.mapa-version button {
-  min-width: 30px;
-  height: 30px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--c-navy);
-  font: inherit;
-  cursor: pointer;
-}
-
-.mapa-version button:hover {
-  background: var(--c-cream);
-}
-
-.mapa-version button[aria-pressed='true'] {
-  background: var(--c-navy);
-  color: var(--c-white);
-}
-
-.mapa-version button:focus-visible {
-  outline: 2px solid var(--c-coral);
-  outline-offset: 2px;
-}
-
 /* Escenario del mapa con la tarjeta de ficha encima */
 .mapa-escenario {
   position: relative;
@@ -696,10 +652,6 @@
     min-height: 44px;
   }
 
-  .mapa-version button {
-    min-width: 40px;
-    height: 40px;
-  }
 }
 
 /* Explorador adaptable: sin desbordes y panel más estrecho en pantallas medianas */
@@ -895,48 +847,6 @@
   z-index: 8;
 }
 
-/* Selector de iconos: arriba del mapa, por fuera, a la izquierda */
-.mapa-barra {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-  margin-bottom: 10px;
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--c-ink);
-}
-
-.mapa-barra__opciones {
-  display: inline-flex;
-  padding: 3px;
-  border: var(--border);
-  border-radius: var(--radius-pill);
-  background: var(--c-white);
-}
-
-.mapa-barra__opciones button {
-  min-width: 40px;
-  min-height: 36px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--c-navy);
-  font: inherit;
-  cursor: pointer;
-}
-
-.mapa-barra__opciones button[aria-pressed="true"] {
-  background: var(--c-navy);
-  color: var(--c-white);
-}
-
-.mapa-barra__opciones button:focus-visible {
-  outline: 2px solid var(--c-coral);
-  outline-offset: 2px;
-}
-
 /* Escritorio: los filtros van dentro del panel izquierdo, no en una ventana flotante */
 @media (min-width: 861px) {
   .mapa-hoja {
@@ -973,13 +883,6 @@
 
   .mapa-panel__lista {
     flex: 1 0 160px;
-  }
-}
-
-/* Escritorio: el selector de iconos vuelve a su sitio, dentro del mapa arriba a la izquierda */
-@media (min-width: 861px) {
-  .mapa-barra {
-    display: none;
   }
 }
 

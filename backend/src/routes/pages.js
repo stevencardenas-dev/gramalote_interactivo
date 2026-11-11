@@ -1,4 +1,5 @@
-// Páginas editables (/admin/paginas): Inicio, Qué hacer y las de Dónde ir.
+// Páginas editables (/admin/paginas): Inicio, Qué hacer, las de Dónde ir, las
+// redes sociales y el carrusel de eventos de Inicio.
 //
 // Cada página guarda un JSON en site_settings («page:<clave>»). El panel lo
 // escribe tal cual; al servirlo al público se limpia: las fotos de /media que
@@ -16,10 +17,20 @@ import { parseJson, toNumber } from '../serializers.js'
 
 const router = Router()
 
-export const PAGE_KEYS = ['inicio', 'que-hacer', 'donde-ir', 'donde-comer', 'donde-dormir', 'donde-comprar', 'redes']
+export const PAGE_KEYS = ['inicio', 'que-hacer', 'donde-ir', 'donde-comer', 'donde-dormir', 'donde-comprar', 'redes', 'carrusel']
 const settingKey = (page) => `page:${page}`
 const MAX_JSON_BYTES = 64 * 1024
 const INTERNAL_PATH = /^\/[a-z0-9\-/?=&]*$/i
+const WEB_URL = /^https?:\/\/[^\s"'<>]+\.[^\s"'<>]+$/i
+
+// Enlace de WhatsApp a partir de un número (10 dígitos = Colombia, se antepone 57).
+function whatsappUrl(phone, message) {
+  let digits = String(phone ?? '').replace(/\D/g, '')
+  if (digits.length === 10) digits = `57${digits}`
+  if (digits.length < 11 || digits.length > 15) return null
+  const text = typeof message === 'string' ? message.trim().slice(0, 300) : ''
+  return `https://wa.me/${digits}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+}
 
 function pageFrom(params) {
   const page = String(params.page ?? '')
@@ -100,6 +111,19 @@ async function forPublic(raw) {
     } else if (object.kind === 'establishment') {
       object.to = `/establecimiento/${object.slug}`
       object.available = establishments.has(object.slug)
+    } else if (object.kind === 'url') {
+      const url = typeof object.url === 'string' && WEB_URL.test(object.url.trim()) ? object.url.trim() : null
+      object.to = url
+      object.external = true
+      object.available = Boolean(url)
+    } else if (object.kind === 'whatsapp') {
+      const url = whatsappUrl(object.phone, object.message)
+      object.to = url
+      object.external = true
+      object.available = Boolean(url)
+    } else if (object.kind === 'none') {
+      object.to = null
+      object.available = false
     } else {
       const path = typeof object.path === 'string' && INTERNAL_PATH.test(object.path) ? object.path : null
       object.to = path
@@ -275,7 +299,13 @@ router.post(
     if (!req.file?.buffer) throw new ApiError(400, 'VALIDATION', 'Falta el archivo de la imagen')
     await assertQuota(req.file.size)
     await ensureDir(mediaRoot())
-    const stored = await storeImage(req.file.buffer, { folder: 'pages', role: 'gallery' })
+    // Los banners del carrusel ocupan todo el ancho: se guarda también una copia de 2560 px.
+    const banner = req.query?.purpose === 'banner'
+    const stored = await storeImage(req.file.buffer, {
+      folder: 'pages',
+      role: 'gallery',
+      extraWidths: banner ? [2560] : [],
+    })
     const alt = typeof req.body?.altText === 'string' ? req.body.altText.trim().slice(0, 255) || null : null
 
     const mediaId = await withTransaction(async (connection) => {

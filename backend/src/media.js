@@ -88,7 +88,8 @@ export async function assertQuota(incomingBytes = 0) {
 }
 
 // Re-codifica a WebP, corrige orientación y descarta EXIF (incluida la geolocalización).
-export async function storeImage(buffer, { folder, role = 'gallery' }) {
+// `extraWidths`: anchos además de MEDIA_VARIANTS (p. ej. 2560 para los banners).
+export async function storeImage(buffer, { folder, role = 'gallery', extraWidths = [] }) {
   if (!IMAGE_ROLES.has(role)) {
     throw new ApiError(400, 'INVALID_ROLE', 'Rol de imagen inválido')
   }
@@ -112,7 +113,7 @@ export async function storeImage(buffer, { folder, role = 'gallery' }) {
   await ensureDir(directory)
 
   const targets = [...new Set(
-    config.media.variants.map((width) => Math.min(width, metadata.width)),
+    [...config.media.variants, ...extraWidths].map((width) => Math.min(width, metadata.width)),
   )].sort((a, b) => a - b)
   const largest = targets.at(-1) ?? metadata.width
 

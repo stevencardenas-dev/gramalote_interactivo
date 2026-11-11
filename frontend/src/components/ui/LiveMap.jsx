@@ -95,76 +95,18 @@ function toPlaces(data) {
     .filter((place) => place.group)
 }
 
-// Iconos ilustrados (src/data/mapIcons.js), medidos en píxeles. La versión 1
-// (fondo oscuro) o 2 (fondo claro) la elige quien mira el mapa con el control
-// "Iconos" y se recuerda en este navegador.
+// Iconos ilustrados (src/data/mapIcons.js), medidos en píxeles.
 const ICON_SIZE = 48
-const VERSION_KEY = 'gramalote:iconos-mapa'
-
-function readIconVersion() {
-  try {
-    return localStorage.getItem(VERSION_KEY) === '2' ? 2 : 1
-  } catch {
-    return 1
-  }
-}
-
-function saveIconVersion(version) {
-  try {
-    localStorage.setItem(VERSION_KEY, String(version))
-  } catch {
-    // Sin almacenamiento (modo privado): la elección dura lo que la página.
-  }
-}
-
-// Control de MapLibre (DOM plano) con los botones "1" y "2".
-class IconVersionControl {
-  constructor(onChange) {
-    this.onChange = onChange
-  }
-
-  onAdd() {
-    this.element = document.createElement('div')
-    this.element.className = 'maplibregl-ctrl mapa-version'
-    this.element.setAttribute('role', 'group')
-    this.element.setAttribute('aria-label', 'Versión de los iconos del mapa')
-    const label = document.createElement('span')
-    label.textContent = 'Iconos'
-    label.setAttribute('aria-hidden', 'true')
-    this.element.append(label)
-    this.buttons = [1, 2].map((version) => {
-      const button = document.createElement('button')
-      button.type = 'button'
-      button.textContent = String(version)
-      button.title = version === 1 ? 'Iconos versión 1 (fondo oscuro)' : 'Iconos versión 2 (fondo claro)'
-      button.setAttribute('aria-label', button.title)
-      button.addEventListener('click', () => this.onChange(version))
-      this.element.append(button)
-      return button
-    })
-    return this.element
-  }
-
-  setVersion(version) {
-    this.buttons?.forEach((button, index) =>
-      button.setAttribute('aria-pressed', String(index + 1 === version)),
-    )
-  }
-
-  onRemove() {
-    this.element?.remove()
-  }
-}
 
 // Pin con el icono del lugar; es un elemento del DOM, no una capa de WebGL.
-function createPin(place, version, onSelect) {
+function createPin(place, onSelect) {
   const button = document.createElement('button')
   button.type = 'button'
   button.className = 'mapa-pin'
   button.setAttribute('aria-label', `${place.name}, ${placeSubtitle(place)}`)
   const image = document.createElement('img')
   image.className = 'mapa-pin__icono'
-  image.src = mapIconUrl(place.icon, version)
+  image.src = mapIconUrl(place.icon)
   image.width = ICON_SIZE
   image.height = ICON_SIZE
   image.alt = ''
@@ -223,9 +165,6 @@ export default function LiveMap({
   // En escritorio los filtros van abiertos dentro del panel izquierdo; en móvil, como hoja.
   const [sheetOpen, setSheetOpen] = useState(() => window.matchMedia('(min-width: 861px)').matches)
   const [listOpen, setListOpen] = useState(false)
-  const [iconVersion, setIconVersion] = useState(readIconVersion)
-  const iconVersionRef = useRef(iconVersion)
-  const versionControlRef = useRef(null)
   const groupsKey = groups ? groups.join(',') : ''
 
   const places = useMemo(() => {
@@ -308,11 +247,6 @@ export default function LiveMap({
       style: buildMapStyle(),
     })
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right')
-    // En escritorio el selector va dentro del mapa; en móvil (explorador) se usa la barra de arriba.
-    const versionControl = new IconVersionControl(setIconVersion)
-    map.addControl(versionControl, 'top-left')
-    versionControl.setVersion(iconVersionRef.current)
-    versionControlRef.current = versionControl
 
     popupRef.current = new Popup({ closeButton: true, closeOnClick: false, maxWidth: '260px', offset: [0, -ICON_SIZE / 2] })
 
@@ -358,7 +292,7 @@ export default function LiveMap({
     popupRef.current?.remove()
     places.forEach((place) => {
       const marker = new Marker({
-        element: createPin(place, iconVersionRef.current, (item) => {
+        element: createPin(place, (item) => {
           setSelectedId(item.id)
           if (!explorer) showPopup(readyMap, item)
         }),
@@ -372,19 +306,6 @@ export default function LiveMap({
     // showPopup solo usa refs y navigate, que no cambian entre renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readyMap, places])
-
-  // Cambia la versión de los iconos sin volver a crear los pines.
-  useEffect(() => {
-    iconVersionRef.current = iconVersion
-    saveIconVersion(iconVersion)
-    versionControlRef.current?.setVersion(iconVersion)
-    const byId = new Map(places.map((place) => [place.id, place]))
-    markersRef.current.forEach((marker, id) => {
-      const place = byId.get(id)
-      const image = marker.getElement().querySelector('img')
-      if (place && image) image.src = mapIconUrl(place.icon, iconVersion)
-    })
-  }, [iconVersion, places])
 
   // Resalta el pin elegido y deja su tarjeta a la vista en la lista.
   useEffect(() => {
@@ -500,22 +421,6 @@ export default function LiveMap({
   if (explorer) {
     return (
       <>
-      <div className="mapa-barra">
-        <span id="iconos-etiqueta">Iconos</span>
-        <div role="group" aria-labelledby="iconos-etiqueta" className="mapa-barra__opciones">
-          {[1, 2].map((version) => (
-            <button
-              key={version}
-              type="button"
-              aria-pressed={iconVersion === version}
-              title={version === 1 ? 'Iconos versión 1 (fondo oscuro)' : 'Iconos versión 2 (fondo claro)'}
-              onClick={() => setIconVersion(version)}
-            >
-              {version}
-            </button>
-          ))}
-        </div>
-      </div>
       <div className="mapa-explorador">
         <aside className={`mapa-panel${listOpen ? ' is-list-open' : ''}`} aria-label="Lugares del mapa">
           <input

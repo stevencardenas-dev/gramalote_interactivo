@@ -171,3 +171,69 @@ export const RELATED_COUNT = {
   'donde-comer': 4,
   'donde-dormir': 2,
 }
+
+// Carrusel de eventos de Inicio (entrega «CARRUSEL - BANNER», 10 de noviembre).
+// Cada diapositiva es un banner completo de 8:3 (2560×960) con el texto ya
+// dibujado; `alt` lo repite para lectores de pantalla. Fechas en AAAA-MM-DD
+// (vacías = siempre): fuera de ese rango la diapositiva no se muestra.
+// `imageMobile` (opcional, 4:3) solo se usa si todas las visibles la tienen.
+// Enlaces: además de los de las tarjetas, { kind: 'none' }, { kind: 'url', url }
+// y { kind: 'whatsapp', phone, message }.
+export const CAROUSEL_LIMITS = { slides: 10, minInterval: 3, maxInterval: 15 }
+
+const banner = (id, title, alt) => ({
+  id,
+  title,
+  alt,
+  image: `/img/carrusel/${id}.webp`,
+  imageMobile: '',
+  link: { kind: 'none' },
+  active: true,
+  startsAt: '',
+  endsAt: '',
+})
+
+PAGE_DEFAULTS.carrusel = {
+  enabled: true,
+  autoplay: true,
+  interval: 6,
+  label: 'Eventos y celebraciones en Gramalote',
+  slides: [
+    banner(
+      'navidad',
+      'Navidad en Gramalote',
+      'Navidad en Gramalote: la magia de encontrarnos y celebrar nuestras tradiciones. Del 15 al 24 de diciembre de 2026, Ruta Navideña con celebración en los sectores y misas de aguinaldo. Más información por WhatsApp.',
+    ),
+    banner(
+      'ruta-navidena',
+      'Ruta Navideña 2026',
+      'Ruta Navideña 2026 de la Parroquia San Rafael: acompáñanos en este maravilloso encuentro. Mapa con las figuras del pesebre en los sectores de Gramalote, desde el Ángel en La Lomita hasta el Pesebre en la parroquia.',
+    ),
+    banner(
+      'seis-de-reyes',
+      'Seis de Reyes',
+      'Seis de Reyes: tradición, alegría y cultura en Gramalote. Del 8 al 12 de enero de 2027 en el Parque Principal. Más información por WhatsApp.',
+    ),
+    banner(
+      'semana-santa',
+      'Semana Santa',
+      'Semana Santa en Gramalote: vive la fe, recorre nuestro territorio. Del 13 al 20 de abril, Parroquia San Rafael, Parque Principal. Más información por WhatsApp.',
+    ),
+    banner(
+      'fiestas-mitad-de-ano',
+      'Fiestas Populares de Mitad de Año',
+      'Fiestas Populares de Mitad de Año y Día del Campesino: tradición, campo y cultura en un solo festejo. 13 y 14 de julio de 2027 en el Parque Principal, con música autóctona, feria agrícola y homenaje al campesino.',
+    ),
+  ],
+}
+
+// Enlace de WhatsApp a partir de un número colombiano (10 dígitos) o con indicativo.
+export function whatsappUrl(phone, message = '') {
+  let digits = String(phone ?? '').replace(/\D/g, '')
+  if (digits.length === 10) digits = `57${digits}`
+  if (digits.length < 11 || digits.length > 15) return null
+  const text = String(message ?? '').trim()
+  return `https://wa.me/${digits}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+}
+
+export const isWebUrl = (url) => typeof url === 'string' && /^https?:\/\/[^\s]+\.[^\s]+$/i.test(url.trim())

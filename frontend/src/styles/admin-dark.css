@@ -2517,3 +2517,134 @@ a.admin-tile:hover {
     grid-column: 3 / -1;
   }
 }
+
+/* Páginas › Carrusel de eventos */
+.admin-carousel-settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px 24px;
+  align-items: center;
+}
+
+.admin-carousel-settings input[type='range'] {
+  width: 100%;
+  padding: 0;
+  accent-color: var(--a-ac);
+}
+
+.admin-carousel-preview {
+  padding: 14px;
+  border: 1px solid var(--a-ln);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.banner-carousel--preview {
+  padding: 0;
+  background: transparent;
+}
+
+.admin-slide__body {
+  display: grid;
+  grid-template-columns: minmax(240px, 340px) minmax(0, 1fr);
+  gap: 14px 20px;
+  padding: 12px;
+}
+
+.admin-slide__images {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  gap: 12px;
+  align-content: start;
+}
+
+.admin-imgfield--banner .admin-imgfield__shot {
+  aspect-ratio: 8 / 3;
+}
+
+.admin-imgfield--banner {
+  grid-column: 1 / -1;
+}
+
+.admin-imgfield--mobile .admin-imgfield__shot {
+  aspect-ratio: 4 / 3;
+}
+
+.admin-imgfield--mobile {
+  grid-template-columns: 112px minmax(0, 1fr);
+  grid-column: 1 / -1;
+  align-items: center;
+}
+
+.admin-slide__fields,
+.admin-slide__link {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-slide__pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-slide__link .admin-linkfield,
+.admin-slide__link > div:not([class]) {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-slide__clear {
+  justify-self: start;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--a-danger);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.admin-slide.is-off .admin-slide__body {
+  opacity: 0.55;
+}
+
+.admin-slide .admin-pcard__head .admin-toggle {
+  min-width: 0;
+}
+
+.admin-slide [aria-invalid='true'] {
+  border-color: var(--a-danger);
+}
+
+@media (max-width: 760px) {
+  .admin-slide__body,
+  .admin-slide__pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* La vista previa usa los colores del sitio, no los del tema del panel */
+.admin-carousel-preview .banner-carousel .carousel-dots button {
+  border: 0;
+  background: var(--c-line);
+}
+
+.admin-carousel-preview .banner-carousel .carousel-dots button.is-active {
+  background: var(--c-navy);
+}
+
+.admin-carousel-preview .banner-carousel__pause {
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-navy);
+}
+
+.admin-carousel-preview .banner-carousel .carousel-arrow {
+  border: 0;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--c-navy);
+}

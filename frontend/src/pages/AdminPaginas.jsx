@@ -3,18 +3,30 @@ import { Link, useSearchParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import ImagePicker from '../components/admin/ImagePicker.jsx'
-import { PAGE_DEFAULTS, PAGE_LINKS, RELATED_COUNT, SOCIAL_NETWORKS, isSocialUrl } from '../data/pages.js'
+import {
+  CAROUSEL_LIMITS,
+  PAGE_DEFAULTS,
+  PAGE_LINKS,
+  RELATED_COUNT,
+  SOCIAL_NETWORKS,
+  isSocialUrl,
+  isWebUrl,
+  whatsappUrl,
+} from '../data/pages.js'
+import BannerCarousel from '../components/home/BannerCarousel.jsx'
+import { intervalSeconds, todayKey, visibleSlides } from '../lib/carousel.js'
 import SocialIcon from '../components/ui/SocialIcon.jsx'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 import { orderBySlugs } from '../lib/contentApi.js'
 import { mergeContent } from '../lib/pageContent.js'
 
-// Páginas «estáticas» del sitio: Inicio, Qué hacer y Dónde ir (con sus tres
-// subpáginas). Cada página se guarda entera en site_settings («page:<clave>»);
+// Páginas «estáticas» del sitio: Inicio (y su carrusel de eventos), Qué hacer,
+// Dónde ir (con sus tres subpáginas) y las redes sociales. Cada página se guarda entera en site_settings («page:<clave>»);
 // lo que no se toca conserva el diseño original (data/pages.js).
 
 const TABS = [
   { key: 'inicio', label: 'Inicio', pages: ['inicio'] },
+  { key: 'carrusel', label: 'Carrusel', pages: ['carrusel'] },
   { key: 'que-hacer', label: 'Qué hacer', pages: ['que-hacer'] },
   { key: 'donde-ir', label: 'Dónde ir', pages: ['donde-ir', 'donde-comer', 'donde-dormir', 'donde-comprar'] },
   { key: 'redes', label: 'Redes sociales', pages: ['redes'] },
@@ -28,6 +40,7 @@ const PAGE_INFO = {
   'donde-dormir': { label: 'Dónde dormir', path: '/donde-dormir' },
   'donde-comprar': { label: 'Dónde comprar', path: '/donde-comprar' },
   redes: { label: 'Redes sociales', path: '/' },
+  carrusel: { label: 'Carrusel de eventos', path: '/' },
 }
 
 // Redes en el orden guardado; las que aún no estaban guardadas, al final.
@@ -266,7 +279,7 @@ function RelatedEditor({ block, onChange, pool, count, onCover }) {
   )
 }
 
-function LinkField({ link, onChange, sources, allowPage = true }) {
+function LinkField({ link, onChange, sources, allowPage = true, hideKind = false }) {
   const kind = link?.kind ?? 'page'
   const options =
     kind === 'experience'
@@ -278,7 +291,8 @@ function LinkField({ link, onChange, sources, allowPage = true }) {
   const selected = options.find((option) => option.value === value)
 
   return (
-    <div className="admin-linkfield">
+    <div className={hideKind ? undefined : 'admin-linkfield'}>
+      {hideKind ? null : (
       <Field label="Enlaza a">
         <select
           value={kind}
@@ -292,6 +306,7 @@ function LinkField({ link, onChange, sources, allowPage = true }) {
           {allowPage ? <option value="page">Una sección general (Dónde comer, Dónde comprar…)</option> : null}
         </select>
       </Field>
+      )}
       <Field
         label={kind === 'page' ? 'Sección' : 'Ficha'}
         hint={selected && !selected.published ? 'No publicada: la tarjeta no se mostrará hasta publicarla.' : undefined}
@@ -836,6 +851,387 @@ function RedesEditor({ draft, update, signal }) {
   )
 }
 
+// ---------------------------------------------------------------- Carrusel
+const BANNER_HINT =
+  'Banner completo en 8:3 con el texto dentro de la imagen (ideal 2560×960 px; mínimo 1440×540). JPG, PNG o WebP de hasta 8 MB.'
+const MOBILE_HINT =
+  'Opcional: versión 4:3 (1200×900 px) con el texto más grande para celulares. Solo se usa si todas las diapositivas visibles tienen una.'
+
+function formatDay(value) {
+  const [year, month, day] = String(value).split('-').map(Number)
+  if (!year || !month || !day) return value
+  return new Date(year, month - 1, day).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+// Estado de una diapositiva según si está activa, su banner y sus fechas.
+function slideStatus(slide, today) {
+  if (slide.active === false) return { label: 'Oculta', badge: '' }
+  if (!slide.image) return { label: 'Sin banner', badge: 'admin-badge--draft' }
+  if (slide.startsAt && slide.startsAt > today) return { label: `Desde el ${formatDay(slide.startsAt)}`, badge: 'admin-badge--draft' }
+  if (slide.endsAt && slide.endsAt < today) return { label: 'Terminó', badge: '' }
+  return { label: slide.endsAt ? `Visible hasta el ${formatDay(slide.endsAt)}` : 'Visible', badge: 'admin-badge--ok' }
+}
+
+// Problemas que impiden guardar el carrusel (solo en diapositivas activas).
+function carouselProblems(draft) {
+  const problems = []
+  ;(draft?.slides ?? []).forEach((slide, index) => {
+    if (slide.active === false) return
+    const name = slide.title?.trim() || `Diapositiva ${index + 1}`
+    const link = slide.link ?? {}
+    if (!slide.image) problems.push(`${name}: falta el banner.`)
+    if (!slide.alt?.trim()) problems.push(`${name}: falta el texto alternativo.`)
+    if (slide.startsAt && slide.endsAt && slide.endsAt < slide.startsAt) {
+      problems.push(`${name}: la fecha final es anterior a la inicial.`)
+    }
+    if (link.kind === 'url' && !isWebUrl(link.url)) problems.push(`${name}: el enlace debe empezar con https://.`)
+    if (link.kind === 'whatsapp' && !whatsappUrl(link.phone)) problems.push(`${name}: el número de WhatsApp no es válido.`)
+    if ((link.kind === 'experience' || link.kind === 'establishment') && !link.slug) {
+      problems.push(`${name}: elige la ficha del enlace.`)
+    }
+  })
+  return problems
+}
+
+function SlideLinkField({ link, onChange, sources }) {
+  const kind = link?.kind ?? 'none'
+  const choose = (next) => {
+    if (next === 'none') onChange({ kind: 'none' })
+    else if (next === 'url') onChange({ kind: 'url', url: '' })
+    else if (next === 'whatsapp') onChange({ kind: 'whatsapp', phone: '', message: '' })
+    else if (next === 'page') onChange({ kind: 'page', path: PAGE_LINKS[0].path })
+    else onChange({ kind: next, slug: '' })
+  }
+  const badPhone = Boolean(link?.phone) && !whatsappUrl(link.phone)
+  const badUrl = Boolean(link?.url) && !isWebUrl(link.url)
+
+  return (
+    <div className="admin-slide__link">
+      <Field label="Al tocar el banner">
+        <select value={kind} onChange={(event) => choose(event.target.value)}>
+          <option value="none">No lleva a ningún lado</option>
+          <option value="whatsapp">Abre un chat de WhatsApp</option>
+          <option value="url">Abre un enlace externo (formulario, red social…)</option>
+          <option value="page">Lleva a una sección del sitio</option>
+          <option value="experience">Lleva a una experiencia</option>
+          <option value="establishment">Lleva a un establecimiento</option>
+        </select>
+      </Field>
+      {kind === 'page' || kind === 'experience' || kind === 'establishment' ? (
+        <LinkField link={link} onChange={onChange} sources={sources} hideKind />
+      ) : null}
+      {kind === 'url' ? (
+        <Field label="Enlace" hint={badUrl ? 'Escribe el enlace completo, con https://' : 'Se abre en otra pestaña.'}>
+          <input
+            type="url"
+            value={link.url ?? ''}
+            placeholder="https://"
+            aria-invalid={badUrl}
+            onChange={(event) => onChange({ ...link, url: event.target.value })}
+          />
+        </Field>
+      ) : null}
+      {kind === 'whatsapp' ? (
+        <div className="admin-slide__pair">
+          <Field
+            label="Número de WhatsApp"
+            hint={badPhone ? 'Celular de 10 dígitos o con indicativo (57…).' : 'Celular de 10 dígitos; se antepone el 57.'}
+          >
+            <input
+              type="tel"
+              inputMode="tel"
+              value={link.phone ?? ''}
+              placeholder="300 123 4567"
+              aria-invalid={badPhone}
+              onChange={(event) => onChange({ ...link, phone: event.target.value })}
+            />
+          </Field>
+          <Field label="Mensaje inicial (opcional)">
+            <input
+              value={link.message ?? ''}
+              maxLength={300}
+              placeholder="Hola, quiero información sobre…"
+              onChange={(event) => onChange({ ...link, message: event.target.value })}
+            />
+          </Field>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function BannerField({ label, size, photo, onOpen, onClear, mobile = false }) {
+  return (
+    <div className={`admin-imgfield ${mobile ? 'admin-imgfield--mobile' : 'admin-imgfield--banner'}`}>
+      <button type="button" className="admin-imgfield__shot" onClick={onOpen} aria-label={`Cambiar: ${label}`}>
+        {photo ? <img src={photo} alt="" loading="lazy" /> : <span className="admin-imgfield__empty" aria-hidden="true" />}
+        <span className="admin-imgfield__cta">{photo ? 'Cambiar' : mobile ? 'Añadir' : 'Elegir banner'}</span>
+      </button>
+      <span className="admin-imgfield__label">
+        <strong>{label}</strong>
+        <small>{size}</small>
+        {photo && onClear ? (
+          <button type="button" className="admin-slide__clear" onClick={onClear}>
+            Quitar
+          </button>
+        ) : null}
+      </span>
+    </div>
+  )
+}
+
+function CarruselEditor({ draft, update, sources, groups, openPicker, signal, uploadImage }) {
+  const today = todayKey()
+  const defaults = PAGE_DEFAULTS.carrusel
+  const visible = visibleSlides(draft.slides, today)
+  const designGroup = {
+    key: 'carrusel-diseno',
+    label: 'Banners del diseño',
+    from: null,
+    images: defaults.slides.map((slide) => ({ url: slide.image, alt: slide.alt })),
+  }
+
+  const setSlide = (index, patch) =>
+    update((page) => {
+      Object.assign(page.slides[index], patch)
+    })
+
+  const setPage = (patch) =>
+    update((page) => {
+      Object.assign(page, patch)
+    })
+
+  const pickBanner = (index, mobile = false) => {
+    const slide = draft.slides[index]
+    const original = defaults.slides.find((item) => item.id === slide.id)
+    openPicker({
+      title: `${mobile ? 'Versión para celular' : 'Banner'} · ${slide.title || `Diapositiva ${index + 1}`}`,
+      hint: mobile ? MOBILE_HINT : BANNER_HINT,
+      groups: mobile ? [groups.uploads] : [groups.uploads, designGroup],
+      current: mobile ? slide.imageMobile : slide.image,
+      defaultPhoto: mobile ? undefined : original?.image,
+      onUpload: (file) => uploadImage(file, mobile ? undefined : 'banner'),
+      onPick: ({ url, alt }) =>
+        update((page) => {
+          const target = page.slides[index]
+          if (mobile) {
+            target.imageMobile = url
+            return
+          }
+          target.image = url
+          // Al volver a un banner del diseño se recupera también su texto alternativo.
+          const design = defaults.slides.find((item) => item.image === url)
+          if (design && (!target.alt?.trim() || target.alt === original?.alt)) target.alt = design.alt
+          else if (!target.alt?.trim() && alt) target.alt = alt
+        }),
+    })
+  }
+
+  const addSlide = () =>
+    update((page) => {
+      page.slides.push({
+        id: newId(),
+        title: '',
+        alt: '',
+        image: null,
+        imageMobile: '',
+        cta: '',
+        link: { kind: 'none' },
+        active: true,
+        startsAt: '',
+        endsAt: '',
+      })
+    })
+
+  return (
+    <>
+      <AdminSection signal={signal} title="Ajustes" hint="Si se muestra en Inicio y cómo avanza.">
+        <div className="admin-carousel-settings">
+          <label className="admin-toggle">
+            <input
+              type="checkbox"
+              checked={draft.enabled !== false}
+              onChange={(event) => setPage({ enabled: event.target.checked })}
+            />
+            <span>{draft.enabled !== false ? 'Se muestra en Inicio, bajo la portada' : 'Oculto en Inicio'}</span>
+          </label>
+          <label className="admin-toggle">
+            <input
+              type="checkbox"
+              checked={draft.autoplay !== false}
+              onChange={(event) => setPage({ autoplay: event.target.checked })}
+            />
+            <span>{draft.autoplay !== false ? 'Avanza solo' : 'Solo con flechas y puntos'}</span>
+          </label>
+          <Field
+            label={`Cambia cada ${intervalSeconds(draft.interval)} segundos`}
+            hint="Se detiene al pasar el ratón, con el foco del teclado o con el botón de pausa."
+          >
+            <input
+              type="range"
+              min={CAROUSEL_LIMITS.minInterval}
+              max={CAROUSEL_LIMITS.maxInterval}
+              step={1}
+              value={intervalSeconds(draft.interval)}
+              disabled={draft.autoplay === false}
+              onChange={(event) => setPage({ interval: Number(event.target.value) })}
+            />
+          </Field>
+          <Field label="Nombre del carrusel" hint="Lo anuncian los lectores de pantalla; no se ve en la página.">
+            <input value={draft.label ?? ''} maxLength={80} onChange={(event) => setPage({ label: event.target.value })} />
+          </Field>
+        </div>
+      </AdminSection>
+
+      <AdminSection
+        signal={signal}
+        title="Vista previa"
+        hint={`Así se ve hoy: ${visible.length} de ${draft.slides.length} diapositivas visibles.`}
+      >
+        {draft.enabled === false ? (
+          <p className="note">El carrusel está oculto: no sale en Inicio aunque tenga diapositivas.</p>
+        ) : null}
+        {visible.length ? (
+          <div className="admin-carousel-preview">
+            <BannerCarousel content={{ ...draft, enabled: true }} preview />
+          </div>
+        ) : (
+          <p className="empty">
+            Ninguna diapositiva está visible hoy: revisa que estén activas, con banner y dentro de sus fechas.
+          </p>
+        )}
+      </AdminSection>
+
+      <AdminSection signal={signal} title="Diapositivas" hint="Banner, orden, fechas en que se muestra y a dónde lleva.">
+        <div className="admin-pcards">
+          {draft.slides.map((slide, index) => {
+            const status = slideStatus(slide, today)
+            const name = slide.title?.trim() || `Diapositiva ${index + 1}`
+            return (
+              <article key={slide.id} className={`admin-pcard admin-slide${slide.active === false ? ' is-off' : ''}`}>
+                <header className="admin-pcard__head">
+                  <span className="admin-order__pos">{index + 1}</span>
+                  <strong>{name}</strong>
+                  <span className={`admin-badge ${status.badge}`}>{status.label}</span>
+                  <MoveButtons
+                    index={index}
+                    length={draft.slides.length}
+                    label={name}
+                    onMove={(from, delta) =>
+                      update((page) => {
+                        page.slides = move(page.slides, from, delta)
+                      })
+                    }
+                  />
+                  <label className="admin-toggle">
+                    <input
+                      type="checkbox"
+                      checked={slide.active !== false}
+                      onChange={(event) => setSlide(index, { active: event.target.checked })}
+                    />
+                    <span>{slide.active !== false ? 'Activa' : 'Oculta'}</span>
+                  </label>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--danger-outline"
+                    onClick={() => {
+                      if (!window.confirm(`¿Quitar «${name}» del carrusel?`)) return
+                      update((page) => {
+                        page.slides.splice(index, 1)
+                      })
+                    }}
+                  >
+                    Quitar
+                  </button>
+                </header>
+                <div className="admin-slide__body">
+                  <div className="admin-slide__images">
+                    <BannerField
+                      label="Banner"
+                      size="8:3 · 2560×960 px"
+                      photo={slide.image}
+                      onOpen={() => pickBanner(index)}
+                    />
+                    <BannerField
+                      mobile
+                      label="Celular (opcional)"
+                      size="4:3 · 1200×900 px"
+                      photo={slide.imageMobile}
+                      onOpen={() => pickBanner(index, true)}
+                      onClear={() => setSlide(index, { imageMobile: '' })}
+                    />
+                  </div>
+                  <div className="admin-slide__fields">
+                    <div className="admin-slide__pair">
+                      <Field label="Nombre" hint="Para reconocerla aquí y en los lectores de pantalla.">
+                        <input
+                          value={slide.title ?? ''}
+                          maxLength={80}
+                          onChange={(event) => setSlide(index, { title: event.target.value })}
+                        />
+                      </Field>
+                      <Field label="Texto del botón (opcional)" hint="Sale sobre el banner si lleva a algún lado.">
+                        <input
+                          value={slide.cta ?? ''}
+                          maxLength={30}
+                          placeholder="Ej.: Más información"
+                          onChange={(event) => setSlide(index, { cta: event.target.value })}
+                        />
+                      </Field>
+                    </div>
+                    <Field
+                      label="Texto alternativo"
+                      hint="Lo que dice el banner (evento, fechas, lugar): lo leen los lectores de pantalla y los buscadores."
+                    >
+                      <textarea
+                        rows={3}
+                        value={slide.alt ?? ''}
+                        maxLength={400}
+                        aria-invalid={slide.active !== false && !slide.alt?.trim()}
+                        onChange={(event) => setSlide(index, { alt: event.target.value })}
+                      />
+                    </Field>
+                    <div className="admin-slide__pair">
+                      <Field label="Mostrar desde" hint="Vacío: desde ya.">
+                        <input
+                          type="date"
+                          value={slide.startsAt ?? ''}
+                          max={slide.endsAt || undefined}
+                          onChange={(event) => setSlide(index, { startsAt: event.target.value })}
+                        />
+                      </Field>
+                      <Field label="Mostrar hasta" hint="Vacío: sin final. Al pasar la fecha se oculta sola.">
+                        <input
+                          type="date"
+                          value={slide.endsAt ?? ''}
+                          min={slide.startsAt || undefined}
+                          onChange={(event) => setSlide(index, { endsAt: event.target.value })}
+                        />
+                      </Field>
+                    </div>
+                    <SlideLinkField link={slide.link} sources={sources} onChange={(link) => setSlide(index, { link })} />
+                  </div>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+        {draft.slides.length < CAROUSEL_LIMITS.slides ? (
+          <button type="button" className="admin-btn" onClick={addSlide}>
+            + Diapositiva
+          </button>
+        ) : (
+          <p className="note">Máximo {CAROUSEL_LIMITS.slides} diapositivas: quita o reutiliza una.</p>
+        )}
+        <p className="note">
+          Las diapositivas ocultas, sin banner o fuera de sus fechas no se muestran. Si no queda ninguna visible, el
+          carrusel desaparece de Inicio.
+        </p>
+      </AdminSection>
+    </>
+  )
+}
+
 // ---------------------------------------------------------------- Página
 export default function AdminPaginas() {
   const [params, setParams] = useSearchParams()
@@ -912,10 +1308,11 @@ export default function AdminPaginas() {
     setDirty((current) => ({ ...current, [pageKey]: true }))
   }
 
-  async function uploadImage(file) {
+  async function uploadImage(file, purpose) {
     const form = new FormData()
     form.append('file', file)
-    const image = await apiRequest('/admin/pages/media', { method: 'POST', formData: form })
+    const query = purpose ? `?purpose=${encodeURIComponent(purpose)}` : ''
+    const image = await apiRequest(`/admin/pages/media${query}`, { method: 'POST', formData: form })
     setData((current) => ({
       ...current,
       sources: { ...current.sources, uploads: [image, ...(current.sources.uploads ?? [])] },
@@ -948,6 +1345,12 @@ export default function AdminPaginas() {
     const invalid = pageKey === 'redes' ? invalidSocial(drafts.redes) : []
     if (invalid.length) {
       notify('error', 'Revisa los enlaces', `Falta un enlace válido en: ${invalid.join(', ')}.`)
+      return
+    }
+    const problems = pageKey === 'carrusel' ? carouselProblems(drafts.carrusel) : []
+    if (problems.length) {
+      const more = problems.length > 3 ? ` (y ${problems.length - 3} más)` : ''
+      notify('error', 'Revisa el carrusel', `${problems.slice(0, 3).join(' ')}${more}`)
       return
     }
     setBusy(true)
@@ -987,7 +1390,7 @@ export default function AdminPaginas() {
 
   const draft = drafts[pageKey]
   const stored = data?.pages?.[pageKey]
-  const editorProps = { draft, update, sources: data?.sources, groups, openPicker, signal }
+  const editorProps = { draft, update, sources: data?.sources, groups, openPicker, signal, uploadImage }
 
   return (
     <section className="admin-page">
@@ -996,7 +1399,7 @@ export default function AdminPaginas() {
           <div>
             <h1>Páginas</h1>
             <p className="admin-lead">
-              Fotos, textos, orden y enlaces de las páginas del sitio que muestran fichas.
+              Fotos, textos, orden y enlaces de las páginas del sitio, el carrusel de eventos y las redes.
             </p>
           </div>
         </div>
@@ -1083,6 +1486,7 @@ export default function AdminPaginas() {
             {pageKey === 'inicio' ? <InicioEditor {...editorProps} /> : null}
             {pageKey === 'que-hacer' ? <QueHacerEditor {...editorProps} /> : null}
             {pageKey === 'redes' ? <RedesEditor {...editorProps} /> : null}
+            {pageKey === 'carrusel' ? <CarruselEditor {...editorProps} /> : null}
             {pageKey.startsWith('donde-') ? <CategoryEditor key={pageKey} pageKey={pageKey} {...editorProps} /> : null}
 
             <div className="admin-panel__footer">
@@ -1100,7 +1504,11 @@ export default function AdminPaginas() {
       </div>
 
       {picker ? (
-        <ImagePicker {...picker} onClose={() => setPicker(null)} onUpload={picker.noUpload ? undefined : uploadImage} />
+        <ImagePicker
+          {...picker}
+          onClose={() => setPicker(null)}
+          onUpload={picker.noUpload ? undefined : (picker.onUpload ?? uploadImage)}
+        />
       ) : null}
 
       {toast ? (

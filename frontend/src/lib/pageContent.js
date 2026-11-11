@@ -5,7 +5,7 @@
 // del diseño original (data/pages.js): un valor null o ausente usa el del
 // diseño, y las listas de tarjetas se mezclan por `id`.
 import { useEffect, useState } from 'react'
-import { PAGE_DEFAULTS } from '../data/pages.js'
+import { PAGE_DEFAULTS, isWebUrl, whatsappUrl } from '../data/pages.js'
 import { orderBySlugs } from './contentApi.js'
 
 const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
@@ -80,7 +80,11 @@ export function usePageContent(page) {
 // Ruta y disponibilidad de un enlace de tarjeta. La API ya los resuelve; sin
 // ella (diseño original) se calculan aquí y se dan por disponibles.
 export function resolveLink(link) {
-  if (!link) return { to: null, available: false }
+  if (!link || link.kind === 'none') return { to: null, available: false }
+  if (link.kind === 'url' || link.kind === 'whatsapp') {
+    const url = link.to ?? (link.kind === 'url' ? (isWebUrl(link.url) ? link.url.trim() : null) : whatsappUrl(link.phone, link.message))
+    return { to: url, available: link.available ?? Boolean(url), external: true }
+  }
   const fallback =
     link.kind === 'experience'
       ? `/que-hacer/${link.slug}`

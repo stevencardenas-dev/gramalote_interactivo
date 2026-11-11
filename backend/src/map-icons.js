@@ -1,16 +1,22 @@
-// Iconos ilustrados del mapa (frontend/public/img/mapa/iconos/<icono>-1|2.svg).
+// Iconos ilustrados del mapa (frontend/public/img/mapa/iconos/<icono>.svg).
 // Debe coincidir con frontend/src/data/mapIcons.js.
 export const MAP_ICONS = [
+  'alcaldia',
   'artesanias',
   'banco',
   'cabana',
   'cafeteria',
+  'cancha',
   'capilla',
+  'casa-cultural',
+  'casa-de-abuelos',
   'cascada',
+  'cementerio',
   'colegio',
   'comidas-caseras',
   'comidas-ejecutivas',
   'comidas-rapidas',
+  'experiencias',
   'glamping',
   'heladeria',
   'hospital',
@@ -19,6 +25,8 @@ export const MAP_ICONS = [
   'monumento',
   'parque',
   'parque-principal',
+  'plaza-de-mercado',
+  'polideportivo',
   'postres',
   'pueblo-nuevo',
   'pueblo-viejo',

@@ -345,8 +345,8 @@ Reglas de negocio:
 - **Icono del mapa** (`establishments.map_icon`, migración 004): uno de los
   nombres de `backend/src/map-icons.js` o `NULL` (Automático: el frontend lo
   deduce del tipo, `frontend/src/data/mapIcons.js`). Se elige en
-  Información → Ubicación. La versión 1 (fondo oscuro) o 2 (fondo claro) no se
-  guarda en la ficha: la elige quien mira el mapa con el control "Iconos".
+  Información → Ubicación. Desde el 11 de noviembre hay una sola versión por
+  icono (entrega «ICONOS Final Version»: `/img/mapa/iconos/<icono>.svg`).
 
 ---
 

@@ -1,34 +1,43 @@
-// Iconos ilustrados del mapa (entrega "Iconos mapa", 1 de noviembre). Cada uno
-// tiene dos versiones: -1 (fondo oscuro) y -2 (fondo claro).
+// Iconos ilustrados del mapa (entrega "ICONOS Final Version", 10 de noviembre).
+// Una sola versión por icono: /img/mapa/iconos/<icono>.svg.
 // Debe coincidir con backend/src/map-icons.js.
 export const MAP_ICON_DIR = '/img/mapa/iconos'
 
+// `group` ordena el selector del panel.
 export const MAP_ICONS = [
-  { key: 'restaurante', label: 'Restaurante' },
-  { key: 'comidas-caseras', label: 'Comidas caseras' },
-  { key: 'comidas-ejecutivas', label: 'Comidas ejecutivas' },
-  { key: 'comidas-rapidas', label: 'Comidas rápidas' },
-  { key: 'cafeteria', label: 'Cafetería' },
-  { key: 'heladeria', label: 'Heladería' },
-  { key: 'postres', label: 'Postres' },
-  { key: 'hotel', label: 'Hotel' },
-  { key: 'hostal', label: 'Hostal' },
-  { key: 'cabana', label: 'Cabaña' },
-  { key: 'glamping', label: 'Glamping' },
-  { key: 'artesanias', label: 'Artesanías' },
-  { key: 'banco', label: 'Banco' },
-  { key: 'hospital', label: 'Hospital' },
-  { key: 'colegio', label: 'Colegio' },
-  { key: 'capilla', label: 'Capilla' },
-  { key: 'templo', label: 'Templo' },
-  { key: 'monumento', label: 'Monumento' },
-  { key: 'parque-principal', label: 'Parque principal' },
-  { key: 'parque', label: 'Parque' },
-  { key: 'cascada', label: 'Cascada' },
-  { key: 'puentes', label: 'Puentes' },
-  { key: 'ruinas', label: 'Ruinas' },
-  { key: 'pueblo-nuevo', label: 'Pueblo Nuevo' },
-  { key: 'pueblo-viejo', label: 'Pueblo Viejo' },
+  { key: 'restaurante', label: 'Restaurante', group: 'Comer' },
+  { key: 'comidas-caseras', label: 'Comidas caseras', group: 'Comer' },
+  { key: 'comidas-ejecutivas', label: 'Comidas ejecutivas', group: 'Comer' },
+  { key: 'comidas-rapidas', label: 'Comidas rápidas', group: 'Comer' },
+  { key: 'cafeteria', label: 'Cafetería', group: 'Comer' },
+  { key: 'heladeria', label: 'Heladería', group: 'Comer' },
+  { key: 'postres', label: 'Postres', group: 'Comer' },
+  { key: 'plaza-de-mercado', label: 'Plaza de mercado', group: 'Comer' },
+  { key: 'hotel', label: 'Hotel', group: 'Dormir' },
+  { key: 'hostal', label: 'Hostal', group: 'Dormir' },
+  { key: 'cabana', label: 'Cabaña', group: 'Dormir' },
+  { key: 'glamping', label: 'Glamping', group: 'Dormir' },
+  { key: 'artesanias', label: 'Artesanías', group: 'Comprar' },
+  { key: 'experiencias', label: 'Experiencias', group: 'Lugares y experiencias' },
+  { key: 'parque-principal', label: 'Parque principal', group: 'Lugares y experiencias' },
+  { key: 'parque', label: 'Parque', group: 'Lugares y experiencias' },
+  { key: 'cascada', label: 'Cascadas', group: 'Lugares y experiencias' },
+  { key: 'puentes', label: 'Puentes', group: 'Lugares y experiencias' },
+  { key: 'ruinas', label: 'Ruinas', group: 'Lugares y experiencias' },
+  { key: 'pueblo-nuevo', label: 'Pueblo Nuevo', group: 'Lugares y experiencias' },
+  { key: 'pueblo-viejo', label: 'Pueblo Viejo', group: 'Lugares y experiencias' },
+  { key: 'monumento', label: 'Monumentos', group: 'Lugares y experiencias' },
+  { key: 'templo', label: 'Templo', group: 'Lugares y experiencias' },
+  { key: 'capilla', label: 'Capillas', group: 'Lugares y experiencias' },
+  { key: 'cementerio', label: 'Cementerio', group: 'Lugares y experiencias' },
+  { key: 'casa-cultural', label: 'Casa cultural', group: 'Servicios y comunidad' },
+  { key: 'alcaldia', label: 'Alcaldía', group: 'Servicios y comunidad' },
+  { key: 'banco', label: 'Banco', group: 'Servicios y comunidad' },
+  { key: 'hospital', label: 'Hospital', group: 'Servicios y comunidad' },
+  { key: 'colegio', label: 'Colegios', group: 'Servicios y comunidad' },
+  { key: 'casa-de-abuelos', label: 'Casa de abuelos', group: 'Servicios y comunidad' },
+  { key: 'polideportivo', label: 'Polideportivo', group: 'Servicios y comunidad' },
+  { key: 'cancha', label: 'Cancha', group: 'Servicios y comunidad' },
 ]
 
 const KEYS = new Set(MAP_ICONS.map((icon) => icon.key))
@@ -41,6 +50,7 @@ const BY_TYPE = [
   ['postre', 'postres'],
   ['rapida', 'comidas-rapidas'],
   ['ejecutiv', 'comidas-ejecutivas'],
+  ['mercado', 'plaza-de-mercado'],
   ['casera', 'comidas-caseras'],
   ['tipica', 'comidas-caseras'],
   ['glamping', 'glamping'],
@@ -48,7 +58,7 @@ const BY_TYPE = [
   ['hostal', 'hostal'],
   ['hotel', 'hotel'],
 ]
-const BY_GROUP = { comer: 'restaurante', dormir: 'hotel', comprar: 'artesanias' }
+const BY_GROUP = { comer: 'restaurante', dormir: 'hotel', comprar: 'artesanias', experiencia: 'experiencias' }
 // Las experiencias no tienen tipo ni icono en la base: se eligen por su ficha.
 const BY_SLUG = {
   'cascadas-arco-iris': 'cascada',
@@ -73,4 +83,4 @@ export function resolveMapIcon({ mapIcon, slug, type, group }) {
   return match ? match[1] : BY_GROUP[group] ?? 'parque-principal'
 }
 
-export const mapIconUrl = (icon, version = 1) => `${MAP_ICON_DIR}/${icon}-${version}.svg`
+export const mapIconUrl = (icon) => `${MAP_ICON_DIR}/${icon}.svg`
