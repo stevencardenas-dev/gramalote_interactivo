@@ -1,43 +1,17 @@
-import { useEffect, useState } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import Logo from '../ui/Logo.jsx'
-import { apiRequest, ensureSession, getUser, logout } from '../../lib/auth.js'
+import { getUser, logout } from '../../lib/auth.js'
 import { useAdminTheme } from '../../lib/adminTheme.js'
-
-function formatBytes(bytes) {
-  if (!bytes) return '0 MB'
-  const mb = bytes / (1024 * 1024)
-  return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${mb.toFixed(mb < 10 ? 1 : 0)} MB`
-}
 
 export default function AdminNav() {
   const navigate = useNavigate()
-  const { pathname } = useLocation()
   const user = getUser()
   const { theme, toggle } = useAdminTheme()
-  const [media, setMedia] = useState(null)
-
-  // Se vuelve a pedir al cambiar de pantalla: así refleja las fotos recién subidas.
-  useEffect(() => {
-    let alive = true
-    ensureSession().then((session) => {
-      if (!alive || !session) return
-      apiRequest('/admin/media/stats')
-        .then((stats) => alive && setMedia(stats))
-        .catch(() => {})
-    })
-    return () => {
-      alive = false
-    }
-  }, [pathname])
 
   async function handleLogout() {
     await logout()
     navigate('/acceder', { replace: true })
   }
-
-  const pct =
-    media?.quotaBytes > 0 ? Math.min(100, Math.round((media.usedBytes / media.quotaBytes) * 100)) : 0
 
   return (
     <header className="admin-nav">
@@ -54,14 +28,6 @@ export default function AdminNav() {
         {user?.role === 'admin' ? <NavLink to="/admin/usuarios">Usuarios</NavLink> : null}
       </nav>
       <div className="admin-nav__end">
-        {media ? (
-          <span
-            className={`admin-chip${pct > 85 ? ' is-warn' : ''}`}
-            title="Espacio usado por las imágenes"
-          >
-            Imágenes {formatBytes(media.usedBytes)} de {formatBytes(media.quotaBytes)}
-          </span>
-        ) : null}
         <button
           type="button"
           className="admin-nav__theme"

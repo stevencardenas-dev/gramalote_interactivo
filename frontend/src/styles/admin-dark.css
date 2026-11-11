@@ -142,20 +142,6 @@ body:has(.admin-app) {
   color: var(--a-tx);
 }
 
-.admin-chip {
-  padding: 3px 10px;
-  border: 1px solid var(--a-ln);
-  border-radius: 999px;
-  color: var(--a-mu);
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
-.admin-chip.is-warn {
-  border-color: var(--a-wn);
-  color: var(--a-wn);
-}
-
 .admin-main {
   flex: 1;
 }
