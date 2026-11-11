@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
+import IconMask from '../components/ui/IconMask.jsx'
 import { resolveMapIcon } from '../data/mapIcons.js'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 
@@ -40,10 +41,15 @@ const EMPTY = {
   images: [],
 }
 
-function Field({ label, hint, children }) {
+// `icon` es el nombre del SVG de la ficha (public/brand/icons/icono-*.svg):
+// en la sección «Visita» ilustra cómo se verá ese dato en la ficha final.
+function Field({ label, hint, icon, children }) {
   return (
     <label className="admin-field">
-      <span>{label}</span>
+      <span className="admin-field__label">
+        {icon ? <IconMask icon={`icono-${icon}`} size={18} className="admin-field__icon" /> : null}
+        {label}
+      </span>
       {children}
       {hint ? <small>{hint}</small> : null}
     </label>
@@ -354,11 +360,12 @@ export function AdminExperiencia() {
                 </div>
               </AdminSection>
 
-              <AdminSection title="Ubicación" hint="Sin coordenadas no aparece en el mapa." signal={signal}>
+              <AdminSection
+                title="Ubicación"
+                hint="Coordenadas y pin del mapa; el texto que se lee en la ficha se escribe en «Visita»."
+                signal={signal}
+              >
                 <div className="admin-grid">
-                  <Field label="Ubicación (texto)">
-                    <input value={form.address} onChange={set('address')} />
-                  </Field>
                   <Field label="Enlace de Google Maps (opcional)" hint="Si lo dejas vacío, el botón usa las coordenadas.">
                     <input value={form.mapsUrl} onChange={set('mapsUrl')} placeholder="https://maps.app.goo.gl/…" />
                   </Field>
@@ -376,22 +383,23 @@ export function AdminExperiencia() {
                 />
               </AdminSection>
 
-              <AdminSection title="Visita" hint="Cómo llegar, dificultad, horario y precio." signal={signal}>
+              <AdminSection
+                title="Visita"
+                hint="Los cuatro datos de la ficha, con el icono que llevan en el sitio."
+                signal={signal}
+              >
                 <div className="admin-grid">
-                  <Field label="Cómo llegar">
-                    <input value={form.access} onChange={set('access')} />
+                  <Field label="Horario" icon="horario">
+                    <input value={form.hours} onChange={set('hours')} placeholder="9:00 a. m. – 6:00 p. m." />
                   </Field>
-                  <Field label="Dificultad">
-                    <input value={form.difficulty} onChange={set('difficulty')} placeholder="Media alta" />
+                  <Field label="Ubicación" icon="ubicacion">
+                    <input value={form.address} onChange={set('address')} placeholder="Finca Limoncito, vereda Valderrama" />
                   </Field>
-                  <Field label="Horario">
-                    <input value={form.hours} onChange={set('hours')} />
-                  </Field>
-                  <Field label="Tarifa">
+                  <Field label="Tarifa" icon="billetera">
                     <input value={form.price} onChange={set('price')} placeholder="$5.000 / Entrada libre" />
                   </Field>
-                  <Field label="Teléfono">
-                    <input value={form.phone} onChange={set('phone')} />
+                  <Field label="Teléfono" icon="telefono">
+                    <input value={form.phone} onChange={set('phone')} placeholder="310 7881532" />
                   </Field>
                 </div>
               </AdminSection>

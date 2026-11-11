@@ -125,8 +125,7 @@ body:has(.admin-app) {
 }
 
 .admin-nav__site,
-.admin-nav__out,
-.admin-nav__theme {
+.admin-nav__out {
   border: 0;
   background: none;
   padding: 0;
@@ -137,9 +136,42 @@ body:has(.admin-app) {
 }
 
 .admin-nav__site:hover,
-.admin-nav__out:hover,
-.admin-nav__theme:hover {
+.admin-nav__out:hover {
   color: var(--a-tx);
+}
+
+/* Cambio de modo: botón redondo con sol/luna, en su propio hueco entre los
+   enlaces y la cuenta. */
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin-left: 10px;
+  padding: 0;
+  border: 1px solid var(--a-ln);
+  border-radius: 999px;
+  background: var(--a-sf2);
+  color: var(--a-mu);
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.theme-toggle:hover {
+  border-color: var(--a-ac);
+  background: var(--a-bg);
+  color: var(--a-ac-text);
 }
 
 .admin-main {
@@ -1366,6 +1398,18 @@ a.admin-tile:hover {
   .admin-app .admin-details .admin-password {
     grid-template-columns: 1fr;
   }
+}
+
+/* Icono de la característica en el formulario: el mismo SVG que lleva la ficha
+   en el sitio, para ver de un vistazo qué tipo se está editando. */
+.admin-field__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-field__icon {
+  color: var(--a-ac-text);
 }
 
 /* Experiencias: filas de consejos y alineación de campos con distinta altura. */

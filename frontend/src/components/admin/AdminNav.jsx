@@ -1,12 +1,11 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import Logo from '../ui/Logo.jsx'
+import ThemeToggle from './ThemeToggle.jsx'
 import { getUser, logout } from '../../lib/auth.js'
-import { useAdminTheme } from '../../lib/adminTheme.js'
 
 export default function AdminNav() {
   const navigate = useNavigate()
   const user = getUser()
-  const { theme, toggle } = useAdminTheme()
 
   async function handleLogout() {
     await logout()
@@ -27,15 +26,8 @@ export default function AdminNav() {
         <NavLink to="/admin/experiencias">Experiencias</NavLink>
         {user?.role === 'admin' ? <NavLink to="/admin/usuarios">Usuarios</NavLink> : null}
       </nav>
+      <ThemeToggle />
       <div className="admin-nav__end">
-        <button
-          type="button"
-          className="admin-nav__theme"
-          onClick={toggle}
-          aria-pressed={theme === 'light'}
-        >
-          {theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
-        </button>
         <Link className="admin-nav__site" to="/">
           Ver sitio ↗
         </Link>

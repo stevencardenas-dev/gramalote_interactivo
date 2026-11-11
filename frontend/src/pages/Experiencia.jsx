@@ -9,9 +9,9 @@ import { getActivity } from '../data/experiences.js'
 import { useActivity } from '../lib/contentApi.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
 
+// Los cuatro datos de la ficha del diseño: son los que se editan en la sección
+// «Visita» del panel y salen en este orden bajo el encabezado.
 const INFO_FIELDS = [
-  { key: 'access', icon: 'huellas', label: 'Cómo llegar' },
-  { key: 'difficulty', icon: 'camino', label: 'Dificultad' },
   { key: 'hours', icon: 'horario', label: 'Horario' },
   { key: 'location', icon: 'ubicacion', label: 'Ubicación' },
   { key: 'fee', icon: 'billetera', label: 'Tarifa' },
