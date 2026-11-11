@@ -264,6 +264,16 @@
   }
 }
 
+/* Con zoom o en portátiles el logo de 148 px sobresale del encabezado y se
+   corta contra el borde de la ventana: se ajusta antes de pasar al móvil. */
+@media (max-width: 1240px) {
+  .brand__logo {
+    height: 100px;
+    width: auto;
+    margin-block: 0;
+  }
+}
+
 @media (max-width: 1100px) {
   .site-nav {
     gap: 22px;

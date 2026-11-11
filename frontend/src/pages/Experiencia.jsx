@@ -9,13 +9,17 @@ import { getActivity } from '../data/experiences.js'
 import { useActivity } from '../lib/contentApi.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
 
-// Los cuatro datos de la ficha del diseño: son los que se editan en la sección
-// «Visita» del panel y salen en este orden bajo el encabezado.
+// Datos de la ficha que se editan en la sección «Visita» del panel, en este
+// orden. Los cuatro primeros son los del diseño; «Cómo llegar» y «Dificultad»
+// van detrás porque hay fichas que solo tienen esos dos y, sin ellos, la franja
+// desaparece entera.
 const INFO_FIELDS = [
   { key: 'hours', icon: 'horario', label: 'Horario' },
   { key: 'location', icon: 'ubicacion', label: 'Ubicación' },
   { key: 'fee', icon: 'billetera', label: 'Tarifa' },
   { key: 'phone', icon: 'telefono', label: 'Teléfono' },
+  { key: 'access', icon: 'huellas', label: 'Cómo llegar' },
+  { key: 'difficulty', icon: 'camino', label: 'Dificultad' },
 ]
 
 export default function Experiencia() {

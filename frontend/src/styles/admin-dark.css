@@ -124,8 +124,10 @@ body:has(.admin-app) {
   margin-left: auto;
 }
 
-.admin-nav__site,
-.admin-nav__out {
+.admin-nav__site {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 0;
   background: none;
   padding: 0;
@@ -135,9 +137,63 @@ body:has(.admin-app) {
   white-space: nowrap;
 }
 
-.admin-nav__site:hover,
-.admin-nav__out:hover {
+.admin-nav__site:hover {
   color: var(--a-tx);
+}
+
+/* Atajo de la barra: aparece al pasar el ratón o al enfocar, para no llenar de
+   chapitas una barra que ya tiene cinco destinos. */
+.admin-keyhint {
+  display: inline-block;
+  min-width: 1.9em;
+  padding: 1px 5px;
+  border: 1px solid var(--a-ln);
+  border-radius: 5px;
+  background: var(--a-sf2);
+  color: var(--a-mu);
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  line-height: 1.45;
+  text-align: center;
+  opacity: 0;
+  transform: translateX(-2px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.admin-nav__site:hover .admin-keyhint,
+.admin-nav__site:focus-visible .admin-keyhint {
+  opacity: 1;
+  transform: none;
+}
+
+/* Salir: botón de verdad y en rojo, porque es la acción que cierra la sesión. */
+.admin-nav__out {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid color-mix(in srgb, var(--c-coral) 55%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--c-coral) 14%, transparent);
+  color: var(--c-coral);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-nav__out:hover {
+  border-color: var(--c-coral);
+  background: var(--c-coral);
+  color: #fff;
+}
+
+.admin-nav__out:focus-visible {
+  outline: 2px solid var(--c-coral);
+  outline-offset: 2px;
 }
 
 /* Cambio de modo: botón redondo con sol/luna, en su propio hueco entre los
@@ -1400,6 +1456,62 @@ a.admin-tile:hover {
   }
 }
 
+/* Aviso modal: datos que faltan o error de guardado. */
+.admin-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.admin-dialog__panel {
+  width: min(440px, 100%);
+  padding: 20px 22px 18px;
+  border: 1px solid var(--a-ln);
+  border-radius: 14px;
+  background: var(--a-sf);
+  color: var(--a-tx);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.admin-dialog__title {
+  margin: 0 0 6px;
+  color: var(--a-tx);
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.admin-dialog__text {
+  margin: 0 0 10px;
+  color: var(--a-mu);
+  font-size: 0.86rem;
+}
+
+.admin-dialog__list {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding-left: 20px;
+  color: var(--a-tx);
+  font-size: 0.88rem;
+  list-style: disc;
+}
+
+.admin-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+/* Alta de experiencia: título, categoría, resumen y botón. */
+.admin-app .admin-new--experience {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr) minmax(0, 1.5fr) auto;
+}
+
 /* Icono de la característica en el formulario: el mismo SVG que lleva la ficha
    en el sitio, para ver de un vistazo qué tipo se está editando. */
 .admin-field__label {
@@ -1410,6 +1522,167 @@ a.admin-tile:hover {
 
 .admin-field__icon {
   color: var(--a-ac-text);
+}
+
+/* Horario de apertura: modos, días y turnos (componente ScheduleEditor). */
+.admin-schedule {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-schedule__modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+  gap: 8px;
+}
+
+.admin-schedule__mode {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--a-ln);
+  border-radius: 10px;
+  background: var(--a-bg);
+  cursor: pointer;
+}
+
+.admin-schedule__mode input {
+  margin-top: 3px;
+  accent-color: var(--a-ac);
+}
+
+.admin-schedule__mode strong {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.admin-schedule__mode small {
+  display: block;
+  color: var(--a-mu);
+  font-size: 0.76rem;
+}
+
+.admin-schedule__mode.is-active {
+  border-color: var(--a-ac);
+  box-shadow: inset 0 0 0 1px var(--a-ac);
+}
+
+.admin-schedule__days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.admin-schedule__day {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--a-ln);
+  border-radius: 999px;
+  background: var(--a-sf);
+  color: var(--a-mu);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-schedule__day.is-on {
+  border-color: var(--a-ac);
+  background: var(--a-ac);
+  color: var(--a-onac);
+}
+
+.admin-schedule__quick {
+  margin-left: 4px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--a-ac-text);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.admin-schedule__shared,
+.admin-schedule__perday {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-schedule__closing {
+  max-width: 190px;
+}
+
+.admin-schedule__ranges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+}
+
+.admin-schedule__range {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-schedule__range button,
+.admin-schedule__add {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--a-ln);
+  border-radius: 8px;
+  background: var(--a-sf);
+  color: var(--a-mu);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.admin-schedule__add {
+  border-style: dashed;
+  background: transparent;
+}
+
+.admin-schedule__range button:hover,
+.admin-schedule__add:hover {
+  border-color: var(--a-ac);
+  color: var(--a-ac-text);
+}
+
+.admin-schedule__perday-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding-block: 6px;
+  border-top: 1px solid var(--a-ln);
+}
+
+.admin-schedule__perday-row:first-child {
+  border-top: 0;
+}
+
+.admin-schedule__perday-row > strong {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.admin-schedule__empty {
+  color: var(--a-mu);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 760px) {
+  .admin-schedule__perday-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Experiencias: filas de consejos y alineación de campos con distinta altura. */

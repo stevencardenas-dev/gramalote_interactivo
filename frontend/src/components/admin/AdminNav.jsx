@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import Logo from '../ui/Logo.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
@@ -6,6 +7,24 @@ import { getUser, logout } from '../../lib/auth.js'
 export default function AdminNav() {
   const navigate = useNavigate()
   const user = getUser()
+
+  // Shift+V abre el sitio público desde cualquier página del panel. Se ignora
+  // mientras se escribe en un campo, para no secuestrar la letra.
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (!event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return
+      if (event.key.toLowerCase() !== 'v') return
+      const target = event.target
+      const typing =
+        target instanceof HTMLElement &&
+        (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+      if (typing) return
+      event.preventDefault()
+      navigate('/')
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [navigate])
 
   async function handleLogout() {
     await logout()
@@ -28,10 +47,23 @@ export default function AdminNav() {
       </nav>
       <ThemeToggle />
       <div className="admin-nav__end">
-        <Link className="admin-nav__site" to="/">
+        <Link
+          className="admin-nav__site"
+          to="/"
+          title="Ver el sitio (Shift + V)"
+          aria-keyshortcuts="Shift+V"
+        >
           Ver sitio ↗
+          <kbd className="admin-keyhint" aria-hidden="true">
+            ⇧V
+          </kbd>
         </Link>
-        <button type="button" className="admin-nav__out" onClick={handleLogout}>
+        <button
+          type="button"
+          className="admin-nav__out"
+          onClick={handleLogout}
+          title="Cerrar sesión"
+        >
           {user?.name ? `${user.name.split(' ')[0]} · ` : ''}Salir
         </button>
       </div>

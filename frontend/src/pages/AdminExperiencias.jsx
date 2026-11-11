@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
+import AdminDialog from '../components/admin/AdminDialog.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
+import ScheduleEditor from '../components/admin/ScheduleEditor.jsx'
 import IconMask from '../components/ui/IconMask.jsx'
 import { resolveMapIcon } from '../data/mapIcons.js'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
@@ -11,10 +13,57 @@ const TABS = [
   { key: 'images', label: 'Imágenes' },
   { key: 'tips', label: 'Ten en cuenta' },
   { key: 'publish', label: 'Publicación' },
+  { key: 'history', label: 'Historial' },
 ]
 
 // Iconos de los consejos de la ficha (public/brand/icons/icono-*.svg).
 const TIP_ICONS = ['huellas', 'camino', 'bolso', 'info', 'alerta', 'horario', 'ubicacion', 'billetera', 'telefono']
+
+const AUDIT_PAGE = 8
+
+const STATUS_TABS = [
+  { key: 'published', label: 'Publicadas' },
+  { key: 'draft', label: 'No publicadas' },
+]
+
+function formatDate(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function formatStamp(value) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value ?? ''
+  return date.toLocaleString('es-CO', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+// Datos mínimos de una experiencia, los mismos que exige la API: título,
+// categoría y resumen. Para publicar hace falta además una portada con texto
+// alternativo. Se usa tanto para avisar antes de enviar como en el modal.
+const MINIMUM_HINT =
+  'Mínimo para guardar: título, categoría y resumen. Para publicar, además, una portada con texto alternativo.'
+
+function missingFields(form, { publishing = false } = {}) {
+  const missing = []
+  if (!String(form.title ?? '').trim()) missing.push('Título')
+  if (!form.category) missing.push('Categoría')
+  if (!String(form.summary ?? '').trim()) missing.push('Resumen')
+  if (publishing) {
+    const cover = (form.images ?? []).some(
+      (image) => image.role === 'cover' && String(image.alt ?? '').trim(),
+    )
+    if (!cover) missing.push('Portada con texto alternativo (obligatoria para publicar)')
+  }
+  return missing
+}
 
 const EMPTY = {
   title: '',
@@ -34,11 +83,13 @@ const EMPTY = {
   longitude: '',
   mapsUrl: '',
   mapIcon: '',
+  schedule: null,
   openDaily: true,
-  published: true,
+  published: false,
   sortOrder: 0,
   tips: [],
   images: [],
+  audit: [],
 }
 
 // `icon` es el nombre del SVG de la ficha (public/brand/icons/icono-*.svg):
@@ -57,7 +108,16 @@ function Field({ label, hint, icon, children }) {
 }
 
 export function AdminExperiencias() {
+  const navigate = useNavigate()
   const [items, setItems] = useState(null)
+  const [categories, setCategories] = useState([])
+  const [tab, setTab] = useState('published')
+  const [showNew, setShowNew] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [draftTitle, setDraftTitle] = useState('')
+  const [draftCategory, setDraftCategory] = useState('')
+  const [draftSummary, setDraftSummary] = useState('')
+  const [dialog, setDialog] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -65,8 +125,13 @@ export function AdminExperiencias() {
     ;(async () => {
       if (!(await ensureSession())) return
       try {
-        const data = await apiRequest('/admin/experiences')
-        if (alive) setItems(data ?? [])
+        const [meta, data] = await Promise.all([
+          apiRequest('/admin/experiences/meta'),
+          apiRequest('/admin/experiences'),
+        ])
+        if (!alive) return
+        setCategories(meta?.categories ?? [])
+        setItems(data ?? [])
       } catch (err) {
         if (alive) setError(err.message)
       }
@@ -76,22 +141,152 @@ export function AdminExperiencias() {
     }
   }, [])
 
+  const counts = useMemo(
+    () => ({
+      published: (items ?? []).filter((item) => item.published).length,
+      draft: (items ?? []).filter((item) => !item.published).length,
+    }),
+    [items],
+  )
+
+  const visible = useMemo(
+    () => (items ?? []).filter((item) => (tab === 'published' ? item.published : !item.published)),
+    [items, tab],
+  )
+
+  // Igual que en establecimientos: se crea con los datos mínimos y se abre el
+  // editor; la ficha nace sin publicar.
+  async function handleCreate(event) {
+    event.preventDefault()
+    const missing = missingFields({
+      title: draftTitle,
+      category: draftCategory,
+      summary: draftSummary,
+    })
+    if (missing.length) {
+      setDialog({
+        title: 'Faltan datos para crear la experiencia',
+        message: 'Completa estos datos mínimos y vuelve a intentarlo.',
+        items: missing,
+      })
+      return
+    }
+    setCreating(true)
+    setError('')
+    try {
+      const created = await apiRequest('/admin/experiences', {
+        method: 'POST',
+        body: {
+          title: draftTitle.trim(),
+          category: draftCategory,
+          summary: draftSummary.trim(),
+          published: false,
+        },
+      })
+      navigate(`/admin/experiencias/${created.id}`)
+    } catch (err) {
+      setError(err.message)
+      setDialog({
+        title: 'No se pudo crear la experiencia',
+        message: err.message,
+        hint: MINIMUM_HINT,
+      })
+    } finally {
+      setCreating(false)
+    }
+  }
+
   return (
     <section className="admin-page">
       <div className="admin-wrap">
         <div className="admin-bar">
           <h1>Experiencias</h1>
-          <Link className="admin-btn admin-btn--primary" to="/admin/experiencias/nueva">
-            + Nueva experiencia
-          </Link>
+          <button
+            type="button"
+            className="admin-btn admin-btn--primary"
+            onClick={() => setShowNew((open) => !open)}
+            aria-expanded={showNew}
+          >
+            {showNew ? 'Cerrar' : '+ Nueva experiencia'}
+          </button>
         </div>
+
         {error ? <p className="auth-error">{error}</p> : null}
+
+        {showNew ? (
+          <>
+            <form className="admin-new admin-new--experience" onSubmit={handleCreate}>
+              <div className="field">
+                <label htmlFor="new-experience-title">Título</label>
+                <input
+                  id="new-experience-title"
+                  value={draftTitle}
+                  onChange={(event) => setDraftTitle(event.target.value)}
+                  placeholder="Ej. Cascadas Arco Iris"
+                  autoFocus
+                  required
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="new-experience-category">Categoría</label>
+                <select
+                  id="new-experience-category"
+                  value={draftCategory}
+                  onChange={(event) => setDraftCategory(event.target.value)}
+                  required
+                >
+                  <option value="">Selecciona una categoría</option>
+                  {categories.map((category) => (
+                    <option key={category.slug} value={category.slug}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="new-experience-summary">Resumen</label>
+                <input
+                  id="new-experience-summary"
+                  value={draftSummary}
+                  onChange={(event) => setDraftSummary(event.target.value)}
+                  placeholder="Una frase para la tarjeta y el encabezado"
+                  maxLength={320}
+                  required
+                />
+              </div>
+              <button type="submit" className="admin-btn admin-btn--primary" disabled={creating}>
+                {creating ? 'Creando…' : 'Crear experiencia'}
+              </button>
+            </form>
+            <p className="note">{MINIMUM_HINT}</p>
+          </>
+        ) : null}
+
+        <div className="admin-tabs" role="tablist" aria-label="Filtrar por estado">
+          {STATUS_TABS.map((entry) => (
+            <button
+              key={entry.key}
+              type="button"
+              role="tab"
+              aria-selected={tab === entry.key}
+              className={`admin-tab${tab === entry.key ? ' is-active' : ''}`}
+              onClick={() => setTab(entry.key)}
+            >
+              {entry.label} <span className="admin-tab__count">{counts[entry.key]}</span>
+            </button>
+          ))}
+        </div>
+
         {items === null && !error ? <p className="note">Cargando experiencias…</p> : null}
-        {items !== null && items.length === 0 ? (
-          <p className="empty">Aún no hay experiencias.</p>
+        {items !== null && visible.length === 0 ? (
+          <p className="empty">
+            {items.length === 0
+              ? 'Aún no hay experiencias.'
+              : 'No hay experiencias en esta pestaña.'}
+          </p>
         ) : null}
         <ul className="admin-rows">
-          {(items ?? []).map((item) => (
+          {visible.map((item) => (
             <li key={item.id} className="admin-row-item">
               <span className="admin-row-item__thumb">
                 {item.cover ? <img src={item.cover} alt="" loading="lazy" /> : <span aria-hidden="true" />}
@@ -103,6 +298,7 @@ export function AdminExperiencias() {
                   {item.onMap ? ' · En el mapa' : ' · Sin coordenadas'}
                 </small>
               </div>
+              <span className="admin-row-item__date">{formatDate(item.updatedAt)}</span>
               <span
                 className={`admin-badge ${item.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
               >
@@ -115,6 +311,8 @@ export function AdminExperiencias() {
           ))}
         </ul>
       </div>
+
+      {dialog ? <AdminDialog {...dialog} onClose={() => setDialog(null)} /> : null}
     </section>
   )
 }
@@ -128,7 +326,10 @@ export function AdminExperiencia() {
   const [meta, setMeta] = useState({ categories: [], mapIcons: [] })
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
+  const [published, setPublished] = useState(false)
+  const [dialog, setDialog] = useState(null)
   const [tab, setTab] = useState('info')
+  const [auditPage, setAuditPage] = useState(0)
   const [signal, setSignal] = useState({ open: true, n: 0 })
 
   useEffect(() => {
@@ -142,7 +343,10 @@ export function AdminExperiencia() {
         ])
         if (!alive) return
         setMeta(m)
-        if (data) setForm(data)
+        if (data) {
+          setForm(data)
+          setPublished(Boolean(data.published))
+        }
       } catch (err) {
         if (alive) setNotice(err.message)
       }
@@ -170,6 +374,8 @@ export function AdminExperiencia() {
       tips: current.tips.map((tip, i) => (i === index ? { ...tip, [key]: value } : tip)),
     }))
 
+  // El error se avisa en el pie y, además, en un modal: si faltaba un dato o la
+  // portada, el aviso del pie pasa desapercibido.
   async function run(task, ok) {
     setBusy(true)
     setNotice('')
@@ -178,6 +384,12 @@ export function AdminExperiencia() {
       if (ok) setNotice(ok)
     } catch (err) {
       setNotice(err.message)
+      setDialog({
+        title: 'No se pudo guardar',
+        message: err.message,
+        items: missingFields(form, { publishing: Boolean(form.published) && !published }),
+        hint: MINIMUM_HINT,
+      })
     } finally {
       setBusy(false)
     }
@@ -185,12 +397,24 @@ export function AdminExperiencia() {
 
   const save = (event) => {
     event.preventDefault()
+    const publishing = Boolean(form.published) && !published
+    const missing = missingFields(form, { publishing })
+    if (missing.length) {
+      setDialog({
+        title: 'Faltan datos mínimos',
+        message: 'Completa estos datos antes de guardar la experiencia.',
+        items: missing,
+      })
+      return
+    }
     run(async () => {
       if (isNew) {
         const created = await apiRequest('/admin/experiences', { method: 'POST', body: form })
         navigate(`/admin/experiencias/${created.id}`, { replace: true })
       } else {
-        setForm(await apiRequest(`/admin/experiences/${id}`, { method: 'PUT', body: form }))
+        const saved = await apiRequest(`/admin/experiences/${id}`, { method: 'PUT', body: form })
+        setForm(saved)
+        setPublished(Boolean(saved.published))
       }
     }, 'Cambios guardados.')
   }
@@ -225,10 +449,28 @@ export function AdminExperiencia() {
       setForm(await apiRequest(`/admin/experiences/${id}/images/${image.imageId}`, { method, body }))
     })
 
-  const togglePublish = () =>
+  const togglePublish = () => {
+    const next = !form.published
+    if (next) {
+      const missing = missingFields(form, { publishing: true })
+      if (missing.length) {
+        setDialog({
+          title: 'No se puede publicar todavía',
+          message: 'Para publicar la experiencia faltan estos datos.',
+          items: missing,
+        })
+        return
+      }
+    }
     run(async () => {
-      setForm(await apiRequest(`/admin/experiences/${id}`, { method: 'PUT', body: { ...form, published: !form.published } }))
-    }, form.published ? 'Experiencia despublicada.' : 'Experiencia publicada.')
+      const saved = await apiRequest(`/admin/experiences/${id}`, {
+        method: 'PUT',
+        body: { ...form, published: next },
+      })
+      setForm(saved)
+      setPublished(Boolean(saved.published))
+    }, next ? 'Experiencia publicada.' : 'Experiencia despublicada.')
+  }
 
   const cover = form.images.find((image) => image.role === 'cover') ?? form.images[0]
   const onMap = form.latitude !== '' && form.latitude != null && form.longitude !== '' && form.longitude != null
@@ -271,6 +513,16 @@ export function AdminExperiencia() {
                 >
                   {form.published ? 'Despublicar' : 'Publicar'}
                 </button>
+                {isAdmin ? (
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--danger-outline"
+                    onClick={remove}
+                    disabled={busy}
+                  >
+                    Borrar
+                  </button>
+                ) : null}
               </>
             ) : null}
             <button type="button" className="admin-btn admin-btn--primary" onClick={save} disabled={busy}>
@@ -401,7 +653,26 @@ export function AdminExperiencia() {
                   <Field label="Teléfono" icon="telefono">
                     <input value={form.phone} onChange={set('phone')} placeholder="310 7881532" />
                   </Field>
+                  <Field label="Cómo llegar" icon="huellas" hint="Opcional: si la ficha lo trae, sale detrás de los cuatro.">
+                    <input value={form.access} onChange={set('access')} placeholder="15 min en vehículo" />
+                  </Field>
+                  <Field label="Dificultad" icon="camino" hint="Opcional, en texto libre.">
+                    <input value={form.difficulty} onChange={set('difficulty')} placeholder="Media alta" />
+                  </Field>
                 </div>
+              </AdminSection>
+
+              <AdminSection
+                title="Horario de apertura"
+                hint="Días y horas: con esto se calcula «Abierto hoy»."
+                signal={signal}
+              >
+                <ScheduleEditor
+                  value={form.schedule ?? null}
+                  fallbackDaily={form.openDaily}
+                  onChange={(schedule) => setForm((current) => ({ ...current, schedule }))}
+                  onUseText={(hours) => setForm((current) => ({ ...current, hours }))}
+                />
               </AdminSection>
             </>
           ) : null}
@@ -533,14 +804,11 @@ export function AdminExperiencia() {
                   <small>Se guarda al pulsar «Guardar cambios».</small>
                 </span>
               </label>
-              <label className="admin-check admin-check--card">
-                <input type="checkbox" checked={form.openDaily} onChange={set('openDaily')} />
-                <span>
-                  <strong>Abre todos los días</strong>
-                  <small>Aparece en el filtro «Abierto hoy».</small>
-                </span>
-              </label>
               </div>
+              <p className="note">
+                «Abierto hoy» se calcula con el horario de la pestaña Información.
+              </p>
+              <p className="note">{MINIMUM_HINT}</p>
 
               <h2>Orden</h2>
               <div className="admin-publish__field">
@@ -548,18 +816,53 @@ export function AdminExperiencia() {
                   <input type="number" value={form.sortOrder} onChange={set('sortOrder')} />
                 </Field>
               </div>
+            </div>
+          ) : null}
 
-              {!isNew && isAdmin ? (
+          {tab === 'history' ? (
+            <div className="admin-publish">
+              <h2>Historial</h2>
+              <p className="note">Últimos cambios guardados en esta experiencia.</p>
+              {(form.audit ?? []).length === 0 ? (
+                <p className="note">Sin cambios registrados todavía.</p>
+              ) : (
                 <>
-                  <h2>Borrar</h2>
-                  <p className="note">Deja de verse en el sitio y en el mapa.</p>
-                  <div className="admin-publish__actions">
-                    <button type="button" className="admin-btn admin-btn--danger" onClick={remove} disabled={busy}>
-                      Borrar experiencia
-                    </button>
-                  </div>
+                  <ul className="admin-audit">
+                    {(form.audit ?? [])
+                      .slice(auditPage * AUDIT_PAGE, (auditPage + 1) * AUDIT_PAGE)
+                      .map((entry) => (
+                        <li key={entry.id}>
+                          <span className="admin-audit__action">{entry.action}</span>
+                          <span>{entry.userName ?? 'Sistema'}</span>
+                          <span className="admin-audit__date">{formatStamp(entry.createdAt)}</span>
+                        </li>
+                      ))}
+                  </ul>
+                  {(form.audit ?? []).length > AUDIT_PAGE ? (
+                    <div className="admin-pager">
+                      <button
+                        type="button"
+                        className="admin-btn"
+                        disabled={auditPage === 0}
+                        onClick={() => setAuditPage((page) => page - 1)}
+                      >
+                        ← Anterior
+                      </button>
+                      <span>
+                        Página {auditPage + 1} de {Math.ceil((form.audit ?? []).length / AUDIT_PAGE)}
+                      </span>
+                      <button
+                        type="button"
+                        className="admin-btn"
+                        disabled={(auditPage + 1) * AUDIT_PAGE >= (form.audit ?? []).length}
+                        onClick={() => setAuditPage((page) => page + 1)}
+                      >
+                        Siguiente →
+                      </button>
+                    </div>
+                  ) : null}
                 </>
-              ) : null}
+              )}
             </div>
           ) : null}
 
@@ -571,6 +874,8 @@ export function AdminExperiencia() {
           </div>
         </form>
       </div>
+
+      {dialog ? <AdminDialog {...dialog} onClose={() => setDialog(null)} /> : null}
     </section>
   )
 }

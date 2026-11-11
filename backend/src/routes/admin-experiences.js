@@ -41,6 +41,49 @@ function coordinate(value, field, limit) {
   return parsed
 }
 
+const SCHEDULE_MODES = ['always', 'days', 'days-close', 'multi', 'per-day']
+const DAY_KEYS = ['1', '2', '3', '4', '5', '6', '7']
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
+
+function scheduleTime(value) {
+  if (value === null || value === undefined || value === '') return null
+  if (typeof value !== 'string' || !TIME_PATTERN.test(value)) {
+    throw new ApiError(400, 'VALIDATION', 'Las horas del horario deben ir en formato HH:MM')
+  }
+  return value
+}
+
+// El panel manda siempre el mismo valor canónico (modo + mapa de días con sus
+// turnos): un día ausente está cerrado y una lista vacía significa «abre sin
+// hora fija». Se guarda tal cual y `open_daily` se deriva de ahí.
+function scheduleFrom(value) {
+  if (!value || typeof value !== 'object') return null
+  const mode = SCHEDULE_MODES.includes(value.mode) ? value.mode : 'always'
+  const source = value.days && typeof value.days === 'object' ? value.days : {}
+  const days = {}
+  for (const day of DAY_KEYS) {
+    if (!Array.isArray(source[day])) continue
+    days[day] = source[day]
+      .slice(0, 3)
+      .map((range) => ({
+        opensAt: scheduleTime(range?.opensAt),
+        closesAt: scheduleTime(range?.closesAt),
+      }))
+      .filter((range) => range.opensAt || range.closesAt)
+  }
+  return { mode, days }
+}
+
+function parseSchedule(raw) {
+  if (!raw) return null
+  if (typeof raw === 'object') return raw
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
 function id(value) {
   const parsed = Number.parseInt(value, 10)
   if (!Number.isFinite(parsed) || parsed <= 0) throw new ApiError(400, 'VALIDATION', 'id no válido')
@@ -79,7 +122,7 @@ async function loadExperience(experienceId) {
   )
   if (!row) throw new ApiError(404, 'NOT_FOUND', 'Experiencia no encontrada')
 
-  const [tips, images] = await Promise.all([
+  const [tips, images, auditEntries] = await Promise.all([
     query(
       'SELECT id, icon, title, description FROM experience_tips WHERE experience_id = ? ORDER BY sort_order, id',
       [experienceId],
@@ -89,6 +132,14 @@ async function loadExperience(experienceId) {
        FROM experience_images i JOIN media m ON m.id = i.media_id
        WHERE i.experience_id = ?
        ORDER BY FIELD(i.role, 'cover', 'gallery'), i.sort_order, i.id`,
+      [experienceId],
+    ),
+    // Historial de la ficha (pestaña propia en el panel).
+    query(
+      `SELECT a.id, a.action, a.created_at, u.name AS user_name
+       FROM audit_log a LEFT JOIN admin_users u ON u.id = a.admin_user_id
+       WHERE a.entity_type = 'experience' AND a.entity_id = ?
+       ORDER BY a.id DESC LIMIT 50`,
       [experienceId],
     ),
   ])
@@ -112,6 +163,7 @@ async function loadExperience(experienceId) {
     longitude: row.longitude === null ? '' : String(Number(row.longitude)),
     mapsUrl: row.maps_url ?? '',
     mapIcon: row.map_icon ?? '',
+    schedule: parseSchedule(row.schedule_json),
     openDaily: Boolean(row.open_daily),
     published: Boolean(row.is_published),
     sortOrder: Number(row.sort_order),
@@ -126,6 +178,12 @@ async function loadExperience(experienceId) {
       role: image.role,
       url: image.public_url,
       alt: image.alt_text ?? '',
+    })),
+    audit: auditEntries.map((entry) => ({
+      id: toNumber(entry.id),
+      action: entry.action,
+      userName: entry.user_name ?? null,
+      createdAt: entry.created_at,
     })),
   }
 }
@@ -146,7 +204,7 @@ router.get(
   requireAuth,
   asyncHandler(async (_req, res) => {
     const rows = await query(
-      `SELECT x.id, x.slug, x.title, x.is_published, x.latitude, x.sort_order,
+      `SELECT x.id, x.slug, x.title, x.is_published, x.latitude, x.sort_order, x.updated_at,
               c.name AS category_name,
               (SELECT m.public_url FROM experience_images i JOIN media m ON m.id = i.media_id
                 WHERE i.experience_id = x.id ORDER BY FIELD(i.role, 'cover', 'gallery'), i.sort_order LIMIT 1) AS cover_url
@@ -164,6 +222,7 @@ router.get(
         published: Boolean(row.is_published),
         onMap: row.latitude !== null,
         cover: row.cover_url ?? null,
+        updatedAt: row.updated_at,
       })),
     })
   }),
@@ -178,13 +237,14 @@ router.get(
 )
 
 async function categoryId(connection, slug) {
-  if (!slug) return null
+  if (!slug) throw new ApiError(400, 'VALIDATION', 'La categoría es obligatoria')
   const [rows] = await connection.query('SELECT id FROM experience_categories WHERE slug = ?', [slug])
   if (!rows[0]) throw new ApiError(400, 'VALIDATION', 'La categoría no existe')
   return rows[0].id
 }
 
 function fieldsFrom(body) {
+  const schedule = scheduleFrom(body.schedule)
   const icon = text(body.mapIcon, 'Icono del mapa', { max: 40 })
   if (icon && !MAP_ICONS.includes(icon)) throw new ApiError(400, 'VALIDATION', 'El icono del mapa no existe')
   const mapsUrl = text(body.mapsUrl, 'Enlace de Google Maps', { max: 500 })
@@ -200,7 +260,7 @@ function fieldsFrom(body) {
   return {
     title,
     slug: slugify(text(body.slug, 'Slug', { max: 160 }) ?? title),
-    summary: text(body.summary, 'Resumen', { max: 320 }) ?? '',
+    summary: text(body.summary, 'Resumen', { max: 320, required: true }),
     card_text: text(body.cardText, 'Texto de la tarjeta', { max: 600 }),
     meta_text: text(body.meta, 'Datos de la tarjeta', { max: 255 }),
     description: text(body.description, 'Descripción', { max: 20000 }) ?? '',
@@ -214,7 +274,16 @@ function fieldsFrom(body) {
     longitude,
     maps_url: mapsUrl,
     map_icon: icon,
-    open_daily: body.openDaily ? 1 : 0,
+    schedule_json: schedule ? JSON.stringify(schedule) : null,
+    // Con horario manda el horario: abre todos los días si están los siete.
+    // Sin horario (fichas viejas) se respeta la casilla de siempre.
+    open_daily: schedule
+      ? DAY_KEYS.every((day) => day in schedule.days)
+        ? 1
+        : 0
+      : body.openDaily
+        ? 1
+        : 0,
     is_published: body.published === false ? 0 : 1,
     sort_order: Number.parseInt(body.sortOrder, 10) || 0,
   }
@@ -235,6 +304,25 @@ async function saveTips(connection, experienceId, tips) {
   }
 }
 
+// Publicar exige una portada con texto alternativo, igual que en las fichas de
+// establecimientos: sin ella el listado y el mapa salen con el hueco de imagen.
+async function assertCoverText(experienceId) {
+  const cover = await queryOne(
+    `SELECT i.id FROM experience_images i JOIN media m ON m.id = i.media_id
+     WHERE i.experience_id = ? AND i.role = 'cover'
+       AND COALESCE(NULLIF(i.alt_override, ''), NULLIF(m.alt_text, '')) IS NOT NULL
+     LIMIT 1`,
+    [experienceId],
+  )
+  if (!cover) {
+    throw new ApiError(
+      409,
+      'MISSING_COVER',
+      'Para publicar, la experiencia necesita una portada con texto alternativo',
+    )
+  }
+}
+
 function duplicateSlug(error) {
   if (error?.code === 'ER_DUP_ENTRY') throw new ApiError(409, 'SLUG_TAKEN', 'Ya existe una experiencia con ese slug')
   throw error
@@ -245,13 +333,17 @@ router.post(
   requireAuth,
   asyncHandler(async (req, res) => {
     const fields = fieldsFrom(req.body ?? {})
+    // Una experiencia nueva nace siempre sin publicar: para verla en el sitio
+    // hay que darle portada con texto alternativo y publicarla desde el editor.
+    fields.is_published = 0
+    fields.published_at = null
     const newId = await withTransaction(async (connection) => {
       fields.category_id = await categoryId(connection, req.body.category)
       const columns = Object.keys(fields)
       const [result] = await connection
         .query(
-          `INSERT INTO experiences (${columns.join(', ')}, published_at)
-           VALUES (${columns.map(() => '?').join(', ')}, NOW())`,
+          `INSERT INTO experiences (${columns.join(', ')})
+           VALUES (${columns.map(() => '?').join(', ')})`,
           Object.values(fields),
         )
         .catch(duplicateSlug)
@@ -268,8 +360,13 @@ router.put(
   requireAuth,
   asyncHandler(async (req, res) => {
     const experienceId = id(req.params.id)
-    await loadExperience(experienceId)
+    const current = await loadExperience(experienceId)
     const fields = fieldsFrom(req.body ?? {})
+    // Solo se comprueba al pasar de borrador a publicada: una ficha que ya
+    // estaba publicada se puede seguir guardando sin portada.
+    if (!current.published && fields.is_published) {
+      await assertCoverText(experienceId)
+    }
     await withTransaction(async (connection) => {
       fields.category_id = await categoryId(connection, req.body.category)
       await connection

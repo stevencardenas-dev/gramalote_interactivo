@@ -10,6 +10,7 @@ const TABS = [
   { key: 'images', label: 'Imágenes' },
   { key: 'extras', label: 'Servicios y extras' },
   { key: 'publish', label: 'Publicación' },
+  { key: 'history', label: 'Historial' },
 ]
 
 const AUDIT_PAGE = 8
@@ -234,6 +235,18 @@ export default function AdminEstablecimiento() {
     }
   }
 
+  async function handleDelete() {
+    if (!window.confirm(`¿Borrar «${form.name}»? Deja de verse en el sitio y en el mapa.`)) return
+    setError('')
+    setNotice('')
+    try {
+      await apiRequest(`/admin/establishments/${id}`, { method: 'DELETE' })
+      navigate('/admin/establecimientos', { replace: true })
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   async function handleUpload(event) {
     const files = [...(event.target.files ?? [])]
     if (files.length === 0) return
@@ -380,6 +393,15 @@ export default function AdminEstablecimiento() {
             >
               {form.published ? 'Despublicar' : 'Publicar'}
             </button>
+            {user?.role === 'admin' ? (
+              <button
+                type="button"
+                className="admin-btn admin-btn--danger-outline"
+                onClick={handleDelete}
+              >
+                Borrar
+              </button>
+            ) : null}
             <button
               type="button"
               className="admin-btn admin-btn--primary"
@@ -1027,7 +1049,13 @@ export default function AdminEstablecimiento() {
                 </span>
               </label>
 
+            </div>
+          ) : null}
+
+          {tab === 'history' ? (
+            <div className="admin-publish">
               <h2>Historial</h2>
+              <p className="note">Últimos cambios guardados en esta ficha.</p>
               {form.audit.length === 0 ? (
                 <p className="note">Sin cambios registrados todavía.</p>
               ) : (
