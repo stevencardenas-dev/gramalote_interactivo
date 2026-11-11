@@ -2,7 +2,8 @@
 // - La app (HTML, JS, CSS) se guarda al instalar: abre sin conexión.
 // - La API pública se pide a la red y, si no hay señal, se responde con la
 //   última copia guardada.
-// - Fotos, iconos y fuentes: primero la copia guardada.
+// - Fotos subidas (/media): primero la copia guardada. Fotos del diseño,
+//   iconos y fuentes: la copia guardada, actualizada en segundo plano.
 // - Teselas del mapa: solo las que el visitante ya vio con conexión (la política
 //   de uso de OpenStreetMap no permite descargarlas en bloque).
 /* global self, caches, URL, Response */
@@ -119,8 +120,16 @@ self.addEventListener('fetch', (event) => {
       event.respondWith(cacheFirst(request, SHELL))
       return
     }
-    if (/^\/(media|img|brand|icons)\//.test(path)) {
+    // Las fotos subidas tienen nombre único: la copia guardada nunca caduca.
+    if (path.startsWith('/media/')) {
       event.respondWith(cacheFirst(request, MEDIA))
+      return
+    }
+    // Las del diseño se pueden reemplazar con el mismo nombre (p. ej. un
+    // encabezado en mejor calidad): se responde con la guardada y se revisa en
+    // segundo plano, así la versión nueva aparece en la siguiente visita.
+    if (/^\/(img|brand|icons)\//.test(path)) {
+      event.respondWith(staleWhileRevalidate(request, MEDIA))
     }
     return
   }
