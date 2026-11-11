@@ -337,6 +337,7 @@ export default function Navbar({ over = false }) {
             {site.nav.map((link) => (
               <li key={link.to}>
                 <Link to={link.to} onClick={closeMenu}>
+                  <Icon name={link.icon} />
                   {link.label}
                 </Link>
               </li>
@@ -344,15 +345,11 @@ export default function Navbar({ over = false }) {
             {site.explore.items.map((item) => (
               <li key={item.to}>
                 <Link to={item.to} onClick={closeMenu}>
+                  <Icon name={item.icon} />
                   {item.label}
                 </Link>
               </li>
             ))}
-            <li>
-              <Link to={loginTo} onClick={closeMenu}>
-                {loginLabel}
-              </Link>
-            </li>
           </ul>
         </nav>
         <SearchForm inputId="site-search-mobile" onSubmitted={closeMenu} />

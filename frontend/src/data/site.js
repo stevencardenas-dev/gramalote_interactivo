@@ -1,22 +1,24 @@
 export const site = {
   name: 'Gramalote Interactivo',
   place: 'Gramalote · Norte de Santander',
+  // `icon` se usa en el menú móvil; en la navegación de escritorio no se dibuja.
   nav: [
-    { label: 'Inicio', to: '/', match: ['/'], exact: true },
-    { label: 'Qué hacer', to: '/que-hacer', match: ['/que-hacer'] },
+    { label: 'Inicio', to: '/', match: ['/'], exact: true, icon: 'home' },
+    { label: 'Qué hacer', to: '/que-hacer', match: ['/que-hacer'], icon: 'compass' },
     {
       label: 'Dónde ir',
       to: '/donde-ir',
       match: ['/donde-ir', '/donde-comer', '/donde-dormir', '/donde-comprar', '/establecimiento', '/mapa'],
+      icon: 'map',
     },
-    { label: 'Su historia', to: '/historia', match: ['/historia'] },
+    { label: 'Su historia', to: '/historia', match: ['/historia'], icon: 'book' },
   ],
   explore: {
     label: 'Explorar',
     match: ['/curiosidades', '/informacion-practica'],
     items: [
-      { label: 'Curiosidades', to: '/curiosidades' },
-      { label: 'Información práctica', to: '/informacion-practica' },
+      { label: 'Curiosidades', to: '/curiosidades', icon: 'sparkles' },
+      { label: 'Información práctica', to: '/informacion-practica', icon: 'info' },
     ],
   },
   footer: [

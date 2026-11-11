@@ -1001,3 +1001,252 @@
     padding: 12px 14px 14px;
   }
 }
+
+/* ===================================================================
+   Explorador: filtros en chips sobre el mapa (propuesta A) y lista
+   compacta con el icono del lugar a la derecha (propuesta C).
+   =================================================================== */
+.mapa-chips {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mapa-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(20, 20, 20, 0.16);
+  cursor: pointer;
+}
+
+.mapa-chip:hover {
+  background: var(--c-cream);
+}
+
+.mapa-chip.is-on {
+  background: var(--c-coral);
+  color: var(--c-white);
+  font-weight: 700;
+}
+
+.mapa-chip.is-on:hover {
+  background: #b9410f;
+}
+
+.mapa-chip__flecha {
+  font-size: 0.6rem;
+  opacity: 0.72;
+}
+
+.mapa-chip--check input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--c-coral);
+}
+
+.mapa-chip--quitar {
+  justify-content: center;
+  width: 40px;
+  padding: 0;
+  background: var(--c-ink);
+  color: var(--c-white);
+  font-weight: 700;
+}
+
+.mapa-chip--quitar:hover {
+  background: #000;
+}
+
+/* Menú fijo: la fila de chips se desliza en móvil y lo recortaría. */
+.mapa-menu {
+  position: fixed;
+  z-index: 40;
+  min-width: 236px;
+  max-height: 58vh;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--c-white);
+  box-shadow: 0 18px 40px rgba(20, 20, 20, 0.26);
+  overflow: auto;
+}
+
+.mapa-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mapa-menu button:hover {
+  background: var(--c-cream);
+}
+
+.mapa-menu button.is-on {
+  background: #fde6da;
+  color: #b9410f;
+  font-weight: 700;
+}
+
+.mapa-menu__icono {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+/* Lista: fichas bajas, con el icono del lugar a la derecha en vez de color */
+.mapa-panel__lista {
+  gap: 6px;
+}
+
+.mapa-lugar {
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+}
+
+.mapa-lugar:hover {
+  background: var(--c-cream);
+}
+
+.mapa-lugar[aria-current='true'] {
+  border-color: var(--c-coral);
+  background: #fff6ef;
+}
+
+.mapa-lugar__foto {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+}
+
+.mapa-lugar__foto--vacia {
+  display: block;
+  background: var(--c-surface-2);
+}
+
+.mapa-lugar__texto {
+  flex: 1;
+  gap: 2px;
+}
+
+.mapa-lugar__texto strong {
+  overflow: hidden;
+  font-size: var(--fs-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mapa-lugar__sub {
+  overflow: hidden;
+  color: var(--c-ink-soft);
+  font-size: var(--fs-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mapa-lugar__pie {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-muted);
+  font-size: 0.75rem;
+}
+
+.mapa-lugar__estrella {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  fill: var(--c-gold);
+}
+
+.mapa-lugar__pie .is-open {
+  color: var(--c-green);
+  font-weight: 700;
+}
+
+.mapa-lugar__icono {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  opacity: 0.92;
+}
+
+.mapa-ficha__foto--vacia {
+  display: block;
+  background: var(--c-surface-2);
+}
+
+/* En móvil la lista se abre con la píldora inferior «Ver lista». */
+@media (max-width: 860px) {
+  .mapa-chips {
+    top: 62px;
+    left: 0;
+    right: 0;
+    flex-wrap: nowrap;
+    padding: 2px 10px 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mapa-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mapa-chip {
+    flex: none;
+    height: 42px;
+  }
+
+  .mapa-ver-lista {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    z-index: 7;
+    margin: 0;
+    transform: translateX(-50%);
+  }
+
+  .mapa-lugar__foto {
+    width: 56px;
+    height: 56px;
+  }
+
+  .mapa-lugar__icono {
+    width: 28px;
+    height: 28px;
+  }
+
+  .mapa-menu button {
+    min-height: 44px;
+  }
+}
+

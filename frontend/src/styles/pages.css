@@ -2002,3 +2002,23 @@ button.social-dot {
     grid-template-columns: 1fr;
   }
 }
+
+/* Sugerir: fondo sólido del color de marca para que el formulario resalte */
+.suggest {
+  background: var(--c-navy);
+}
+
+/* Móvil: los llamados a la acción de una sola acción se ajustan al ancho */
+@media (max-width: 600px) {
+  .open-today__more,
+  .footer-suggest__inner .btn,
+  .page-actions .btn,
+  .explore-block__body .btn,
+  .map-explorer__body .btn,
+  .category-spotlight__body .btn,
+  .shops-block__intro .btn,
+  .suggest__done-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

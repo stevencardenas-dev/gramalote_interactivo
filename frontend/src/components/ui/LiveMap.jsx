@@ -35,12 +35,12 @@ setWorkerUrl(workerUrl)
 
 // Un grupo por tipo de punto. El color no es el único canal: cada grupo tiene
 // además un tamaño de círculo distinto, una leyenda con texto y un popup con
-// el nombre de la categoría.
+// el nombre de la categoría. `icon` es el que se muestra en los filtros.
 const GROUPS = [
-  { key: 'comer', label: 'Dónde comer', color: '#c2410c', radius: 8 },
-  { key: 'dormir', label: 'Dónde dormir', color: '#486284', radius: 10 },
-  { key: 'comprar', label: 'Dónde comprar', color: '#2f7d4f', radius: 12 },
-  { key: 'experiencia', label: 'Experiencias', color: '#7c3aed', radius: 14 },
+  { key: 'comer', label: 'Dónde comer', color: '#c2410c', radius: 8, icon: 'restaurante' },
+  { key: 'dormir', label: 'Dónde dormir', color: '#486284', radius: 10, icon: 'hotel' },
+  { key: 'comprar', label: 'Dónde comprar', color: '#2f7d4f', radius: 12, icon: 'artesanias' },
+  { key: 'experiencia', label: 'Experiencias', color: '#7c3aed', radius: 14, icon: 'experiencias' },
 ]
 const GROUP_BY_KEY = Object.fromEntries(GROUPS.map((group) => [group.key, group]))
 
@@ -131,11 +131,15 @@ function placeSubtitle(place) {
   return place.type ? `${place.categoryName} · ${place.type}` : place.categoryName
 }
 
+// Nota del lugar tal como se ve en la lista: 0 cuando nadie ha votado.
+const formatRating = (rating) =>
+  rating.votes ? rating.average.toFixed(1).replace('.', ',') : '0'
+
 // Mapa de MapLibre con los lugares de GET /api/map.
 // `groups`: lista de grupos a mostrar (por defecto, todos).
 // `fill`: el mapa toma el alto de su contenedor en vez de uno propio.
-// `explorer`: panel lateral con buscador, filtros y lista de lugares; al elegir
-// un lugar el mapa se centra en él.
+// `explorer`: panel lateral con buscador y lista de lugares; los filtros van en
+// chips sobre el mapa y al elegir un lugar el mapa se centra en él.
 export default function LiveMap({
   groups = null,
   label = 'Mapa de Gramalote',
@@ -162,9 +166,11 @@ export default function LiveMap({
   const [selectedId, setSelectedId] = useState('')
   const [onlyOpen, setOnlyOpen] = useState(false)
   const [minRating, setMinRating] = useState(0)
-  // En escritorio los filtros van abiertos dentro del panel izquierdo; en móvil, como hoja.
-  const [sheetOpen, setSheetOpen] = useState(() => window.matchMedia('(min-width: 861px)').matches)
   const [listOpen, setListOpen] = useState(false)
+  // Menú desplegable de un filtro ('group' | 'rating' | 'type') y su posición.
+  const [menu, setMenu] = useState(null)
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
+  const menuRef = useRef(null)
   const groupsKey = groups ? groups.join(',') : ''
 
   const places = useMemo(() => {
@@ -189,6 +195,7 @@ export default function LiveMap({
     setMinRating(0)
     setOnlyOpen(false)
     setSelectedId('')
+    setMenu(null)
   }
 
   // Tipos disponibles dentro del grupo elegido (o de todos) para el segundo filtro.
@@ -320,10 +327,66 @@ export default function LiveMap({
       ?.scrollIntoView({ block: 'nearest' })
   }, [places, selectedId])
 
+  // El menú de un filtro se cierra al tocar fuera, con Escape, al hacer scroll
+  // o al cambiar el tamaño de la ventana (la posición quedaría desfasada).
+  useEffect(() => {
+    if (!menu) return undefined
+
+    function onPointerDown(event) {
+      const target = event.target
+      if (menuRef.current?.contains(target)) return
+      if (target instanceof Element && target.closest('.mapa-chip')) return
+      setMenu(null)
+    }
+    function onKeyDown(event) {
+      if (event.key === 'Escape') setMenu(null)
+    }
+    function close() {
+      setMenu(null)
+    }
+
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('resize', close)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+    }
+  }, [menu])
+
+  // El menú es fijo para no quedar recortado por la fila deslizable de chips.
+  function toggleMenu(key, event) {
+    if (menu === key) {
+      setMenu(null)
+      return
+    }
+    const rect = event.currentTarget.getBoundingClientRect()
+    const width = 236
+    setMenuPos({
+      top: rect.bottom + 6,
+      left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
+    })
+    setMenu(key)
+  }
+
   const chooseGroup = (key) => {
     setActiveGroup(key)
     setActiveType('')
     setSelectedId('')
+    setMenu(null)
+  }
+
+  const chooseRating = (value) => {
+    setMinRating(value)
+    setMenu(null)
+  }
+
+  const chooseType = (value) => {
+    setActiveType(value)
+    setMenu(null)
   }
 
   // Centra el mapa en el lugar elegido de la lista y abre su popup.
@@ -354,11 +417,7 @@ export default function LiveMap({
         {place.photo ? (
           <img className="mapa-ficha__foto" src={place.photo} alt="" />
         ) : (
-          <span
-            className="mapa-ficha__foto mapa-ficha__foto--vacia"
-            style={{ background: GROUP_BY_KEY[place.group].color }}
-            aria-hidden="true"
-          />
+          <span className="mapa-ficha__foto mapa-ficha__foto--vacia" aria-hidden="true" />
         )}
         <div className="mapa-ficha__texto">
           <h3>{place.name}</h3>
@@ -419,197 +478,238 @@ export default function LiveMap({
   )
 
   if (explorer) {
+    const groupLabel = activeGroup ? GROUP_BY_KEY[activeGroup]?.label : 'Categoría'
+    const ratingLabel = minRating ? `${String(minRating).replace('.', ',')}★ o más` : 'Calificación'
+    const typeLabel = activeType || 'Tipo'
+
     return (
       <>
-      <div className="mapa-explorador">
-        <aside className={`mapa-panel${listOpen ? ' is-list-open' : ''}`} aria-label="Lugares del mapa">
-          <input
-            type="search"
-            className="mapa-panel__buscar"
-            placeholder="Buscar un lugar…"
-            aria-label="Buscar un lugar"
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value)
-              setSelectedId('')
-            }}
-          />
-          <div className="mapa-rapidos">
-            <button
-              type="button"
-              className="mapa-filtro mapa-filtro--mas"
-              aria-expanded={sheetOpen}
-              onClick={() => setSheetOpen((value) => !value)}
-            >
-              Filtros
-              {filterCount ? <span className="mapa-filtro__cuenta">{filterCount}</span> : null}
-            </button>
-            {listOpen || !selectedPlace ? (
-              <button type="button" className="mapa-ver-lista" onClick={() => setListOpen((value) => !value)}>
-                {listOpen
-                  ? 'Ver mapa'
-                  : places.length === 0
-                    ? 'Sin resultados'
-                    : `Ver lista (${places.length})`}
-              </button>
-            ) : null}
-          </div>
-          {filterCount ? (
-            <div className="mapa-activos" aria-label="Filtros aplicados">
-              {activeGroup ? (
-                <span className="mapa-activo">
-                  {GROUP_BY_KEY[activeGroup]?.label}
-                  <button type="button" aria-label="Quitar categoría" onClick={() => chooseGroup('')}>×</button>
-                </span>
-              ) : null}
-              {activeType ? (
-                <span className="mapa-activo">
-                  {activeType}
-                  <button type="button" aria-label="Quitar tipo" onClick={() => setActiveType('')}>×</button>
-                </span>
-              ) : null}
-              {minRating ? (
-                <span className="mapa-activo">
-                  {String(minRating).replace('.', ',')}★ o más
-                  <button type="button" aria-label="Quitar calificación mínima" onClick={() => setMinRating(0)}>×</button>
-                </span>
-              ) : null}
-              {onlyOpen ? (
-                <span className="mapa-activo">
-                  Abierto ahora
-                  <button type="button" aria-label="Quitar abierto ahora" onClick={() => setOnlyOpen(false)}>×</button>
-                </span>
-              ) : null}
-              <button type="button" className="mapa-limpiar" onClick={clearFilters}>
-                Limpiar todo
-              </button>
-            </div>
-          ) : null}
-          {
-            <div
-              className={`mapa-hoja${sheetOpen ? ' is-open' : ''}`}
-              onMouseDown={(event) => event.target === event.currentTarget && setSheetOpen(false)}
-            >
-              <div className="mapa-hoja__panel" role="dialog" aria-modal="true" aria-label="Filtros del mapa">
-                <span className="mapa-hoja__asa" aria-hidden="true" />
-                <h2 className="mapa-hoja__titulo">
+        <div className="mapa-explorador">
+          <aside className={`mapa-panel${listOpen ? ' is-list-open' : ''}`} aria-label="Lugares del mapa">
+            <input
+              type="search"
+              className="mapa-panel__buscar"
+              placeholder="Buscar un lugar…"
+              aria-label="Buscar un lugar"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value)
+                setSelectedId('')
+              }}
+            />
+            <p className="mapa-panel__cuenta" aria-live="polite">
+              {places.length === 0 && filterCount
+                ? 'Sin resultados con estos filtros'
+                : places.length === 1
+                  ? '1 lugar'
+                  : `${places.length} lugares`}
+            </p>
+            {statusNotes}
+            <ul className="mapa-panel__lista" ref={listRef}>
+              {places.map((place) => (
+                <li key={place.id}>
                   <button
                     type="button"
-                    className="mapa-hoja__cabecera"
-                    aria-expanded={sheetOpen}
-                    onClick={() => setSheetOpen((value) => !value)}
+                    className="mapa-lugar"
+                    aria-current={selectedId === place.id ? 'true' : undefined}
+                    onClick={() => focusPlace(place)}
                   >
-                    <span>
-                      Filtrar lugares
-                      {filterCount ? <span className="mapa-filtro__cuenta">{filterCount}</span> : null}
+                    {place.photo ? (
+                      <img className="mapa-lugar__foto" src={place.photo} alt="" loading="lazy" />
+                    ) : (
+                      <span className="mapa-lugar__foto mapa-lugar__foto--vacia" aria-hidden="true" />
+                    )}
+                    <span className="mapa-lugar__texto">
+                      <strong>{place.name}</strong>
+                      <span className="mapa-lugar__sub">{placeSubtitle(place)}</span>
+                      <span className="mapa-lugar__pie">
+                        <svg className="mapa-lugar__estrella" viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z" />
+                        </svg>
+                        {formatRating(place.rating)}
+                        {place.openNow === null ? null : (
+                          <span className={place.openNow ? 'is-open' : undefined}>
+                            {place.openNow ? 'Abierto' : 'Cerrado'}
+                          </span>
+                        )}
+                      </span>
                     </span>
-                    <span className="mapa-hoja__chevron" aria-hidden="true">▾</span>
+                    <img
+                      className="mapa-lugar__icono"
+                      src={mapIconUrl(place.icon)}
+                      alt=""
+                      width="30"
+                      height="30"
+                      loading="lazy"
+                    />
                   </button>
-                </h2>
-                <div className="mapa-hoja__cuerpo">
+                </li>
+              ))}
+            </ul>
+            <button type="button" className="mapa-ver-lista" onClick={() => setListOpen((value) => !value)}>
+              {listOpen
+                ? 'Ver mapa'
+                : places.length === 0
+                  ? 'Sin resultados'
+                  : `Ver lista (${places.length})`}
+            </button>
+          </aside>
 
-                <h3>Categoría</h3>
-                <div className="mapa-hoja__opciones mapa-hoja__opciones--cuadricula" role="group" aria-label="Categoría">
-                  {[{ key: '', label: 'Todas' }, ...visibleGroups].map((group) => (
-                    <button
-                      key={group.key}
-                      type="button"
-                      className="mapa-filtro"
-                      aria-pressed={activeGroup === group.key}
-                      onClick={() => chooseGroup(group.key)}
-                    >
-                      {group.color ? (
-                        <span className="mapa-filtro__punto" style={{ background: group.color }} aria-hidden="true" />
-                      ) : null}
-                      {group.label}
-                    </button>
-                  ))}
-                </div>
+          <div className="mapa-escenario">
+            <div
+              ref={containerRef}
+              className="mapa mapa--explorador"
+              role="region"
+              aria-label={label}
+            />
 
-                {typeSelect}
+            <div className="mapa-chips" role="toolbar" aria-label="Filtros del mapa">
+              <button
+                type="button"
+                className={`mapa-chip${activeGroup ? ' is-on' : ''}`}
+                aria-haspopup="menu"
+                aria-expanded={menu === 'group'}
+                onClick={(event) => toggleMenu('group', event)}
+              >
+                {groupLabel}
+                <span className="mapa-chip__flecha" aria-hidden="true">▼</span>
+              </button>
 
-                <label className="mapa-hoja__fila">
-                  <span>Abierto ahora</span>
-                  <input type="checkbox" checked={onlyOpen} onChange={(event) => setOnlyOpen(event.target.checked)} />
-                </label>
+              <button
+                type="button"
+                className={`mapa-chip${minRating ? ' is-on' : ''}`}
+                aria-haspopup="menu"
+                aria-expanded={menu === 'rating'}
+                onClick={(event) => toggleMenu('rating', event)}
+              >
+                {ratingLabel}
+                <span className="mapa-chip__flecha" aria-hidden="true">▼</span>
+              </button>
 
-                <h3>Calificación mínima</h3>
-                <div className="mapa-hoja__opciones" role="group" aria-label="Calificación mínima">
-                  {[
-                    [0, 'Todas'],
-                    [4, '4★ o más'],
-                    [4.5, '4,5★ o más'],
-                  ].map(([value, text]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className="mapa-filtro"
-                      aria-pressed={minRating === value}
-                      onClick={() => setMinRating(value)}
-                    >
-                      {text}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="mapa-hoja__pie">
-                  <button type="button" className="btn btn--ghost" onClick={clearFilters}>
-                    Limpiar
-                  </button>
-                  <button type="button" className="btn btn--primary" onClick={() => setSheetOpen(false)}>
-                    Ver {places.length} {places.length === 1 ? 'lugar' : 'lugares'}
-                  </button>
-                </div>
-                </div>
-              </div>
-            </div>
-          }
-          <p className="mapa-panel__cuenta" aria-live="polite">
-            {places.length === 0 && filterCount
-              ? 'Sin resultados con estos filtros'
-              : places.length === 1
-                ? '1 lugar'
-                : `${places.length} lugares`}
-          </p>
-          {statusNotes}
-          <ul className="mapa-panel__lista" ref={listRef}>
-            {places.map((place) => (
-              <li key={place.id}>
+              {typeOptions.length > 1 ? (
                 <button
                   type="button"
-                  className="mapa-lugar"
-                  aria-current={selectedId === place.id ? 'true' : undefined}
-                  onClick={() => focusPlace(place)}
+                  className={`mapa-chip${activeType ? ' is-on' : ''}`}
+                  aria-haspopup="menu"
+                  aria-expanded={menu === 'type'}
+                  onClick={(event) => toggleMenu('type', event)}
                 >
-                  {place.photo ? (
-                    <img className="mapa-lugar__foto" src={place.photo} alt="" loading="lazy" />
-                  ) : (
-                    <span
-                      className="mapa-lugar__foto mapa-lugar__foto--vacia"
-                      style={{ background: GROUP_BY_KEY[place.group].color }}
-                      aria-hidden="true"
-                    />
-                  )}
-                  <span className="mapa-lugar__texto">
-                    <strong>{place.name}</strong>
-                    <span>{placeSubtitle(place)}</span>
-                  </span>
+                  {typeLabel}
+                  <span className="mapa-chip__flecha" aria-hidden="true">▼</span>
                 </button>
-              </li>
-            ))}
-          </ul>
-        </aside>
-        <div className="mapa-escenario">
-          <div
-            ref={containerRef}
-            className="mapa mapa--explorador"
-            role="region"
-            aria-label={label}
-          />
-          {selectedPlace ? renderCard(selectedPlace) : null}
-        </div>
+              ) : null}
 
-      </div>
+              <label className={`mapa-chip mapa-chip--check${onlyOpen ? ' is-on' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={onlyOpen}
+                  onChange={(event) => setOnlyOpen(event.target.checked)}
+                />
+                Abierto ahora
+              </label>
+
+              {filterCount ? (
+                <button
+                  type="button"
+                  className="mapa-chip mapa-chip--quitar"
+                  aria-label="Quitar filtros"
+                  onClick={clearFilters}
+                >
+                  ✕
+                </button>
+              ) : null}
+            </div>
+
+            {menu ? (
+              <div
+                className="mapa-menu"
+                ref={menuRef}
+                role="menu"
+                style={{ top: `${menuPos.top}px`, left: `${menuPos.left}px` }}
+              >
+                {menu === 'group' ? (
+                  <>
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={!activeGroup}
+                      className={!activeGroup ? 'is-on' : undefined}
+                      onClick={() => chooseGroup('')}
+                    >
+                      Todas las categorías
+                    </button>
+                    {visibleGroups.map((group) => (
+                      <button
+                        key={group.key}
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={activeGroup === group.key}
+                        className={activeGroup === group.key ? 'is-on' : undefined}
+                        onClick={() => chooseGroup(group.key)}
+                      >
+                        <img
+                          className="mapa-menu__icono"
+                          src={mapIconUrl(group.icon)}
+                          alt=""
+                          width="22"
+                          height="22"
+                        />
+                        {group.label}
+                      </button>
+                    ))}
+                  </>
+                ) : null}
+
+                {menu === 'rating'
+                  ? [
+                      [0, 'Cualquier calificación'],
+                      [4, '4★ o más'],
+                      [4.5, '4,5★ o más'],
+                    ].map(([value, text]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={minRating === value}
+                        className={minRating === value ? 'is-on' : undefined}
+                        onClick={() => chooseRating(value)}
+                      >
+                        {text}
+                      </button>
+                    ))
+                  : null}
+
+                {menu === 'type' ? (
+                  <>
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={!activeType}
+                      className={!activeType ? 'is-on' : undefined}
+                      onClick={() => chooseType('')}
+                    >
+                      Todos los tipos
+                    </button>
+                    {typeOptions.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={activeType === type}
+                        className={activeType === type ? 'is-on' : undefined}
+                        onClick={() => chooseType(type)}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </>
+                ) : null}
+              </div>
+            ) : null}
+
+            {selectedPlace ? renderCard(selectedPlace) : null}
+          </div>
+        </div>
       </>
     )
   }

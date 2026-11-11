@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { site } from '../../data/site.js'
 import { SOCIAL_NETWORKS, isSocialUrl } from '../../data/pages.js'
 import { usePageContent } from '../../lib/pageContent.js'
@@ -7,6 +7,10 @@ import SocialIcon from '../ui/SocialIcon.jsx'
 const year = new Date().getFullYear()
 
 export default function Footer() {
+  const { pathname } = useLocation()
+  // En /sugerir el aviso del pie repetiría la propia página: no se muestra.
+  const showSuggest = pathname !== '/sugerir'
+
   // Redes activas y sus enlaces: Páginas › Redes sociales, en el panel.
   const { social } = usePageContent('redes')
   const networks = social
@@ -16,17 +20,19 @@ export default function Footer() {
 
   return (
     <footer className="site-footer">
-      <div className="footer-suggest">
-        <div className="container footer-suggest__inner">
-          <p>
-            <strong>¿Conoces un lugar que debería estar aquí?</strong>
-            <span>Sugiere un restaurante, alojamiento, tienda o atractivo de Gramalote.</span>
-          </p>
-          <Link className="btn btn--primary" to="/sugerir">
-            Sugerir un establecimiento
-          </Link>
+      {showSuggest ? (
+        <div className="footer-suggest">
+          <div className="container footer-suggest__inner">
+            <p>
+              <strong>¿Conoces un lugar que debería estar aquí?</strong>
+              <span>Sugiere un restaurante, alojamiento, tienda o atractivo de Gramalote.</span>
+            </p>
+            <Link className="btn btn--primary" to="/sugerir">
+              Sugerir un establecimiento
+            </Link>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="footer-logos">
         <img src="/brand/logo-rect.svg" alt="Gramalote Interactivo" />

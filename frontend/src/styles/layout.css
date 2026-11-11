@@ -289,8 +289,8 @@
     padding-inline: 16px;
   }
 
-  .site-nav,
-  .site-login {
+  /* El candado de acceso sigue visible en la esquina, junto al menú. */
+  .site-nav {
     display: none;
   }
 
