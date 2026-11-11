@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import OpeningHoursEditor from '../components/admin/OpeningHoursEditor.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
+import AdminToast from '../components/admin/AdminToast.jsx'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 import { resolveMapIcon } from '../data/mapIcons.js'
 
@@ -387,23 +388,6 @@ export default function AdminEstablecimiento() {
             </Link>
             <button
               type="button"
-              className={`admin-btn ${form.published ? 'admin-btn--danger' : 'admin-btn--accent'}`}
-              onClick={() => handlePublish(!form.published)}
-              disabled={!form.published && user?.role !== 'admin'}
-            >
-              {form.published ? 'Despublicar' : 'Publicar'}
-            </button>
-            {user?.role === 'admin' ? (
-              <button
-                type="button"
-                className="admin-btn admin-btn--danger-outline"
-                onClick={handleDelete}
-              >
-                Borrar
-              </button>
-            ) : null}
-            <button
-              type="button"
               className="admin-btn admin-btn--primary"
               onClick={handleSave}
               disabled={saving}
@@ -413,8 +397,18 @@ export default function AdminEstablecimiento() {
           </div>
         </div>
 
-        {error ? <p className="auth-error">{error}</p> : null}
-        {notice ? <p className="admin-notice">{notice}</p> : null}
+        {error || notice ? (
+          <AdminToast
+            key={`${error}-${notice}`}
+            tone={error ? 'error' : 'ok'}
+            title={error ? 'No se pudo guardar' : 'Guardado'}
+            message={error || notice}
+            onClose={() => {
+              setError('')
+              setNotice('')
+            }}
+          />
+        ) : null}
 
         <nav className="admin-tabs" role="tablist">
           {TABS.map((item) => (
@@ -1028,10 +1022,24 @@ export default function AdminEstablecimiento() {
                 >
                   {form.published ? 'Despublicar' : 'Publicar ficha'}
                 </button>
+                {user?.role === 'admin' ? (
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--danger-outline"
+                    onClick={handleDelete}
+                    disabled={form.published}
+                    title={form.published ? 'Despublica la ficha para poder borrarla' : undefined}
+                  >
+                    Borrar
+                  </button>
+                ) : null}
                 {user?.role !== 'admin' ? (
                   <span className="note">Solo un administrador puede publicar.</span>
                 ) : null}
               </div>
+              {form.published ? (
+                <p className="note">Para borrar la ficha, primero despublica.</p>
+              ) : null}
               <p className="note">
                 Para publicar se exige al menos una portada con texto alternativo.
               </p>
@@ -1103,7 +1111,7 @@ export default function AdminEstablecimiento() {
             <button type="submit" className="admin-btn admin-btn--primary" disabled={saving}>
               {saving ? 'Guardando…' : 'Guardar cambios'}
             </button>
-            {notice ? <span className="admin-notice">{notice}</span> : null}
+            
           </div>
         </form>
       </div>

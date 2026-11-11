@@ -1112,21 +1112,49 @@ router.delete(
   asyncHandler(async (req, res) => {
     const establishmentId = integer(req.params.id, 'id')
     const imageId = integer(req.params.imageId, 'imageId')
-    await withTransaction(async (connection) => {
-      const [result] = await connection.query(
-        'DELETE FROM establishment_images WHERE id = ? AND establishment_id = ?',
+    // Igual que en experiencias: se desvincula la foto y, si nadie más la usa,
+    // se borra el registro y los archivos. Primero la base y después el disco,
+    // para no dejar una ficha mostrando una foto que ya no existe.
+    const storagePath = await withTransaction(async (connection) => {
+      const [rows] = await connection.query(
+        `SELECT i.media_id, m.storage_disk, m.storage_path
+         FROM establishment_images i JOIN media m ON m.id = i.media_id
+         WHERE i.id = ? AND i.establishment_id = ? FOR UPDATE`,
         [imageId, establishmentId],
       )
-      if (result.affectedRows === 0) {
-        throw new ApiError(404, 'NOT_FOUND', 'Imagen de la ficha no encontrada')
-      }
+      const image = rows[0]
+      if (!image) throw new ApiError(404, 'NOT_FOUND', 'Imagen de la ficha no encontrada')
+
+      await connection.query('DELETE FROM establishment_images WHERE id = ?', [imageId])
       await recordAudit(connection, req, {
         action: 'unlink_media',
         entityType: 'establishment',
         entityId: establishmentId,
         changes: { imageId },
       })
+
+      const [usageRows] = await connection.query(
+        `SELECT (SELECT COUNT(*) FROM establishment_images WHERE media_id = ?) +
+                (SELECT COUNT(*) FROM experience_images WHERE media_id = ?) AS total`,
+        [image.media_id, image.media_id],
+      )
+      if (Number(usageRows[0]?.total ?? 0) > 0) return null
+
+      try {
+        await connection.query('DELETE FROM media WHERE id = ?', [image.media_id])
+      } catch (error) {
+        // Otra tabla del sitio todavía la referencia: se conserva el archivo.
+        if (error?.code === 'ER_ROW_IS_REFERENCED_2') return null
+        throw error
+      }
+
+      // Solo las fotos subidas tienen archivo aquí; las del diseño viven en la
+      // imagen del frontend.
+      return image.storage_disk === 'local' ? image.storage_path : null
     })
+
+    if (storagePath) await removeImageFiles(storagePath)
+
     res.status(204).end()
   }),
 )

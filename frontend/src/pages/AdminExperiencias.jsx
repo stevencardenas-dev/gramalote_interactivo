@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminDialog from '../components/admin/AdminDialog.jsx'
+import AdminToast from '../components/admin/AdminToast.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
 import ScheduleEditor from '../components/admin/ScheduleEditor.jsx'
 import IconMask from '../components/ui/IconMask.jsx'
@@ -118,6 +119,8 @@ export function AdminExperiencias() {
   const [draftCategory, setDraftCategory] = useState('')
   const [draftSummary, setDraftSummary] = useState('')
   const [dialog, setDialog] = useState(null)
+  const [toast, setToast] = useState(null)
+  const toastSeq = useRef(0)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -185,11 +188,12 @@ export function AdminExperiencias() {
       })
       navigate(`/admin/experiencias/${created.id}`)
     } catch (err) {
-      setError(err.message)
-      setDialog({
+      toastSeq.current += 1
+      setToast({
+        tone: 'error',
         title: 'No se pudo crear la experiencia',
         message: err.message,
-        hint: MINIMUM_HINT,
+        key: toastSeq.current,
       })
     } finally {
       setCreating(false)
@@ -312,6 +316,16 @@ export function AdminExperiencias() {
         </ul>
       </div>
 
+      {toast ? (
+        <AdminToast
+          key={toast.key}
+          tone={toast.tone}
+          title={toast.title}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      ) : null}
+
       {dialog ? <AdminDialog {...dialog} onClose={() => setDialog(null)} /> : null}
     </section>
   )
@@ -324,7 +338,8 @@ export function AdminExperiencia() {
   const isAdmin = getUser()?.role === 'admin'
   const [form, setForm] = useState(isNew ? EMPTY : null)
   const [meta, setMeta] = useState({ categories: [], mapIcons: [] })
-  const [notice, setNotice] = useState('')
+  const [toast, setToast] = useState(null)
+  const toastSeq = useRef(0)
   const [busy, setBusy] = useState(false)
   const [published, setPublished] = useState(false)
   const [dialog, setDialog] = useState(null)
@@ -348,7 +363,9 @@ export function AdminExperiencia() {
           setPublished(Boolean(data.published))
         }
       } catch (err) {
-        if (alive) setNotice(err.message)
+        if (alive) {
+          setToast({ tone: 'error', title: 'No se pudo cargar la experiencia', message: err.message })
+        }
       }
     })()
     return () => {
@@ -359,7 +376,7 @@ export function AdminExperiencia() {
   if (!form) {
     return (
       <section className="admin-page">
-        <div className="admin-wrap">{notice || 'Cargando…'}</div>
+        <div className="admin-wrap">Cargando…</div>
       </section>
     )
   }
@@ -374,22 +391,20 @@ export function AdminExperiencia() {
       tips: current.tips.map((tip, i) => (i === index ? { ...tip, [key]: value } : tip)),
     }))
 
-  // El error se avisa en el pie y, además, en un modal: si faltaba un dato o la
-  // portada, el aviso del pie pasa desapercibido.
+  // Todo aviso del editor pasa por el mismo popup con barra de 8 segundos. El
+  // contador hace que cada aviso se monte de nuevo y reinicie su barra.
+  const notify = (tone, title, message) => {
+    toastSeq.current += 1
+    setToast({ tone, title, message, key: toastSeq.current })
+  }
+
   async function run(task, ok) {
     setBusy(true)
-    setNotice('')
     try {
       await task()
-      if (ok) setNotice(ok)
+      if (ok) notify('ok', ok)
     } catch (err) {
-      setNotice(err.message)
-      setDialog({
-        title: 'No se pudo guardar',
-        message: err.message,
-        items: missingFields(form, { publishing: Boolean(form.published) && !published }),
-        hint: MINIMUM_HINT,
-      })
+      notify('error', 'No se pudo guardar', err.message)
     } finally {
       setBusy(false)
     }
@@ -501,37 +516,15 @@ export function AdminExperiencia() {
           </div>
           <div className="admin-head2__actions">
             {!isNew ? (
-              <>
-                <Link className="admin-btn" to={`/que-hacer/${form.slug}`} target="_blank" rel="noreferrer">
-                  Ver ficha ↗
-                </Link>
-                <button
-                  type="button"
-                  className={`admin-btn ${form.published ? 'admin-btn--danger' : 'admin-btn--accent'}`}
-                  onClick={togglePublish}
-                  disabled={busy}
-                >
-                  {form.published ? 'Despublicar' : 'Publicar'}
-                </button>
-                {isAdmin ? (
-                  <button
-                    type="button"
-                    className="admin-btn admin-btn--danger-outline"
-                    onClick={remove}
-                    disabled={busy}
-                  >
-                    Borrar
-                  </button>
-                ) : null}
-              </>
+              <Link className="admin-btn" to={`/que-hacer/${form.slug}`} target="_blank" rel="noreferrer">
+                Ver ficha ↗
+              </Link>
             ) : null}
             <button type="button" className="admin-btn admin-btn--primary" onClick={save} disabled={busy}>
               {busy ? 'Guardando…' : 'Guardar'}
             </button>
           </div>
         </div>
-
-        {notice ? <p className="admin-notice">{notice}</p> : null}
 
         <nav className="admin-tabs" role="tablist">
           {TABS.map((item) => (
@@ -796,6 +789,32 @@ export function AdminExperiencia() {
                   ? 'La experiencia es visible en «Qué hacer» y en el mapa.'
                   : 'La experiencia no está publicada y no aparece en el sitio.'}
               </p>
+              {!isNew ? (
+                <div className="admin-publish__actions">
+                  <button
+                    type="button"
+                    className={`admin-btn ${form.published ? 'admin-btn--danger' : 'admin-btn--accent'}`}
+                    onClick={togglePublish}
+                    disabled={busy}
+                  >
+                    {form.published ? 'Despublicar' : 'Publicar'}
+                  </button>
+                  {isAdmin ? (
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--danger-outline"
+                      onClick={remove}
+                      disabled={busy || form.published}
+                      title={form.published ? 'Despublica la experiencia para poder borrarla' : undefined}
+                    >
+                      Borrar
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+              {form.published ? (
+                <p className="note">Para borrar la experiencia, primero despublica.</p>
+              ) : null}
               <div className="admin-publish__checks">
               <label className="admin-check admin-check--card">
                 <input type="checkbox" checked={form.published} onChange={set('published')} />
@@ -870,10 +889,19 @@ export function AdminExperiencia() {
             <button type="submit" className="admin-btn admin-btn--primary" disabled={busy}>
               {busy ? 'Guardando…' : 'Guardar cambios'}
             </button>
-            {notice ? <span className="admin-notice">{notice}</span> : null}
           </div>
         </form>
       </div>
+
+      {toast ? (
+        <AdminToast
+          key={toast.key}
+          tone={toast.tone}
+          title={toast.title}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      ) : null}
 
       {dialog ? <AdminDialog {...dialog} onClose={() => setDialog(null)} /> : null}
     </section>

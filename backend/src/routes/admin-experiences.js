@@ -502,19 +502,34 @@ router.delete(
     )
     if (!image) throw new ApiError(404, 'NOT_FOUND', 'Imagen no encontrada')
 
-    await query('DELETE FROM experience_images WHERE id = ?', [imageId])
-    // Las fotos subidas solo se borran del disco si nadie más las usa.
-    if (image.storage_disk === 'local') {
-      const usage = await queryOne(
+    // Primero la base y después el disco: si algo falla en medio, nunca queda un
+    // archivo borrado que la ficha siga mostrando.
+    const storagePath = await withTransaction(async (connection) => {
+      await connection.query('DELETE FROM experience_images WHERE id = ?', [imageId])
+
+      const [usageRows] = await connection.query(
         `SELECT (SELECT COUNT(*) FROM experience_images WHERE media_id = ?) +
                 (SELECT COUNT(*) FROM establishment_images WHERE media_id = ?) AS total`,
         [image.media_id, image.media_id],
       )
-      if (Number(usage?.total ?? 0) === 0) {
-        await query('DELETE FROM media WHERE id = ?', [image.media_id])
-        await removeImageFiles(image.storage_path)
+      // Si otra ficha la sigue usando, se quita solo de esta.
+      if (Number(usageRows[0]?.total ?? 0) > 0) return null
+
+      try {
+        await connection.query('DELETE FROM media WHERE id = ?', [image.media_id])
+      } catch (error) {
+        // La referencia la protege otra tabla: se conserva el registro y el archivo.
+        if (error?.code === 'ER_ROW_IS_REFERENCED_2') return null
+        throw error
       }
-    }
+
+      // Las fotos del diseño viven dentro de la imagen del frontend, no en
+      // /opt/gramalote/media: ahí solo se borra el registro.
+      return image.storage_disk === 'local' ? image.storage_path : null
+    })
+
+    if (storagePath) await removeImageFiles(storagePath)
+
     res.json({ data: await loadExperience(experienceId) })
   }),
 )
