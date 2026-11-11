@@ -316,7 +316,7 @@ function LinkField({ link, onChange, sources, allowPage = true }) {
 }
 
 // ---------------------------------------------------------------- Inicio
-function InicioEditor({ draft, update, sources, groups, openPicker }) {
+function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
   const defaults = PAGE_DEFAULTS.inicio
   const allGroups = [groups.uploads, ...groups.experiences, ...groups.establishments]
 
@@ -362,7 +362,7 @@ function InicioEditor({ draft, update, sources, groups, openPicker }) {
 
   return (
     <>
-      <AdminSection title="Accede rápido" hint="Las cinco secciones son fijas; aquí cambia su imagen." defaultOpen>
+      <AdminSection signal={signal} title="Accede rápido" hint="Las cinco secciones son fijas; aquí cambia su imagen.">
         <div className="admin-imggrid">
           {draft.quickAccess.map((item, index) => (
             <ImageField
@@ -377,9 +377,9 @@ function InicioEditor({ draft, update, sources, groups, openPicker }) {
       </AdminSection>
 
       <AdminSection
+        signal={signal}
         title="Experiencias que no olvidarás"
         hint="Tres tarjetas: la primera es la grande. Imagen, orden, título, texto y enlace."
-        defaultOpen
       >
         <div className="admin-pcards">
           {draft.experiences.map((card, index) => (
@@ -429,9 +429,9 @@ function InicioEditor({ draft, update, sources, groups, openPicker }) {
       </AdminSection>
 
       <AdminSection
+        signal={signal}
         title="Descubre establecimientos disponibles para tu visita"
         hint="Tarjetas del bloque «Abierto hoy en Gramalote»: orden, título, fondo y la ficha a la que llevan."
-        defaultOpen
       >
         <div className="admin-pcards admin-pcards--compact">
           {draft.highlights.map((card, index) => (
@@ -500,14 +500,14 @@ function InicioEditor({ draft, update, sources, groups, openPicker }) {
 }
 
 // ---------------------------------------------------------------- Qué hacer
-function QueHacerEditor({ draft, update, sources, groups, openPicker }) {
+function QueHacerEditor({ draft, update, sources, groups, openPicker, signal }) {
   const experiences = sources?.experiences ?? []
 
   return (
     <AdminSection
+      signal={signal}
       title="Experiencias"
       hint="Orden de las tarjetas en «Qué hacer» y la portada de cada una (de su galería)."
-      defaultOpen
     >
       <OrderList
         kind="experience"
@@ -570,7 +570,7 @@ function TextBlock({ block, onChange, withText = true }) {
   )
 }
 
-function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker }) {
+function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, signal }) {
   const pools = useMemo(() => {
     const byCategory = (category) => (sources?.establishments ?? []).filter((item) => item.category === category)
     return { comer: byCategory('comer'), dormir: byCategory('dormir'), comprar: byCategory('comprar') }
@@ -619,7 +619,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker })
     const defaults = PAGE_DEFAULTS['donde-ir']
     return (
       <>
-        <AdminSection title="Dónde comer" hint="Texto y las tres fotos del collage." defaultOpen>
+        <AdminSection signal={signal} title="Dónde comer" hint="Texto y las tres fotos del collage.">
           <TextBlock block={draft.comer} onChange={setBlock('comer')} />
           <div className="admin-imggrid admin-imggrid--three">
             {draft.comer.images.map((image, index) => (
@@ -635,7 +635,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker })
             ))}
           </div>
         </AdminSection>
-        <AdminSection title="Dónde dormir" hint="Título y los cuatro alojamientos, con su orden y foto." defaultOpen>
+        <AdminSection signal={signal} title="Dónde dormir" hint="Título y los cuatro alojamientos, con su orden y foto.">
           <TextBlock block={draft.dormir} onChange={setBlock('dormir')} withText={false} />
           <RelatedEditor
             block={draft.dormir}
@@ -649,7 +649,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker })
             onCover={(item) => coverPicker(item, (page) => page.dormir, 'Foto en Dónde ir')}
           />
         </AdminSection>
-        <AdminSection title="Dónde comprar" hint="Texto y los tres artesanos, con su orden y foto." defaultOpen>
+        <AdminSection signal={signal} title="Dónde comprar" hint="Texto y los tres artesanos, con su orden y foto.">
           <TextBlock block={draft.comprar} onChange={setBlock('comprar')} />
           <RelatedEditor
             block={draft.comprar}
@@ -672,9 +672,9 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker })
   const listLabel = { comer: 'Establecimientos', dormir: 'Alojamientos', comprar: 'Artesanos' }[category]
   const listing = (
     <AdminSection
+      signal={signal}
       title={listLabel}
       hint={`Orden de las tarjetas en ${PAGE_INFO[pageKey].label} y la foto de cada una (de su galería).`}
-      defaultOpen
     >
       <OrderList
         kind="establishment"
@@ -697,9 +697,9 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker })
       <>
         {listing}
         <AdminSection
+          signal={signal}
           title="Referencia a Dónde comer · Platos típicos"
           hint="Las tres fotos del bloque «Explora nuestros platos típicos», elegidas de los establecimientos de comida."
-          defaultOpen
         >
           <div className="admin-imggrid admin-imggrid--three">
             {draft.platos.images.map((image, index) => (
@@ -716,9 +716,9 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker })
           </div>
         </AdminSection>
         <AdminSection
+          signal={signal}
           title="Referencia al mapa interactivo"
           hint="Bloque «Encuentra dónde comer»: su botón lleva al mapa con los restaurantes."
-          defaultOpen
         >
           <div className="admin-imggrid admin-imggrid--three">
             <ImageField
@@ -753,7 +753,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker })
   return (
     <>
       {listing}
-      <AdminSection title={related.title} hint="Título, descripción y las fichas que se muestran, con su foto." defaultOpen>
+      <AdminSection signal={signal} title={related.title} hint="Título, descripción y las fichas que se muestran, con su foto.">
         <TextBlock block={draft.related} onChange={setBlock('related')} />
         <RelatedEditor
           block={draft.related}
@@ -772,7 +772,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker })
 }
 
 // ---------------------------------------------------------------- Redes
-function RedesEditor({ draft, update }) {
+function RedesEditor({ draft, update, signal }) {
   const rows = socialRows(draft.social)
   const setRow = (index, patch) =>
     update((page) => {
@@ -781,9 +781,9 @@ function RedesEditor({ draft, update }) {
 
   return (
     <AdminSection
+      signal={signal}
       title="Redes sociales del pie de página"
       hint="Activa o desactiva cada icono, cambia a dónde lleva y su orden."
-      defaultOpen
     >
       <ol className="admin-order">
         {rows.map((item, index) => {
@@ -848,6 +848,8 @@ export default function AdminPaginas() {
   const [dirty, setDirty] = useState({})
   const [busy, setBusy] = useState(false)
   const [picker, setPicker] = useState(null)
+  // Expandir / Contraer todo: cada sección escucha el contador `n`.
+  const [signal, setSignal] = useState({ open: false, n: 0 })
   const [toast, setToast] = useState(null)
   const toastSeq = useRef(0)
   const [error, setError] = useState('')
@@ -985,7 +987,7 @@ export default function AdminPaginas() {
 
   const draft = drafts[pageKey]
   const stored = data?.pages?.[pageKey]
-  const editorProps = { draft, update, sources: data?.sources, groups, openPicker }
+  const editorProps = { draft, update, sources: data?.sources, groups, openPicker, signal }
 
   return (
     <section className="admin-page">
@@ -1061,6 +1063,21 @@ export default function AdminPaginas() {
                   </button>
                 ) : null}
               </div>
+            </div>
+
+            <div className="admin-panel__tools">
+              <button type="button" className="admin-tool-btn" onClick={() => setSignal((p) => ({ open: true, n: p.n + 1 }))}>
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="m4 3.5 4 4 4-4M4 8.5l4 4 4-4" />
+                </svg>
+                Expandir todo
+              </button>
+              <button type="button" className="admin-tool-btn" onClick={() => setSignal((p) => ({ open: false, n: p.n + 1 }))}>
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="m4 7.5 4-4 4 4M4 12.5l4-4 4 4" />
+                </svg>
+                Contraer todo
+              </button>
             </div>
 
             {pageKey === 'inicio' ? <InicioEditor {...editorProps} /> : null}

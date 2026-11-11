@@ -546,7 +546,7 @@ export function AdminExperiencia() {
         </nav>
 
         <form onSubmit={save} className="admin-panel">
-          {tab === 'info' ? (
+          {tab === 'info' || tab === 'tips' ? (
             <div className="admin-panel__tools">
               <button type="button" className="admin-tool-btn" onClick={() => setSignal((p) => ({ open: true, n: p.n + 1 }))}>
                 <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -742,7 +742,6 @@ export function AdminExperiencia() {
             <AdminSection
               title="Ten en cuenta"
               hint="Consejos con icono que salen en la ficha."
-              defaultOpen
               signal={signal}
             >
               {form.tips.length === 0 ? <p className="empty">Sin consejos todavía.</p> : null}
