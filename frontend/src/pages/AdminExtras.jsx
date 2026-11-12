@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import AdminToast from '../components/admin/AdminToast.jsx'
-import { MAP_ICONS } from '../data/mapIcons.js'
+import { MAP_ICONS, mapIconUrl } from '../data/mapIcons.js'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 
 // Panel › Lugares › Extras: puntos complementarios del mapa. No tienen ficha
@@ -34,6 +34,13 @@ const EMPTY = {
   mapsUrl: '',
   mapIcon: 'parque',
   published: false,
+}
+
+function formatDate(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function normalize(value) {
@@ -300,28 +307,29 @@ export default function AdminExtras() {
           <ul className="admin-rows">
             {visible.map((item) => (
               <li key={item.id} className="admin-row-item">
-                <span className="admin-row-item__main">
+                <span className="admin-row-item__thumb">
+                  <img src={mapIconUrl(item.mapIcon)} alt="" loading="lazy" />
+                </span>
+                <div className="admin-row-item__main">
                   <button type="button" className="admin-row-item__link" onClick={() => startEdit(item)}>
                     {item.name}
                   </button>
                   <small>
                     {item.category}
-                    {item.zone ? ` · ${item.zone}` : ''} · {item.latitude.toFixed(5)},{' '}
-                    {item.longitude.toFixed(5)}
+                    {item.zone ? ` · ${item.zone}` : ''}
                     {item.matrixRef ? ` · ${item.matrixRef}` : ''}
                   </small>
-                </span>
+                </div>
+                <span className="admin-row-item__date">{formatDate(item.updatedAt)}</span>
                 <button
                   type="button"
-                  className="admin-btn admin-btn--sm"
+                  className={`admin-badge ${item.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
                   onClick={() => togglePublished(item)}
                   disabled={busy || (!item.published && !isAdmin)}
+                  title={item.published ? 'Despublicar' : 'Publicar'}
                 >
-                  {item.published ? 'Despublicar' : 'Publicar'}
-                </button>
-                <span className={`admin-badge ${item.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}>
                   {item.published ? 'Publicada' : 'No publicada'}
-                </span>
+                </button>
                 <button type="button" className="admin-btn admin-btn--sm" onClick={() => startEdit(item)}>
                   Editar
                 </button>

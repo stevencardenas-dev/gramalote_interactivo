@@ -56,6 +56,11 @@ function mapIcon(value) {
   return icon ?? 'parque'
 }
 
+// El panel manda booleanos; los formularios, '1'/'0'.
+function bool(value) {
+  return typeof value === 'boolean' ? value : booleanParam(value)
+}
+
 function serialize(row) {
   return {
     id: toNumber(row.id),
@@ -99,7 +104,7 @@ router.post(
     const body = req.body ?? {}
     const name = text(body.name, 'Nombre', { max: 180, required: true })
     const category = text(body.category, 'Categoría', { max: 80, required: true })
-    const published = booleanParam(body.published) === true
+    const published = bool(body.published) === true
     if (published && req.admin.role !== 'admin') {
       throw new ApiError(403, 'FORBIDDEN', 'Solo un administrador puede publicar')
     }
@@ -157,7 +162,7 @@ router.patch(
 
     let published = Boolean(current.is_published)
     if (body.published !== undefined) {
-      const next = booleanParam(body.published)
+      const next = bool(body.published)
       if (next === null) throw new ApiError(400, 'VALIDATION', 'Indica si se publica o no')
       if (next && req.admin.role !== 'admin') {
         throw new ApiError(403, 'FORBIDDEN', 'Solo un administrador puede publicar')

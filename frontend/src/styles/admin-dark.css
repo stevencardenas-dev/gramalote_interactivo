@@ -2959,3 +2959,21 @@ a.admin-tile:hover {
 .admin-row-item__link:hover {
   color: var(--a-ac-text);
 }
+
+/* Botón que parece enlace dentro de una fila del panel */
+.admin-row-item__link {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-row-item button.admin-badge {
+  border: 0;
+  cursor: pointer;
+}
+
+.admin-row-item button.admin-badge:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
