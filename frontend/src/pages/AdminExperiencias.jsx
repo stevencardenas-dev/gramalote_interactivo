@@ -30,6 +30,14 @@ const STATUS_TABS = [
   { key: 'draft', label: 'No publicadas' },
 ]
 
+function normalize(text) {
+  return (text ?? '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
 function formatDate(value) {
   if (!value) return ''
   const date = new Date(value)
@@ -115,6 +123,7 @@ export function AdminExperiencias() {
   const navigate = useNavigate()
   const [items, setItems] = useState(null)
   const [categories, setCategories] = useState([])
+  const [query, setQuery] = useState('')
   const [tab, setTab] = useState('published')
   const [showNew, setShowNew] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -155,10 +164,16 @@ export function AdminExperiencias() {
     [items],
   )
 
-  const visible = useMemo(
-    () => (items ?? []).filter((item) => (tab === 'published' ? item.published : !item.published)),
-    [items, tab],
-  )
+  const visible = useMemo(() => {
+    const term = normalize(query.trim())
+    return (items ?? []).filter((item) => {
+      if (tab === 'published' ? !item.published : item.published) return false
+      if (!term) return true
+      return normalize(`${item.title ?? ''} ${item.slug ?? ''} ${item.category ?? ''}`).includes(
+        term,
+      )
+    })
+  }, [items, tab, query])
 
   // Igual que en establecimientos: se crea con los datos mínimos y se abre el
   // editor; la ficha nace sin publicar.
@@ -208,7 +223,22 @@ export function AdminExperiencias() {
       <div className="admin-wrap">
         <AdminLugaresTabs />
         <div className="admin-bar">
-          <h1>Experiencias</h1>
+          <div className="admin-bar__heading">
+            <h1>Experiencias</h1>
+            <p className="admin-bar__lead">
+              Fichas de «Qué hacer»: patrimonio, naturaleza y recorridos.
+            </p>
+          </div>
+          <label className="visually-hidden" htmlFor="admin-experience-search">
+            Buscar
+          </label>
+          <input
+            id="admin-experience-search"
+            type="search"
+            placeholder="Buscar por título, slug o categoría…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
           <button
             type="button"
             className="admin-btn admin-btn--primary"

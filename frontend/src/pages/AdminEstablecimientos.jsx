@@ -113,7 +113,12 @@ export default function AdminEstablecimientos() {
       <div className="admin-wrap">
         <AdminLugaresTabs />
         <div className="admin-bar">
-          <h1>Establecimientos</h1>
+          <div className="admin-bar__heading">
+            <h1>Establecimientos</h1>
+            <p className="admin-bar__lead">
+              Fichas con página propia: dónde comer, dormir y comprar.
+            </p>
+          </div>
           <label className="visually-hidden" htmlFor="admin-search">
             Buscar
           </label>

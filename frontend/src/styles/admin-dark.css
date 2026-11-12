@@ -530,6 +530,22 @@ a.admin-tile:hover {
   margin-right: 8px;
 }
 
+.admin-bar__heading {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  margin-right: auto;
+}
+
+.admin-bar__heading h1 {
+  margin-right: 0;
+}
+
+.admin-bar__heading .admin-bar__lead {
+  flex: none;
+  max-width: 58ch;
+}
+
 .admin-bar input {
   flex: 1 1 220px;
   min-height: 38px;
@@ -645,13 +661,17 @@ a.admin-tile:hover {
 }
 
 .admin-app .admin-segment button.is-active {
-  background: var(--a-sf);
-  color: var(--a-tx);
-  box-shadow: 0 0 0 1px var(--a-ac);
+  background: var(--a-ac);
+  color: var(--a-onac);
+}
+
+.admin-app .admin-segment button.is-active .admin-tab__count {
+  background: rgba(255, 255, 255, 0.24);
+  color: var(--a-onac);
 }
 
 .admin-app .admin-segment button:focus-visible {
-  outline: 2px solid var(--a-ac);
+  outline: 2px solid var(--a-ac-text);
   outline-offset: 1px;
 }
 

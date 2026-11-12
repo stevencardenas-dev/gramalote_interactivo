@@ -90,15 +90,17 @@ export default function AdminSugerencias() {
       <div className="admin-wrap">
         <AdminLugaresTabs />
         <div className="admin-bar">
-          <h1>Sugerencias</h1>
-          <p className="admin-lead admin-bar__lead">
-            Establecimientos que los visitantes sugieren desde <Link to="/sugerir">/sugerir</Link>.
-            {isAdmin ? (
-              <>
-                {' '}Quién recibe el aviso por correo se configura en <Link to="/admin/correo">Correo</Link>.
-              </>
-            ) : null}
-          </p>
+          <div className="admin-bar__heading">
+            <h1>Sugerencias</h1>
+            <p className="admin-bar__lead">
+              Lo que llega desde <Link to="/sugerir">/sugerir</Link>; no se publica solo.
+              {isAdmin ? (
+                <>
+                  {' '}Los avisos salen de <Link to="/admin/correo">Correo</Link>.
+                </>
+              ) : null}
+            </p>
+          </div>
         </div>
 
         <div className="admin-segment" role="tablist" aria-label="Filtrar por estado">

@@ -182,11 +182,10 @@ export default function AdminExtras() {
       <div className="admin-wrap">
         <AdminLugaresTabs />
         <div className="admin-bar">
-          <h1>Extras</h1>
-          <p className="admin-lead admin-bar__lead">
-            Puntos complementarios del mapa (salud, bancos, escenarios, espacios públicos). No tienen
-            ficha: toda su información se ve en la tarjeta del mapa y solo se filtran por categoría.
-          </p>
+          <div className="admin-bar__heading">
+            <h1>Extras</h1>
+            <p className="admin-bar__lead">Puntos del mapa sin ficha; se filtran solo por categoría.</p>
+          </div>
           <label className="visually-hidden" htmlFor="extras-search">
             Buscar
           </label>
@@ -308,12 +307,19 @@ export default function AdminExtras() {
         ) : (
           <ul className="admin-rows">
             {visible.map((item) => (
-              <li key={item.id} className="admin-row-item">
+              <li key={item.id} className="admin-row-item" onClick={() => startEdit(item)}>
                 <span className="admin-row-item__thumb">
                   <img src={mapIconUrl(item.mapIcon)} alt="" loading="lazy" />
                 </span>
                 <div className="admin-row-item__main">
-                  <button type="button" className="admin-row-item__link" onClick={() => startEdit(item)}>
+                  <button
+                    type="button"
+                    className="admin-row-item__link"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      startEdit(item)
+                    }}
+                  >
                     {item.name}
                   </button>
                   <small>
@@ -326,15 +332,18 @@ export default function AdminExtras() {
                 <button
                   type="button"
                   className={`admin-badge ${item.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
-                  onClick={() => togglePublished(item)}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    togglePublished(item)
+                  }}
                   disabled={busy || (!item.published && !isAdmin)}
                   title={item.published ? 'Despublicar' : 'Publicar'}
                 >
                   {item.published ? 'Publicada' : 'No publicada'}
                 </button>
-                <button type="button" className="admin-btn admin-btn--sm" onClick={() => startEdit(item)}>
-                  Editar
-                </button>
+                <span className="admin-row-item__go" aria-hidden="true">
+                  ›
+                </span>
               </li>
             ))}
           </ul>
