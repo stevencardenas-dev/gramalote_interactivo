@@ -387,7 +387,10 @@ export default function LiveMap({
     function onKeyDown(event) {
       if (event.key === 'Escape') setMenu(null)
     }
-    function close() {
+    function close(event) {
+      // Deslizar dentro del propio menú (por ejemplo la lista de Categoría) no
+      // lo cierra: solo se cierra cuando se mueve la página o el mapa.
+      if (event?.target instanceof Node && menuRef.current?.contains(event.target)) return
       setMenu(null)
     }
 

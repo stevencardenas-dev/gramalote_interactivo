@@ -200,7 +200,11 @@ function OrderList({ items, order, covers, onOrder, onCover, kind }) {
               </button>
               <Link
                 className="admin-btn"
-                to={kind === 'experience' ? `/admin/experiencias/${item.id}` : `/admin/establecimientos/${item.id}`}
+                to={
+                  kind === 'experience'
+                    ? `/admin/lugares/experiencias/${item.id}`
+                    : `/admin/lugares/establecimientos/${item.id}`
+                }
               >
                 Ficha
               </Link>

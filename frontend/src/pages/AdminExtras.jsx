@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import { MAP_ICONS, mapIconUrl } from '../data/mapIcons.js'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 
@@ -179,6 +180,7 @@ export default function AdminExtras() {
   return (
     <section className="admin-page">
       <div className="admin-wrap">
+        <AdminLugaresTabs />
         <div className="admin-bar">
           <h1>Extras</h1>
           <p className="admin-lead admin-bar__lead">
@@ -202,7 +204,7 @@ export default function AdminExtras() {
 
         {error ? <p className="auth-error">{error}</p> : null}
 
-        <div className="admin-tabs" role="tablist" aria-label="Filtrar por estado">
+        <div className="admin-segment" role="tablist" aria-label="Filtrar por estado">
           {STATUS_TABS.map((entry) => (
             <button
               key={entry.key}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 
 // Panel › Sugerencias: lo que llega del formulario «Sugerir un establecimiento»
@@ -87,6 +88,7 @@ export default function AdminSugerencias() {
   return (
     <section className="admin-page">
       <div className="admin-wrap">
+        <AdminLugaresTabs />
         <div className="admin-bar">
           <h1>Sugerencias</h1>
           <p className="admin-lead admin-bar__lead">
@@ -99,7 +101,7 @@ export default function AdminSugerencias() {
           </p>
         </div>
 
-        <div className="admin-tabs" role="tablist" aria-label="Filtrar por estado">
+        <div className="admin-segment" role="tablist" aria-label="Filtrar por estado">
           {FILTERS.map(([value, label]) => (
             <button
               key={value || 'todas'}

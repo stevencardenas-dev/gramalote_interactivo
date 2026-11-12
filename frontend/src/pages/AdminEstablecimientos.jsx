@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 
 const STATUS_TABS = [
@@ -99,7 +100,7 @@ export default function AdminEstablecimientos() {
         method: 'POST',
         body: { name: draftName.trim(), categoryId: Number(draftCategory) },
       })
-      navigate(`/admin/establecimientos/${created.id}`)
+      navigate(`/admin/lugares/establecimientos/${created.id}`)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -110,6 +111,7 @@ export default function AdminEstablecimientos() {
   return (
     <section className="admin-page">
       <div className="admin-wrap">
+        <AdminLugaresTabs />
         <div className="admin-bar">
           <h1>Establecimientos</h1>
           <label className="visually-hidden" htmlFor="admin-search">
@@ -184,7 +186,7 @@ export default function AdminEstablecimientos() {
           </form>
         ) : null}
 
-        <div className="admin-tabs" role="tablist" aria-label="Filtrar por estado">
+        <div className="admin-segment" role="tablist" aria-label="Filtrar por estado">
           {STATUS_TABS.map((entry) => (
             <button
               key={entry.key}
@@ -220,7 +222,7 @@ export default function AdminEstablecimientos() {
                   )}
                 </span>
                 <div className="admin-row-item__main">
-                  <Link to={`/admin/establecimientos/${item.id}`}>{item.name}</Link>
+                  <Link to={`/admin/lugares/establecimientos/${item.id}`}>{item.name}</Link>
                   <small>
                     {item.category.name}
                     {item.zone ? ` · ${item.zone.name}` : ''}

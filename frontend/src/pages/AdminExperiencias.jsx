@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
+import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import AdminDialog from '../components/admin/AdminDialog.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import RatingsPanel from '../components/admin/RatingsPanel.jsx'
@@ -188,7 +189,7 @@ export function AdminExperiencias() {
           published: false,
         },
       })
-      navigate(`/admin/experiencias/${created.id}`)
+      navigate(`/admin/lugares/experiencias/${created.id}`)
     } catch (err) {
       toastSeq.current += 1
       setToast({
@@ -205,6 +206,7 @@ export function AdminExperiencias() {
   return (
     <section className="admin-page">
       <div className="admin-wrap">
+        <AdminLugaresTabs />
         <div className="admin-bar">
           <h1>Experiencias</h1>
           <button
@@ -268,7 +270,7 @@ export function AdminExperiencias() {
           </>
         ) : null}
 
-        <div className="admin-tabs" role="tablist" aria-label="Filtrar por estado">
+        <div className="admin-segment" role="tablist" aria-label="Filtrar por estado">
           {STATUS_TABS.map((entry) => (
             <button
               key={entry.key}
@@ -298,7 +300,7 @@ export function AdminExperiencias() {
                 {item.cover ? <img src={item.cover} alt="" loading="lazy" /> : <span aria-hidden="true" />}
               </span>
               <div className="admin-row-item__main">
-                <Link to={`/admin/experiencias/${item.id}`}>{item.title}</Link>
+                <Link to={`/admin/lugares/experiencias/${item.id}`}>{item.title}</Link>
                 <small>
                   {item.category ?? 'Sin categoría'}
                   {item.onMap ? ' · En el mapa' : ' · Sin coordenadas'}
@@ -429,7 +431,7 @@ export function AdminExperiencia() {
     run(async () => {
       if (isNew) {
         const created = await apiRequest('/admin/experiences', { method: 'POST', body: form })
-        navigate(`/admin/experiencias/${created.id}`, { replace: true })
+        navigate(`/admin/lugares/experiencias/${created.id}`, { replace: true })
       } else {
         const saved = await apiRequest(`/admin/experiences/${id}`, { method: 'PUT', body: form })
         setForm(saved)
@@ -442,7 +444,7 @@ export function AdminExperiencia() {
     if (!window.confirm(`¿Borrar «${form.title}»? Dejará de verse en el sitio y en el mapa.`)) return
     run(async () => {
       await apiRequest(`/admin/experiences/${id}`, { method: 'DELETE' })
-      navigate('/admin/experiencias')
+      navigate('/admin/lugares/experiencias')
     })
   }
 
@@ -505,7 +507,7 @@ export function AdminExperiencia() {
     <section className="admin-page">
       <div className="admin-wrap">
         <div className="admin-head2">
-          <Link className="admin-back" to="/admin/experiencias">
+          <Link className="admin-back" to="/admin/lugares/experiencias">
             ← Experiencias
           </Link>
           <div className="admin-head2__cover">

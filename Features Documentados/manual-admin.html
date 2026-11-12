@@ -33,13 +33,14 @@
     <table>
       <tr><th>Acceso</th><th>Qué hay dentro</th></tr>
       <tr><td><strong>Inicio</strong></td><td>Buscador de fichas y los cuatro accesos: Lugares, Usuarios, Correo y Páginas. Debajo, el espacio usado por las imágenes.</td></tr>
-      <tr><td><strong>Lugares</strong></td><td>Establecimientos, Experiencias, Extras y Sugerencias.</td></tr>
+      <tr><td><strong>Lugares</strong></td><td>Es un botón, no un desplegable: abre la sección Lugares, donde se cambia de tipo con las pestañas subrayadas Establecimientos, Experiencias, Extras y Sugerencias.</td></tr>
       <tr><td><strong>Páginas</strong></td><td>Textos, fotos y enlaces de las páginas públicas.</td></tr>
       <tr><td><strong>Usuarios</strong></td><td>Cuentas del panel y sus roles (solo administrador).</td></tr>
       <tr><td><strong>Correo</strong></td><td>Cuenta que envía los correos del sitio (solo administrador).</td></tr>
       <tr><td><strong>Ver sitio</strong></td><td>Abre el sitio público. Atajo: <kbd>Shift</kbd> + <kbd>V</kbd> desde cualquier página del panel.</td></tr>
     </table>
     <p>El botón de tema (claro/oscuro) está a la derecha de la barra y se recuerda en el navegador.</p>
+    <p>Las direcciones de la sección Lugares son <code>/admin/lugares/establecimientos</code>, <code>/admin/lugares/experiencias</code>, <code>/admin/lugares/extras</code> y <code>/admin/lugares/sugerencias</code>. Las direcciones antiguas (<code>/admin/establecimientos</code>, etc.) redirigen solas a la nueva.</p>
   </section>
 
   <section>
@@ -47,7 +48,8 @@
     <p>Son las fichas con página propia: dónde comer, dormir y comprar.</p>
     <h3>Listado</h3>
     <ul>
-      <li><strong>Publicadas / No publicadas</strong>: el conmutador de arriba separa lo que ya se ve en el sitio de lo que sigue en borrador. Cada pestaña muestra su cuenta.</li>
+      <li><strong>Pestañas de tipo</strong>: Establecimientos, Experiencias, Extras y Sugerencias van en una fila con una línea debajo del tipo abierto. Cambian de listado sin volver a la barra.</li>
+      <li><strong>Publicadas / No publicadas</strong>: es un filtro aparte, en un rectángulo redondeado. La opción elegida queda resaltada y con el contorno de foco; cada una muestra su cuenta.</li>
       <li><strong>Buscar</strong> por nombre, slug o zona; el selector filtra por categoría.</li>
       <li>La fila resume categoría, zona, si es destacada y si le falta portada.</li>
       <li><strong>+ Nueva ficha</strong> pide nombre y categoría; la ficha nace sin publicar.</li>
@@ -96,7 +98,7 @@
 
   <section>
     <h2>6. Lugares → Sugerencias</h2>
-    <p>Es lo que llega del formulario público <code>/sugerir</code>. Arriba hay cinco conmutadores con su conteo: <strong>Todas, Nueva, Revisada, Agregada, Descartada</strong>.</p>
+    <p>Es lo que llega del formulario público <code>/sugerir</code>. Arriba hay un filtro en rectángulo redondeado con cinco opciones y su conteo: <strong>Todas, Nueva, Revisada, Agregada, Descartada</strong>; la elegida queda resaltada.</p>
     <ul>
       <li>Dentro de cada sugerencia se cambia el estado con el selector y se deja una <strong>nota interna</strong> (se guarda al salir del campo).</li>
       <li>«Nueva» es lo recién llegado; «Revisada», lo que ya se miró; «Agregada», lo que terminó en una ficha; «Descartada», lo que no se publica.</li>

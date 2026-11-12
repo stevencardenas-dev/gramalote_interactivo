@@ -64,7 +64,11 @@ export default function Admin() {
   function handleSearch(event) {
     event.preventDefault()
     const term = query.trim()
-    navigate(term ? `/admin/establecimientos?q=${encodeURIComponent(term)}` : '/admin/establecimientos')
+    navigate(
+      term
+        ? `/admin/lugares/establecimientos?q=${encodeURIComponent(term)}`
+        : '/admin/lugares/establecimientos',
+    )
   }
 
   const quotaPct =
@@ -99,7 +103,7 @@ export default function Admin() {
         </form>
 
         <div className="admin-tiles">
-          <Link className="admin-tile" to="/admin/establecimientos">
+          <Link className="admin-tile" to="/admin/lugares/establecimientos">
             <strong>Lugares</strong>
             <span>
               {dash ?? plural(summary.total, 'ficha', 'fichas')}

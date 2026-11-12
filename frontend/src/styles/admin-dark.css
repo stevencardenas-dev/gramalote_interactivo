@@ -581,6 +581,8 @@ a.admin-tile:hover {
 
 .admin-app .admin-tab {
   padding: 8px 12px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
   color: var(--a-mu);
 }
 
@@ -588,9 +590,16 @@ a.admin-tile:hover {
   color: var(--a-tx);
 }
 
-.admin-app .admin-tab.is-active {
+.admin-app .admin-tab.is-active,
+.admin-app .admin-tab.active {
   color: var(--a-ac-text);
   border-bottom-color: var(--a-ac);
+}
+
+.admin-app .admin-tab:focus-visible {
+  outline: 2px solid var(--a-ac);
+  outline-offset: -2px;
+  border-radius: 6px;
 }
 
 .admin-app .admin-tab__count {
@@ -601,6 +610,53 @@ a.admin-tile:hover {
 .admin-app .admin-tab.is-active .admin-tab__count {
   background: var(--a-ac);
   color: var(--a-onac);
+}
+
+/* Filtros de estado: rectángulo redondeado aparte de las pestañas de tipo. */
+.admin-app .admin-segment {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px;
+  border: 1px solid var(--a-ln);
+  border-radius: 999px;
+  background: var(--a-sf2);
+}
+
+.admin-app .admin-segment button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--a-mu);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.admin-app .admin-segment button:hover {
+  color: var(--a-tx);
+}
+
+.admin-app .admin-segment button.is-active {
+  background: var(--a-sf);
+  color: var(--a-tx);
+  box-shadow: 0 0 0 1px var(--a-ac);
+}
+
+.admin-app .admin-segment button:focus-visible {
+  outline: 2px solid var(--a-ac);
+  outline-offset: 1px;
+}
+
+.admin-app .admin-segment .admin-tab__count {
+  background: var(--a-sf);
 }
 
 .admin-app .admin-results__clear {

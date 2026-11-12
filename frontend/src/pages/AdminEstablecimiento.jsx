@@ -246,7 +246,7 @@ export default function AdminEstablecimiento() {
     setNotice('')
     try {
       await apiRequest(`/admin/establishments/${id}`, { method: 'DELETE' })
-      navigate('/admin/establecimientos', { replace: true })
+      navigate('/admin/lugares/establecimientos', { replace: true })
     } catch (err) {
       setError(err.message)
     }
@@ -361,7 +361,7 @@ export default function AdminEstablecimiento() {
     <section className="admin-page">
       <div className="admin-wrap">
         <div className="admin-head2">
-          <Link className="admin-back" to="/admin/establecimientos">
+          <Link className="admin-back" to="/admin/lugares/establecimientos">
             ← Establecimientos
           </Link>
           <div className="admin-head2__cover">

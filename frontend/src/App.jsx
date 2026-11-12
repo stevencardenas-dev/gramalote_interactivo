@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 import Layout from './components/layout/Layout.jsx'
 import Inicio from './pages/Inicio.jsx'
 import QueHacer from './pages/QueHacer.jsx'
@@ -29,6 +29,12 @@ import AdminEstablecimientos from './pages/AdminEstablecimientos.jsx'
 import AdminEstablecimiento from './pages/AdminEstablecimiento.jsx'
 import RequireAdmin from './components/admin/RequireAdmin.jsx'
 import NoEncontrada from './pages/NoEncontrada.jsx'
+
+// Enlaces antiguos del panel: conservan las fichas abiertas y los marcadores.
+function LegacyDetalle({ section }) {
+  const { id } = useParams()
+  return <Navigate to={`/admin/lugares/${section}/${id}`} replace />
+}
 
 export default function App() {
   return (
@@ -63,8 +69,9 @@ export default function App() {
             </RequireAdmin>
           }
         />
+        <Route path="admin/lugares" element={<Navigate to="/admin/lugares/establecimientos" replace />} />
         <Route
-          path="admin/establecimientos"
+          path="admin/lugares/establecimientos"
           element={
             <RequireAdmin>
               <AdminEstablecimientos />
@@ -72,7 +79,7 @@ export default function App() {
           }
         />
         <Route
-          path="admin/establecimientos/:id"
+          path="admin/lugares/establecimientos/:id"
           element={
             <RequireAdmin>
               <AdminEstablecimiento />
@@ -80,7 +87,7 @@ export default function App() {
           }
         />
         <Route
-          path="admin/experiencias"
+          path="admin/lugares/experiencias"
           element={
             <RequireAdmin>
               <AdminExperiencias />
@@ -88,7 +95,7 @@ export default function App() {
           }
         />
         <Route
-          path="admin/experiencias/:id"
+          path="admin/lugares/experiencias/:id"
           element={
             <RequireAdmin>
               <AdminExperiencia />
@@ -96,13 +103,28 @@ export default function App() {
           }
         />
         <Route
-          path="admin/extras"
+          path="admin/lugares/extras"
           element={
             <RequireAdmin>
               <AdminExtras />
             </RequireAdmin>
           }
         />
+        <Route
+          path="admin/lugares/sugerencias"
+          element={
+            <RequireAdmin>
+              <AdminSugerencias />
+            </RequireAdmin>
+          }
+        />
+        {/* Rutas anteriores a /admin/lugares: redirigen sin romper enlaces. */}
+        <Route path="admin/establecimientos" element={<Navigate to="/admin/lugares/establecimientos" replace />} />
+        <Route path="admin/establecimientos/:id" element={<LegacyDetalle section="establecimientos" />} />
+        <Route path="admin/experiencias" element={<Navigate to="/admin/lugares/experiencias" replace />} />
+        <Route path="admin/experiencias/:id" element={<LegacyDetalle section="experiencias" />} />
+        <Route path="admin/extras" element={<Navigate to="/admin/lugares/extras" replace />} />
+        <Route path="admin/sugerencias" element={<Navigate to="/admin/lugares/sugerencias" replace />} />
         <Route
           path="admin/paginas"
           element={
@@ -116,14 +138,6 @@ export default function App() {
           element={
             <RequireAdmin>
               <AdminUsuarios />
-            </RequireAdmin>
-          }
-        />
-        <Route
-          path="admin/sugerencias"
-          element={
-            <RequireAdmin>
-              <AdminSugerencias />
             </RequireAdmin>
           }
         />
