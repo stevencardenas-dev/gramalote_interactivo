@@ -1685,20 +1685,29 @@ button.social-dot {
   outline-offset: 2px;
 }
 
+.ficha-hero__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.ficha-hero__controls .ficha-hero__dots {
+  margin-top: 0;
+}
+
 .ficha-hero__dots {
   align-items: center;
 }
 
 .ficha-hero__pause {
-  position: absolute;
-  right: max(20px, calc((100% - var(--container)) / 2));
-  bottom: 112px;
-  z-index: 2;
   display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 50%;

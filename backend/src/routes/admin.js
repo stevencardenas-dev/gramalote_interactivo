@@ -1193,10 +1193,15 @@ router.get(
   requireAuth,
   asyncHandler(async (_req, res) => {
     const { bytes, files } = await usageBytes()
+    // `files` cuenta las variantes de cada foto en el disco (una foto subida
+    // deja 480/960/1440 px); el panel muestra `images`, que sí sube de una en
+    // una, para que el contador no mienta.
+    const row = await queryOne('SELECT COUNT(*) AS images FROM media')
     res.json({
       data: {
         usedBytes: bytes,
         files,
+        images: Number(row?.images ?? 0),
         quotaBytes: config.media.quotaMb * 1024 * 1024,
         maxUploadBytes: config.media.maxUploadMb * 1024 * 1024,
       },

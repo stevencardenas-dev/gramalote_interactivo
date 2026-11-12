@@ -143,9 +143,9 @@ export default function Admin() {
           <p className="admin-hint">
             {media
               ? `${formatBytes(media.usedBytes)} de ${formatBytes(media.quotaBytes)} · ${plural(
-                  media.files,
-                  'archivo',
-                  'archivos',
+                  media.images,
+                  'imagen',
+                  'imágenes',
                 )} · máximo ${formatBytes(media.maxUploadBytes)} por imagen`
               : loading
                 ? 'Cargando…'

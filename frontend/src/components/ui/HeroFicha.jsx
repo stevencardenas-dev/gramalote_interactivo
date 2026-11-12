@@ -201,40 +201,44 @@ export default function HeroFicha({
 
           {rating ? <RatingStars kind={rating.kind} slug={rating.slug} title={title} /> : null}
 
-          {dots && slides.length > 1 ? (
-            <div className="ficha-hero__dots">
-              {slides.map((src, index) => (
-                <button
-                  key={src}
-                  type="button"
-                  className={index === dot ? 'is-active' : undefined}
-                  aria-label={`Ver foto ${index + 1} de ${slides.length}`}
-                  aria-current={index === dot}
-                  onClick={() => goTo(index)}
-                />
-              ))}
+          {/* Pausa y puntitos comparten fila en las dos fichas: el botón no
+              cambia de sitio según la cantidad de fotos ni de encabezado. */}
+          {multiple ? (
+            <div className="ficha-hero__controls">
+              {dots ? (
+                <div className="ficha-hero__dots">
+                  {slides.map((src, index) => (
+                    <button
+                      key={src}
+                      type="button"
+                      className={index === dot ? 'is-active' : undefined}
+                      aria-label={`Ver foto ${index + 1} de ${slides.length}`}
+                      aria-current={index === dot}
+                      onClick={() => goTo(index)}
+                    />
+                  ))}
+                </div>
+              ) : null}
+              <button
+                type="button"
+                className="ficha-hero__pause"
+                aria-pressed={paused}
+                aria-label={paused ? 'Reanudar el movimiento de las fotos' : 'Pausar el movimiento de las fotos'}
+                title={paused ? 'Reanudar' : 'Pausar'}
+                onClick={() => setPaused((value) => !value)}
+              >
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  {paused ? (
+                    <path d="M5 3.2v9.6L12.6 8z" />
+                  ) : (
+                    <path d="M4.5 3h2.6v10H4.5zM8.9 3h2.6v10H8.9z" />
+                  )}
+                </svg>
+              </button>
             </div>
           ) : null}
         </div>
       </div>
-      {multiple ? (
-        <button
-          type="button"
-          className="ficha-hero__pause"
-          aria-pressed={paused}
-          aria-label={paused ? 'Reanudar el movimiento de las fotos' : 'Pausar el movimiento de las fotos'}
-          title={paused ? 'Reanudar' : 'Pausar'}
-          onClick={() => setPaused((value) => !value)}
-        >
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            {paused ? (
-              <path d="M5 3.2v9.6L12.6 8z" />
-            ) : (
-              <path d="M4.5 3h2.6v10H4.5zM8.9 3h2.6v10H8.9z" />
-            )}
-          </svg>
-        </button>
-      ) : null}
     </section>
   )
 }

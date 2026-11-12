@@ -176,21 +176,31 @@
   text-align: center;
 }
 
+/* Galería flexible: la última fila siempre queda centrada, sea cual sea la
+   cantidad de fotos (1 se ve sola y centrada; 2 llenan la fila; de 3 en
+   adelante, las pequeñas se reparten de tres en tres y se centran). */
 .experience-gallery {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: clamp(12px, 2vw, 30px);
+  --experience-gap: clamp(12px, 2vw, 30px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--experience-gap);
 }
 
 .experience-gallery .photo {
-  grid-column: span 2;
+  flex: 0 1 calc((100% - var(--experience-gap) * 2) / 3);
+  min-width: 0;
   height: clamp(180px, 21vw, 300px);
   border-radius: var(--radius-lg);
 }
 
 .experience-gallery .photo:nth-child(-n + 2) {
-  grid-column: span 3;
+  flex-basis: calc((100% - var(--experience-gap)) / 2);
   height: clamp(240px, 35vw, 502px);
+}
+
+.experience-gallery .photo:only-child {
+  flex-basis: min(100%, 900px);
 }
 
 .tips {
@@ -1134,18 +1144,14 @@
     grid-template-columns: 1fr;
   }
 
-  .experience-gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .experience-gallery .photo,
   .experience-gallery .photo:nth-child(-n + 2) {
-    grid-column: span 1;
+    flex-basis: calc((100% - var(--experience-gap)) / 2);
     height: 180px;
   }
 
   .experience-gallery .photo:first-child {
-    grid-column: span 2;
+    flex-basis: 100%;
     height: 240px;
   }
 
