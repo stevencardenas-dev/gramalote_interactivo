@@ -1195,6 +1195,11 @@ a.admin-tile:hover {
     gap: 8px 14px;
   }
 
+  /* Cinco destinos no caben en una fila de celular: se reparten en dos. */
+  .admin-nav__links {
+    flex-wrap: wrap;
+  }
+
   .admin-nav__end {
     margin-left: 0;
     width: 100%;
