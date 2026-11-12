@@ -3071,3 +3071,15 @@ a.admin-tile:hover {
   cursor: default;
   opacity: 0.7;
 }
+
+/* Número del botón flotante de WhatsApp (Páginas › Redes sociales) */
+.admin-wa {
+  max-width: 460px;
+  margin-bottom: 18px;
+}
+
+.admin-wa .note,
+.admin-wa .admin-social__error {
+  font-size: 0.76rem;
+  line-height: 1.4;
+}

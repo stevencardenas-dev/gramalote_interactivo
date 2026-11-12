@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Navbar from './Navbar.jsx'
 import Footer from './Footer.jsx'
 import AdminNav from '../admin/AdminNav.jsx'
+import WhatsAppHelp from '../ui/WhatsAppHelp.jsx'
 import { usePageTitle } from '../../lib/usePageTitle.js'
 
 // Títulos de las vistas fijas. Las fichas y detalles ponen el suyo (el efecto
@@ -107,6 +108,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <WhatsAppHelp />
     </>
   )
 }

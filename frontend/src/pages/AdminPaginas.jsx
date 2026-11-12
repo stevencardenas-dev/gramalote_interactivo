@@ -58,6 +58,11 @@ function invalidSocial(draft) {
     .map((item) => SOCIAL_NETWORKS.find((network) => network.id === item.id)?.label ?? item.id)
 }
 
+function invalidWhatsapp(value) {
+  const digits = String(value ?? '').replace(/\D/g, '')
+  return digits.length > 0 && (digits.length < 10 || digits.length > 15)
+}
+
 const CATEGORY_OF_PAGE = { '/donde-comer': 'comer', '/donde-dormir': 'dormir', '/donde-comprar': 'comprar' }
 
 const clone = (value) => JSON.parse(JSON.stringify(value))
@@ -793,6 +798,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
 // ---------------------------------------------------------------- Redes
 function RedesEditor({ draft, update, signal }) {
   const rows = socialRows(draft.social)
+  const phoneBad = invalidWhatsapp(draft.supportWhatsapp)
   const setRow = (index, patch) =>
     update((page) => {
       page.social = socialRows(page.social).map((item, i) => (i === index ? { ...item, ...patch } : item))
@@ -804,6 +810,27 @@ function RedesEditor({ draft, update, signal }) {
       title="Redes sociales del pie de página"
       hint="Activa o desactiva cada icono, cambia a dónde lleva y su orden."
     >
+      <label className="admin-field admin-wa">
+        <span>Número del botón flotante de WhatsApp</span>
+        <input
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          value={draft.supportWhatsapp ?? ''}
+          placeholder="+57 320 417 7123"
+          aria-invalid={phoneBad}
+          onChange={(event) =>
+            update((page) => {
+              page.supportWhatsapp = event.target.value
+            })
+          }
+        />
+        <small className={phoneBad ? 'admin-social__error' : 'note'}>
+          {phoneBad
+            ? 'Escribe entre 10 y 15 dígitos (por ejemplo, 57 320 417 7123).'
+            : 'Número del botón de ayuda de todas las páginas. Escribe el indicativo; si es de Colombia, puedes usar 57.'}
+        </small>
+      </label>
       <ol className="admin-order">
         {rows.map((item, index) => {
           const network = SOCIAL_NETWORKS.find((entry) => entry.id === item.id)
@@ -1359,6 +1386,10 @@ export default function AdminPaginas() {
     const invalid = pageKey === 'redes' ? invalidSocial(drafts.redes) : []
     if (invalid.length) {
       notify('error', 'Revisa los enlaces', `Falta un enlace válido en: ${invalid.join(', ')}.`)
+      return
+    }
+    if (pageKey === 'redes' && invalidWhatsapp(drafts.redes.supportWhatsapp)) {
+      notify('error', 'Revisa el WhatsApp', 'El número debe tener entre 10 y 15 dígitos.')
       return
     }
     const problems = pageKey === 'carrusel' ? carouselProblems(drafts.carrusel) : []
