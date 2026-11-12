@@ -113,9 +113,16 @@ export default function HeroFicha({
     base.current = progress.current
     since.current = performance.now()
     let frame
+    let last = since.current
     let shown = -1
-    let hiddenAt = 0
     function tick(now) {
+      const gap = now - last
+      last = now
+      // Al entrar en la ficha (o al volver de una pestaña oculta) el primer
+      // fotograma llega con mucho retraso, y con el reloj la primera foto
+      // aparecía a mitad de camino. Se descarta ese hueco; los tirones normales
+      // de la máquina (hasta 200 ms) sí cuentan, para no frenar el ritmo.
+      if (gap > 200) since.current += gap - 16
       const value = (base.current + (now - since.current) / (SLIDE_SECONDS * 1000)) % total
       progress.current = value
       paint(trackRef.current, value, total)
@@ -126,23 +133,8 @@ export default function HeroFicha({
       }
       frame = requestAnimationFrame(tick)
     }
-    // Con la pestaña en segundo plano no hay fotogramas: al volver se descarta
-    // ese rato en vez de saltar de foto.
-    function onVisibility() {
-      const now = performance.now()
-      if (document.visibilityState === 'hidden') {
-        hiddenAt = now
-      } else if (hiddenAt) {
-        since.current += now - hiddenAt
-        hiddenAt = 0
-      }
-    }
-    document.addEventListener('visibilitychange', onVisibility)
     frame = requestAnimationFrame(tick)
-    return () => {
-      cancelAnimationFrame(frame)
-      document.removeEventListener('visibilitychange', onVisibility)
-    }
+    return () => cancelAnimationFrame(frame)
   }, [multiple, paused, total, retarget])
 
   function goTo(index) {
