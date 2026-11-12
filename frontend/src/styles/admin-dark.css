@@ -423,21 +423,22 @@ body:has(.admin-app) {
   padding-inline: 22px;
 }
 
+/* Los accesos se reparten el ancho disponible: dos por fila y, si el total
+   es impar, el último ocupa la fila entera (nunca queda uno angosto suelto). */
 .admin-tiles {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
-@media (max-width: 900px) {
-  .admin-tiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.admin-tiles > .admin-tile {
+  flex: 1 1 calc((100% - 12px) / 2);
+  min-width: 0;
 }
 
 @media (max-width: 560px) {
-  .admin-tiles {
-    grid-template-columns: 1fr;
+  .admin-tiles > .admin-tile {
+    flex-basis: 100%;
   }
 }
 
