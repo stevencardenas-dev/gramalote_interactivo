@@ -807,6 +807,25 @@
     display: grid;
   }
 
+  /* Con la lista abierta ocupa todo el mapa (alto y ancho) y los filtros de
+     arriba se ocultan; la píldora «Ver mapa» queda por encima para volver. */
+  .mapa-explorador.is-lista .mapa-panel__lista {
+    inset: 0;
+    height: 100%;
+    max-height: none;
+    padding: 14px 12px 96px;
+    border-radius: var(--radius-md);
+    box-shadow: none;
+  }
+
+  .mapa-explorador.is-lista .mapa-panel__buscar,
+  .mapa-explorador.is-lista .mapa-chips,
+  .mapa-explorador.is-lista .mapa-menu,
+  .mapa-explorador.is-lista .mapa-panel .note,
+  .mapa-explorador.is-lista .mapa-ficha {
+    display: none;
+  }
+
   /* «Ver lista» va arriba, junto a «Filtros» */
   .mapa-ver-lista {
     margin-left: auto;

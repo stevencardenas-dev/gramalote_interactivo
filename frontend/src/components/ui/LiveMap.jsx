@@ -484,7 +484,7 @@ export default function LiveMap({
 
     return (
       <>
-        <div className="mapa-explorador">
+        <div className={`mapa-explorador${listOpen ? ' is-lista' : ''}`}>
           <aside className={`mapa-panel${listOpen ? ' is-list-open' : ''}`} aria-label="Lugares del mapa">
             <input
               type="search"
@@ -546,7 +546,15 @@ export default function LiveMap({
                 </li>
               ))}
             </ul>
-            <button type="button" className="mapa-ver-lista" onClick={() => setListOpen((value) => !value)}>
+            <button
+              type="button"
+              className="mapa-ver-lista"
+              aria-expanded={listOpen}
+              onClick={() => {
+                setMenu(null)
+                setListOpen((value) => !value)
+              }}
+            >
               {listOpen
                 ? 'Ver mapa'
                 : places.length === 0
