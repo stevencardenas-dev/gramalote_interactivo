@@ -90,14 +90,6 @@ function id(value) {
   return parsed
 }
 
-function onlyAdmin(req, _res, next) {
-  if (req.admin?.role !== 'admin') {
-    next(new ApiError(403, 'FORBIDDEN', 'Tu cuenta no tiene permiso para esta acción'))
-    return
-  }
-  next()
-}
-
 async function audit(connection, req, action, entityId, changes) {
   await connection.query(
     `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, changes, ip_address)
@@ -385,7 +377,6 @@ router.put(
 router.delete(
   '/admin/experiences/:id',
   requireAuth,
-  onlyAdmin,
   asyncHandler(async (req, res) => {
     const experienceId = id(req.params.id)
     await withTransaction(async (connection) => {

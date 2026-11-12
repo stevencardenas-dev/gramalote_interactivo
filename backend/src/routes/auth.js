@@ -59,7 +59,7 @@ async function issueSession(req, res, user) {
 // además, 5 contraseñas erradas seguidas para el mismo correo desde la misma
 // IP bloquean ese par 15 minutos (y 15 fallos por correo desde cualquier IP).
 const LOGIN_WINDOW = 15 * 60 * 1000
-const LOCK_MESSAGE = 'Demasiados intentos fallidos. Espera 15 minutos o usa «¿Olvidaste tu contraseña?».'
+const LOCK_MESSAGE = 'Demasiados intentos fallidos. Espera 15 minutos o usa «¿Olvidaste tu contraseña?» (llega por correo).'
 
 router.post(
   '/auth/login',
@@ -162,9 +162,8 @@ router.post(
   }),
 )
 
-// Con correo configurado (Panel › Correo) se envía el enlace directamente. Sin
-// correo, la solicitud queda registrada y un administrador ve el aviso en
-// Usuarios para generar el enlace. La respuesta no revela qué correos existen.
+// Recuperar la contraseña solo funciona por correo: se envía un enlace de un
+// solo uso y la respuesta no revela qué correos existen.
 // Olvidé mi contraseña: 5 por IP cada 15 min y 20 por día (cada una puede
 // mandar un correo). Por correo, 3 por hora: las de más se ignoran en silencio.
 const forgotPerEmail = new Map()
@@ -185,33 +184,30 @@ router.post(
   ]),
   asyncHandler(async (req, res) => {
     const email = stringParam(req.body?.email, { max: 190 })?.toLowerCase()
-    const ip = (req.ip ?? '').slice(0, 45) || null
-    const mailOn = await isMailReady()
+    if (!(await isMailReady())) {
+      throw new ApiError(
+        503,
+        'MAIL_OFF',
+        'La recuperación por correo no está disponible por ahora. Intenta más tarde.',
+      )
+    }
     if (email && !tooManyForgot(email)) {
       const user = await queryOne(
         'SELECT id, name, email FROM admin_users WHERE email = ? AND is_active = 1 AND deleted_at IS NULL',
         [email],
       )
       if (user) {
-        await query(
-          `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, ip_address)
-           VALUES (NULL, 'password_reset_requested', 'admin_user', ?, ?)`,
-          [user.id, ip],
-        )
-        if (mailOn) {
-          // Sin await: responder igual de rápido exista o no la cuenta. Un fallo
-          // queda en el registro de correos del panel y en el aviso de Usuarios.
-          createResetToken(user.id, { hours: 1 })
-            .then((reset) => sendResetEmail(user, reset, 'forgot'))
-            .catch((failure) => console.error('[mail] restablecer contraseña:', failure.message))
-        }
+        // Sin await: responder igual de rápido exista o no la cuenta. Un fallo
+        // queda en el registro de correos del panel.
+        createResetToken(user.id, { hours: 1 })
+          .then((reset) => sendResetEmail(user, reset, 'forgot'))
+          .catch((failure) => console.error('[mail] restablecer contraseña:', failure.message))
       }
     }
     res.json({
       data: {
-        message: mailOn
-          ? 'Si el correo pertenece a una cuenta activa, te enviamos un enlace para crear una contraseña nueva. Vence en 1 hora; revisa también la carpeta de spam.'
-          : 'Si el correo pertenece a una cuenta activa, un administrador recibió el aviso y te enviará un enlace para crear una contraseña nueva.',
+        message:
+          'Si el correo pertenece a una cuenta activa, te enviamos un enlace para crear una contraseña nueva. Vence en 1 hora; revisa también la carpeta de spam.',
       },
     })
   }),

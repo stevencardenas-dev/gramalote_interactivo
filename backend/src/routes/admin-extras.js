@@ -105,9 +105,6 @@ router.post(
     const name = text(body.name, 'Nombre', { max: 180, required: true })
     const category = text(body.category, 'Categoría', { max: 80, required: true })
     const published = bool(body.published) === true
-    if (published && req.admin.role !== 'admin') {
-      throw new ApiError(403, 'FORBIDDEN', 'Solo un administrador puede publicar')
-    }
 
     const [existing] = await query('SELECT slug FROM map_extras WHERE slug = ?', [slugify(name)])
     const slug = existing.length > 0 ? `${slugify(name)}-${Date.now().toString(36)}` : slugify(name)
@@ -164,9 +161,6 @@ router.patch(
     if (body.published !== undefined) {
       const next = bool(body.published)
       if (next === null) throw new ApiError(400, 'VALIDATION', 'Indica si se publica o no')
-      if (next && req.admin.role !== 'admin') {
-        throw new ApiError(403, 'FORBIDDEN', 'Solo un administrador puede publicar')
-      }
       published = next
     }
 
@@ -186,9 +180,6 @@ router.delete(
   '/admin/extras/:id',
   requireAuth,
   asyncHandler(async (req, res) => {
-    if (req.admin.role !== 'admin') {
-      throw new ApiError(403, 'FORBIDDEN', 'Solo un administrador puede borrar extras')
-    }
     const id = Number.parseInt(req.params.id, 10)
     await findExtra(id)
     await query('DELETE FROM map_extras WHERE id = ?', [id])

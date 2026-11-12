@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchTopRated } from '../../lib/ratingsApi.js'
+import { fetchTopRated, formatAverage, formatVotes } from '../../lib/ratingsApi.js'
 import { StarsRow } from '../ui/RatingStars.jsx'
 import Photo from '../ui/Photo.jsx'
 import Icon from '../ui/Icon.jsx'
@@ -45,7 +45,7 @@ export default function RelatedPlaces({
                 {item.votes ? (
                   <span className="related-card__rating">
                     <StarsRow value={item.average} />
-                    {item.average.toFixed(1).replace('.', ',')}
+                    {formatAverage(item.average)} <small>({formatVotes(item.votes)})</small>
                   </span>
                 ) : null}
                 <span className="related-card__link">

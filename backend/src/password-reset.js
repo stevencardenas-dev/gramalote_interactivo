@@ -95,3 +95,18 @@ export function sendPasswordChangedEmail(userId) {
     await trySendMail({ to: user.email, subject: 'Tu contraseña del panel cambió', html, text, kind: 'password_changed' })
   })().catch((failure) => console.error('[mail] aviso de contraseña:', failure.message))
 }
+
+// Aviso al correo anterior cuando cambia el de la cuenta. No bloquea ni lanza.
+export function sendEmailChangedNotice(user, newEmail) {
+  ;(async () => {
+    const { html, text } = renderEmail({
+      title: 'El correo de tu cuenta cambió',
+      paragraphs: [
+        `${(user.name ?? '').split(' ')[0] || 'Hola'}:`,
+        `El correo de tu cuenta del panel de Gramalote Interactivo cambió a ${newEmail}. Desde ahora entras con ese correo.`,
+        'Si no fuiste tú ni un administrador, avisa de inmediato a un administrador del sitio.',
+      ],
+    })
+    await trySendMail({ to: user.email, subject: 'El correo de tu cuenta del panel cambió', html, text, kind: 'email_changed' })
+  })().catch((failure) => console.error('[mail] aviso de correo:', failure.message))
+}

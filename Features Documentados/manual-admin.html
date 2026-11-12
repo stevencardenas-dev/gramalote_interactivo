@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8" />
-<title>Manual de Usuario · Administración</title>
+<title>Manual de Usuario · Administración (funciones exclusivas)</title>
 <link rel="stylesheet" href="_estilo-manuales.css" />
 </head>
 <body>
@@ -11,132 +11,66 @@
   <header class="portada">
     <span class="sello">Gramalote Interactivo</span>
     <h1>Manual de Usuario<br />Administración</h1>
-    <p>Todo lo que se hace desde el panel: fichas de lugares, experiencias, extras, sugerencias, páginas, usuarios y correo.</p>
+    <p>Lo que solo puede hacer un administrador: gestionar cuentas y configurar el correo. Todo lo demás del panel (lugares, páginas, publicar, borrar) también lo hace un editor y se explica en el manual del editor.</p>
   </header>
 
   <section>
-    <h2 class="azul">1. Entrar al panel</h2>
-    <p>El panel vive en <code>/acceder</code> del mismo sitio. Se entra con el correo y la contraseña que entregó el administrador; no hay registro público.</p>
-    <ol class="pasos">
-      <li>Abre <code>https://d2nm90ise1l8de.cloudfront.net/acceder</code>.</li>
-      <li>Escribe tu correo y contraseña y pulsa <strong>Entrar</strong>.</li>
-      <li>Si olvidaste la clave, usa <strong>¿Olvidaste tu contraseña?</strong>: llega un enlace al correo (vence en pocas horas).</li>
-    </ol>
-    <div class="caja">
-      <strong>Roles</strong>
-      <p><strong>Administrador:</strong> todo, incluidos usuarios, correo, publicar y borrar. <strong>Editor:</strong> crea y edita contenido, pero no publica fichas ni toca usuarios, correo o sugerencias ajenas.</p>
-    </div>
-  </section>
-
-  <section>
-    <h2>2. La barra del panel</h2>
+    <h2 class="azul">1. Qué es exclusivo del administrador</h2>
+    <p>El administrador tiene todos los permisos del panel. Este manual cubre únicamente lo que el editor <strong>no</strong> puede hacer:</p>
     <table>
-      <tr><th>Acceso</th><th>Qué hay dentro</th></tr>
-      <tr><td><strong>Inicio</strong></td><td>Buscador de fichas y los cuatro accesos: Lugares, Usuarios, Correo y Páginas. Debajo, el espacio usado por las imágenes.</td></tr>
-      <tr><td><strong>Lugares</strong></td><td>Es un botón, no un desplegable: abre la sección Lugares, donde se cambia de tipo con las pestañas subrayadas Establecimientos, Experiencias, Extras y Sugerencias.</td></tr>
-      <tr><td><strong>Páginas</strong></td><td>Textos, fotos y enlaces de las páginas públicas.</td></tr>
-      <tr><td><strong>Usuarios</strong></td><td>Cuentas del panel y sus roles (solo administrador).</td></tr>
-      <tr><td><strong>Correo</strong></td><td>Cuenta que envía los correos del sitio (solo administrador).</td></tr>
-      <tr><td><strong>Ver sitio</strong></td><td>Abre el sitio público. Atajo: <kbd>Shift</kbd> + <kbd>V</kbd> desde cualquier página del panel.</td></tr>
+      <tr><th>Función</th><th>Administrador</th><th>Editor</th></tr>
+      <tr><td>Ver la lista de usuarios (por privacidad)</td><td>Sí</td><td>No</td></tr>
+      <tr><td>Crear usuarios</td><td>Sí</td><td>No</td></tr>
+      <tr><td>Cambiar rol, desactivar o eliminar otras cuentas</td><td>Sí (con las reglas del apartado 3)</td><td>No</td></tr>
+      <tr><td>Cambiar el correo de otra cuenta</td><td>Sí (cuentas más nuevas que la suya)</td><td>No</td></tr>
+      <tr><td>Enviar a otra cuenta un enlace para crear contraseña</td><td>Sí</td><td>No</td></tr>
+      <tr><td>Configurar el correo del sitio (Correo)</td><td>Sí</td><td>No; la opción ni aparece</td></tr>
+      <tr><td>Eliminar su propia cuenta</td><td>Sí, si queda otro administrador</td><td>No</td></tr>
     </table>
-    <p>El botón de tema (claro/oscuro) está a la derecha de la barra y se recuerda en el navegador.</p>
-    <p>Las direcciones de la sección Lugares son <code>/admin/lugares/establecimientos</code>, <code>/admin/lugares/experiencias</code>, <code>/admin/lugares/extras</code> y <code>/admin/lugares/sugerencias</code>. Las direcciones antiguas (<code>/admin/establecimientos</code>, etc.) redirigen solas a la nueva.</p>
+    <p>Cada persona, sea cual sea su rol, puede cambiar su propio correo y su propia contraseña desde su página de cuenta.</p>
   </section>
 
   <section>
-    <h2 class="verde">3. Lugares → Establecimientos</h2>
-    <p>Son las fichas con página propia: dónde comer, dormir y comprar.</p>
-    <h3>Listado</h3>
+    <h2 class="verde">2. Usuarios</h2>
+    <p>Se abre desde <strong>Usuarios</strong> en la barra del panel (el editor ve en su lugar <strong>Mi cuenta</strong>, sin lista).</p>
     <ul>
-      <li><strong>Pestañas de tipo</strong>: Establecimientos, Experiencias, Extras y Sugerencias van en una fila con una línea debajo del tipo abierto. Cambian de listado sin volver a la barra.</li>
-      <li><strong>Publicadas / No publicadas</strong>: es un filtro aparte, en un rectángulo redondeado. La opción elegida queda resaltada y con el contorno de foco; cada una muestra su cuenta.</li>
-      <li><strong>Buscar</strong> por nombre, slug o zona; el selector filtra por categoría.</li>
-      <li>La fila resume categoría, zona, si es destacada y si le falta portada.</li>
-      <li><strong>+ Nueva ficha</strong> pide nombre y categoría; la ficha nace sin publicar.</li>
+      <li><strong>+ Agregar usuario</strong>: se escribe nombre, correo y rol, y la persona recibe por correo un enlace para definir su contraseña. El enlace <strong>nunca se muestra en el panel</strong>: solo viaja por correo.</li>
+      <li><strong>Rol</strong>: administrador o editor; se puede cambiar después (no el propio).</li>
+      <li><strong>Enviar enlace por correo</strong>: manda a la cuenta un enlace nuevo para crear una contraseña. Necesita el correo configurado.</li>
+      <li><strong>Cambiar correo</strong>: edita el correo de una cuenta más nueva que la tuya. Sus sesiones se cierran y se avisa al correo anterior.</li>
+      <li><strong>Desactivar / Reactivar</strong>: la cuenta deja de poder entrar sin borrarse ni perder su historial.</li>
+      <li><strong>Eliminar</strong>: da de baja la cuenta (ver reglas abajo).</li>
     </ul>
-    <h3>Dentro de una ficha</h3>
-    <table>
-      <tr><th>Pestaña</th><th>Qué se edita</th></tr>
-      <tr><td>Información</td><td>Nombre, slug (la URL), categoría, tipo, zona, resumen (máx. 320), descripción, dirección, detalle de ubicación, enlace de Google Maps, coordenadas, teléfonos, WhatsApp, correo, web, horario, precios, servicios, formas de pago, redes y fichas relacionadas.</td></tr>
-      <tr><td>Imágenes</td><td>Portada, encabezado, logo y galería. Cada foto lleva su texto alternativo (obligatorio en la portada para publicar) y su crédito.</td></tr>
-      <tr><td>Servicios y extras</td><td>Servicios del lugar, platos o productos con foto y precio, y horarios especiales.</td></tr>
-      <tr><td>Publicación</td><td>Publicar o volver a borrador, destacar la ficha y ver quién y cuándo publicó.</td></tr>
-      <tr><td>Calificaciones</td><td>Nota media, votos y comentarios; se pueden borrar votos concretos.</td></tr>
-      <tr><td>Historial</td><td>Cambios guardados, con autor y fecha.</td></tr>
-    </table>
+  </section>
+
+  <section>
+    <h2 class="morado">3. Quién puede eliminar a quién</h2>
+    <p>La antigüedad cuenta: «más nueva» significa creada después.</p>
+    <ul>
+      <li>Un administrador elimina <strong>solo cuentas más nuevas que la suya</strong>.</li>
+      <li>Para quitar una cuenta <strong>más antigua</strong>, esa persona tiene que eliminarse a sí misma (<strong>Mi cuenta → Eliminar mi cuenta</strong>).</li>
+      <li>Siempre debe quedar <strong>al menos un administrador activo</strong>; el último no puede eliminarse ni desactivarse.</li>
+      <li>La baja conserva el historial de cambios y libera el correo para otra cuenta.</li>
+    </ul>
     <div class="caja aviso">
-      <strong>Para publicar hace falta una portada con texto alternativo</strong>
-      <p>Si falta, el botón de publicar avisa y no deja seguir. El texto alternativo describe la foto para quien usa lector de pantalla.</p>
+      <strong>No se puede deshacer</strong>
+      <p>Una cuenta eliminada no se recupera desde el panel. Si solo quieres que deje de entrar por un tiempo, usa <strong>Desactivar</strong>.</p>
     </div>
   </section>
 
   <section>
-    <h2 class="morado">4. Lugares → Experiencias</h2>
-    <p>Son las fichas de «Qué hacer»: patrimonio, naturaleza y recorridos. Funcionan igual que un establecimiento, con estas diferencias:</p>
+    <h2 class="coral">4. Contraseñas y recuperación</h2>
     <ul>
-      <li>Campos propios: título, resumen corto de tarjeta, dificultad, duración, acceso, «Ten en cuenta» y horario.</li>
-      <li>La pestaña <strong>Ten en cuenta</strong> agrega consejos con icono (huellas, camino, bolso, alerta, horario…).</li>
-      <li>Para publicar se exige título, categoría, resumen y portada con texto alternativo.</li>
-      <li>El conmutador <strong>Publicadas / No publicadas</strong> funciona igual que en establecimientos.</li>
+      <li>La contraseña solo se recupera <strong>por correo</strong>: <strong>¿Olvidaste tu contraseña?</strong> en /acceder envía un enlace de un solo uso que vence en 1 hora. No existe otra vía.</li>
+      <li>Si el correo del sitio no está configurado, la recuperación no está disponible y /acceder lo avisa. Configúralo en <strong>Correo</strong>.</li>
+      <li>Al iniciar sesión y al crear o cambiar una contraseña, el <strong>icono de ojo</strong> del campo la muestra u oculta para revisar lo escrito.</li>
+      <li>Cambiar el correo propio pide la contraseña actual.</li>
     </ul>
   </section>
 
   <section>
-    <h2 class="coral">5. Lugares → Extras</h2>
-    <p>Los extras son puntos del mapa <strong>sin ficha</strong>: alcaldía, casa de la cultura, banco, centro de salud, escenarios deportivos, parques, capillas… Su información completa se ve en la tarjeta del mapa.</p>
-    <ul>
-      <li><strong>Publicadas / No publicadas</strong> separa los que ya salen en el mapa.</li>
-      <li><strong>+ Nuevo extra</strong> y la fila del extra (o su nombre) abren el formulario: nombre, categoría, zona o referencia, icono del mapa, latitud, longitud y enlace de Google Maps.</li>
-      <li><strong>Publicar / Despublicar</strong> cambia su estado sin borrarlo. Solo un administrador puede publicar.</li>
-      <li>En el mapa, los extras solo se filtran por <strong>Categoría</strong>; no tienen calificación ni horario.</li>
-    </ul>
-    <div class="caja tip">
-      <strong>Coordenadas</strong>
-      <p>Van con punto decimal y en el orden latitud, longitud (por ejemplo <code>7.9155988</code> y <code>-72.7870962</code>). Si el lugar tiene enlace de Google Maps, se abre desde la tarjeta del mapa.</p>
-    </div>
-  </section>
-
-  <section>
-    <h2>6. Lugares → Sugerencias</h2>
-    <p>Es lo que llega del formulario público <code>/sugerir</code>. Arriba hay un filtro en rectángulo redondeado con cinco opciones y su conteo: <strong>Todas, Nueva, Revisada, Agregada, Descartada</strong>; la elegida queda resaltada.</p>
-    <ul>
-      <li>Dentro de cada sugerencia se cambia el estado con el selector y se deja una <strong>nota interna</strong> (se guarda al salir del campo).</li>
-      <li>«Nueva» es lo recién llegado; «Revisada», lo que ya se miró; «Agregada», lo que terminó en una ficha; «Descartada», lo que no se publica.</li>
-      <li>Solo el administrador ve el botón <strong>Borrar</strong>.</li>
-      <li>Quién recibe el aviso por correo se configura en <strong>Correo</strong>.</li>
-    </ul>
-  </section>
-
-  <section class="salto">
-    <h2 class="azul">7. Páginas</h2>
-    <p>Cada pestaña edita los textos, fotos y enlaces de una página pública. Los cambios se ven al pulsar <strong>Guardar</strong>; el punto en la pestaña avisa que hay cambios sin guardar.</p>
-    <table>
-      <tr><th>Pestaña</th><th>Qué se edita</th></tr>
-      <tr><td>Inicio</td><td>Las cinco imágenes de «Accede rápido», las tres tarjetas de «Experiencias que no olvidarás» y las tarjetas de «Abierto hoy» (título, fondo y ficha de destino).</td></tr>
-      <tr><td>Carrusel</td><td>Si se muestra, cada cuánto avanza y durante cuánto se pausa; las diapositivas con banner, orden, fechas de inicio y fin, texto alternativo y enlace.</td></tr>
-      <tr><td>Qué hacer</td><td>Orden de las tarjetas y la portada de cada experiencia dentro de esa página (no cambia la portada de la ficha).</td></tr>
-      <tr><td>Dónde ir</td><td>Antetítulo, título y descripción; las secciones de Dónde comer, Dónde dormir y Dónde comprar; el collage de platos típicos y el bloque que lleva al mapa.</td></tr>
-      <tr><td>Redes sociales</td><td>Los iconos del pie: activarlos, cambiar a dónde llevan y su orden (enlaces con <code>https://</code>, WhatsApp con celular de 10 dígitos).</td></tr>
-    </table>
-    <div class="caja">
-      <strong>Lo que no se edita desde el panel</strong>
-      <p>Historia, Curiosidades e Información práctica son contenido de diseño: sus textos y fotos se cambian en el código o en la base de datos. El mapa se arma solo con las fichas y los extras. El buscador usa lo que haya publicado.</p>
-    </div>
-  </section>
-
-  <section>
-    <h2 class="verde">8. Usuarios</h2>
-    <ul>
-      <li><strong>Invitar</strong>: se escribe nombre, correo y rol; llega un enlace para crear la contraseña.</li>
-      <li><strong>Rol</strong>: administrador o editor. También se puede cambiar después.</li>
-      <li><strong>Restablecer</strong>: envía un enlace nuevo al correo de esa cuenta.</li>
-      <li><strong>Desactivar</strong>: la cuenta deja de poder entrar, pero no se borra ni pierde su historial.</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2 class="morado">9. Correo</h2>
-    <p>Es la cuenta que envía los correos del sitio: restablecer contraseñas, invitaciones, confirmación de calificaciones y avisos de sugerencias.</p>
+    <h2 class="morado">5. Correo</h2>
+    <p>Es la cuenta que envía los correos del sitio: restablecer contraseñas, invitaciones, confirmación de calificaciones y avisos de sugerencias. Solo la ve el administrador.</p>
     <h3>Cuenta de envío</h3>
     <ol class="pasos">
       <li>Activa <strong>Enviar correos desde esta cuenta</strong>.</li>
@@ -144,7 +78,7 @@
       <li>Pega la <strong>contraseña de aplicación</strong> de Gmail (16 letras). No es la contraseña normal de la cuenta y no se vuelve a mostrar.</li>
       <li>Guarda y envía una <strong>prueba</strong> a tu propio correo.</li>
     </ol>
-    <p>Las secciones de la página se abren y se cierran con su título. «Servidor SMTP» sirve para otro proveedor distinto de Gmail; «Avisos y enlaces» define los correos del equipo y la dirección base que llevan los enlaces.</p>
+    <p>«Servidor SMTP» sirve para otro proveedor distinto de Gmail; «Avisos y enlaces» define los correos del equipo y la dirección base que llevan los enlaces. Abajo quedan los últimos envíos, con su error si fallaron.</p>
     <div class="caja tip">
       <strong>Calificaciones con confirmación</strong>
       <p>Con la confirmación activada, quien califica recibe un enlace y el voto cuenta solo al abrirlo (vence en 48 horas). Sin correo configurado, los votos cuentan de inmediato.</p>
@@ -152,14 +86,13 @@
   </section>
 
   <section>
-    <h2 class="coral">10. Problemas frecuentes</h2>
+    <h2 class="coral">6. Problemas frecuentes</h2>
     <table>
       <tr><th>Síntoma</th><th>Qué hacer</th></tr>
-      <tr><td>No deja publicar una ficha</td><td>Falta la portada o su texto alternativo. Súbela en la pestaña Imágenes.</td></tr>
-      <tr><td>Un lugar no sale en el mapa</td><td>Revisa que esté publicada y que tenga latitud y longitud.</td></tr>
-      <tr><td>La página pública no cambia</td><td>Faltó <strong>Guardar</strong> en la pestaña; el punto junto al nombre lo indica.</td></tr>
-      <tr><td>El correo de prueba no llega</td><td>Revisa la contraseña de aplicación, que la cuenta esté activa y la carpeta de spam. Abajo están los últimos envíos con su error.</td></tr>
-      <tr><td>No puedo editar usuarios o correo</td><td>Tu cuenta es de editor. Pídele a un administrador.</td></tr>
+      <tr><td>No puedo eliminar a alguien</td><td>Es una cuenta más antigua que la tuya (debe eliminarse ella misma) o es el último administrador.</td></tr>
+      <tr><td>Alguien no recibe el enlace de contraseña</td><td>Revisa su spam y, en Correo, los últimos envíos. Con el correo sin configurar no sale ningún enlace.</td></tr>
+      <tr><td>El correo de prueba no llega</td><td>Revisa la contraseña de aplicación y que la cuenta esté activa.</td></tr>
+      <tr><td>Un editor no ve Usuarios ni Correo</td><td>Es lo esperado: ve solo <strong>Mi cuenta</strong>.</td></tr>
     </table>
   </section>
 

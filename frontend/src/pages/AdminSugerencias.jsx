@@ -188,16 +188,14 @@ export default function AdminSugerencias() {
                       if (event.target.value !== (item.adminNote ?? '')) update(item, { adminNote: event.target.value })
                     }}
                   />
-                  {isAdmin ? (
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--danger-outline"
-                      onClick={() => remove(item)}
-                      disabled={busy}
-                    >
-                      Borrar
-                    </button>
-                  ) : null}
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--danger-outline"
+                    onClick={() => remove(item)}
+                    disabled={busy}
+                  >
+                    Borrar
+                  </button>
                 </div>
               </li>
               ))}

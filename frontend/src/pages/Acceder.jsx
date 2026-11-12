@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import Logo from '../components/ui/Logo.jsx'
+import PasswordInput from '../components/ui/PasswordInput.jsx'
 import { AuthError, ensureSession, forgotPassword, login, logout } from '../lib/auth.js'
 
 export default function Acceder() {
@@ -117,8 +118,7 @@ export default function Acceder() {
               ) : (
                 <>
                   <p>
-                    Escribe tu correo. Un administrador recibirá el aviso y te enviará un enlace para
-                    crear una contraseña nueva.
+                    Escribe tu correo y te enviaremos un enlace para crear una contraseña nueva.
                   </p>
                   <div className="field">
                     <label htmlFor="forgot-email">Correo electrónico</label>
@@ -166,9 +166,8 @@ export default function Acceder() {
               </div>
               <div className="field">
                 <label htmlFor="password">Contraseña</label>
-                <input
+                <PasswordInput
                   id="password"
-                  type="password"
                   autoComplete="current-password"
                   required
                   value={password}

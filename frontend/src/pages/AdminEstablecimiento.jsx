@@ -4,7 +4,7 @@ import OpeningHoursEditor from '../components/admin/OpeningHoursEditor.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import RatingsPanel from '../components/admin/RatingsPanel.jsx'
-import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
+import { apiRequest, ensureSession } from '../lib/auth.js'
 import { resolveMapIcon } from '../data/mapIcons.js'
 
 const TABS = [
@@ -104,7 +104,6 @@ function Section({ title, hint, actions, defaultOpen = false, signal, children }
 export default function AdminEstablecimiento() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const user = getUser()
   const fileInput = useRef(null)
 
   const [tab, setTab] = useState('info')
@@ -1024,24 +1023,18 @@ export default function AdminEstablecimiento() {
                   type="button"
                   className={`admin-btn ${form.published ? 'admin-btn--danger' : 'admin-btn--primary'}`}
                   onClick={() => handlePublish(!form.published)}
-                  disabled={!form.published && user?.role !== 'admin'}
                 >
                   {form.published ? 'Despublicar' : 'Publicar ficha'}
                 </button>
-                {user?.role === 'admin' ? (
-                  <button
-                    type="button"
-                    className="admin-btn admin-btn--danger-outline"
-                    onClick={handleDelete}
-                    disabled={form.published}
-                    title={form.published ? 'Despublica la ficha para poder borrarla' : undefined}
-                  >
-                    Borrar
-                  </button>
-                ) : null}
-                {user?.role !== 'admin' ? (
-                  <span className="note">Solo un administrador puede publicar.</span>
-                ) : null}
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--danger-outline"
+                  onClick={handleDelete}
+                  disabled={form.published}
+                  title={form.published ? 'Despublica la ficha para poder borrarla' : undefined}
+                >
+                  Borrar
+                </button>
               </div>
               {form.published ? (
                 <p className="note">Para borrar la ficha, primero despublica.</p>

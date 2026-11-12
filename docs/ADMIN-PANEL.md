@@ -88,17 +88,18 @@ contraseñas, tokens ni el binario de la imagen.
 
 ### 2.4 `admin_users` — roles
 
-`role ENUM('admin','editor')` e `is_active` ya existen. La matriz propuesta:
+`role ENUM('admin','editor')` e `is_active`. Desde 2026-11-12 el editor puede
+hacer todo salvo cuatro cosas:
 
 | Acción | `editor` | `admin` |
 | --- | :---: | :---: |
-| Ver y editar fichas en borrador | ✅ | ✅ |
-| Subir / reordenar / reemplazar imágenes | ✅ | ✅ |
-| Publicar o despublicar una ficha | ❌ | ✅ |
-| Borrar una ficha (soft delete) | ❌ | ✅ |
-| Borrar un archivo de `media` | ❌ | ✅ |
-| Gestionar cuentas de administración | ❌ | ✅ |
-| Consultar `audit_log` | ❌ | ✅ |
+| Fichas, extras, sugerencias, páginas, imágenes: ver, editar, publicar, borrar | ✅ | ✅ |
+| Listar usuarios | ❌ | ✅ |
+| Crear usuarios; modificar o eliminar otras cuentas | ❌ | ✅ |
+| Cambiar su propio correo y contraseña | ✅ | ✅ |
+| Cambiar el correo de otra cuenta | ❌ | ✅ (solo cuentas más nuevas) |
+| Eliminar cuentas | ❌ | ✅ (más nuevas, o la propia; debe quedar un admin activo) |
+| Configurar Correo | ❌ (no se lista) | ✅ |
 
 El rol viaja en el JWT y se revalida contra la base en cada request
 (`backend/src/auth.js`), así que desactivar una cuenta surte efecto sin esperar
@@ -520,8 +521,10 @@ servicios propietarios. Checklist al mudar:
 
 ## 13. Usuarios, roles y restablecer contraseña (2026-11-01)
 
-- **Roles:** `admin` (todo: publicar fichas, usuarios) y `editor` (edita fichas, no
-  publica ni gestiona usuarios). Un admin cambia el rol, desactiva o reactiva cuentas en
+- **Roles:** `admin` (todo) y `editor` (todo menos listar/crear/modificar usuarios ajenos
+  y Correo; ver la matriz de §2.4). La contraseña solo se recupera por correo
+  (`/auth/forgot`; sin correo configurado responde 503) y el panel nunca muestra enlaces de
+  restablecimiento. Un admin cambia el rol, desactiva o reactiva cuentas en
   `/admin/usuarios`; no puede quitarse su propio acceso ni dejar el sitio sin
   administrador activo. Cambiar el rol o desactivar cierra las sesiones de esa cuenta.
 - **Enlace de restablecimiento:** `POST /api/admin/users/:id/reset-link` (o al crear la

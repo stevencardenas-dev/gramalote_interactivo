@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { apiRequest, changePassword, ensureSession, getUser } from '../lib/auth.js'
+import { useNavigate } from 'react-router-dom'
+import PasswordInput from '../components/ui/PasswordInput.jsx'
+import {
+  apiRequest,
+  changeOwnEmail,
+  changePassword,
+  deleteOwnAccount,
+  ensureSession,
+  getUser,
+} from '../lib/auth.js'
 
 const ROLE_LABEL = { admin: 'Administrador', editor: 'Editor' }
 
@@ -10,23 +19,25 @@ function formatDate(value) {
   return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function fullLink(reset) {
-  return `${window.location.origin}${reset.path}`
-}
-
 export default function AdminUsuarios() {
+  const navigate = useNavigate()
   const me = getUser()
   const isAdmin = me?.role === 'admin'
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(isAdmin)
   const [error, setError] = useState('')
-  const [links, setLinks] = useState({})
+  const [notice, setNotice] = useState('')
   const [form, setForm] = useState({ name: '', email: '', role: 'editor' })
   const [busy, setBusy] = useState(false)
   const [showNew, setShowNew] = useState(false)
+  // Correo en edición de otra cuenta: { id, value }.
+  const [emailEdit, setEmailEdit] = useState(null)
+
+  // Mi cuenta
+  const [myEmail, setMyEmail] = useState({ email: '', password: '' })
   const [passwords, setPasswords] = useState({ current: '', next: '' })
-  const [passwordMsg, setPasswordMsg] = useState('')
-  const [passwordErr, setPasswordErr] = useState('')
+  const [accountMsg, setAccountMsg] = useState('')
+  const [accountErr, setAccountErr] = useState('')
 
   const load = useCallback(async () => {
     try {
@@ -49,6 +60,7 @@ export default function AdminUsuarios() {
   async function run(action) {
     setBusy(true)
     setError('')
+    setNotice('')
     try {
       await action()
       await load()
@@ -63,7 +75,11 @@ export default function AdminUsuarios() {
     event.preventDefault()
     run(async () => {
       const data = await apiRequest('/admin/users', { method: 'POST', body: form })
-      setLinks((current) => ({ ...current, [data.user.id]: data.reset }))
+      setNotice(
+        data.mailed
+          ? `Invitación enviada a ${data.user.email}.`
+          : `Cuenta creada, pero el correo no salió (${data.mailError}). Cuando el correo esté configurado, usa «Enviar enlace por correo».`,
+      )
       setForm({ name: '', email: '', role: 'editor' })
       setShowNew(false)
     })
@@ -73,26 +89,74 @@ export default function AdminUsuarios() {
     run(() => apiRequest(`/admin/users/${user.id}`, { method: 'PATCH', body: changes }))
   }
 
-  function makeLink(user, send = false) {
+  function sendLink(user) {
     run(async () => {
-      const reset = await apiRequest(`/admin/users/${user.id}/reset-link`, {
-        method: 'POST',
-        body: send ? { send: true } : undefined,
+      await apiRequest(`/admin/users/${user.id}/send-reset`, { method: 'POST' })
+      setNotice(`Enviamos a ${user.email} un enlace para crear una contraseña nueva.`)
+    })
+  }
+
+  function saveUserEmail(event, user) {
+    event.preventDefault()
+    run(async () => {
+      await apiRequest(`/admin/users/${user.id}/email`, {
+        method: 'PATCH',
+        body: { email: emailEdit.value },
       })
-      setLinks((current) => ({ ...current, [user.id]: { ...reset, requestedMail: send } }))
+      setNotice(`Correo de ${user.name} actualizado. Sus sesiones se cerraron.`)
+      setEmailEdit(null)
+    })
+  }
+
+  function removeUser(user) {
+    if (!window.confirm(`¿Eliminar la cuenta de ${user.name}? No se puede deshacer.`)) return
+    run(async () => {
+      await apiRequest(`/admin/users/${user.id}`, { method: 'DELETE' })
+      setNotice(`Cuenta de ${user.name} eliminada.`)
     })
   }
 
   async function submitPassword(event) {
     event.preventDefault()
-    setPasswordMsg('')
-    setPasswordErr('')
+    setAccountMsg('')
+    setAccountErr('')
     try {
       await changePassword(passwords.current, passwords.next)
       setPasswords({ current: '', next: '' })
-      setPasswordMsg('Contraseña actualizada.')
+      setAccountMsg('Contraseña actualizada.')
     } catch (err) {
-      setPasswordErr(err.message)
+      setAccountErr(err.message)
+    }
+  }
+
+  async function submitMyEmail(event) {
+    event.preventDefault()
+    setAccountMsg('')
+    setAccountErr('')
+    try {
+      await changeOwnEmail(myEmail.email, myEmail.password)
+      setMyEmail({ email: '', password: '' })
+      setAccountMsg('Correo actualizado. Desde ahora entras con el correo nuevo.')
+      if (isAdmin) load()
+    } catch (err) {
+      setAccountErr(err.message)
+    }
+  }
+
+  async function removeMyself() {
+    if (
+      !window.confirm(
+        '¿Eliminar tu propia cuenta? Perderás el acceso al panel y no se puede deshacer.',
+      )
+    )
+      return
+    setAccountMsg('')
+    setAccountErr('')
+    try {
+      await deleteOwnAccount()
+      navigate('/acceder', { replace: true })
+    } catch (err) {
+      setAccountErr(err.message)
     }
   }
 
@@ -100,9 +164,11 @@ export default function AdminUsuarios() {
     <section className="admin-page">
       <div className="admin-wrap">
         <div className="admin-bar">
-          <h1>Usuarios</h1>
+          <h1>{isAdmin ? 'Usuarios' : 'Mi cuenta'}</h1>
           <p className="admin-lead admin-bar__lead">
-            Los administradores publican y gestionan cuentas; los editores solo editan fichas.
+            {isAdmin
+              ? 'Gestiona las cuentas del panel. Puedes eliminar o cambiar el correo de las cuentas más nuevas que la tuya.'
+              : 'Cambia tu correo o tu contraseña.'}
           </p>
           {isAdmin ? (
             <button
@@ -117,6 +183,11 @@ export default function AdminUsuarios() {
         </div>
 
         {error ? <p className="auth-error">{error}</p> : null}
+        {notice ? (
+          <p className="admin-notice" role="status">
+            {notice}
+          </p>
+        ) : null}
 
         {isAdmin && showNew ? (
           <form className="admin-new admin-new--users" onSubmit={createUser}>
@@ -164,7 +235,8 @@ export default function AdminUsuarios() {
             <ul className="admin-rows admin-urows">
               {users.map((user) => {
                 const isMe = user.id === me?.id
-                const link = links[user.id]
+                const isNewer = user.id > (me?.id ?? 0)
+                const editing = emailEdit?.id === user.id
                 return (
                   <li key={user.id} className={`admin-urow${user.isActive ? '' : ' is-off'}`}>
                     <span className="admin-urow__avatar" aria-hidden="true">
@@ -183,14 +255,6 @@ export default function AdminUsuarios() {
                       {user.isActive ? null : (
                         <span className="admin-badge admin-badge--draft">Desactivado</span>
                       )}
-                      {user.resetRequestedAt ? (
-                        <span
-                          className="admin-badge admin-badge--draft"
-                          title={`Pidió restablecer la contraseña el ${formatDate(user.resetRequestedAt)}`}
-                        >
-                          Pidió nueva contraseña
-                        </span>
-                      ) : null}
                     </div>
                     <select
                       aria-label={`Rol de ${user.name}`}
@@ -206,19 +270,21 @@ export default function AdminUsuarios() {
                         type="button"
                         className="admin-btn"
                         disabled={busy}
-                        onClick={() => makeLink(user, true)}
-                        title="Genera un enlace nuevo y lo envía al correo de la cuenta"
+                        onClick={() => sendLink(user)}
+                        title="Envía al correo de la cuenta un enlace para crear una contraseña nueva"
                       >
                         Enviar enlace por correo
                       </button>
-                      <button
-                        type="button"
-                        className="admin-btn"
-                        disabled={busy}
-                        onClick={() => makeLink(user)}
-                      >
-                        Enlace de contraseña
-                      </button>
+                      {isNewer ? (
+                        <button
+                          type="button"
+                          className="admin-btn"
+                          disabled={busy}
+                          onClick={() => setEmailEdit(editing ? null : { id: user.id, value: user.email })}
+                        >
+                          Cambiar correo
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         className={`admin-btn${user.isActive ? ' admin-btn--danger-outline' : ''}`}
@@ -227,24 +293,34 @@ export default function AdminUsuarios() {
                       >
                         {user.isActive ? 'Desactivar' : 'Reactivar'}
                       </button>
-                    </div>
-                    {link ? (
-                      <div className="admin-link-box">
-                        {link.mailed
-                          ? `Se envió el enlace a ${user.email}. Si no le llega, entrégale este. `
-                          : link.requestedMail || link.mailError
-                            ? `No se pudo enviar el correo (${link.mailError ?? 'sin configurar'}). Entrega este enlace a ${user.name}. `
-                            : `Entrega este enlace a ${user.name}. `}
-                        Funciona una sola vez y vence el {formatDate(link.expiresAt)}; no se vuelve a mostrar.
-                        <code>{fullLink(link)}</code>
+                      {isNewer ? (
                         <button
                           type="button"
-                          className="admin-btn admin-btn--accent"
-                          onClick={() => navigator.clipboard?.writeText(fullLink(link))}
+                          className="admin-btn admin-btn--danger"
+                          disabled={busy}
+                          onClick={() => removeUser(user)}
                         >
-                          Copiar enlace
+                          Eliminar
                         </button>
-                      </div>
+                      ) : null}
+                    </div>
+                    {editing ? (
+                      <form className="admin-link-box" onSubmit={(event) => saveUserEmail(event, user)}>
+                        <div className="field">
+                          <label htmlFor={`email-${user.id}`}>Correo nuevo de {user.name}</label>
+                          <input
+                            id={`email-${user.id}`}
+                            type="email"
+                            required
+                            autoFocus
+                            value={emailEdit.value}
+                            onChange={(event) => setEmailEdit({ id: user.id, value: event.target.value })}
+                          />
+                        </div>
+                        <button type="submit" className="admin-btn admin-btn--primary" disabled={busy}>
+                          Guardar correo
+                        </button>
+                      </form>
                     ) : null}
                   </li>
                 )
@@ -253,42 +329,77 @@ export default function AdminUsuarios() {
           )
         ) : null}
 
-        <details className="admin-details">
-          <summary>Cambiar mi contraseña</summary>
-          <form className="admin-password" onSubmit={submitPassword}>
-            {passwordErr ? <p className="auth-error">{passwordErr}</p> : null}
-            {passwordMsg ? (
+        <details className="admin-details" open={!isAdmin}>
+          <summary>Mi cuenta: correo y contraseña</summary>
+          <div className="admin-account">
+            {accountErr ? <p className="auth-error">{accountErr}</p> : null}
+            {accountMsg ? (
               <p className="admin-notice" role="status">
-                {passwordMsg}
+                {accountMsg}
               </p>
             ) : null}
-            <div className="field">
-              <label htmlFor="current-password">Contraseña actual</label>
-              <input
-                id="current-password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={passwords.current}
-                onChange={(event) => setPasswords({ ...passwords, current: event.target.value })}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="next-password">Nueva (mínimo 8 caracteres)</label>
-              <input
-                id="next-password"
-                type="password"
-                autoComplete="new-password"
-                minLength={8}
-                required
-                value={passwords.next}
-                onChange={(event) => setPasswords({ ...passwords, next: event.target.value })}
-              />
-            </div>
-            <button type="submit" className="admin-btn admin-btn--primary">
-              Guardar contraseña
-            </button>
-          </form>
+            <p className="note">Tu correo actual: {me?.email}</p>
+
+            <form onSubmit={submitMyEmail}>
+              <div className="field">
+                <label htmlFor="my-email">Correo nuevo</label>
+                <input
+                  id="my-email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={myEmail.email}
+                  onChange={(event) => setMyEmail({ ...myEmail, email: event.target.value })}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="my-email-password">Tu contraseña actual</label>
+                <PasswordInput
+                  id="my-email-password"
+                  autoComplete="current-password"
+                  required
+                  value={myEmail.password}
+                  onChange={(event) => setMyEmail({ ...myEmail, password: event.target.value })}
+                />
+              </div>
+              <button type="submit" className="admin-btn admin-btn--primary">
+                Guardar correo
+              </button>
+            </form>
+
+            <form onSubmit={submitPassword}>
+              <div className="field">
+                <label htmlFor="current-password">Contraseña actual</label>
+                <PasswordInput
+                  id="current-password"
+                  autoComplete="current-password"
+                  required
+                  value={passwords.current}
+                  onChange={(event) => setPasswords({ ...passwords, current: event.target.value })}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="next-password">Nueva (mínimo 8 caracteres)</label>
+                <PasswordInput
+                  id="next-password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  value={passwords.next}
+                  onChange={(event) => setPasswords({ ...passwords, next: event.target.value })}
+                />
+              </div>
+              <button type="submit" className="admin-btn admin-btn--primary">
+                Guardar contraseña
+              </button>
+            </form>
+
+            {isAdmin ? (
+              <button type="button" className="admin-btn admin-btn--danger-outline" onClick={removeMyself}>
+                Eliminar mi cuenta
+              </button>
+            ) : null}
+          </div>
         </details>
       </div>
     </section>

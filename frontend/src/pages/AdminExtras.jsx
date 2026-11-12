@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import { MAP_ICONS, mapIconUrl } from '../data/mapIcons.js'
-import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
+import { apiRequest, ensureSession } from '../lib/auth.js'
 
 // Panel › Lugares › Extras: puntos complementarios del mapa. No tienen ficha
 // pública; aquí se editan el nombre, la categoría, la zona, el pin y el enlace
@@ -52,7 +52,6 @@ function normalize(value) {
 }
 
 export default function AdminExtras() {
-  const isAdmin = getUser()?.role === 'admin'
   const [items, setItems] = useState(null)
   const [tab, setTab] = useState('published')
   const [query, setQuery] = useState('')
@@ -278,7 +277,6 @@ export default function AdminExtras() {
                 type="checkbox"
                 checked={form.published}
                 onChange={set('published')}
-                disabled={!isAdmin && !form.published}
               />
               Publicado en el mapa
             </label>
@@ -336,7 +334,7 @@ export default function AdminExtras() {
                     event.stopPropagation()
                     togglePublished(item)
                   }}
-                  disabled={busy || (!item.published && !isAdmin)}
+                  disabled={busy}
                   title={item.published ? 'Despublicar' : 'Publicar'}
                 >
                   {item.published ? 'Publicada' : 'No publicada'}

@@ -1433,3 +1433,34 @@ a.admin-module-card:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* Mi cuenta: correo, contraseña y baja en bloques apilados */
+.admin-app .admin-details .admin-account {
+  display: grid;
+  gap: 22px;
+  max-width: 480px;
+  padding: 16px 18px;
+}
+
+.admin-account form {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--a-ln, rgba(127, 127, 127, 0.25));
+}
+
+.admin-account .field {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.admin-account .admin-btn {
+  justify-self: start;
+}
+
+.admin-account .note,
+.admin-account .auth-error,
+.admin-account .admin-notice {
+  margin: 0;
+}

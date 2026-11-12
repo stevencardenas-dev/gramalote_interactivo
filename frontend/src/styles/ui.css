@@ -313,3 +313,51 @@ button.link-arrow {
   border-radius: 50%;
   background: currentColor;
 }
+
+/* Campo de contraseña con ojo */
+.password-input {
+  position: relative;
+  display: block;
+}
+
+.password-input input {
+  width: 100%;
+  padding-right: 48px;
+}
+
+.password-input__eye {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--c-muted, #6b6158);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-input__eye:hover,
+.password-input__eye:focus-visible {
+  background: rgba(127, 127, 127, 0.18);
+  color: inherit;
+}
+
+.password-input__eye svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-app .password-input input {
+  padding-right: 44px;
+}

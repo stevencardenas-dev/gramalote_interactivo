@@ -15,6 +15,7 @@ import '../../styles/mapa.css'
 import { getJson } from '../../lib/api.js'
 import { mapIconUrl, resolveMapIcon } from '../../data/mapIcons.js'
 import { StarsRow } from './RatingStars.jsx'
+import { formatAverage, formatVotes } from '../../lib/ratingsApi.js'
 
 
 // Centro aproximado de Gramalote, en formato [longitud, latitud].
@@ -145,7 +146,7 @@ function placeSubtitle(place) {
 
 // Nota del lugar tal como se ve en la lista: 0 cuando nadie ha votado.
 const formatRating = (rating) =>
-  rating.votes ? rating.average.toFixed(1).replace('.', ',') : '0'
+  rating.votes ? `${formatAverage(rating.average)} (${rating.votes})` : '0'
 
 // Mapa de MapLibre con los lugares de GET /api/map.
 // `groups`: lista de grupos a mostrar (por defecto, todos).
@@ -515,7 +516,11 @@ export default function LiveMap({
           <span className="mapa-ficha__sub">{placeSubtitle(place)}</span>
           <span className="mapa-ficha__estrellas">
             <StarsRow value={average} />
-            {votes ? average.toFixed(1).replace('.', ',') : null}
+            {votes ? (
+              <>
+                {formatAverage(average)} <small>({formatVotes(votes)})</small>
+              </>
+            ) : null}
           </span>
           {place.openNow === null ? null : (
             <span className={place.openNow ? 'mapa-ficha__estado is-open' : 'mapa-ficha__estado'}>

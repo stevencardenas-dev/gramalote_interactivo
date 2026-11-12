@@ -43,7 +43,7 @@ export default function AdminNav() {
         </NavLink>
         <NavLink to="/admin/lugares">Lugares</NavLink>
         <NavLink to="/admin/paginas">Páginas</NavLink>
-        {user?.role === 'admin' ? <NavLink to="/admin/usuarios">Usuarios</NavLink> : null}
+        <NavLink to="/admin/usuarios">{user?.role === 'admin' ? 'Usuarios' : 'Mi cuenta'}</NavLink>
         {user?.role === 'admin' ? <NavLink to="/admin/correo">Correo</NavLink> : null}
       </nav>
       <ThemeToggle />

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import Logo from '../components/ui/Logo.jsx'
+import PasswordInput from '../components/ui/PasswordInput.jsx'
 import { AuthError, resetPassword } from '../lib/auth.js'
 
 export default function Restablecer() {
@@ -58,9 +59,8 @@ export default function Restablecer() {
               {error ? <p className="auth-error">{error}</p> : null}
               <div className="field">
                 <label htmlFor="new-password">Contraseña nueva</label>
-                <input
+                <PasswordInput
                   id="new-password"
-                  type="password"
                   autoComplete="new-password"
                   minLength={8}
                   required
@@ -70,9 +70,8 @@ export default function Restablecer() {
               </div>
               <div className="field">
                 <label htmlFor="confirm-password">Repite la contraseña</label>
-                <input
+                <PasswordInput
                   id="confirm-password"
-                  type="password"
                   autoComplete="new-password"
                   minLength={8}
                   required

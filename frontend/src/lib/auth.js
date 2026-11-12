@@ -84,6 +84,23 @@ export async function changePassword(currentPassword, newPassword) {
   })
 }
 
+// Cambia el correo de la propia cuenta (pide la contraseña actual).
+export async function changeOwnEmail(email, currentPassword) {
+  const user = await apiRequest(`/admin/users/${currentUser.id}/email`, {
+    method: 'PATCH',
+    body: { email, currentPassword },
+  })
+  currentUser = { ...currentUser, email: user.email }
+  listeners.forEach((listener) => listener())
+  return currentUser
+}
+
+// Elimina la propia cuenta (solo administradores) y cierra la sesión local.
+export async function deleteOwnAccount() {
+  await apiRequest(`/admin/users/${currentUser.id}`, { method: 'DELETE' })
+  applySession(null)
+}
+
 export async function refreshSession() {
   if (refreshPromise) return refreshPromise
 

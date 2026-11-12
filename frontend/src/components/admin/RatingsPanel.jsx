@@ -81,7 +81,7 @@ export default function RatingsPanel({ kind, id, name, onNotify }) {
           <p className="note">
             {data
               ? data.votes
-                ? `Promedio ${data.average.toFixed(1).replace('.', ',')} de 5 · ${data.votes} ${data.votes === 1 ? 'voto' : 'votos'}`
+                ? `Promedio ${(Math.round(data.average * 10) / 10).toFixed(1).replace('.', ',')} de 5 · ${data.votes} ${data.votes === 1 ? 'voto' : 'votos'}`
                 : 'Todavía nadie ha calificado esta ficha.'
               : error || 'Cargando…'}
           </p>

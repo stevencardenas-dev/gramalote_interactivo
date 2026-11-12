@@ -203,7 +203,6 @@ router.delete(
   '/admin/suggestions/:id',
   requireAuth,
   asyncHandler(async (req, res) => {
-    if (req.admin?.role !== 'admin') throw new ApiError(403, 'FORBIDDEN', 'Solo un administrador borra sugerencias')
     const id = Number.parseInt(req.params.id, 10)
     await query('DELETE FROM establishment_suggestions WHERE id = ?', [id])
     await query(

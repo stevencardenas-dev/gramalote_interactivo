@@ -9,7 +9,7 @@ import MapIconPicker from '../components/admin/MapIconPicker.jsx'
 import ScheduleEditor from '../components/admin/ScheduleEditor.jsx'
 import IconMask from '../components/ui/IconMask.jsx'
 import { resolveMapIcon } from '../data/mapIcons.js'
-import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
+import { apiRequest, ensureSession } from '../lib/auth.js'
 
 const TABS = [
   { key: 'info', label: 'Información' },
@@ -369,7 +369,6 @@ export function AdminExperiencia() {
   const { id } = useParams()
   const isNew = id === 'nueva'
   const navigate = useNavigate()
-  const isAdmin = getUser()?.role === 'admin'
   const [form, setForm] = useState(isNew ? EMPTY : null)
   const [meta, setMeta] = useState({ categories: [], mapIcons: [] })
   const [toast, setToast] = useState(null)
@@ -839,17 +838,15 @@ export function AdminExperiencia() {
                   >
                     {form.published ? 'Despublicar' : 'Publicar'}
                   </button>
-                  {isAdmin ? (
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--danger-outline"
-                      onClick={remove}
-                      disabled={busy || form.published}
-                      title={form.published ? 'Despublica la experiencia para poder borrarla' : undefined}
-                    >
-                      Borrar
-                    </button>
-                  ) : null}
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--danger-outline"
+                    onClick={remove}
+                    disabled={busy || form.published}
+                    title={form.published ? 'Despublica la experiencia para poder borrarla' : undefined}
+                  >
+                    Borrar
+                  </button>
                 </div>
               ) : null}
               {form.published ? (

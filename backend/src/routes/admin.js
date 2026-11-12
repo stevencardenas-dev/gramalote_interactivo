@@ -105,16 +105,6 @@ function time(value) {
   return raw.length === 5 ? `${raw}:00` : raw
 }
 
-function requireAdmin(role) {
-  return (req, _res, next) => {
-    if (req.admin?.role !== role) {
-      next(new ApiError(403, 'FORBIDDEN', 'Tu cuenta no tiene permiso para esta acción'))
-      return
-    }
-    next()
-  }
-}
-
 async function recordAudit(connection, req, { action, entityType, entityId, changes }) {
   await connection.query(
     `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, changes, ip_address)
@@ -733,9 +723,6 @@ router.post(
     if (published === null) {
       throw new ApiError(400, 'VALIDATION', 'Indica si se publica o no')
     }
-    if (published && req.admin.role !== 'admin') {
-      throw new ApiError(403, 'FORBIDDEN', 'Solo un administrador puede publicar fichas')
-    }
 
     const updatedAt = await withTransaction(async (connection) => {
       const [rows] = await connection.query(
@@ -796,7 +783,6 @@ router.post(
 router.delete(
   '/admin/establishments/:id',
   requireAuth,
-  requireAdmin('admin'),
   asyncHandler(async (req, res) => {
     const id = integer(req.params.id, 'id')
     await withTransaction(async (connection) => {
@@ -973,7 +959,6 @@ router.patch(
 router.delete(
   '/admin/media/:id',
   requireAuth,
-  requireAdmin('admin'),
   asyncHandler(async (req, res) => {
     const id = integer(req.params.id, 'id')
     const media = await queryOne(

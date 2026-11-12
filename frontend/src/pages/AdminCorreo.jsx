@@ -13,6 +13,7 @@ const KIND_LABEL = {
   password_admin: 'Enlace de contraseña',
   password_invite: 'Invitación al panel',
   password_changed: 'Aviso: contraseña cambiada',
+  email_changed: 'Aviso: correo cambiado',
   rating_confirm: 'Confirmar calificación',
   suggestion_notify: 'Aviso de sugerencia',
   suggestion_thanks: 'Gracias por sugerir',

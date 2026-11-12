@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import Logo from '../components/ui/Logo.jsx'
-import { confirmRating } from '../lib/ratingsApi.js'
+import { confirmRating, formatAverage } from '../lib/ratingsApi.js'
 
 // Destino del enlace del correo «Confirma tu calificación». Pide un clic en
 // lugar de confirmar al cargar: así los antivirus de correo que abren los
@@ -38,7 +38,7 @@ export default function ConfirmarCalificacion() {
               <h1>¡Voto confirmado!</h1>
               <p>
                 Tu calificación de {data.stars} {data.stars === 1 ? 'estrella' : 'estrellas'} ya cuenta
-                para {data.title}. Ahora tiene {data.average.toFixed(1).replace('.', ',')} de 5 con{' '}
+                para {data.title}. Ahora tiene {formatAverage(data.average)} de 5 con{' '}
                 {data.votes} {data.votes === 1 ? 'voto' : 'votos'}.
               </p>
               <Button to={back}>Volver a {data.title}</Button>

@@ -113,15 +113,17 @@ export default function Admin() {
             </span>
             <span className="admin-tile__go">Abrir →</span>
           </Link>
-          {isAdmin ? (
-            <Link className="admin-tile" to="/admin/usuarios">
-              <strong>Usuarios</strong>
-              <span>
-                {users ? plural(users.filter((u) => u.isActive).length, 'cuenta activa', 'cuentas activas') : 'Cuentas y roles'}
-              </span>
-              <span className="admin-tile__go">Abrir →</span>
-            </Link>
-          ) : null}
+          <Link className="admin-tile" to="/admin/usuarios">
+            <strong>{isAdmin ? 'Usuarios' : 'Mi cuenta'}</strong>
+            <span>
+              {isAdmin
+                ? users
+                  ? plural(users.filter((u) => u.isActive).length, 'cuenta activa', 'cuentas activas')
+                  : 'Cuentas y roles'
+                : 'Tu correo y tu contraseña'}
+            </span>
+            <span className="admin-tile__go">Abrir →</span>
+          </Link>
           {isAdmin ? (
             <Link className="admin-tile" to="/admin/correo">
               <strong>Correo</strong>

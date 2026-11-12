@@ -61,3 +61,7 @@ export async function sendSuggestion(body) {
   }
   return payload.data
 }
+
+// Promedio con un decimal y coma: 4,5.
+export const formatAverage = (value) => (Math.round(Number(value || 0) * 10) / 10).toFixed(1).replace('.', ',')
+export const formatVotes = (count) => `${count} ${count === 1 ? 'voto' : 'votos'}`
