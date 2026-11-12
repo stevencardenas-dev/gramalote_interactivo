@@ -170,7 +170,7 @@ export default function AdminCorreo() {
               </p>
             ) : null}
 
-            <AdminSection title="Cuenta de envío" hint="Remitente y acceso SMTP" defaultOpen>
+            <AdminSection title="Cuenta de envío" hint="Remitente y acceso SMTP">
               <label className="admin-check">
                 <input type="checkbox" checked={form.enabled} onChange={set('enabled')} />
                 Enviar correos desde esta cuenta
@@ -222,8 +222,7 @@ export default function AdminCorreo() {
                   </ol>
                 </div>
               ) : null}
-              <details className="admin-details">
-                <summary>Servidor SMTP (otro proveedor)</summary>
+              <AdminSection title="Servidor SMTP" hint="Otro proveedor">
                 <div className="admin-grid">
                   <label className="admin-field">
                     <span>Servidor</span>
@@ -242,10 +241,10 @@ export default function AdminCorreo() {
                     <small>En Gmail es el mismo correo remitente.</small>
                   </label>
                 </div>
-              </details>
+              </AdminSection>
             </AdminSection>
 
-            <AdminSection title="Avisos y enlaces" hint="Quién recibe los avisos internos" defaultOpen>
+            <AdminSection title="Avisos y enlaces" hint="Quién recibe los avisos internos">
               <div className="admin-grid">
                 <label className="admin-field">
                   <span>Correos del equipo</span>
@@ -293,8 +292,7 @@ export default function AdminCorreo() {
         )}
 
         {log.length ? (
-          <details className="admin-details">
-            <summary>Últimos envíos ({log.length})</summary>
+          <AdminSection title="Últimos envíos" hint={`${log.length} registros`}>
             <div className="admin-ratings__table admin-mail__log" role="table" aria-label="Últimos envíos">
               <div className="admin-ratings__row admin-ratings__row--head" role="row">
                 <span role="columnheader">Fecha</span>
@@ -315,7 +313,7 @@ export default function AdminCorreo() {
                 </div>
               ))}
             </div>
-          </details>
+          </AdminSection>
         ) : null}
       </div>
       {toast ? (

@@ -2842,3 +2842,120 @@ a.admin-tile:hover {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Barra del panel: «Lugares» agrupa fichas, experiencias, extras y sugerencias */
+.admin-nav__drop {
+  position: relative;
+}
+
+.admin-nav__drop > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: var(--a-mu);
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+.admin-nav__drop > summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-nav__drop > summary:hover {
+  color: var(--a-tx);
+}
+
+.admin-nav__drop > summary.is-active {
+  background: var(--a-sf2);
+  color: var(--a-ac-text);
+}
+
+.admin-nav__caret {
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.admin-nav__drop[open] > summary .admin-nav__caret {
+  margin-top: 3px;
+  transform: rotate(-135deg);
+}
+
+.admin-nav__drop-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  display: grid;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid var(--a-ln);
+  border-radius: 12px;
+  background: var(--a-sf);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.admin-nav__drop-menu a {
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: var(--a-mu);
+  font-weight: 500;
+}
+
+.admin-nav__drop-menu a:hover {
+  color: var(--a-tx);
+}
+
+.admin-nav__drop-menu a.active {
+  background: var(--a-sf2);
+  color: var(--a-ac-text);
+}
+
+/* Formulario de Extras (se abre sobre el listado) */
+.admin-extras__form {
+  display: grid;
+  gap: 14px;
+  margin-block: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--a-ln);
+  border-radius: 12px;
+  background: var(--a-sf);
+}
+
+.admin-extras__form-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-extras__wide {
+  grid-column: 1 / -1;
+}
+
+.admin-extras__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-row-item__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--a-tx);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-row-item__link:hover {
+  color: var(--a-ac-text);
+}

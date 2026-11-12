@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Manual de Usuario · Editor: ¿qué es editable?</title>
+<link rel="stylesheet" href="_estilo-manuales.css" />
+</head>
+<body>
+<div class="hoja">
+
+  <header class="portada">
+    <span class="sello">Gramalote Interactivo</span>
+    <h1>Manual de Usuario<br />Editor: ¿qué es editable?</h1>
+    <p>Qué se puede cambiar desde el panel, página por página y tipo de lugar por tipo de lugar, y qué queda en manos del diseño.</p>
+  </header>
+
+  <section>
+    <h2 class="azul">1. La regla general</h2>
+    <p>El panel edita <strong>contenido</strong>: textos de las páginas, fotos, fichas, precios, horarios, enlaces y redes. No edita el diseño ni la estructura: el orden de las secciones, los colores, la tipografía y los textos fijos (menú, botones, pies legales) se cambian en el código.</p>
+    <div class="caja">
+      <strong>Qué significa «editable» aquí</strong>
+      <p>Un campo editable se puede guardar y se ve en el sitio al recargar. Un campo no editable aparece fijo aunque cambies la ficha: por ejemplo, el título del encabezado de Inicio o el texto de la historia del municipio.</p>
+    </div>
+    <table>
+      <tr><th>Se edita en</th><th>Contenido</th></tr>
+      <tr><td>Lugares → Establecimientos</td><td>Fichas de comer, dormir y comprar</td></tr>
+      <tr><td>Lugares → Experiencias</td><td>Fichas de Qué hacer, patrimonio y naturaleza</td></tr>
+      <tr><td>Lugares → Extras</td><td>Puntos del mapa sin ficha</td></tr>
+      <tr><td>Lugares → Sugerencias</td><td>Lo que envía la comunidad (no se publica solo)</td></tr>
+      <tr><td>Páginas</td><td>Textos, fotos, enlaces y orden de las páginas públicas</td></tr>
+      <tr><td>Correo / Usuarios</td><td>Envío de correos y cuentas del panel (solo administrador)</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2 class="verde">2. Página por página</h2>
+
+    <h3>Inicio</h3>
+    <table>
+      <tr><th>Bloque</th><th>¿Editable?</th><th>Dónde</th></tr>
+      <tr><td>Encabezado (foto, antetítulo, título y botón «Explorar lugares»)</td><td>No: es diseño</td><td>—</td></tr>
+      <tr><td>Carrusel de eventos sobre el encabezado</td><td>Sí</td><td>Páginas → Carrusel</td></tr>
+      <tr><td>«Accede rápido» (las cinco secciones)</td><td>Solo la imagen de cada tarjeta; los nombres y destinos son fijos</td><td>Páginas → Inicio</td></tr>
+      <tr><td>«Experiencias que no olvidarás»</td><td>Sí: imagen, título, texto, enlace y orden (la primera es la tarjeta grande)</td><td>Páginas → Inicio</td></tr>
+      <tr><td>«Abierto hoy en Gramalote»</td><td>Sí: orden, título, fondo y la ficha a la que lleva cada tarjeta</td><td>Páginas → Inicio</td></tr>
+      <tr><td>Bloque «Explora Gramalote» y pie de página</td><td>No: es diseño</td><td>—</td></tr>
+    </table>
+
+    <h3>Qué hacer</h3>
+    <ul>
+      <li><strong>Editable:</strong> el orden de las tarjetas y la portada de cada experiencia dentro de esta página (se elige entre las fotos de su galería).</li>
+      <li><strong>No editable aquí:</strong> el título de la página, su introducción y el encabezado. Las experiencias no publicadas no aparecen y su lugar se guarda.</li>
+      <li>Los datos de cada experiencia (nombre, resumen, fotos, horario) se cambian en <strong>Lugares → Experiencias</strong>.</li>
+    </ul>
+
+    <h3>Dónde ir</h3>
+    <ul>
+      <li><strong>Editable:</strong> antetítulo, título y descripción de la página; los bloques de Dónde comer, Dónde dormir y Dónde comprar (texto e imágenes); el collage de platos típicos y el bloque que lleva al mapa (su botón abre el mapa con los restaurantes).</li>
+      <li>Las fichas que se listan en cada bloque se eligen y se ordenan desde la misma pestaña; la foto de cada tarjeta sale de su galería.</li>
+      <li><strong>No editable:</strong> el nombre fijo de las secciones y el encabezado ilustrado.</li>
+    </ul>
+
+    <h3>Redes sociales</h3>
+    <p>Se activan o desactivan los iconos del pie, se cambia a dónde lleva cada uno y su orden. Los enlaces deben empezar por <code>https://</code>; WhatsApp pide un celular de 10 dígitos (se antepone el 57).</p>
+
+    <h3>Páginas sin editor en el panel</h3>
+    <table>
+      <tr><th>Página</th><th>Por qué</th></tr>
+      <tr><td>Historia</td><td>Contenido de diseño, con textos y fotos propios; se cambia en el código o en la base de datos.</td></tr>
+      <tr><td>Curiosidades</td><td>Igual: secciones y fichas cargadas como contenido editorial.</td></tr>
+      <tr><td>Información práctica</td><td>Bloques de datos (transporte, salud, teléfonos) con contenido propio.</td></tr>
+      <tr><td>Mapa</td><td>Se arma solo con las fichas y los extras publicados; no hay textos que editar.</td></tr>
+      <tr><td>Sugerir, Buscar, Acceder, Restablecer</td><td>Formularios y pantallas del sistema.</td></tr>
+    </table>
+  </section>
+
+  <section class="salto">
+    <h2 class="morado">3. Tipo de lugar por tipo de lugar</h2>
+
+    <h3>Establecimiento (comer, dormir, comprar)</h3>
+    <table>
+      <tr><th>Grupo</th><th>Campos editables</th></tr>
+      <tr><td>Identidad</td><td>Nombre, slug (URL), categoría, tipo, zona</td></tr>
+      <tr><td>Textos</td><td>Resumen (máx. 320 caracteres), descripción</td></tr>
+      <tr><td>Ubicación</td><td>Dirección, detalle de ubicación, enlace de Google Maps, latitud y longitud</td></tr>
+      <tr><td>Contacto</td><td>Teléfono, segundo teléfono, WhatsApp, correo, sitio web</td></tr>
+      <tr><td>Visita</td><td>Horario por día y excepciones, texto de horario, precios, check-in</td></tr>
+      <tr><td>Servicios</td><td>Servicios, formas de pago, platos o productos con foto y precio</td></tr>
+      <tr><td>Redes y relaciones</td><td>Facebook, Instagram, TikTok, YouTube, X y las fichas relacionadas</td></tr>
+      <tr><td>Fotos</td><td>Portada, encabezado, logo y galería; texto alternativo y crédito</td></tr>
+    </table>
+
+    <h3>Experiencia</h3>
+    <table>
+      <tr><th>Grupo</th><th>Campos editables</th></tr>
+      <tr><td>Identidad</td><td>Título, slug, categoría, zona</td></tr>
+      <tr><td>Textos</td><td>Resumen, texto de tarjeta, descripción, metadatos</td></tr>
+      <tr><td>Visita</td><td>Horario, si abre todos los días, duración, dificultad, acceso, precio, estacionamiento</td></tr>
+      <tr><td>Ubicación y contacto</td><td>Dirección, coordenadas, enlace de Google Maps, teléfonos, correo, web</td></tr>
+      <tr><td>Ten en cuenta</td><td>Consejos con icono, título y texto</td></tr>
+      <tr><td>Fotos</td><td>Portada, encabezado y galería con texto alternativo</td></tr>
+    </table>
+
+    <h3>Extra (sin ficha)</h3>
+    <ul>
+      <li>Nombre, categoría, zona o referencia, icono del mapa, latitud, longitud y enlace de Google Maps.</li>
+      <li>No tiene página pública: todo se muestra en la tarjeta del mapa.</li>
+      <li>No admite fotos, calificaciones, horarios ni precios.</li>
+    </ul>
+
+    <h3>Sugerencia (no es un lugar)</h3>
+    <p>Es el mensaje de una persona: nombre del negocio, tipo, dirección, teléfono, redes, si es el dueño, quién la envía y el motivo. Se puede cambiar su estado, dejar una nota interna y, si eres administrador, borrarla. Para publicarla hay que crear la ficha a mano.</p>
+  </section>
+
+  <section>
+    <h2 class="coral">4. Fotos: lo que conviene saber</h2>
+    <ul>
+      <li><strong>Portada:</strong> la que sale en tarjetas y listados. Es obligatoria (con texto alternativo) para publicar.</li>
+      <li><strong>Encabezado:</strong> la foto ancha de la ficha. Puede haber varias y la ficha las rota.</li>
+      <li><strong>Galería:</strong> fotos de apoyo. Al cambiar la portada, la anterior pasa a la galería.</li>
+      <li><strong>Texto alternativo:</strong> describe la foto en una frase (por ejemplo, «Fachada de madera del restaurante Bambú»). No es decorativo: lo leen los lectores de pantalla y los buscadores.</li>
+      <li><strong>Crédito:</strong> el nombre de quien tomó la foto, si hay que acreditarlo.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 class="azul">5. Ruta rápida: «quiero cambiar…»</h2>
+    <table>
+      <tr><th>Quiero cambiar</th><th>Voy a</th></tr>
+      <tr><td>El nombre, la descripción o los precios de un restaurante</td><td>Lugares → Establecimientos → la ficha → Información</td></tr>
+      <tr><td>Las fotos de una experiencia</td><td>Lugares → Experiencias → la ficha → Imágenes</td></tr>
+      <tr><td>El pin de la alcaldía en el mapa</td><td>Lugares → Extras → Editar</td></tr>
+      <tr><td>Las tarjetas de la portada del sitio</td><td>Páginas → Inicio</td></tr>
+      <tr><td>El banner de un evento</td><td>Páginas → Carrusel</td></tr>
+      <tr><td>El orden de «Qué hacer»</td><td>Páginas → Qué hacer</td></tr>
+      <tr><td>Los textos de «Dónde ir»</td><td>Páginas → Dónde ir</td></tr>
+      <tr><td>Los iconos de redes del pie</td><td>Páginas → Redes sociales</td></tr>
+      <tr><td>Si un lugar se ve o no</td><td>Su ficha → Publicación (o el conmutador del listado)</td></tr>
+    </table>
+  </section>
+
+  <p class="pie">Gramalote Interactivo · Manual del editor · Noviembre de 2026</p>
+</div>
+</body>
+</html>

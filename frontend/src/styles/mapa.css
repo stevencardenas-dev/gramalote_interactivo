@@ -1159,6 +1159,37 @@
   height: 22px;
 }
 
+.mapa-menu__titulo {
+  display: block;
+  padding: 12px 12px 4px;
+  color: var(--c-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Extras: tarjeta sin foto ni calificación, con el icono del punto */
+.mapa-ficha__icono-caja {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 12px;
+  background: var(--c-cream);
+}
+
+.mapa-ficha__nota {
+  color: var(--c-muted);
+  font-size: 0.8rem;
+}
+
+.mapa-lugar__sin-ficha {
+  color: var(--c-muted);
+  font-size: 0.8rem;
+}
+
 /* Lista: fichas bajas, con el icono del lugar a la derecha en vez de color */
 .mapa-panel__lista {
   gap: 6px;

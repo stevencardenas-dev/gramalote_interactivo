@@ -14,6 +14,8 @@ const STATUS = {
 }
 const FILTERS = [['', 'Todas'], ...Object.entries(STATUS).map(([key, value]) => [key, value.label])]
 
+// Conmutadores de estado (Todas y los cuatro estados de la sugerencia).
+
 function formatStamp(value) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
@@ -42,29 +44,26 @@ export default function AdminSugerencias() {
 
   const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message })
 
-  const load = useCallback(async (status) => {
-    setItems(await apiRequest(`/admin/suggestions${status ? `?status=${status}` : ''}`))
+  // Se cargan todas para que los conmutadores muestren cuántas hay de cada estado.
+  const load = useCallback(async () => {
+    setItems(await apiRequest('/admin/suggestions'))
   }, [])
 
   useEffect(() => {
     let alive = true
     ensureSession().then((session) => {
-      if (session && alive) load(filter).catch((err) => notify('error', 'No se pudo cargar', err.message))
+      if (session && alive) load().catch((err) => notify('error', 'No se pudo cargar', err.message))
     })
     return () => {
       alive = false
     }
-  }, [filter, load])
+  }, [load])
 
   async function update(item, changes) {
     setBusy(true)
     try {
       const next = await apiRequest(`/admin/suggestions/${item.id}`, { method: 'PATCH', body: changes })
-      setItems((current) =>
-        current
-          .map((entry) => (entry.id === item.id ? next : entry))
-          .filter((entry) => !filter || entry.status === filter),
-      )
+      setItems((current) => current.map((entry) => (entry.id === item.id ? next : entry)))
     } catch (err) {
       notify('error', 'No se pudo guardar', err.message)
     } finally {
@@ -98,25 +97,37 @@ export default function AdminSugerencias() {
               </>
             ) : null}
           </p>
-          <label className="admin-field admin-suggest__filter">
-            <span className="visually-hidden">Filtrar por estado</span>
-            <select value={filter} onChange={(event) => setFilter(event.target.value)}>
-              {FILTERS.map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
+        </div>
+
+        <div className="admin-tabs" role="tablist" aria-label="Filtrar por estado">
+          {FILTERS.map(([value, label]) => (
+            <button
+              key={value || 'todas'}
+              type="button"
+              role="tab"
+              aria-selected={filter === value}
+              className={`admin-tab${filter === value ? ' is-active' : ''}`}
+              onClick={() => setFilter(value)}
+            >
+              {label}{' '}
+              <span className="admin-tab__count">
+                {value ? (items ?? []).filter((entry) => entry.status === value).length : (items ?? []).length}
+              </span>
+            </button>
+          ))}
         </div>
 
         {items === null ? (
           <p className="note">Cargando…</p>
         ) : items.length === 0 ? (
-          <p className="note">{filter ? 'No hay sugerencias con ese estado.' : 'Todavía no llegan sugerencias.'}</p>
+          <p className="note">Todavía no llegan sugerencias.</p>
+        ) : items.filter((entry) => !filter || entry.status === filter).length === 0 ? (
+          <p className="note">No hay sugerencias con ese estado.</p>
         ) : (
           <ul className="admin-suggest">
-            {items.map((item) => (
+            {items
+              .filter((entry) => !filter || entry.status === filter)
+              .map((item) => (
               <li key={item.id} className={`admin-suggest__item is-${item.status}`}>
                 <div className="admin-suggest__head">
                   <div>
@@ -185,7 +196,7 @@ export default function AdminSugerencias() {
                   ) : null}
                 </div>
               </li>
-            ))}
+              ))}
           </ul>
         )}
       </div>

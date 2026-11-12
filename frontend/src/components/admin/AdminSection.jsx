@@ -30,7 +30,13 @@ export default function AdminSection({ title, hint, defaultOpen = false, signal 
           </button>
         </h2>
       </div>
-      <div id={bodyId} className="admin-section__body" hidden={!open} onInvalidCapture={() => setOpen(true)}>
+      <div
+        id={bodyId}
+        className="admin-section__body"
+        hidden={!open}
+        style={{ display: open ? undefined : 'none' }}
+        onInvalidCapture={() => setOpen(true)}
+      >
         {children}
       </div>
     </section>

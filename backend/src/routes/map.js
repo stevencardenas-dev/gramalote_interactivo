@@ -28,6 +28,16 @@ const EXPERIENCE_COVER = `
    WHERE i.experience_id = e.id AND i.role = 'cover'
    ORDER BY i.sort_order, i.id LIMIT 1) AS cover_alt`
 
+// Categoría o zona de un extra -> slug estable para los filtros del mapa.
+function slugifyCategory(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
 function buildWhere(queryParams, titleField = 'name') {
   const where = ['e.latitude IS NOT NULL', 'e.longitude IS NOT NULL']
   const params = []
@@ -94,7 +104,7 @@ router.get(
       cover: coverFromRow(row),
     })
 
-    const [establishments, experiences] = await Promise.all([
+    const [establishments, experiences, extraRows] = await Promise.all([
       kind === 'experience'
         ? []
         : query(
@@ -113,6 +123,14 @@ router.get(
              ORDER BY e.sort_order, e.title`,
             experienceFilters.params,
           ),
+      // Extras: puntos complementarios sin ficha; solo se filtran por categoría.
+      query(
+        `SELECT id, matrix_ref, slug, name, category, zone, latitude, longitude,
+                maps_url, map_icon, sort_order
+         FROM map_extras
+         WHERE is_published = 1
+         ORDER BY sort_order, name`,
+      ),
     ])
 
     const [extras, stats] = await Promise.all([
@@ -132,6 +150,24 @@ router.get(
           mapEstablishment(row, extras.get(Number(row.id)), statsOf('establishment', row.id)),
         ),
         experiences: experiences.map((row) => mapExperience(row, statsOf('experience', row.id))),
+        extras: extraRows
+          .filter((row) => Number.isFinite(Number(row.latitude)))
+          .map((row) => ({
+            kind: 'extra',
+            id: toNumber(row.id),
+            slug: row.slug,
+            name: row.name,
+            group: 'Extra',
+            category: { slug: slugifyCategory(row.category), name: row.category },
+            zone: row.zone ? { slug: slugifyCategory(row.zone), name: row.zone } : null,
+            mapIcon: row.map_icon ?? null,
+            mapsUrl: row.maps_url ?? null,
+            coordinates: {
+              latitude: Number(row.latitude),
+              longitude: Number(row.longitude),
+            },
+            cover: null,
+          })),
       },
     })
   }),

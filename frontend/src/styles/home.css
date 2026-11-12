@@ -4,7 +4,8 @@
 .home-hero {
   position: relative;
   display: flex;
-  align-items: flex-start;
+  /* El bloque del inicio va centrado en el alto de la portada, también en móvil. */
+  align-items: center;
   min-height: 729px;
   overflow: hidden;
   color: var(--c-white);
@@ -38,22 +39,8 @@
   flex-direction: column;
   align-items: center;
   width: min(var(--container), calc(100% - var(--gutter) * 2));
-  padding-top: 200px;
-  padding-bottom: 140px;
+  padding-block: 0;
   text-align: center;
-}
-
-/* En pantallas anchas (y con zoom) el bloque del inicio se centra en el alto de
-   la portada en vez de quedar pegado a los 200 px de arriba. */
-@media (min-width: 641px) {
-  .home-hero {
-    align-items: center;
-  }
-
-  .home-hero__inner {
-    padding-top: 0;
-    padding-bottom: 0;
-  }
 }
 
 .home-hero__eyebrow {
@@ -502,10 +489,6 @@
     min-height: 620px;
   }
 
-  .home-hero__inner {
-    padding-top: 150px;
-  }
-
   .explore-block__inner {
     gap: 56px;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
@@ -532,11 +515,6 @@
 @media (max-width: 860px) {
   .home-hero {
     min-height: 560px;
-  }
-
-  .home-hero__inner {
-    padding-top: 120px;
-    padding-bottom: 70px;
   }
 
   .home-hero h1 {

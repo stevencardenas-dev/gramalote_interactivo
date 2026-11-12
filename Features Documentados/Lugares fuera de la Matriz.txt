@@ -1,0 +1,64 @@
+CUADRE DEL SITIO CON LA MATRIZ
+Fuente: referencia/Matriz y Documentación/Matriz_mapa_interactivo_lista.xlsx
+Revisión: 12 de noviembre de 2026 (migración 022)
+
+1. LUGARES PUBLICADOS QUE NO APARECEN EN LA MATRIZ
+   Ninguno. Las 26 fichas de establecimientos y las 5 experiencias publicadas
+   tienen su fila en la matriz (GR-014 a GR-043), así que no se despublicó nada.
+
+2. CORRECCIONES APLICADAS PARA QUE COINCIDAN CON LA MATRIZ
+   - Enlace de Google Maps de las 26 fichas de establecimientos y de las
+     4 experiencias que son lugares del mapa (GR-014, GR-015, GR-042, GR-043):
+     ahora es el enlace corto de la matriz.
+   - Icono del mapa: se aplicó el icono asignado en la matriz.
+   - Coordenadas: se ajustaron a las del enlace de la matriz en 11 fichas.
+   - Zonas: se revisaron todas; ya coincidían con la columna «Zona» de la
+     matriz (Gramalote Nuevo = Casco urbano nuevo; veredas = Vereda / zona
+     rural; Gramalote Viejo se conserva para las experiencias).
+
+3. LUGARES DE LA MATRIZ QUE AÚN NO TIENEN FICHA EN EL SITIO
+   Patrimonio (la matriz los marca con ficha, pero el sitio todavía no tiene
+   página para ellos):
+     GR-001 Templo de San Rafael · antiguo
+     GR-002 Templo San Rafael Arcángel
+     GR-003 Plaza de la Restauración
+     GR-004 Casa Municipal Gregorio Montes
+     GR-005 Puente Cuervo
+     GR-006 Hospital San Vicente de Paúl
+     GR-007 Colegio Sagrado Corazón de Jesús
+     GR-008 Capilla Bethlemita
+     GR-010 Estatua de Secundino Jácome
+     GR-011 Estatua de Laureano Gómez
+     GR-012 Diosa de la Fuente
+     GR-013 Puente Gregorio Montes
+   (GR-009 y GR-043 corresponden a las experiencias «Pueblo Viejo» y «Las ruinas
+   del antiguo Gramalote», que ya existen.)
+
+4. EXTRAS CREADOS (13 puntos complementarios, sin ficha)
+   GR-044 CAM / Palacio Municipal
+   GR-045 Casa de la Cultura Francisco Márquez Acuña
+   GR-046 Estación de Policía
+   GR-047 Centro de salud
+   GR-048 Banco Agrario
+   GR-049 Plaza Mayor de Gramalote
+   GR-052 Parque Gruta de la virgen
+   GR-053 Parque del Agua
+   GR-054 Polideportivo San Rafael
+   GR-055 Estadio Municipal Manuel Grillo Martínez
+   GR-056 Coliseo Municipal
+   GR-057 Capilla Belén / Capilla Bethel
+   GR-058 Convento de las Hermanas Clarisas
+
+5. DATOS DE LA MATRIZ QUE HAY QUE CONFIRMAR
+   - GR-046, GR-048, GR-053, GR-054, GR-057 y GR-058 no traen enlace de Google
+     Maps y su columna «Zona» dice «248». Se ubicaron con coordenadas
+     aproximadas dentro del casco urbano nuevo. Hay que enviar el pin exacto.
+   - GR-050 y GR-051 no existen en la hoja aunque el resumen cuenta 15 puntos
+     complementarios (solo hay 13 filas). Faltan dos filas o sobra el conteo.
+   - GR-047 «Centro de salud»: su enlace de Google Maps apunta al sector del
+     Gramalote viejo (7.8677537, -72.7780382), a unos 5 km del casco urbano,
+     aunque la columna «Zona» dice Gramalote Nuevo. Se dejó como dice la
+     matriz; conviene verificar cuál es el punto correcto.
+   - GR-001, GR-004 y GR-008 comparten el mismo enlace que GR-009 (ruinas),
+     así que sus pines quedarían encima. Cuando se creen sus fichas hay que
+     pedir coordenadas propias.

@@ -21,6 +21,7 @@ import ConfirmarCalificacion from './pages/ConfirmarCalificacion.jsx'
 import Sugerir from './pages/Sugerir.jsx'
 import AdminCorreo from './pages/AdminCorreo.jsx'
 import AdminSugerencias from './pages/AdminSugerencias.jsx'
+import AdminExtras from './pages/AdminExtras.jsx'
 import Admin from './pages/Admin.jsx'
 import AdminUsuarios from './pages/AdminUsuarios.jsx'
 import AdminPaginas from './pages/AdminPaginas.jsx'
@@ -91,6 +92,14 @@ export default function App() {
           element={
             <RequireAdmin>
               <AdminExperiencia />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/extras"
+          element={
+            <RequireAdmin>
+              <AdminExtras />
             </RequireAdmin>
           }
         />

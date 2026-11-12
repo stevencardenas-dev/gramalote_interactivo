@@ -98,23 +98,13 @@ export default function Admin() {
 
         <div className="admin-tiles">
           <Link className="admin-tile" to="/admin/establecimientos">
-            <strong>Establecimientos</strong>
+            <strong>Lugares</strong>
             <span>
               {dash ?? plural(summary.total, 'ficha', 'fichas')}
               {!loading && summary.drafts > 0 ? (
                 <em className="is-warn"> · {plural(summary.drafts, 'no publicada', 'no publicadas')}</em>
               ) : null}
             </span>
-            <span className="admin-tile__go">Abrir →</span>
-          </Link>
-          <Link className="admin-tile" to="/admin/experiencias">
-            <strong>Experiencias</strong>
-            <span>Qué hacer y pines del mapa</span>
-            <span className="admin-tile__go">Abrir →</span>
-          </Link>
-          <Link className="admin-tile" to="/admin/paginas">
-            <strong>Páginas</strong>
-            <span>Inicio, Qué hacer y Dónde ir</span>
             <span className="admin-tile__go">Abrir →</span>
           </Link>
           {isAdmin ? (
@@ -126,11 +116,6 @@ export default function Admin() {
               <span className="admin-tile__go">Abrir →</span>
             </Link>
           ) : null}
-          <Link className="admin-tile" to="/admin/sugerencias">
-            <strong>Sugerencias</strong>
-            <span>Lugares que envía la gente</span>
-            <span className="admin-tile__go">Abrir →</span>
-          </Link>
           {isAdmin ? (
             <Link className="admin-tile" to="/admin/correo">
               <strong>Correo</strong>
@@ -138,6 +123,11 @@ export default function Admin() {
               <span className="admin-tile__go">Abrir →</span>
             </Link>
           ) : null}
+          <Link className="admin-tile" to="/admin/paginas">
+            <strong>Páginas</strong>
+            <span>Inicio, Qué hacer y Dónde ir</span>
+            <span className="admin-tile__go">Abrir →</span>
+          </Link>
         </div>
 
         <div className="admin-tile admin-storage-tile">
