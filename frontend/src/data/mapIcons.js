@@ -33,6 +33,7 @@ export const MAP_ICONS = [
   { key: 'casa-cultural', label: 'Casa cultural', group: 'Servicios y comunidad' },
   { key: 'alcaldia', label: 'Alcaldía', group: 'Servicios y comunidad' },
   { key: 'banco', label: 'Banco', group: 'Servicios y comunidad' },
+  { key: 'policia', label: 'Policía', group: 'Servicios y comunidad' },
   { key: 'hospital', label: 'Hospital', group: 'Servicios y comunidad' },
   { key: 'colegio', label: 'Colegios', group: 'Servicios y comunidad' },
   { key: 'casa-de-abuelos', label: 'Casa de abuelos', group: 'Servicios y comunidad' },

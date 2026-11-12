@@ -26,6 +26,7 @@ export const MAP_ICONS = [
   'parque',
   'parque-principal',
   'plaza-de-mercado',
+  'policia',
   'polideportivo',
   'postres',
   'pueblo-nuevo',
