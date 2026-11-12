@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useSyncExternalStore } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import Logo from '../ui/Logo.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
-import { getUser, logout } from '../../lib/auth.js'
+import { getUser, logout, subscribe } from '../../lib/auth.js'
 
 // Secciones que cuelgan de «Lugares» en la barra del panel.
 const LUGARES = [
@@ -15,7 +15,8 @@ const LUGARES = [
 export default function AdminNav() {
   const navigate = useNavigate()
   const location = useLocation()
-  const user = getUser()
+  // Se suscribe a la sesión: al recargar, el usuario llega después del primer render.
+  const user = useSyncExternalStore(subscribe, getUser)
   const menuRef = useRef(null)
   const enLugares = LUGARES.some((item) => location.pathname.startsWith(item.to))
 

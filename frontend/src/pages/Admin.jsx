@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
+import { apiRequest, ensureSession, getUser, subscribe } from '../lib/auth.js'
 
 function formatBytes(bytes) {
   if (!bytes) return '0 MB'
@@ -14,7 +14,9 @@ function plural(count, one, many) {
 
 export default function Admin() {
   const navigate = useNavigate()
-  const user = getUser()
+  // La sesión se resuelve después del primer render: hay que escucharla para
+  // que Usuarios y Correo aparezcan sin recargar.
+  const user = useSyncExternalStore(subscribe, getUser)
   const isAdmin = user?.role === 'admin'
   const [items, setItems] = useState([])
   const [users, setUsers] = useState(null)
