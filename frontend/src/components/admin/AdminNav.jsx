@@ -33,9 +33,8 @@ export default function AdminNav() {
 
   return (
     <header className="admin-nav">
-      <Link className="admin-nav__brand" to="/admin">
+      <Link className="admin-nav__brand" to="/admin" aria-label="Panel de administración">
         <Logo variant="cube" className="admin-nav__logo" alt="Gramalote Interactivo" />
-        <span>Panel</span>
       </Link>
       <nav className="admin-nav__links" aria-label="Panel">
         <NavLink to="/admin" end>

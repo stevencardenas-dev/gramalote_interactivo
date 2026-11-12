@@ -348,6 +348,8 @@ export function AdminExperiencia() {
   const [tab, setTab] = useState('info')
   const [auditPage, setAuditPage] = useState(0)
   const [signal, setSignal] = useState({ open: true, n: 0 })
+  // Evita que un doble aviso del selector de archivos suba la misma foto dos veces.
+  const uploadGuard = useRef(false)
 
   useEffect(() => {
     let alive = true
@@ -447,7 +449,8 @@ export function AdminExperiencia() {
   const uploadImage = (event) => {
     const files = [...(event.target.files ?? [])]
     event.target.value = ''
-    if (!files.length) return
+    if (!files.length || uploadGuard.current) return
+    uploadGuard.current = true
     run(async () => {
       let count = form.images.length
       for (const file of files) {
@@ -455,10 +458,14 @@ export function AdminExperiencia() {
         data.append('file', file)
         data.append('role', count ? 'gallery' : 'cover')
         data.append('altText', form.title)
-        setForm(await apiRequest(`/admin/experiences/${id}/images`, { method: 'POST', formData: data }))
+        await apiRequest(`/admin/experiences/${id}/images`, { method: 'POST', formData: data })
         count += 1
       }
-    }, files.length === 1 ? 'Imagen subida.' : `${files.length} imágenes subidas.`)
+      // La lista se relee del servidor: es la que manda para el contador.
+      setForm(await apiRequest(`/admin/experiences/${id}`))
+    }, files.length === 1 ? 'Imagen subida.' : `${files.length} imágenes subidas.`).finally(() => {
+      uploadGuard.current = false
+    })
   }
 
   const imageAction = (image, method, body) =>
@@ -681,7 +688,7 @@ export function AdminExperiencia() {
                   <div>
                     <h2>Imágenes de la experiencia</h2>
                     <p className="note">
-                      La portada se usa en la tarjeta, el encabezado de la ficha y el mapa. Se convierten a WebP al subir.
+                      La primera portada se usa en las tarjetas y el mapa; todas las portadas se deslizan en el encabezado de la ficha. Se convierten a WebP al subir.
                     </p>
                   </div>
                   <div>
@@ -720,8 +727,8 @@ export function AdminExperiencia() {
                           <select
                             aria-label="Uso de la imagen"
                             value={image.role === 'cover' ? 'cover' : 'gallery'}
-                            disabled={busy || image.role === 'cover'}
-                            onChange={(e) => e.target.value === 'cover' && imageAction(image, 'PATCH', { role: 'cover' })}
+                            disabled={busy}
+                            onChange={(e) => imageAction(image, 'PATCH', { role: e.target.value })}
                           >
                             <option value="cover">Portada</option>
                             <option value="gallery">Galería</option>

@@ -209,6 +209,7 @@ export default function HeroFicha({
           className="ficha-hero__pause"
           aria-pressed={paused}
           aria-label={paused ? 'Reanudar el movimiento de las fotos' : 'Pausar el movimiento de las fotos'}
+          title={paused ? 'Reanudar' : 'Pausar'}
           onClick={() => setPaused((value) => !value)}
         >
           <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -218,7 +219,6 @@ export default function HeroFicha({
               <path d="M4.5 3h2.6v10H4.5zM8.9 3h2.6v10H8.9z" />
             )}
           </svg>
-          {paused ? 'Reanudar' : 'Pausar'}
         </button>
       ) : null}
     </section>

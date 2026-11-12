@@ -126,6 +126,18 @@ export default function Admin() {
               <span className="admin-tile__go">Abrir →</span>
             </Link>
           ) : null}
+          <Link className="admin-tile" to="/admin/sugerencias">
+            <strong>Sugerencias</strong>
+            <span>Lugares que envía la gente</span>
+            <span className="admin-tile__go">Abrir →</span>
+          </Link>
+          {isAdmin ? (
+            <Link className="admin-tile" to="/admin/correo">
+              <strong>Correo</strong>
+              <span>Avisos y plantillas de correo</span>
+              <span className="admin-tile__go">Abrir →</span>
+            </Link>
+          ) : null}
         </div>
 
         <div className="admin-tile admin-storage-tile">

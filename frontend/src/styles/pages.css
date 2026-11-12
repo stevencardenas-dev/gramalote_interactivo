@@ -1696,11 +1696,12 @@ button.social-dot {
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 16px 0 12px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 999px;
+  border-radius: 50%;
   background: rgba(10, 14, 18, 0.38);
   color: var(--c-white);
   font: inherit;
@@ -1713,8 +1714,8 @@ button.social-dot {
 }
 
 .ficha-hero__pause svg {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   fill: currentColor;
 }
 

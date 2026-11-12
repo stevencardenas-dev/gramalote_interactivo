@@ -436,12 +436,8 @@ router.post(
           stored.checksum,
         ],
       )
-      if (role === 'cover') {
-        await connection.query(
-          `UPDATE experience_images SET role = 'gallery' WHERE experience_id = ? AND role = 'cover'`,
-          [experienceId],
-        )
-      }
+      // Se admiten varias portadas por experiencia: la primera se usa en las
+      // tarjetas y el mapa, y todas se deslizan en el encabezado de la ficha.
       const [sortRows] = await connection.query(
         'SELECT COALESCE(MAX(sort_order), 0) AS m FROM experience_images WHERE experience_id = ?',
         [experienceId],
@@ -470,12 +466,10 @@ router.patch(
     if (!image) throw new ApiError(404, 'NOT_FOUND', 'Imagen no encontrada')
 
     await withTransaction(async (connection) => {
-      if (req.body?.role === 'cover') {
-        await connection.query(
-          `UPDATE experience_images SET role = 'gallery' WHERE experience_id = ? AND role = 'cover'`,
-          [experienceId],
-        )
-        await connection.query(`UPDATE experience_images SET role = 'cover' WHERE id = ?`, [imageId])
+      // Cambiar el uso no toca a las demás: puede haber varias portadas.
+      const nextRole = req.body?.role
+      if (nextRole === 'cover' || nextRole === 'gallery') {
+        await connection.query('UPDATE experience_images SET role = ? WHERE id = ?', [nextRole, imageId])
       }
       if (req.body && 'altText' in req.body) {
         await connection.query('UPDATE media SET alt_text = ? WHERE id = ?', [

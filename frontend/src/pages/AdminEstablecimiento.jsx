@@ -112,6 +112,8 @@ export default function AdminEstablecimiento() {
   const [auditPage, setAuditPage] = useState(0)
   const [form, setForm] = useState(null)
   const [meta, setMeta] = useState(null)
+  // Evita que un doble aviso del selector de archivos suba la misma foto dos veces.
+  const uploadGuard = useRef(false)
   const [allEstablishments, setAllEstablishments] = useState([])
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -252,7 +254,8 @@ export default function AdminEstablecimiento() {
 
   async function handleUpload(event) {
     const files = [...(event.target.files ?? [])]
-    if (files.length === 0) return
+    if (files.length === 0 || uploadGuard.current) return
+    uploadGuard.current = true
 
     setUploading(true)
     setError('')
@@ -272,6 +275,7 @@ export default function AdminEstablecimiento() {
     } catch (err) {
       setError(err.message)
     } finally {
+      uploadGuard.current = false
       setUploading(false)
       if (fileInput.current) fileInput.current.value = ''
     }

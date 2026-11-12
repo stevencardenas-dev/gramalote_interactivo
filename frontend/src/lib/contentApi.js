@@ -174,6 +174,11 @@ export function adaptActivity(item) {
   const gallery = images
     .filter((image) => image.role === 'gallery')
     .map((image) => ({ src: image.url, alt: image.alt ?? item.title }))
+  // Varias portadas: se usan todas en el encabezado de la ficha (se deslizan).
+  const covers = images
+    .filter((image) => image.role === 'cover')
+    .map((image) => image.url)
+    .filter(Boolean)
   return {
     slug: item.slug,
     title: item.title,
@@ -182,6 +187,7 @@ export function adaptActivity(item) {
     meta: item.meta ?? '',
     photo: gallery[0]?.src ?? cover,
     hero: cover,
+    covers: covers.length > 0 ? covers : [cover].filter(Boolean),
     openDaily: Boolean(item.openDaily),
     summary: item.summary,
     description: item.description,

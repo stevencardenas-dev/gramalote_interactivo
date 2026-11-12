@@ -66,8 +66,8 @@ export default function Experiencia() {
         rating={{ kind: 'experiencia', slug: item.slug }}
         summary={item.summary ?? item.text}
         image={item.hero ?? item.photo}
+        images={item.covers}
         social={[]}
-        dots={false}
         breadcrumb={[
           { label: 'Inicio', to: '/' },
           { label: 'Qué hacer', to: '/que-hacer' },
