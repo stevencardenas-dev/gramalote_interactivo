@@ -64,6 +64,11 @@ function Breadcrumb({ items = [] }) {
 // Segundos que tarda una foto en recorrer todo el ancho (deslizamiento continuo).
 const SLIDE_SECONDS = 12
 
+function paint(track, value, total) {
+  if (!track) return
+  track.style.transform = `translate3d(-${(value * 100) / (total + 1)}%, 0, 0)`
+}
+
 export default function HeroFicha({
   breadcrumb,
   eyebrow,
@@ -87,9 +92,16 @@ export default function HeroFicha({
   const total = slides.length
   const multiple = total > 1
   const trackRef = useRef(null)
+  // La posición (0..total) sale del reloj, no de sumar fotogramas: con fotos
+  // grandes el navegador baja de 20 fps y, sumando fotogramas con tope, la
+  // rotación se arrastraba. `base` es la posición al empezar este tramo y
+  // `since` el instante en que empezó.
   const progress = useRef(0)
+  const base = useRef(0)
+  const since = useRef(0)
   const [dot, setDot] = useState(0)
   const [paused, setPaused] = useState(false)
+  const [retarget, setRetarget] = useState(0)
 
   // Carrusel continuo: las fotos se deslizan sin parar hacia la izquierda; al
   // terminar la última asoma otra vez la primera (hay una copia al final). El
@@ -98,35 +110,46 @@ export default function HeroFicha({
   // animaciones CSS cuando el visitante pidió «reducir movimiento».
   useEffect(() => {
     if (!multiple || paused) return undefined
+    base.current = progress.current
+    since.current = performance.now()
     let frame
-    let last = performance.now()
     let shown = -1
+    let hiddenAt = 0
     function tick(now) {
-      // Con la pestaña en segundo plano el navegador detiene los fotogramas; al
-      // volver, el salto de tiempo se recorta para no dar un tirón.
-      const step = Math.min(now - last, 50) / (SLIDE_SECONDS * 1000)
-      last = now
-      progress.current = (progress.current + step) % total
-      if (trackRef.current) {
-        trackRef.current.style.transform = `translate3d(-${(progress.current * 100) / (total + 1)}%, 0, 0)`
-      }
-      const next = Math.round(progress.current) % total
+      const value = (base.current + (now - since.current) / (SLIDE_SECONDS * 1000)) % total
+      progress.current = value
+      paint(trackRef.current, value, total)
+      const next = Math.round(value) % total
       if (next !== shown) {
         shown = next
         setDot(next)
       }
       frame = requestAnimationFrame(tick)
     }
+    // Con la pestaña en segundo plano no hay fotogramas: al volver se descarta
+    // ese rato en vez de saltar de foto.
+    function onVisibility() {
+      const now = performance.now()
+      if (document.visibilityState === 'hidden') {
+        hiddenAt = now
+      } else if (hiddenAt) {
+        since.current += now - hiddenAt
+        hiddenAt = 0
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
     frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [multiple, paused, total])
+    return () => {
+      cancelAnimationFrame(frame)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [multiple, paused, total, retarget])
 
   function goTo(index) {
     progress.current = index
-    if (trackRef.current) {
-      trackRef.current.style.transform = `translate3d(-${(index * 100) / (total + 1)}%, 0, 0)`
-    }
+    paint(trackRef.current, index, total)
     setDot(index)
+    setRetarget((value) => value + 1)
   }
 
   const track = multiple ? [...slides, slides[0]] : slides
@@ -145,7 +168,6 @@ export default function HeroFicha({
                 key={`${src}-${index}`}
                 src={src}
                 alt={index === dot ? imageAlt : ''}
-                loading={index === 0 ? undefined : 'lazy'}
               />
             ))}
           </div>
