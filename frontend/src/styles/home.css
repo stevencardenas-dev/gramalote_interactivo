@@ -688,8 +688,10 @@
 }
 
 @media (max-width: 520px) {
+  /* Alto suficiente para que el bloque quede centrado sin meterse bajo la
+     cabecera fija: el contenido ronda los 310 px. */
   .home-hero {
-    min-height: min(380px, calc(100svh - var(--header-h)));
+    min-height: min(500px, calc(100svh - var(--header-h)));
   }
 
   .experience-card::after {
@@ -702,8 +704,7 @@
   }
 
   .home-hero__inner {
-    padding-top: clamp(84px, calc(var(--header-h) + 2vh), 100px);
-    padding-bottom: 16px;
+    padding-block: 0;
   }
 
   .home-hero h1 {
