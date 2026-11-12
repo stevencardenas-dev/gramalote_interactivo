@@ -43,6 +43,19 @@
   text-align: center;
 }
 
+/* En pantallas anchas (y con zoom) el bloque del inicio se centra en el alto de
+   la portada en vez de quedar pegado a los 200 px de arriba. */
+@media (min-width: 641px) {
+  .home-hero {
+    align-items: center;
+  }
+
+  .home-hero__inner {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
 .home-hero__eyebrow {
   font-size: 1.0625rem;
   font-weight: 500;
