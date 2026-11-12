@@ -2367,6 +2367,17 @@ a.admin-tile:hover {
   padding-inline: 10px;
 }
 
+/* Comentario del voto: ocupa la fila entera, debajo de los datos. */
+.admin-ratings__row > .admin-ratings__comment {
+  grid-column: 1 / -1;
+  padding-bottom: 2px;
+  color: var(--a-mu);
+  font-size: 0.8rem;
+  font-style: italic;
+  line-height: 1.45;
+  white-space: normal;
+}
+
 .admin-stars {
   display: inline-flex;
   gap: 1px;

@@ -32,8 +32,8 @@ async function targetFrom(params) {
 async function listFor(target) {
   const [rows, stats] = await Promise.all([
     query(
-      `SELECT id, voter_name, voter_email, stars, status, pending_stars, confirm_expires_at,
-              created_at, updated_at
+      `SELECT id, voter_name, voter_email, stars, comment_text, status, pending_stars,
+              pending_comment, confirm_expires_at, created_at, updated_at
        FROM ratings WHERE target_type = ? AND target_id = ?
        ORDER BY updated_at DESC, id DESC`,
       [target.type, target.id],
@@ -51,6 +51,9 @@ async function listFor(target) {
       name: row.voter_name,
       email: row.voter_email,
       stars: Number(row.stars),
+      // Comentario confirmado; el nuevo, si volvió a calificar, espera en pendingComment.
+      comment: row.comment_text ?? null,
+      pendingComment: row.pending_comment ?? null,
       // pending: aún no abre el enlace del correo (no cuenta en el promedio).
       // pendingStars: ya confirmado, pero votó otra vez y falta confirmar.
       pending: row.status === 'pending',

@@ -123,6 +123,8 @@ router.post(
     const name = stringParam(req.body?.name, { max: 80 })
     const email = stringParam(req.body?.email, { max: 160 })?.toLowerCase()
     const stars = Number(req.body?.stars)
+    // Comentario opcional; si viene vacío se guarda como NULL.
+    const comment = stringParam(req.body?.comment, { max: 1000 })
 
     if (!name || name.length < 2) {
       throw new ApiError(400, 'INVALID_NAME', 'Escribe tu nombre')
@@ -141,12 +143,13 @@ router.post(
       // Sin correo configurado (o con la confirmación apagada) el voto cuenta
       // de inmediato, como antes.
       await query(
-        `INSERT INTO ratings (target_type, target_id, voter_name, voter_email, stars, status, confirmed_at)
-         VALUES (?, ?, ?, ?, ?, 'confirmed', NOW())
+        `INSERT INTO ratings (target_type, target_id, voter_name, voter_email, stars, comment_text, status, confirmed_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'confirmed', NOW())
          ON DUPLICATE KEY UPDATE voter_name = VALUES(voter_name), stars = VALUES(stars),
-           status = 'confirmed', pending_stars = NULL, pending_name = NULL,
+           comment_text = VALUES(comment_text), status = 'confirmed', pending_stars = NULL,
+           pending_name = NULL, pending_comment = NULL,
            confirm_token_hash = NULL, confirm_expires_at = NULL, confirmed_at = NOW()`,
-        [target.type, target.id, name, email, stars],
+        [target.type, target.id, name, email, stars, comment],
       )
       res.status(201).json({ data: { ...(await statsFor(target)), pending: false } })
       return
@@ -169,24 +172,25 @@ router.post(
     if (existing?.status === 'confirmed') {
       // El voto anterior sigue contando hasta que se confirme el nuevo.
       await query(
-        `UPDATE ratings SET pending_stars = ?, pending_name = ?, confirm_token_hash = ?,
-           confirm_expires_at = NOW() + INTERVAL ${CONFIRM_HOURS} HOUR
+        `UPDATE ratings SET pending_stars = ?, pending_name = ?, pending_comment = ?,
+           confirm_token_hash = ?, confirm_expires_at = NOW() + INTERVAL ${CONFIRM_HOURS} HOUR
          WHERE id = ?`,
-        [stars, name, tokenHash, existing.id],
+        [stars, name, comment, tokenHash, existing.id],
       )
     } else if (existing) {
       await query(
-        `UPDATE ratings SET voter_name = ?, stars = ?, pending_stars = NULL, pending_name = NULL,
-           confirm_token_hash = ?, confirm_expires_at = NOW() + INTERVAL ${CONFIRM_HOURS} HOUR
+        `UPDATE ratings SET voter_name = ?, stars = ?, comment_text = ?, pending_stars = NULL,
+           pending_name = NULL, pending_comment = NULL, confirm_token_hash = ?,
+           confirm_expires_at = NOW() + INTERVAL ${CONFIRM_HOURS} HOUR
          WHERE id = ?`,
-        [name, stars, tokenHash, existing.id],
+        [name, stars, comment, tokenHash, existing.id],
       )
     } else {
       const result = await query(
-        `INSERT INTO ratings (target_type, target_id, voter_name, voter_email, stars, status,
-           confirm_token_hash, confirm_expires_at)
-         VALUES (?, ?, ?, ?, ?, 'pending', ?, NOW() + INTERVAL ${CONFIRM_HOURS} HOUR)`,
-        [target.type, target.id, name, email, stars, tokenHash],
+        `INSERT INTO ratings (target_type, target_id, voter_name, voter_email, stars, comment_text,
+           status, confirm_token_hash, confirm_expires_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, NOW() + INTERVAL ${CONFIRM_HOURS} HOUR)`,
+        [target.type, target.id, name, email, stars, comment, tokenHash],
       )
       createdId = result.insertId
     }
@@ -198,7 +202,9 @@ router.post(
         `${name.split(' ')[0]}:`,
         `Gracias por calificar ${target.name} con ${stars} ${stars === 1 ? 'estrella' : 'estrellas'}. Para que tu voto cuente, confírmalo con el botón. Así evitamos votos falsos.`,
         `El enlace vence en ${CONFIRM_HOURS} horas. Si calificas otra vez con este correo, cuenta solo tu último voto.`,
+        ...(comment ? ['Guardamos también tu comentario; el equipo del sitio lo verá en el panel.'] : []),
       ],
+      rows: comment ? [['Tu comentario', comment]] : [],
       action: { label: 'Confirmar mi calificación', url },
       footer: 'Si no calificaste nada en Gramalote Interactivo, ignora este correo y el voto no se contará.',
     })
@@ -242,9 +248,10 @@ router.post(
     }
     const stars = row.pending_stars ?? row.stars
     await query(
-      `UPDATE ratings SET stars = ?, voter_name = COALESCE(pending_name, voter_name), status = 'confirmed',
-         pending_stars = NULL, pending_name = NULL, confirm_token_hash = NULL, confirm_expires_at = NULL,
-         confirmed_at = NOW()
+      `UPDATE ratings SET stars = ?, voter_name = COALESCE(pending_name, voter_name),
+         comment_text = COALESCE(pending_comment, comment_text), status = 'confirmed',
+         pending_stars = NULL, pending_name = NULL, pending_comment = NULL,
+         confirm_token_hash = NULL, confirm_expires_at = NULL, confirmed_at = NOW()
        WHERE id = ?`,
       [stars, row.id],
     )

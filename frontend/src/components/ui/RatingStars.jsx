@@ -39,6 +39,7 @@ function RatingDialog({ kind, slug, title, confirm, onClose, onSaved }) {
   const [hover, setHover] = useState(0)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [comment, setComment] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
@@ -64,6 +65,7 @@ function RatingDialog({ kind, slug, title, confirm, onClose, onSaved }) {
         name: name.trim(),
         email: email.trim(),
         stars,
+        comment: comment.trim(),
       })
       onSaved(stats)
       setPending(Boolean(stats?.pending))
@@ -114,7 +116,7 @@ function RatingDialog({ kind, slug, title, confirm, onClose, onSaved }) {
           <form onSubmit={submit} noValidate>
             <h2 id={titleId}>Califica {title}</h2>
             <p className="rating-modal__hint">
-              Toca una estrella. No se reciben comentarios.
+              Toca una estrella y, si quieres, cuéntanos qué te pareció.
               {confirm ? ' Te enviaremos un correo para confirmar tu voto.' : ''}
             </p>
             <div
@@ -165,6 +167,16 @@ function RatingDialog({ kind, slug, title, confirm, onClose, onSaved }) {
                 maxLength={160}
                 autoComplete="email"
                 onChange={(event) => setEmail(event.target.value)}
+              />
+            </label>
+            <label className="rating-modal__field">
+              Comentario (opcional)
+              <textarea
+                value={comment}
+                maxLength={1000}
+                rows={3}
+                placeholder="¿Qué te pareció? Lo leerá el equipo del sitio."
+                onChange={(event) => setComment(event.target.value)}
               />
             </label>
             {error ? (

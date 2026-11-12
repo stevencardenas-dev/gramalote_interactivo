@@ -136,13 +136,20 @@ export default function RatingsPanel({ kind, id, name, onNotify }) {
                   Borrar
                 </button>
               </span>
+              {rating.comment || rating.pendingComment ? (
+                <span className="admin-ratings__comment" role="cell">
+                  «{rating.comment ?? rating.pendingComment}»
+                  {rating.comment ? '' : ' · sin confirmar'}
+                </span>
+              ) : null}
             </div>
           ))}
         </div>
       ) : null}
       <p className="note">
-        Si alguien vuelve a calificar con el mismo correo, se actualiza su voto y su fecha. Con el
-        correo activo, cada voto cuenta solo cuando la persona lo confirma desde su bandeja.
+        Si alguien vuelve a calificar con el mismo correo, se actualiza su voto, su comentario y su
+        fecha. Con el correo activo, cada voto cuenta solo cuando la persona lo confirma desde su
+        bandeja.
       </p>
     </div>
   )

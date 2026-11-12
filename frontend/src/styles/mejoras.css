@@ -227,12 +227,19 @@ button.stars__button:focus-visible {
   font-weight: 600;
 }
 
-.rating-modal__field input {
+.rating-modal__field input,
+.rating-modal__field textarea {
   padding: 12px 14px;
   border: 1px solid var(--c-line);
   border-radius: var(--radius-sm);
   background: var(--c-white);
   font: inherit;
+}
+
+.rating-modal__field textarea {
+  min-height: 84px;
+  resize: vertical;
+  line-height: 1.5;
 }
 
 .rating-modal__error {

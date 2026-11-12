@@ -267,7 +267,8 @@ export default function AdminCorreo() {
               </label>
               <p className="note">
                 Quien califica recibe un enlace en el correo que escribió; el voto cuenta solo al abrirlo
-                (vence en 48 horas). Sin correo activo, los votos cuentan de inmediato.
+                (vence en 48 horas). El comentario, si lo escribe, va en ese mismo correo y se ve en la
+                pestaña Calificaciones de la ficha. Sin correo activo, los votos cuentan de inmediato.
               </p>
             </AdminSection>
 
