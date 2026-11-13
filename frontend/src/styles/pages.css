@@ -2052,9 +2052,16 @@ button.social-dot {
   }
 }
 
-/* Sugerir: fondo sólido del color de marca para que el formulario resalte */
+/* Sugerir: el beige del encabezado del sitio, para que la tarjeta blanca del
+   formulario resalte sin el peso del azul. */
 .suggest {
-  background: var(--c-navy);
+  background: var(--c-cream);
+}
+
+/* Sobre el beige, el panel lateral pasa a blanco: si no, se confunde con el fondo. */
+.suggest .suggest__aside {
+  background: var(--c-white);
+  box-shadow: 0 18px 48px rgba(0, 50, 79, 0.1);
 }
 
 /* Móvil: los llamados a la acción de una sola acción se ajustan al ancho */
