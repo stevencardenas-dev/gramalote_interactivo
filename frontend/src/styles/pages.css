@@ -6,8 +6,23 @@
 
 /* /sugerir: encabezado en el café del pie, con todo el texto en blanco. */
 .page-hero--brown {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background: var(--c-brown);
   color: var(--c-white);
+}
+
+/* Patrón de ondas sobre el café: una sola imagen estirada al ancho del
+   encabezado (no se repite), al 10 % para que no compita con el texto. */
+.page-hero--brown::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url('/brand/patron-hero.svg') center / cover no-repeat;
+  opacity: 0.1;
+  pointer-events: none;
 }
 
 .page-hero--brown .breadcrumb,
