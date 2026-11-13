@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
+import { DialogProvider } from './lib/dialog.jsx'
 import { registerServiceWorker } from './lib/offline.js'
 import { initAdminTheme } from './lib/adminTheme.js'
 import './styles/tokens.css'
@@ -12,6 +13,7 @@ import './styles/home.css'
 import './styles/pages.css'
 import './styles/vistas.css'
 import './styles/mejoras.css'
+import './styles/dialog.css'
 import './styles/admin.css'
 import './styles/admin-dark.css'
 import './styles/admin-light.css'
@@ -22,7 +24,9 @@ initAdminTheme()
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
-      <App />
+      <DialogProvider>
+        <App />
+      </DialogProvider>
     </BrowserRouter>
   </StrictMode>,
 )

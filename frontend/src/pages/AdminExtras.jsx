@@ -3,6 +3,7 @@ import AdminToast from '../components/admin/AdminToast.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import { MAP_ICONS, mapIconUrl } from '../data/mapIcons.js'
 import { apiRequest, ensureSession } from '../lib/auth.js'
+import { useDialog } from '../lib/dialog.jsx'
 
 // Panel › Lugares › Extras: puntos complementarios del mapa. No tienen ficha
 // pública; aquí se editan el nombre, la categoría, la zona, el pin y el enlace
@@ -60,6 +61,7 @@ export default function AdminExtras() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState(null)
+  const { confirm } = useDialog()
 
   const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message })
 
@@ -161,7 +163,13 @@ export default function AdminExtras() {
   }
 
   async function remove(item) {
-    if (!window.confirm(`¿Borrar el extra «${item.name}»? No se puede deshacer.`)) return
+    const ok = await confirm({
+      title: `¿Borrar el extra «${item.name}»?`,
+      message: 'No se puede deshacer.',
+      confirmLabel: 'Borrar extra',
+      danger: true,
+    })
+    if (!ok) return
     setBusy(true)
     try {
       await apiRequest(`/admin/extras/${item.id}`, { method: 'DELETE' })

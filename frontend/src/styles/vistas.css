@@ -680,8 +680,11 @@
   line-height: 1.5;
 }
 
+/* Todas las facetas comparten proporción: sin esto, la foto vertical de
+   «Naturaleza y vida» estiraba su bloque al doble que las demás. */
 .facet__media {
-  min-height: 320px;
+  aspect-ratio: 16 / 10;
+  min-height: 0;
   border-radius: 0;
 }
 

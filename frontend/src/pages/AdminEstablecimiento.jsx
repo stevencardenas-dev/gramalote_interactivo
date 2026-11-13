@@ -5,6 +5,7 @@ import MapIconPicker from '../components/admin/MapIconPicker.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import RatingsPanel from '../components/admin/RatingsPanel.jsx'
 import { apiRequest, ensureSession } from '../lib/auth.js'
+import { useDialog } from '../lib/dialog.jsx'
 import { resolveMapIcon } from '../data/mapIcons.js'
 
 const TABS = [
@@ -119,6 +120,7 @@ export default function AdminEstablecimiento() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [busyImage, setBusyImage] = useState(false)
+  const { confirm } = useDialog()
 
   async function load() {
     setError('')
@@ -240,7 +242,13 @@ export default function AdminEstablecimiento() {
   }
 
   async function handleDelete() {
-    if (!window.confirm(`¿Borrar «${form.name}»? Deja de verse en el sitio y en el mapa.`)) return
+    const ok = await confirm({
+      title: `¿Borrar «${form.name}»?`,
+      message: 'Deja de verse en el sitio y en el mapa.',
+      confirmLabel: 'Borrar ficha',
+      danger: true,
+    })
+    if (!ok) return
     setError('')
     setNotice('')
     try {

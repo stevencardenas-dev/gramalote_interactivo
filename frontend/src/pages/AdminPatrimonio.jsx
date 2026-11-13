@@ -3,6 +3,7 @@ import AdminToast from '../components/admin/AdminToast.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import { MAP_ICONS, mapIconUrl } from '../data/mapIcons.js'
 import { apiRequest, ensureSession } from '../lib/auth.js'
+import { useDialog } from '../lib/dialog.jsx'
 
 // Panel › Lugares › Patrimonio: bienes que tendrán ficha pública. Mientras la
 // ficha se completa, estos datos ya alimentan el pin y la tarjeta del mapa.
@@ -60,6 +61,7 @@ export default function AdminPatrimonio() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState(null)
+  const { confirm } = useDialog()
 
   const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message })
 
@@ -166,7 +168,13 @@ export default function AdminPatrimonio() {
   }
 
   async function remove(item) {
-    if (!window.confirm(`¿Borrar «${item.name}» del patrimonio? No se puede deshacer.`)) return
+    const ok = await confirm({
+      title: `¿Borrar «${item.name}» del patrimonio?`,
+      message: 'No se puede deshacer.',
+      confirmLabel: 'Borrar',
+      danger: true,
+    })
+    if (!ok) return
     setBusy(true)
     try {
       await apiRequest(`/admin/heritage/${item.id}`, { method: 'DELETE' })

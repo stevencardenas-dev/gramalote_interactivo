@@ -96,10 +96,12 @@
   flex: none;
 }
 
+/* A la mitad de los 148 px del diseño: el logo cabe dentro de la barra de
+   100 px sin desbordarse por arriba ni por abajo. */
 .brand__logo {
-  width: 148px;
-  height: 148px;
-  margin-block: -24px;
+  width: 74px;
+  height: 74px;
+  margin-block: 0;
 }
 
 .site-nav {
@@ -268,7 +270,7 @@
    corta contra el borde de la ventana: se ajusta antes de pasar al móvil. */
 @media (max-width: 1240px) {
   .brand__logo {
-    height: 100px;
+    height: 58px;
     width: auto;
     margin-block: 0;
   }

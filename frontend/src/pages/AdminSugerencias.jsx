@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
+import { useDialog } from '../lib/dialog.jsx'
 
 // Panel › Sugerencias: lo que llega del formulario «Sugerir un establecimiento»
 // del sitio (/sugerir). Se marca como revisada, agregada o descartada.
@@ -42,6 +43,7 @@ export default function AdminSugerencias() {
   const [filter, setFilter] = useState('')
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState(null)
+  const { confirm } = useDialog()
 
   const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message })
 
@@ -73,7 +75,13 @@ export default function AdminSugerencias() {
   }
 
   async function remove(item) {
-    if (!window.confirm(`¿Borrar la sugerencia «${item.businessName}»? No se puede deshacer.`)) return
+    const ok = await confirm({
+      title: `¿Borrar la sugerencia «${item.businessName}»?`,
+      message: 'No se puede deshacer.',
+      confirmLabel: 'Borrar sugerencia',
+      danger: true,
+    })
+    if (!ok) return
     setBusy(true)
     try {
       await apiRequest(`/admin/suggestions/${item.id}`, { method: 'DELETE' })

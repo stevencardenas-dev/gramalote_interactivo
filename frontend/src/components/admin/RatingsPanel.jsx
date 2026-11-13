@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../../lib/auth.js'
+import { useDialog } from '../../lib/dialog.jsx'
 
 // Pestaña «Calificaciones» de una ficha: quién votó, cuándo y cuántas
 // estrellas. Cada voto se puede borrar, o todos a la vez (con confirmación).
@@ -33,6 +34,7 @@ export default function RatingsPanel({ kind, id, name, onNotify }) {
   const [data, setData] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const { confirm } = useDialog()
 
   useEffect(() => {
     let alive = true
@@ -56,20 +58,26 @@ export default function RatingsPanel({ kind, id, name, onNotify }) {
     }
   }
 
-  const removeOne = (rating) => {
-    if (!window.confirm(`¿Borrar la calificación de ${rating.name} (${rating.stars} ★)?`)) return
+  const removeOne = async (rating) => {
+    const ok = await confirm({
+      title: `¿Borrar la calificación de ${rating.name}?`,
+      message: `${rating.stars} de 5 estrellas. No se puede deshacer.`,
+      confirmLabel: 'Borrar calificación',
+      danger: true,
+    })
+    if (!ok) return
     remove(`/admin/${kind}/${id}/ratings/${rating.id}`, 'Calificación borrada.')
   }
 
-  const removeAll = () => {
+  const removeAll = async () => {
     const count = data?.items.length ?? 0
-    if (
-      !window.confirm(
-        `¿Borrar las ${count} calificaciones de «${name}»? El promedio vuelve a cero y no se puede deshacer.`,
-      )
-    ) {
-      return
-    }
+    const ok = await confirm({
+      title: `¿Borrar las ${count} calificaciones de «${name}»?`,
+      message: 'El promedio vuelve a cero y no se puede deshacer.',
+      confirmLabel: 'Borrar todas',
+      danger: true,
+    })
+    if (!ok) return
     remove(`/admin/${kind}/${id}/ratings`, 'Se borraron todas las calificaciones.')
   }
 

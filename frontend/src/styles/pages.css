@@ -345,6 +345,18 @@ button.social-dot {
   color: var(--c-ink-soft);
 }
 
+/* La franja de fotos marcaba la altura del bloque (más de una pantalla con las
+   fotos a tamaño natural): se limita a la mitad para que quepa de un vistazo. */
+.category-spotlight .photo-collage {
+  min-height: 0;
+  height: clamp(200px, 30vw, 430px);
+}
+
+.category-spotlight .photo-collage .photo {
+  min-height: 0;
+  height: 100%;
+}
+
 .cross-section {
   margin-top: clamp(48px, 6vw, 80px);
 }

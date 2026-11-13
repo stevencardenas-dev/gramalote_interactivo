@@ -3108,3 +3108,249 @@ a.admin-tile:hover {
   font-size: 0.76rem;
   line-height: 1.4;
 }
+
+/* ------------------------------------------------- Barra del panel en móvil */
+.admin-nav__panel {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.admin-nav__toggle {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--a-ln);
+  border-radius: 9px;
+  background: var(--a-sf2);
+  color: var(--a-tx);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-nav__toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.admin-nav__toggle:hover {
+  border-color: var(--a-ac);
+  color: var(--a-ac-text);
+}
+
+@media (max-width: 900px) {
+  .admin-nav__toggle {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .admin-nav__panel {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    max-height: calc(100dvh - 64px);
+    padding: 14px 16px 18px;
+    overflow-y: auto;
+    background: var(--a-sf);
+    border-bottom: 1px solid var(--a-ln);
+    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.4);
+  }
+
+  .admin-nav__panel.is-open {
+    display: flex;
+  }
+
+  .admin-nav__links {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .admin-nav__links a {
+    padding: 11px 12px;
+    font-size: 1rem;
+  }
+
+  .admin-nav__end {
+    width: 100%;
+    margin-left: 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--a-ln);
+    justify-content: space-between;
+  }
+
+  .theme-toggle {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+}
+
+/* ------------------------------------- Desplegables de Lugares y Páginas */
+.admin-nav-select {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 20px;
+}
+
+.admin-nav-select > label {
+  color: var(--a-mu);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.admin-nav-select__field {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin-nav-select select {
+  min-width: 230px;
+  min-height: 42px;
+  padding: 0 40px 0 14px;
+  border: 1px solid var(--a-ln);
+  border-radius: 10px;
+  background: var(--a-sf);
+  color: var(--a-tx);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.admin-nav-select select:hover,
+.admin-nav-select select:focus-visible {
+  border-color: var(--a-ac);
+}
+
+.admin-nav-select__field svg {
+  position: absolute;
+  right: 12px;
+  width: 15px;
+  height: 15px;
+  color: var(--a-mu);
+  pointer-events: none;
+}
+
+.admin-nav-select__hint {
+  color: var(--a-wn, var(--c-gold));
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+@media (max-width: 520px) {
+  .admin-nav-select,
+  .admin-nav-select__field,
+  .admin-nav-select select {
+    width: 100%;
+  }
+}
+
+/* ------------------------------ Mi cuenta: tres desplegables en fila */
+.admin-myaccount {
+  margin-top: 26px;
+}
+
+.admin-myaccount__title {
+  margin-bottom: 4px;
+  font-size: 1.05rem;
+}
+
+.admin-account__cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.admin-acc {
+  border: 1px solid var(--a-ln);
+  border-radius: 12px;
+  background: var(--a-sf);
+}
+
+.admin-acc summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.admin-acc summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-acc summary::after {
+  content: '⌄';
+  color: var(--a-mu);
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.admin-acc[open] summary {
+  border-bottom: 1px solid var(--a-ln);
+}
+
+.admin-acc[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.admin-acc__body {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px 16px;
+}
+
+.admin-acc .admin-account__name {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+}
+
+.admin-acc .admin-account__name .field {
+  flex: none;
+}
+
+.admin-acc .admin-account__name .admin-btn,
+.admin-acc .admin-account__block .admin-btn {
+  justify-self: start;
+  margin-top: 0;
+}
+
+.admin-account__delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-account__delete svg {
+  flex: none;
+}
+
+@media (max-width: 1000px) {
+  .admin-account__cols {
+    grid-template-columns: 1fr;
+  }
+}

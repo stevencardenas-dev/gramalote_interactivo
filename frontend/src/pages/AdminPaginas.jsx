@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import AdminNavSelect from '../components/admin/AdminNavSelect.jsx'
 import ImagePicker from '../components/admin/ImagePicker.jsx'
 import {
   CAROUSEL_LIMITS,
@@ -17,6 +18,7 @@ import BannerCarousel from '../components/home/BannerCarousel.jsx'
 import { intervalSeconds, timingSeconds, todayKey, visibleSlides } from '../lib/carousel.js'
 import SocialIcon from '../components/ui/SocialIcon.jsx'
 import { apiRequest, ensureSession } from '../lib/auth.js'
+import { useDialog } from '../lib/dialog.jsx'
 import { orderBySlugs } from '../lib/contentApi.js'
 import { mergeContent } from '../lib/pageContent.js'
 
@@ -1183,8 +1185,14 @@ function CarruselEditor({ draft, update, sources, groups, openPicker, signal, up
                   <button
                     type="button"
                     className="admin-btn admin-btn--danger-outline"
-                    onClick={() => {
-                      if (!window.confirm(`¿Quitar «${name}» del carrusel?`)) return
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: `¿Quitar «${name}» del carrusel?`,
+                        message: 'La imagen deja de aparecer en el inicio.',
+                        confirmLabel: 'Quitar',
+                        danger: true,
+                      })
+                      if (!ok) return
                       update((page) => {
                         page.slides.splice(index, 1)
                       })
@@ -1290,6 +1298,7 @@ export default function AdminPaginas() {
   const [toast, setToast] = useState(null)
   const toastSeq = useRef(0)
   const [error, setError] = useState('')
+  const { confirm } = useDialog()
 
   const notify = (tone, title, message) => {
     toastSeq.current += 1
@@ -1412,13 +1421,13 @@ export default function AdminPaginas() {
   }
 
   async function restore() {
-    if (
-      !window.confirm(
-        `¿Volver al diseño original de «${PAGE_INFO[pageKey].label}»? Se pierden el orden, los textos y las fotos elegidas aquí.`,
-      )
-    ) {
-      return
-    }
+    const ok = await confirm({
+      title: `¿Volver al diseño original de «${PAGE_INFO[pageKey].label}»?`,
+      message: 'Se pierden el orden, los textos y las fotos elegidas aquí.',
+      confirmLabel: 'Volver al original',
+      danger: true,
+    })
+    if (!ok) return
     setBusy(true)
     try {
       await apiRequest(`/admin/pages/${pageKey}`, { method: 'DELETE' })
@@ -1451,40 +1460,30 @@ export default function AdminPaginas() {
 
         {error ? <p className="auth-error">{error}</p> : null}
 
-        <nav className="admin-tabs" role="tablist" aria-label="Página">
-          {TABS.map((entry) => (
-            <button
-              key={entry.key}
-              type="button"
-              role="tab"
-              aria-selected={tab.key === entry.key}
-              className={`admin-tab${tab.key === entry.key ? ' is-active' : ''}`}
-              onClick={() => select(entry.pages[0])}
-            >
-              {entry.label}
-              {entry.pages.some((key) => dirty[key]) ? (
-                <span className="admin-tab__dot" title="Cambios sin guardar" aria-label="Cambios sin guardar" />
-              ) : null}
-            </button>
-          ))}
-        </nav>
+        {/* Un desplegable en vez de la hilera de pestañas: en móvil cabía mal. */}
+        <AdminNavSelect
+          id="admin-page"
+          label="Página"
+          value={tab.key}
+          options={TABS.map((entry) => ({
+            value: entry.key,
+            label: `${entry.label}${entry.pages.some((key) => dirty[key]) ? ' •' : ''}`,
+          }))}
+          onChange={(key) => select(TABS.find((entry) => entry.key === key)?.pages[0] ?? 'inicio')}
+          hint={tab.pages.some((key) => dirty[key]) ? '• cambios sin guardar' : undefined}
+        />
 
         {tab.pages.length > 1 ? (
-          <div className="admin-switch" role="radiogroup" aria-label="Página de Dónde ir">
-            {tab.pages.map((key) => (
-              <button
-                key={key}
-                type="button"
-                role="radio"
-                aria-checked={pageKey === key}
-                className={`admin-switch__opt${pageKey === key ? ' is-active' : ''}`}
-                onClick={() => select(key)}
-              >
-                {PAGE_INFO[key].label}
-                {dirty[key] ? <span className="admin-tab__dot" aria-label="Cambios sin guardar" /> : null}
-              </button>
-            ))}
-          </div>
+          <AdminNavSelect
+            id="admin-subpage"
+            label="Subpágina"
+            value={pageKey}
+            options={tab.pages.map((key) => ({
+              value: key,
+              label: `${PAGE_INFO[key].label}${dirty[key] ? ' •' : ''}`,
+            }))}
+            onChange={select}
+          />
         ) : null}
 
         {!data && !error ? <p className="note">Cargando páginas…</p> : null}

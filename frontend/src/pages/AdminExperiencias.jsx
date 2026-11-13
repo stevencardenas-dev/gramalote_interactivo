@@ -4,6 +4,7 @@ import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import AdminDialog from '../components/admin/AdminDialog.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import { useDialog } from '../lib/dialog.jsx'
 import RatingsPanel from '../components/admin/RatingsPanel.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
 import ScheduleEditor from '../components/admin/ScheduleEditor.jsx'
@@ -381,6 +382,7 @@ export function AdminExperiencia() {
   const [signal, setSignal] = useState({ open: true, n: 0 })
   // Evita que un doble aviso del selector de archivos suba la misma foto dos veces.
   const uploadGuard = useRef(false)
+  const { confirm } = useDialog()
 
   useEffect(() => {
     let alive = true
@@ -469,8 +471,14 @@ export function AdminExperiencia() {
     }, 'Cambios guardados.')
   }
 
-  const remove = () => {
-    if (!window.confirm(`¿Borrar «${form.title}»? Dejará de verse en el sitio y en el mapa.`)) return
+  const remove = async () => {
+    const ok = await confirm({
+      title: `¿Borrar «${form.title}»?`,
+      message: 'Dejará de verse en el sitio y en el mapa.',
+      confirmLabel: 'Borrar',
+      danger: true,
+    })
+    if (!ok) return
     run(async () => {
       await apiRequest(`/admin/experiences/${id}`, { method: 'DELETE' })
       navigate('/admin/lugares/experiencias')

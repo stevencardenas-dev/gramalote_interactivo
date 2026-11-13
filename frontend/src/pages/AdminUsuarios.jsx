@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AdminToast from '../components/admin/AdminToast.jsx'
 import PasswordInput from '../components/ui/PasswordInput.jsx'
+import { useDialog } from '../lib/dialog.jsx'
 import {
   apiRequest,
   changeOwnEmail,
@@ -12,6 +14,22 @@ import {
 } from '../lib/auth.js'
 
 const ROLE_LABEL = { admin: 'Administrador', editor: 'Editor' }
+
+// Basura dibujada para la baja de la cuenta: tapa, cuerpo y dos rayas.
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+      <path
+        d="M9 4.5h6M4.5 7h15M7 7l.9 12.2a1.8 1.8 0 0 0 1.8 1.7h5.6a1.8 1.8 0 0 0 1.8-1.7L18 7M10.2 11v6M13.8 11v6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
 
 function formatDate(value) {
   if (!value) return 'Nunca'
@@ -40,9 +58,8 @@ export default function AdminUsuarios() {
   const [passwords, setPasswords] = useState({ current: '', next: '' })
   const [accountMsg, setAccountMsg] = useState('')
   const [accountErr, setAccountErr] = useState('')
-  // La baja de la propia cuenta se confirma dentro del panel, no con el
-  // diálogo del navegador.
-  const [confirmDelete, setConfirmDelete] = useState(false)
+  // Confirmaciones dentro del panel (borrar cuenta, borrar usuario).
+  const { confirm } = useDialog()
 
   const load = useCallback(async () => {
     try {
@@ -83,7 +100,7 @@ export default function AdminUsuarios() {
       setNotice(
         data.mailed
           ? `Invitación enviada a ${data.user.email}.`
-          : `Cuenta creada, pero el correo no salió (${data.mailError}). Cuando el correo esté configurado, usa «Enviar enlace por correo».`,
+          : `Cuenta creada, pero el correo no salió (${data.mailError}). La persona puede usar «¿Olvidaste tu contraseña?» cuando el correo esté configurado.`,
       )
       setForm({ name: '', email: '', role: 'editor' })
       setShowNew(false)
@@ -106,8 +123,14 @@ export default function AdminUsuarios() {
     })
   }
 
-  function removeUser(user) {
-    if (!window.confirm(`¿Eliminar la cuenta de ${user.name}? No se puede deshacer.`)) return
+  async function removeUser(user) {
+    const ok = await confirm({
+      title: `¿Eliminar la cuenta de ${user.name}?`,
+      message: 'La persona sale del panel y no se puede deshacer.',
+      confirmLabel: 'Eliminar cuenta',
+      danger: true,
+    })
+    if (!ok) return
     run(async () => {
       await apiRequest(`/admin/users/${user.id}`, { method: 'DELETE' })
       setNotice(`Cuenta de ${user.name} eliminada.`)
@@ -163,9 +186,41 @@ export default function AdminUsuarios() {
       navigate('/acceder', { replace: true })
     } catch (err) {
       setAccountErr(err.message)
-      setConfirmDelete(false)
     }
   }
+
+  async function askRemoveMyself() {
+    const ok = await confirm({
+      title: '¿Eliminar tu cuenta?',
+      message: 'Sales del panel y no se puede deshacer.',
+      hint: 'Otro administrador tendrá que crearte de nuevo.',
+      confirmLabel: 'Sí, eliminar mi cuenta',
+      danger: true,
+    })
+    if (ok) removeMyself()
+  }
+
+  // Un aviso a la vez, abajo: primero el error y, si no hay, el mensaje de éxito.
+  const toast =
+    error || accountErr
+      ? {
+          tone: 'error',
+          message: error || accountErr,
+          close: () => {
+            setError('')
+            setAccountErr('')
+          },
+        }
+      : notice || accountMsg
+        ? {
+            tone: 'ok',
+            message: notice || accountMsg,
+            close: () => {
+              setNotice('')
+              setAccountMsg('')
+            },
+          }
+        : null
 
   return (
     <section className="admin-page">
@@ -190,13 +245,6 @@ export default function AdminUsuarios() {
             </button>
           ) : null}
         </div>
-
-        {error ? <p className="auth-error">{error}</p> : null}
-        {notice ? (
-          <p className="admin-notice" role="status">
-            {notice}
-          </p>
-        ) : null}
 
         {isAdmin && showNew ? (
           <form className="admin-new admin-new--users" onSubmit={createUser}>
@@ -336,129 +384,123 @@ export default function AdminUsuarios() {
           )
         ) : null}
 
-        <details className="admin-details" open={!isAdmin}>
-          <summary>Mi cuenta: nombre, correo y contraseña</summary>
-          <div className="admin-account">
-            {accountErr ? <p className="auth-error">{accountErr}</p> : null}
-            {accountMsg ? (
-              <p className="admin-notice" role="status">
-                {accountMsg}
-              </p>
-            ) : null}
-            <p className="admin-account__who">
-              Tu correo actual: <strong>{me?.email}</strong>
-            </p>
+        <section className="admin-myaccount">
+          <h2 className="admin-myaccount__title">Datos de la cuenta</h2>
+          <p className="admin-account__who">
+            Tu correo actual: <strong>{me?.email}</strong>
+          </p>
 
-            <form className="admin-account__name" onSubmit={submitMyName}>
-              <div className="field">
-                <label htmlFor="my-name">Nombre visible</label>
-                <input
-                  id="my-name"
-                  autoComplete="name"
-                  required
-                  maxLength={160}
-                  value={myName}
-                  onChange={(event) => setMyName(event.target.value)}
-                />
-              </div>
-              <button type="submit" className="admin-btn admin-btn--primary">
-                Guardar nombre
-              </button>
-            </form>
-
-            <div className="admin-account__grid">
-              <form className="admin-account__block" onSubmit={submitMyEmail}>
-                <h2>Correo</h2>
-                <p className="admin-account__hint">Con este correo entras al panel.</p>
-                <div className="field">
-                  <label htmlFor="my-email">Correo nuevo</label>
-                  <input
-                    id="my-email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={myEmail.email}
-                    onChange={(event) => setMyEmail({ ...myEmail, email: event.target.value })}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="my-email-password">Tu contraseña actual</label>
-                  <PasswordInput
-                    id="my-email-password"
-                    autoComplete="current-password"
-                    required
-                    value={myEmail.password}
-                    onChange={(event) => setMyEmail({ ...myEmail, password: event.target.value })}
-                  />
-                </div>
-                <button type="submit" className="admin-btn admin-btn--primary">
-                  Guardar correo
-                </button>
-              </form>
-
-              <form className="admin-account__block" onSubmit={submitPassword}>
-                <h2>Contraseña</h2>
-                <p className="admin-account__hint">Mínimo 8 caracteres.</p>
-                <div className="field">
-                  <label htmlFor="current-password">Contraseña actual</label>
-                  <PasswordInput
-                    id="current-password"
-                    autoComplete="current-password"
-                    required
-                    value={passwords.current}
-                    onChange={(event) => setPasswords({ ...passwords, current: event.target.value })}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="next-password">Nueva contraseña</label>
-                  <PasswordInput
-                    id="next-password"
-                    autoComplete="new-password"
-                    minLength={8}
-                    required
-                    value={passwords.next}
-                    onChange={(event) => setPasswords({ ...passwords, next: event.target.value })}
-                  />
-                </div>
-                <button type="submit" className="admin-btn admin-btn--primary">
-                  Guardar contraseña
-                </button>
-              </form>
-            </div>
-
-            {isAdmin ? (
-              <div className="admin-account__danger">
-                <div>
-                  <strong>Eliminar mi cuenta</strong>
-                  <p>Sales del panel y no se puede deshacer.</p>
-                </div>
-                {confirmDelete ? (
-                  <div className="admin-account__confirm" role="alert">
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--danger"
-                      onClick={removeMyself}
-                    >
-                      Sí, eliminar mi cuenta
-                    </button>
-                    <button type="button" className="admin-btn" onClick={() => setConfirmDelete(false)}>
-                      Cancelar
-                    </button>
+          {/* Tres desplegables independientes: nombre, correo y contraseña. */}
+          <div className="admin-account__cols">
+            <details className="admin-acc" open>
+              <summary>Nombre</summary>
+              <div className="admin-acc__body">
+                <p className="admin-account__hint">Así apareces en el panel y en el historial.</p>
+                <form className="admin-account__name" onSubmit={submitMyName}>
+                  <div className="field">
+                    <label htmlFor="my-name">Nombre visible</label>
+                    <input
+                      id="my-name"
+                      autoComplete="name"
+                      required
+                      maxLength={160}
+                      value={myName}
+                      onChange={(event) => setMyName(event.target.value)}
+                    />
                   </div>
-                ) : (
-                  <button
-                    type="button"
-                    className="admin-btn admin-btn--danger-outline"
-                    onClick={() => setConfirmDelete(true)}
-                  >
-                    Eliminar mi cuenta
+                  <button type="submit" className="admin-btn admin-btn--primary">
+                    Guardar nombre
                   </button>
-                )}
+                </form>
               </div>
-            ) : null}
+            </details>
+
+            <details className="admin-acc">
+              <summary>Correo</summary>
+              <div className="admin-acc__body">
+                <p className="admin-account__hint">Con este correo entras al panel.</p>
+                <form className="admin-account__block" onSubmit={submitMyEmail}>
+                  <div className="field">
+                    <label htmlFor="my-email">Correo nuevo</label>
+                    <input
+                      id="my-email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={myEmail.email}
+                      onChange={(event) => setMyEmail({ ...myEmail, email: event.target.value })}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="my-email-password">Tu contraseña actual</label>
+                    <PasswordInput
+                      id="my-email-password"
+                      autoComplete="current-password"
+                      required
+                      value={myEmail.password}
+                      onChange={(event) => setMyEmail({ ...myEmail, password: event.target.value })}
+                    />
+                  </div>
+                  <button type="submit" className="admin-btn admin-btn--primary">
+                    Guardar correo
+                  </button>
+                </form>
+              </div>
+            </details>
+
+            <details className="admin-acc">
+              <summary>Contraseña</summary>
+              <div className="admin-acc__body">
+                <p className="admin-account__hint">Mínimo 8 caracteres.</p>
+                <form className="admin-account__block" onSubmit={submitPassword}>
+                  <div className="field">
+                    <label htmlFor="current-password">Contraseña actual</label>
+                    <PasswordInput
+                      id="current-password"
+                      autoComplete="current-password"
+                      required
+                      value={passwords.current}
+                      onChange={(event) => setPasswords({ ...passwords, current: event.target.value })}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="next-password">Nueva contraseña</label>
+                    <PasswordInput
+                      id="next-password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      required
+                      value={passwords.next}
+                      onChange={(event) => setPasswords({ ...passwords, next: event.target.value })}
+                    />
+                  </div>
+                  <button type="submit" className="admin-btn admin-btn--primary">
+                    Guardar contraseña
+                  </button>
+                </form>
+              </div>
+            </details>
           </div>
-        </details>
+
+          {isAdmin ? (
+            <div className="admin-account__danger">
+              <div>
+                <strong>Eliminar mi cuenta</strong>
+                <p>Sales del panel y no se puede deshacer.</p>
+              </div>
+              <button
+                type="button"
+                className="admin-btn admin-btn--danger-outline admin-account__delete"
+                onClick={askRemoveMyself}
+              >
+                <TrashIcon />
+                Eliminar mi cuenta
+              </button>
+            </div>
+          ) : null}
+        </section>
       </div>
+      {toast ? <AdminToast tone={toast.tone} message={toast.message} onClose={toast.close} /> : null}
     </section>
   )
 }

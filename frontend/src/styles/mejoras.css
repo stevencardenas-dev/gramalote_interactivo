@@ -307,6 +307,25 @@ button.stars__button:focus-visible {
   font-size: 1.125rem;
 }
 
+/* Las tarjetas de sección del buscador tienen una proporción fija, sin heredar
+   el 1/1 de «Accede rápido» del inicio: así todas miden lo mismo. */
+.component-results .quick-card .photo {
+  aspect-ratio: 4 / 3;
+}
+
+@media (max-width: 600px) {
+  /* Dos columnas: en una sola, cada tarjeta cuadrada ocupaba la pantalla. */
+  .component-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 14px;
+  }
+
+  .component-results .quick-card {
+    gap: 10px;
+    font-size: 1rem;
+  }
+}
+
 /* ============ Acceso: candado a la derecha del buscador ============ */
 .site-login {
   display: inline-grid;
@@ -507,10 +526,10 @@ button.stars__button:focus-visible {
   list-style: none;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-md);
-  background: rgba(20, 20, 24, 0.78);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  /* Opaco: con transparencia, los colores del menú móvil se veían por debajo
+     del panel de sugerencias y parecía roto. */
+  background: #131b22;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
 }
 
 .search-suggest li {
