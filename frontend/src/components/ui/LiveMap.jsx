@@ -348,7 +348,7 @@ export default function LiveMap({
       const marker = new Marker({
         element: createPin(place, (item) => {
           setSelectedId(item.id)
-          if (!explorer) showPopup(readyMap, item)
+          if (!explorer && !fill) showPopup(readyMap, item)
         }),
         anchor: 'center',
       })
@@ -458,7 +458,7 @@ export default function LiveMap({
       zoom: Math.max(readyMap.getZoom(), 16),
       duration: 800,
     })
-    if (!explorer) showPopup(readyMap, place)
+    if (!explorer && !fill) showPopup(readyMap, place)
   }
 
   // Ficha del lugar elegido (tarjeta inferior del modo explorador).
@@ -888,6 +888,11 @@ export default function LiveMap({
         role="region"
         aria-label={label}
       />
+
+      {/* Vistas previas: misma ficha que el mapa interactivo (se oculta en móvil). */}
+      {fill && selectedPlace ? (
+        <div className="mapa-ficha-vista">{renderCard(selectedPlace)}</div>
+      ) : null}
 
       {showLegend ? (
         <ul className="mapa-leyenda" aria-label="Leyenda del mapa">
