@@ -67,6 +67,7 @@ export default function Sugerir() {
   return (
     <>
       <PageHero
+        className="page-hero--brown"
         eyebrow="Ayúdanos a crecer"
         title="Sugerir un establecimiento"
         intro="¿Conoces un restaurante, alojamiento, tienda o lugar de Gramalote que debería estar en esta guía? Cuéntanos y el equipo lo revisará."

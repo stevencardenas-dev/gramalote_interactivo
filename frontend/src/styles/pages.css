@@ -4,6 +4,20 @@
   background: linear-gradient(180deg, #eff1f3 0%, #e8eaed 100%);
 }
 
+/* /sugerir: encabezado en el café del pie, con todo el texto en blanco. */
+.page-hero--brown {
+  background: var(--c-brown);
+  color: var(--c-white);
+}
+
+.page-hero--brown .breadcrumb,
+.page-hero--brown .breadcrumb a,
+.page-hero--brown .eyebrow,
+.page-hero--brown h1,
+.page-hero--brown .page-hero__intro {
+  color: var(--c-white);
+}
+
 .page-hero .breadcrumb {
   padding-block: 16px 10px;
   font-size: 11px;
