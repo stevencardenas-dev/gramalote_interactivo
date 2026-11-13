@@ -42,16 +42,58 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
   }
 
   if (!response.ok) {
-    throw new AuthError(payload?.error?.message ?? 'No se pudo completar la operación')
+    const error = new AuthError(payload?.error?.message ?? 'No se pudo completar la operación')
+    error.code = payload?.error?.code ?? null
+    error.status = response.status
+    throw error
   }
   return payload?.data ?? null
 }
 
 const listeners = new Set()
 
+// Motivo por el que se cerró la sesión (por ejemplo, porque la cuenta se abrió
+// en otro dispositivo). Se muestra una sola vez en /acceder.
+const NOTICE_KEY = 'gramalote_session_notice'
+let sessionNotice = ''
+
+function rememberSessionNotice(message) {
+  sessionNotice = message
+  try {
+    sessionStorage.setItem(NOTICE_KEY, message)
+  } catch {
+    // Sin almacenamiento disponible: queda solo en memoria.
+  }
+}
+
+export function takeSessionNotice() {
+  let stored = ''
+  try {
+    stored = sessionStorage.getItem(NOTICE_KEY) ?? ''
+  } catch {
+    stored = ''
+  }
+  const message = sessionNotice || stored
+  sessionNotice = ''
+  try {
+    sessionStorage.removeItem(NOTICE_KEY)
+  } catch {
+    // nada que limpiar
+  }
+  return message
+}
+
 function applySession(data) {
   accessToken = data?.accessToken ?? null
   currentUser = data?.user ?? null
+  if (accessToken) {
+    sessionNotice = ''
+    try {
+      sessionStorage.removeItem(NOTICE_KEY)
+    } catch {
+      // nada que limpiar
+    }
+  }
   listeners.forEach((listener) => listener())
   return currentUser
 }
@@ -77,11 +119,13 @@ export async function resetPassword(token, password) {
 }
 
 export async function changePassword(currentPassword, newPassword) {
-  await request('/change-password', {
+  const data = await request('/change-password', {
     method: 'POST',
     body: { currentPassword, newPassword },
     auth: true,
   })
+  // La API cierra las demás sesiones y devuelve una nueva para este navegador.
+  if (data?.accessToken) applySession(data)
 }
 
 // Cambia el correo de la propia cuenta (pide la contraseña actual).
@@ -108,7 +152,10 @@ export async function refreshSession() {
     try {
       const data = await request('/refresh', { method: 'POST' })
       return applySession(data)
-    } catch {
+    } catch (error) {
+      // INVALID_SESSION llega cuando la cuenta abrió sesión en otro dispositivo
+      // (o le cambiaron la contraseña): se avisa al entrar.
+      if (error?.code === 'INVALID_SESSION') rememberSessionNotice(error.message)
       applySession(null)
       return null
     } finally {

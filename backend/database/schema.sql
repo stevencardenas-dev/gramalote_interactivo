@@ -734,6 +734,8 @@ CREATE TABLE admin_users (
   password_hash VARCHAR(255) NOT NULL COMMENT 'Argon2id/bcrypt; nunca texto plano',
   role          ENUM('admin', 'editor') NOT NULL DEFAULT 'editor',
   is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+  session_version INT UNSIGNED NOT NULL DEFAULT 0
+    COMMENT 'Sube al abrir sesión: invalida los access tokens anteriores',
   last_login_at DATETIME NULL,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

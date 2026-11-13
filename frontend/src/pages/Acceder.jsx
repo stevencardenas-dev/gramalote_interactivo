@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import Logo from '../components/ui/Logo.jsx'
 import PasswordInput from '../components/ui/PasswordInput.jsx'
-import { AuthError, ensureSession, forgotPassword, login, logout } from '../lib/auth.js'
+import { AuthError, ensureSession, forgotPassword, login, logout, takeSessionNotice } from '../lib/auth.js'
 
 export default function Acceder() {
   const navigate = useNavigate()
@@ -16,6 +16,8 @@ export default function Acceder() {
   const [pending, setPending] = useState(false)
   const [forgot, setForgot] = useState(false)
   const [notice, setNotice] = useState('')
+  // Aviso de por qué se cerró la sesión (la cuenta se abrió en otro equipo).
+  const [kicked, setKicked] = useState('')
 
   useEffect(() => {
     let alive = true
@@ -23,6 +25,7 @@ export default function Acceder() {
       if (!alive) return
       setUser(session)
       setStatus(session ? 'authed' : 'anon')
+      if (!session) setKicked(takeSessionNotice())
     })
     return () => {
       alive = false
@@ -152,6 +155,7 @@ export default function Acceder() {
             </form>
           ) : (
             <form onSubmit={handleSubmit}>
+              {kicked && !error ? <p role="status">{kicked}</p> : null}
               {error ? <p className="auth-error">{error}</p> : null}
               <div className="field">
                 <label htmlFor="email">Correo electrónico</label>

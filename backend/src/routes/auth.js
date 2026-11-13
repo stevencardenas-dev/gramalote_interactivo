@@ -99,8 +99,20 @@ router.post(
     }
 
     reset('login-fail', pairKey)
-    await query('UPDATE admin_users SET last_login_at = NOW() WHERE id = ?', [user.id])
-    res.json({ data: await issueSession(req, res, user) })
+    // Una sola sesión por cuenta: la versión sube y los refresh tokens
+    // anteriores se revocan antes de emitir el nuevo.
+    await query(
+      'UPDATE admin_users SET last_login_at = NOW(), session_version = session_version + 1 WHERE id = ?',
+      [user.id],
+    )
+    await query(
+      'UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
+      [user.id],
+    )
+    const session = await queryOne('SELECT session_version FROM admin_users WHERE id = ?', [user.id])
+    res.json({
+      data: await issueSession(req, res, { ...user, session_version: session.session_version }),
+    })
   }),
 )
 
@@ -114,7 +126,7 @@ router.post(
 
     const row = await queryOne(
       `SELECT t.id, t.user_id, t.expires_at, t.revoked_at,
-              u.name, u.email, u.role, u.is_active, u.last_login_at
+              u.name, u.email, u.role, u.is_active, u.last_login_at, u.session_version
        FROM admin_refresh_tokens t
        JOIN admin_users u ON u.id = t.user_id
        WHERE t.token_hash = ? AND u.deleted_at IS NULL`,
@@ -142,6 +154,7 @@ router.post(
       email: row.email,
       role: row.role,
       last_login_at: row.last_login_at,
+      session_version: row.session_version,
     }
     res.json({ data: await issueSession(req, res, user) })
   }),
@@ -249,6 +262,10 @@ router.post(
       'UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
       [reset.user_id],
     )
+    // La contraseña cambió: cualquier access token que ande por ahí deja de valer.
+    await query('UPDATE admin_users SET session_version = session_version + 1 WHERE id = ?', [
+      reset.user_id,
+    ])
     await query(
       `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, ip_address)
        VALUES (?, 'password_reset', 'admin_user', ?, ?)`,
@@ -270,7 +287,7 @@ router.post(
       throw new ApiError(400, 'VALIDATION', 'La contraseña nueva debe tener entre 8 y 256 caracteres')
     }
     const user = await queryOne(
-      'SELECT id, password_hash FROM admin_users WHERE id = ? AND is_active = 1 AND deleted_at IS NULL',
+      'SELECT id, name, email, role, password_hash FROM admin_users WHERE id = ? AND is_active = 1 AND deleted_at IS NULL',
       [req.admin.id],
     )
     if (!user || !(await verifyPassword(current, user.password_hash))) {
@@ -280,8 +297,20 @@ router.post(
       await hashPassword(next),
       user.id,
     ])
+    // Cambiar la contraseña cierra las demás sesiones, pero deja abierta esta:
+    // se revocan los refresh tokens y se emite uno nuevo con la versión al día.
+    await query(
+      'UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
+      [user.id],
+    )
+    await query('UPDATE admin_users SET session_version = session_version + 1 WHERE id = ?', [
+      user.id,
+    ])
+    const fresh = await queryOne('SELECT session_version FROM admin_users WHERE id = ?', [user.id])
     sendPasswordChangedEmail(user.id)
-    res.status(204).end()
+    res.json({
+      data: await issueSession(req, res, { ...user, session_version: fresh.session_version }),
+    })
   }),
 )
 

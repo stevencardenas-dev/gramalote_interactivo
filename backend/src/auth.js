@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { config } from './config.js'
+import { queryOne } from './db.js'
 import { ApiError } from './http.js'
 
 const ROUNDS = 12
@@ -26,35 +27,67 @@ export async function placeholderHash() {
 
 export function signAccessToken(admin) {
   return jwt.sign(
-    { sub: String(admin.id), role: admin.role, name: admin.name, email: admin.email },
+    {
+      sub: String(admin.id),
+      role: admin.role,
+      name: admin.name,
+      email: admin.email,
+      // Versión de la sesión: requireAuth la compara con la base, así que al
+      // abrir sesión en otro dispositivo la anterior deja de servir.
+      sv: Number(admin.session_version ?? 0),
+    },
     config.auth.jwtSecret,
     { expiresIn: config.auth.accessTtl },
   )
 }
 
-export function requireAuth(req, _res, next) {
+// Una sola sesión por cuenta: además de verificar la firma, se mira en la base
+// que la cuenta siga activa y que la versión del token sea la vigente.
+async function authenticate(req) {
   const header = req.get('authorization') ?? ''
   const [scheme, token] = header.split(' ')
   if (scheme?.toLowerCase() !== 'bearer' || !token) {
-    next(new ApiError(401, 'UNAUTHORIZED', 'Se requiere iniciar sesión'))
-    return
+    throw new ApiError(401, 'UNAUTHORIZED', 'Se requiere iniciar sesión')
   }
 
   let payload
   try {
     payload = jwt.verify(token, config.auth.jwtSecret)
   } catch {
-    next(new ApiError(401, 'INVALID_TOKEN', 'La sesión expiró; vuelve a iniciar sesión'))
-    return
+    throw new ApiError(401, 'INVALID_TOKEN', 'La sesión expiró; vuelve a iniciar sesión')
   }
 
-  req.admin = {
+  const row = await queryOne(
+    'SELECT session_version, is_active FROM admin_users WHERE id = ? AND deleted_at IS NULL',
+    [Number(payload.sub)],
+  )
+  if (!row || !row.is_active) {
+    throw new ApiError(401, 'UNAUTHORIZED', 'La cuenta ya no está activa')
+  }
+  if (Number(row.session_version) !== Number(payload.sv ?? 0)) {
+    throw new ApiError(
+      401,
+      'INVALID_SESSION',
+      'Tu cuenta se abrió en otro dispositivo; vuelve a iniciar sesión',
+    )
+  }
+
+  return {
     id: Number(payload.sub),
     role: payload.role,
     name: payload.name,
     email: payload.email,
   }
-  next()
+}
+
+export function requireAuth(req, _res, next) {
+  authenticate(req).then(
+    (admin) => {
+      req.admin = admin
+      next()
+    },
+    (error) => next(error),
+  )
 }
 
 export function newRefreshToken() {

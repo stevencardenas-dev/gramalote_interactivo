@@ -154,6 +154,7 @@ router.patch(
         'UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
         [id],
       )
+      await query('UPDATE admin_users SET session_version = session_version + 1 WHERE id = ?', [id])
     }
     await query(
       `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, changes, ip_address)
@@ -244,6 +245,7 @@ router.patch(
         'UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
         [id],
       )
+      await query('UPDATE admin_users SET session_version = session_version + 1 WHERE id = ?', [id])
     }
     await query(
       `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, changes, ip_address)
@@ -297,6 +299,7 @@ router.delete(
       'UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
       [id],
     )
+    await query('UPDATE admin_users SET session_version = session_version + 1 WHERE id = ?', [id])
     await query(
       'UPDATE admin_password_resets SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL',
       [id],

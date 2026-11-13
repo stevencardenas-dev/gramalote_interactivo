@@ -536,4 +536,12 @@ servicios propietarios. Checklist al mudar:
   cuenta. **No se envía correo**: no hay SMTP configurado. Para enviarlo solo hará falta
   un servidor SMTP (decisión abierta) y llamar `createResetToken` desde esa ruta.
 - `POST /api/auth/reset` fija la contraseña nueva (mínimo 8) y revoca las sesiones;
-  `POST /api/auth/change-password` es el cambio propio con la contraseña actual.
+  `POST /api/auth/change-password` es el cambio propio con la contraseña actual: cierra
+  las demás sesiones y devuelve una nueva para el navegador donde se hizo el cambio.
+- **Una sola sesión por cuenta (migración 026):** cada inicio de sesión sube
+  `admin_users.session_version` y revoca los refresh tokens anteriores. El access token
+  lleva ese número (`sv`) y `requireAuth` lo compara con la base en cada petición, así
+  que la sesión anterior deja de servir **al instante**, sin esperar a que venza el token
+  (30 min). Cambiar el rol, desactivar, eliminar o cambiar el correo de otra cuenta
+  también cierra todo de inmediato. Al quedar fuera, `/acceder` avisa: «Tu cuenta se abrió
+  en otro dispositivo; vuelve a iniciar sesión».

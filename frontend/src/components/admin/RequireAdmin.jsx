@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { ensureSession } from '../../lib/auth.js'
+import { ensureSession, getUser, subscribe } from '../../lib/auth.js'
 
 export default function RequireAdmin({ children }) {
   const location = useLocation()
@@ -11,8 +11,14 @@ export default function RequireAdmin({ children }) {
     ensureSession().then((session) => {
       if (alive) setStatus(session ? 'ok' : 'anon')
     })
+    // Si la sesión se cierra mientras se usa el panel (la cuenta se abrió en
+    // otro dispositivo), se sale a /acceder sin esperar a la siguiente recarga.
+    const unsubscribe = subscribe(() => {
+      if (!getUser()) setStatus('anon')
+    })
     return () => {
       alive = false
+      unsubscribe()
     }
   }, [])
 
