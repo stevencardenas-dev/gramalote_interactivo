@@ -915,8 +915,7 @@ a.admin-tile:hover {
 .admin-app .admin-hours button,
 .admin-app .admin-media__actions button,
 .admin-app .admin-users__actions button,
-.admin-app .admin-users__actions select,
-.admin-app .admin-link-box button {
+.admin-app .admin-users__actions select {
   border-color: var(--a-ln);
   background: var(--a-sf);
   color: var(--a-tx);
@@ -1000,10 +999,6 @@ a.admin-tile:hover {
 
 .admin-app .admin-users__meta {
   color: var(--a-mu);
-}
-
-.admin-app .admin-link-box {
-  background: var(--a-sf2);
 }
 
 /* Botones de acento (dorado de la marca) y de peligro */
@@ -1479,23 +1474,48 @@ a.admin-tile:hover {
   background: rgba(214, 45, 28, 0.12);
 }
 
-.admin-urow .admin-link-box {
+/* Cambiar correo: una sola línea dentro de la fila (etiqueta, campo y botones). */
+.admin-urow .admin-email-edit {
   grid-column: 1 / -1;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-left: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--a-ln);
+  border-radius: 10px;
   background: var(--a-sf2);
-  border-radius: 8px;
 }
 
-.admin-urow .admin-link-box code {
-  align-self: stretch;
-  margin: 0;
-  padding: 8px 10px;
-  border-radius: 6px;
+.admin-urow .admin-email-edit label {
+  color: var(--a-mu);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-urow .admin-email-edit input {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--a-ln);
+  border-radius: 8px;
   background: var(--a-bg);
   color: var(--a-tx);
+  font: inherit;
+}
+
+.admin-urow .admin-email-edit input:focus-visible {
+  outline: 2px solid var(--a-ac);
+  outline-offset: 1px;
+}
+
+@media (max-width: 720px) {
+  .admin-urow .admin-email-edit {
+    margin-left: 0;
+  }
 }
 
 .admin-details {

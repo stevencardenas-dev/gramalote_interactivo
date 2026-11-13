@@ -1404,21 +1404,6 @@ a.admin-module-card:hover {
   cursor: pointer;
 }
 
-.admin-link-box {
-  grid-column: 1 / -1;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  background: var(--c-sky, #eef3f9);
-  font-size: var(--fs-sm);
-}
-
-.admin-link-box code {
-  display: block;
-  margin: 8px 0;
-  overflow-wrap: anywhere;
-  user-select: all;
-}
-
 .admin-password {
   display: grid;
   gap: 12px;

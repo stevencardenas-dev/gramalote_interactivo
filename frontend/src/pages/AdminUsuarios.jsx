@@ -289,20 +289,22 @@ export default function AdminUsuarios() {
                       ) : null}
                     </div>
                     {editing ? (
-                      <form className="admin-link-box" onSubmit={(event) => saveUserEmail(event, user)}>
-                        <div className="field">
-                          <label htmlFor={`email-${user.id}`}>Correo nuevo de {user.name}</label>
-                          <input
-                            id={`email-${user.id}`}
-                            type="email"
-                            required
-                            autoFocus
-                            value={emailEdit.value}
-                            onChange={(event) => setEmailEdit({ id: user.id, value: event.target.value })}
-                          />
-                        </div>
+                      <form className="admin-email-edit" onSubmit={(event) => saveUserEmail(event, user)}>
+                        <label htmlFor={`email-${user.id}`}>Correo nuevo</label>
+                        <input
+                          id={`email-${user.id}`}
+                          type="email"
+                          required
+                          autoFocus
+                          placeholder={user.email}
+                          value={emailEdit.value}
+                          onChange={(event) => setEmailEdit({ id: user.id, value: event.target.value })}
+                        />
                         <button type="submit" className="admin-btn admin-btn--primary" disabled={busy}>
-                          Guardar correo
+                          Guardar
+                        </button>
+                        <button type="button" className="admin-btn" onClick={() => setEmailEdit(null)}>
+                          Cancelar
                         </button>
                       </form>
                     ) : null}
