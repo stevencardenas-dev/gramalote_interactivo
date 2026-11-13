@@ -1434,33 +1434,101 @@ a.admin-module-card:hover {
   }
 }
 
-/* Mi cuenta: correo, contraseña y baja en bloques apilados */
+/* Mi cuenta: correo y contraseña lado a lado, y la baja en su propia franja */
 .admin-app .admin-details .admin-account {
   display: grid;
-  gap: 22px;
-  max-width: 480px;
-  padding: 16px 18px;
+  gap: 16px;
+  padding: 16px 18px 18px;
 }
 
-.admin-account form {
+.admin-account__who {
+  margin: 0;
+  color: var(--c-ink-soft);
+  font-size: var(--fs-sm);
+}
+
+.admin-account__who strong {
+  color: inherit;
+}
+
+.admin-account__grid {
   display: grid;
-  gap: 12px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--a-ln, rgba(127, 127, 127, 0.25));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 32px;
+  align-items: start;
 }
 
-.admin-account .field {
+.admin-account__block {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.admin-account__block h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.admin-account__hint {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: var(--fs-sm);
+}
+
+.admin-account__block .field {
   display: grid;
   gap: 4px;
   margin: 0;
 }
 
-.admin-account .admin-btn {
-  justify-self: start;
+/* El botón queda alineado con el borde derecho del campo. */
+.admin-account__block .admin-btn {
+  justify-self: end;
+  margin-top: 2px;
+}
+
+.admin-account__danger {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-line);
+}
+
+.admin-account__danger strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.admin-account__danger p {
+  margin: 2px 0 0;
+  color: var(--c-muted);
+  font-size: var(--fs-sm);
+}
+
+.admin-account__confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .admin-account .note,
 .admin-account .auth-error,
 .admin-account .admin-notice {
   margin: 0;
+}
+
+@media (max-width: 900px) {
+  .admin-account__grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
 }
