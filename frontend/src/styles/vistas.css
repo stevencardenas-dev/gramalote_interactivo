@@ -375,14 +375,10 @@
   align-items: center;
   gap: 18px;
   padding: 18px 22px;
-  border-left: 3px solid transparent;
+  border-left: 3px solid var(--c-navy);
   border-radius: 6px;
   background: var(--c-cream);
   box-shadow: 0 10px 24px rgba(20, 20, 20, 0.06);
-}
-
-.safety-list li:first-child {
-  border-left-color: var(--c-navy);
 }
 
 .safety-list__icon {
