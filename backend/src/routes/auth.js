@@ -329,6 +329,42 @@ router.post(
   }),
 )
 
+// Cambiar el nombre visible de la propia cuenta. No toca el correo, la
+// contraseña ni la sesión: el nombre no es un dato de acceso.
+router.patch(
+  '/auth/me',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const name = stringParam(req.body?.name, { max: 160 })
+    if (!name || name.length < 2) {
+      throw new ApiError(400, 'VALIDATION', 'El nombre debe tener al menos 2 caracteres')
+    }
+
+    const current = await queryOne(
+      'SELECT id, name FROM admin_users WHERE id = ? AND is_active = 1 AND deleted_at IS NULL',
+      [req.admin.id],
+    )
+    if (!current) {
+      throw new ApiError(401, 'UNAUTHORIZED', 'La cuenta ya no está activa')
+    }
+
+    await query('UPDATE admin_users SET name = ? WHERE id = ?', [name, current.id])
+    await query(
+      `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, changes, ip_address)
+       VALUES (?, 'update_name', 'admin_user', ?, ?, ?)`,
+      [current.id, current.id, JSON.stringify({ from: current.name, to: name }), clientIp(req)],
+    )
+
+    const user = await queryOne(
+      `SELECT id, name, email, role, last_login_at
+       FROM admin_users
+       WHERE id = ? AND is_active = 1 AND deleted_at IS NULL`,
+      [current.id],
+    )
+    res.json({ data: toPublicUser(user) })
+  }),
+)
+
 router.get(
   '/auth/me',
   requireAuth,

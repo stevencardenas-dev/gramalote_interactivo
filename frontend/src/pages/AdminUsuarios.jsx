@@ -4,6 +4,7 @@ import PasswordInput from '../components/ui/PasswordInput.jsx'
 import {
   apiRequest,
   changeOwnEmail,
+  changeOwnName,
   changePassword,
   deleteOwnAccount,
   ensureSession,
@@ -34,6 +35,7 @@ export default function AdminUsuarios() {
   const [emailEdit, setEmailEdit] = useState(null)
 
   // Mi cuenta
+  const [myName, setMyName] = useState(me?.name ?? '')
   const [myEmail, setMyEmail] = useState({ email: '', password: '' })
   const [passwords, setPasswords] = useState({ current: '', next: '' })
   const [accountMsg, setAccountMsg] = useState('')
@@ -125,6 +127,20 @@ export default function AdminUsuarios() {
     }
   }
 
+  async function submitMyName(event) {
+    event.preventDefault()
+    setAccountMsg('')
+    setAccountErr('')
+    try {
+      const user = await changeOwnName(myName)
+      setMyName(user.name)
+      setAccountMsg('Nombre actualizado.')
+      if (isAdmin) load()
+    } catch (err) {
+      setAccountErr(err.message)
+    }
+  }
+
   async function submitMyEmail(event) {
     event.preventDefault()
     setAccountMsg('')
@@ -160,7 +176,7 @@ export default function AdminUsuarios() {
             <p className="admin-bar__lead">
               {isAdmin
                 ? 'Gestiona las cuentas del panel. Las cuentas más nuevas que la tuya se pueden editar; las anteriores son de solo lectura.'
-                : 'Cambia tu correo o tu contraseña.'}
+                : 'Cambia tu nombre, correo o contraseña.'}
             </p>
           </div>
           {isAdmin ? (
@@ -321,7 +337,7 @@ export default function AdminUsuarios() {
         ) : null}
 
         <details className="admin-details" open={!isAdmin}>
-          <summary>Mi cuenta: correo y contraseña</summary>
+          <summary>Mi cuenta: nombre, correo y contraseña</summary>
           <div className="admin-account">
             {accountErr ? <p className="auth-error">{accountErr}</p> : null}
             {accountMsg ? (
@@ -332,6 +348,23 @@ export default function AdminUsuarios() {
             <p className="admin-account__who">
               Tu correo actual: <strong>{me?.email}</strong>
             </p>
+
+            <form className="admin-account__name" onSubmit={submitMyName}>
+              <div className="field">
+                <label htmlFor="my-name">Nombre visible</label>
+                <input
+                  id="my-name"
+                  autoComplete="name"
+                  required
+                  maxLength={160}
+                  value={myName}
+                  onChange={(event) => setMyName(event.target.value)}
+                />
+              </div>
+              <button type="submit" className="admin-btn admin-btn--primary">
+                Guardar nombre
+              </button>
+            </form>
 
             <div className="admin-account__grid">
               <form className="admin-account__block" onSubmit={submitMyEmail}>

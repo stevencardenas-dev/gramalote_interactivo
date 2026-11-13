@@ -128,6 +128,14 @@ export async function changePassword(currentPassword, newPassword) {
   if (data?.accessToken) applySession(data)
 }
 
+// Cambia el nombre visible de la propia cuenta.
+export async function changeOwnName(name) {
+  const user = await request('/me', { method: 'PATCH', body: { name }, auth: true })
+  currentUser = { ...currentUser, name: user.name }
+  listeners.forEach((listener) => listener())
+  return currentUser
+}
+
 // Cambia el correo de la propia cuenta (pide la contraseña actual).
 export async function changeOwnEmail(email, currentPassword) {
   const user = await apiRequest(`/admin/users/${currentUser.id}/email`, {

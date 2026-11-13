@@ -97,7 +97,7 @@ hacer todo salvo cuatro cosas:
 | Listar usuarios | ❌ | ✅ |
 | Crear usuarios; modificar o eliminar cuentas más nuevas | ❌ | ✅ |
 | Editar rol, estado, correo o datos de una cuenta anterior | ❌ | ❌ (solo lectura) |
-| Cambiar su propio correo y contraseña | ✅ | ✅ |
+| Cambiar su propio nombre, correo y contraseña | ✅ | ✅ |
 | Cambiar el correo de otra cuenta | ❌ | ✅ (solo cuentas más nuevas) |
 | Eliminar cuentas | ❌ | ✅ (más nuevas, o la propia; debe quedar un admin activo) |
 | Configurar Correo | ❌ (no se lista) | ✅ |

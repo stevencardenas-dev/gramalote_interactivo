@@ -1419,7 +1419,7 @@ a.admin-module-card:hover {
   }
 }
 
-/* Mi cuenta: correo y contraseña lado a lado, y la baja en su propia franja */
+/* Mi cuenta: nombre arriba; correo y contraseña lado a lado, y la baja en su propia franja */
 .admin-app .admin-details .admin-account {
   display: grid;
   gap: 16px;
@@ -1434,6 +1434,26 @@ a.admin-module-card:hover {
 
 .admin-account__who strong {
   color: inherit;
+}
+
+.admin-account__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.admin-account__name .field {
+  flex: 1 1 260px;
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.admin-account__name .admin-btn {
+  margin-bottom: 1px;
 }
 
 .admin-account__grid {
