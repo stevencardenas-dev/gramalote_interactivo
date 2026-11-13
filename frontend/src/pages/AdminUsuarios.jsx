@@ -92,13 +92,6 @@ export default function AdminUsuarios() {
     run(() => apiRequest(`/admin/users/${user.id}`, { method: 'PATCH', body: changes }))
   }
 
-  function sendLink(user) {
-    run(async () => {
-      await apiRequest(`/admin/users/${user.id}/send-reset`, { method: 'POST' })
-      setNotice(`Enviamos a ${user.email} un enlace para crear una contraseña nueva.`)
-    })
-  }
-
   function saveUserEmail(event, user) {
     event.preventDefault()
     run(async () => {
@@ -266,15 +259,6 @@ export default function AdminUsuarios() {
                       <option value="admin">{ROLE_LABEL.admin}</option>
                     </select>
                     <div className="admin-urow__actions">
-                      <button
-                        type="button"
-                        className="admin-btn"
-                        disabled={busy}
-                        onClick={() => sendLink(user)}
-                        title="Envía al correo de la cuenta un enlace para crear una contraseña nueva"
-                      >
-                        Enviar enlace por correo
-                      </button>
                       {isNewer ? (
                         <button
                           type="button"

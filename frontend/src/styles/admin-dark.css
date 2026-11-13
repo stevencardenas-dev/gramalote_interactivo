@@ -1398,7 +1398,10 @@ a.admin-tile:hover {
 
 .admin-urow {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) auto 150px auto;
+  /* Columnas fijas para el rol y las acciones: el selector de rol queda siempre
+     a la misma altura a la izquierda de los botones, aunque una fila tenga más
+     acciones que otra. */
+  grid-template-columns: 36px minmax(0, 1fr) auto 150px 340px;
   gap: 12px;
   align-items: center;
   padding: 10px 14px;
@@ -1455,6 +1458,8 @@ a.admin-tile:hover {
 
 .admin-urow__actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
 }
 
