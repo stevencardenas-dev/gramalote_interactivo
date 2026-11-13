@@ -377,6 +377,18 @@
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
 }
 
+/* Vista previa del mapa (inicio y páginas de categoría): la ficha va sobre el
+   marco del mapa y no se muestra en móvil. */
+.mapa-ficha-vista .mapa-ficha {
+  bottom: 28px;
+}
+
+@media (max-width: 860px) {
+  .mapa-ficha-vista {
+    display: none;
+  }
+}
+
 .mapa-ficha__foto {
   flex: none;
   width: 92px;
