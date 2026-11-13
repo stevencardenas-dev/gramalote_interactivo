@@ -135,16 +135,31 @@ router.post(
 
     const expired = row ? new Date(row.expires_at).getTime() <= Date.now() : true
 
-    if (!row || row.revoked_at || expired || !row.is_active) {
+    if (!row || expired) {
       clearRefreshCookie(res)
-      if (row?.revoked_at) {
-        // Reutilización de un token ya canjeado: se revocan el resto.
-        await query(
-          'UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
-          [row.user_id],
-        )
-      }
       throw new ApiError(401, 'INVALID_SESSION', 'La sesión expiró; vuelve a iniciar sesión')
+    }
+
+    if (!row.is_active) {
+      clearRefreshCookie(res)
+      throw new ApiError(401, 'INVALID_SESSION', 'La cuenta ya no está activa')
+    }
+
+    if (row.revoked_at) {
+      clearRefreshCookie(res)
+      // Reutilización de un token ya canjeado: se revocan el resto.
+      await query(
+        'UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
+        [row.user_id],
+      )
+      // Un token vigente pero revocado significa que la sesión se cerró desde
+      // otro lado: la cuenta abrió sesión en otro dispositivo, o se cambió la
+      // contraseña / el rol.
+      throw new ApiError(
+        401,
+        'INVALID_SESSION',
+        'Tu cuenta se abrió en otro dispositivo; vuelve a iniciar sesión',
+      )
     }
 
     await query('UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE id = ?', [row.id])
