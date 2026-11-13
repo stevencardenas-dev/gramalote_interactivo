@@ -64,7 +64,7 @@ function decimal(value, field, { min = 0, max = 99_999_999 } = {}) {
   if (value === null || value === undefined || value === '') return null
   const parsed = Number(value)
   if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
-    throw new ApiError(400, 'VALIDATION', `${field} no es un número válido`)
+    throw new ApiError(400, 'VALIDATION', `${field} no es un número válido o está fuera del rango permitido`)
   }
   return parsed
 }
@@ -486,8 +486,8 @@ router.patch(
         summary,
         description,
         address: text(body.address, 'Dirección', { max: 255 }),
-        latitude: decimal(body.latitude, 'Latitud', { min: -90, max: 90 }),
-        longitude: decimal(body.longitude, 'Longitud', { min: -180, max: 180 }),
+        latitude: decimal(body.latitude, 'Latitud (Norte de Santander)', { min: 6.9, max: 9.3 }),
+        longitude: decimal(body.longitude, 'Longitud (Norte de Santander)', { min: -73.7, max: -72.0 }),
         // Sin la clave (cliente anterior) se conserva el icono actual.
         map_icon: 'mapIcon' in body ? mapIcon(body.mapIcon) : current.map_icon,
         maps_url: mapsUrl(body.mapsUrl),
