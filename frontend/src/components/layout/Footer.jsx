@@ -35,7 +35,7 @@ export default function Footer() {
       ) : null}
 
       <div className="footer-logos">
-        <img src="/brand/logo-rect.svg" alt="Gramalote Interactivo" />
+        <img src="/brand/logo-rect.svg" alt="Turismo Gramalote" />
         <span className="footer-logos__rule" aria-hidden="true" />
         <img
           className="footer-logos__institution"
@@ -73,7 +73,7 @@ export default function Footer() {
       </div>
 
       <div className="footer-legal">
-        © {year} Gramalote Interactivo. Todos los derechos reservados.
+        © {year} Turismo Gramalote. Todos los derechos reservados.
       </div>
     </footer>
   )

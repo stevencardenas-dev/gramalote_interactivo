@@ -206,7 +206,7 @@ router.post(
       ],
       rows: comment ? [['Tu comentario', comment]] : [],
       action: { label: 'Confirmar mi calificación', url },
-      footer: 'Si no calificaste nada en Gramalote Interactivo, ignora este correo y el voto no se contará.',
+      footer: 'Si no calificaste nada en Turismo Gramalote, ignora este correo y el voto no se contará.',
     })
     try {
       await sendMail({ to: email, subject: `Confirma tu calificación de ${target.name}`, html, text, kind: 'rating_confirm' })

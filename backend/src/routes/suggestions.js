@@ -146,13 +146,13 @@ router.post(
         title: '¡Gracias por tu sugerencia!',
         paragraphs: [
           `${(fields.suggester_name ?? '').split(' ')[0] || 'Hola'}:`,
-          `Recibimos tu sugerencia de «${fields.business_name}». El equipo de Gramalote Interactivo la revisará y, si cumple con lo necesario, la agregaremos al sitio.`,
+          `Recibimos tu sugerencia de «${fields.business_name}». El equipo de Turismo Gramalote la revisará y, si cumple con lo necesario, la agregaremos al sitio.`,
         ],
         action: { label: 'Seguir explorando Gramalote', url: settings.siteUrl },
       })
       trySendMail({
         to: fields.suggester_email,
-        subject: 'Recibimos tu sugerencia · Gramalote Interactivo',
+        subject: 'Recibimos tu sugerencia · Turismo Gramalote',
         html,
         text,
         kind: 'suggestion_thanks',

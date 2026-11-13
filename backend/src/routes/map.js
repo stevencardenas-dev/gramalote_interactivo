@@ -104,7 +104,7 @@ router.get(
       cover: coverFromRow(row),
     })
 
-    const [establishments, experiences, extraRows] = await Promise.all([
+    const [establishments, experiences, extraRows, heritageRows] = await Promise.all([
       kind === 'experience'
         ? []
         : query(
@@ -128,6 +128,14 @@ router.get(
         `SELECT id, matrix_ref, slug, name, category, zone, latitude, longitude,
                 maps_url, map_icon, sort_order
          FROM map_extras
+         WHERE is_published = 1
+         ORDER BY sort_order, name`,
+      ),
+      // Patrimonio: fichas en preparación; ya tienen pin y tarjeta de mapa.
+      query(
+        `SELECT id, matrix_ref, slug, name, category, zone, latitude, longitude,
+                maps_url, map_icon, summary, sort_order
+         FROM heritage_sites
          WHERE is_published = 1
          ORDER BY sort_order, name`,
       ),
@@ -162,6 +170,25 @@ router.get(
             zone: row.zone ? { slug: slugifyCategory(row.zone), name: row.zone } : null,
             mapIcon: row.map_icon ?? null,
             mapsUrl: row.maps_url ?? null,
+            coordinates: {
+              latitude: Number(row.latitude),
+              longitude: Number(row.longitude),
+            },
+            cover: null,
+          })),
+        heritage: heritageRows
+          .filter((row) => Number.isFinite(Number(row.latitude)))
+          .map((row) => ({
+            kind: 'heritage',
+            id: toNumber(row.id),
+            slug: row.slug,
+            name: row.name,
+            group: 'Patrimonio',
+            category: { slug: slugifyCategory(row.category), name: row.category },
+            zone: row.zone ? { slug: slugifyCategory(row.zone), name: row.zone } : null,
+            mapIcon: row.map_icon ?? null,
+            mapsUrl: row.maps_url ?? null,
+            summary: row.summary ?? null,
             coordinates: {
               latitude: Number(row.latitude),
               longitude: Number(row.longitude),

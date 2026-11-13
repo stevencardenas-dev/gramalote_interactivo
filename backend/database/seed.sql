@@ -108,7 +108,7 @@ INSERT INTO navigation_items (id, location, label, path, sort_order, is_external
 
 -- Configuración del sitio ---------------------------------------------------
 INSERT INTO site_settings (setting_key, setting_value, description) VALUES
-  ('site.name', JSON_OBJECT('value', 'Gramalote Interactivo'), 'Nombre del sitio'),
+  ('site.name', JSON_OBJECT('value', 'Turismo Gramalote'), 'Nombre del sitio'),
   ('site.place', JSON_OBJECT('value', 'Gramalote · Norte de Santander'), 'Lugar que se muestra en el footer'),
   ('site.social', JSON_ARRAY(
       JSON_OBJECT('label', 'Instagram', 'icon', 'instagram', 'href', 'https://www.instagram.com/'),

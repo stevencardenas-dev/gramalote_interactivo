@@ -1,4 +1,4 @@
-// Service worker de Gramalote Interactivo (lo genera pwa/plugin.js al compilar).
+// Service worker de Turismo Gramalote (lo genera pwa/plugin.js al compilar).
 // - La app (HTML, JS, CSS) se guarda al instalar: abre sin conexión.
 // - La API pública se pide a la red y, si no hay señal, se responde con la
 //   última copia guardada.

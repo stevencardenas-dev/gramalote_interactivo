@@ -159,7 +159,7 @@ export default function AdminUsuarios() {
             <h1>{isAdmin ? 'Usuarios' : 'Mi cuenta'}</h1>
             <p className="admin-bar__lead">
               {isAdmin
-                ? 'Gestiona las cuentas del panel. Puedes eliminar o cambiar el correo de las cuentas más nuevas que la tuya.'
+                ? 'Gestiona las cuentas del panel. Las cuentas más nuevas que la tuya se pueden editar; las anteriores son de solo lectura.'
                 : 'Cambia tu correo o tu contraseña.'}
             </p>
           </div>
@@ -229,6 +229,8 @@ export default function AdminUsuarios() {
               {users.map((user) => {
                 const isMe = user.id === me?.id
                 const isNewer = user.id > (me?.id ?? 0)
+                // Las cuentas anteriores no se editan: ni rol, ni estado, ni correo.
+                const isOlder = !isMe && !isNewer
                 const editing = emailEdit?.id === user.id
                 return (
                   <li key={user.id} className={`admin-urow${user.isActive ? '' : ' is-off'}`}>
@@ -240,8 +242,9 @@ export default function AdminUsuarios() {
                         {user.name}
                         {isMe ? ' (tú)' : ''}
                       </strong>
-                      <small>
+                      <small title={isOlder ? 'Cuenta anterior a la tuya: solo lectura' : undefined}>
                         {user.email} · ingresó {formatDate(user.lastLoginAt)}
+                        {isOlder ? ' · anterior: solo lectura' : ''}
                       </small>
                     </div>
                     <div className="admin-urow__status">
@@ -252,7 +255,8 @@ export default function AdminUsuarios() {
                     <select
                       aria-label={`Rol de ${user.name}`}
                       value={user.role}
-                      disabled={busy || isMe}
+                      disabled={busy || isMe || isOlder}
+                      title={isOlder ? 'Las cuentas anteriores a la tuya son de solo lectura' : undefined}
                       onChange={(event) => patchUser(user, { role: event.target.value })}
                     >
                       <option value="editor">{ROLE_LABEL.editor}</option>
@@ -272,7 +276,8 @@ export default function AdminUsuarios() {
                       <button
                         type="button"
                         className={`admin-btn${user.isActive ? ' admin-btn--danger-outline' : ''}`}
-                        disabled={busy || isMe}
+                        disabled={busy || isMe || isOlder}
+                        title={isOlder ? 'Las cuentas anteriores a la tuya son de solo lectura' : undefined}
                         onClick={() => patchUser(user, { isActive: !user.isActive })}
                       >
                         {user.isActive ? 'Desactivar' : 'Reactivar'}

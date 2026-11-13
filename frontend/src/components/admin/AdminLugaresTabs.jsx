@@ -5,6 +5,7 @@ import { NavLink } from 'react-router-dom'
 const TIPOS = [
   { to: '/admin/lugares/establecimientos', label: 'Establecimientos' },
   { to: '/admin/lugares/experiencias', label: 'Experiencias' },
+  { to: '/admin/lugares/patrimonio', label: 'Patrimonio' },
   { to: '/admin/lugares/extras', label: 'Extras' },
   { to: '/admin/lugares/sugerencias', label: 'Sugerencias' },
 ]

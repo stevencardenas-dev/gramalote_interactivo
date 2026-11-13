@@ -27,7 +27,7 @@ export async function getMailSettings() {
   const value = {
     enabled: Boolean(row?.enabled),
     fromEmail: row?.from_email ?? '',
-    fromName: row?.from_name ?? 'Gramalote Interactivo',
+    fromName: row?.from_name ?? 'Turismo Gramalote',
     host: row?.smtp_host ?? 'smtp.gmail.com',
     port: Number(row?.smtp_port ?? 465),
     secure: row ? Boolean(row.smtp_secure) : true,
@@ -103,7 +103,7 @@ export async function sendMail({ to, subject, text, html, kind = 'general', repl
   }
   try {
     const info = await transportFor(settings).sendMail({
-      from: { name: settings.fromName || 'Gramalote Interactivo', address: settings.fromEmail },
+      from: { name: settings.fromName || 'Turismo Gramalote', address: settings.fromEmail },
       to,
       replyTo: replyTo || settings.replyTo || undefined,
       subject,
@@ -178,12 +178,12 @@ export function renderEmail({ title, paragraphs = [], action = null, rows = [], 
     : ''
   const html = `<!doctype html><html lang="es"><body style="margin:0;background:#f4f1ea;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">
 <table role="presentation" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:14px;width:100%;border-collapse:separate">
-<tr><td style="padding:22px 28px 8px;border-bottom:3px solid #00426b"><strong style="font-size:17px;color:#00426b">Gramalote Interactivo</strong></td></tr>
+<tr><td style="padding:22px 28px 8px;border-bottom:3px solid #00426b"><strong style="font-size:17px;color:#00426b">Turismo Gramalote</strong></td></tr>
 <tr><td style="padding:22px 28px 12px">
 <h1 style="margin:0 0 16px;font-size:21px;color:#1d1d1d">${escapeHtml(title)}</h1>
 ${body}${table}${button}
 </td></tr>
-<tr><td style="padding:14px 28px 22px;font-size:12px;color:#8a8a8a;border-top:1px solid #eee">${escapeHtml(footer || 'Este correo lo envió automáticamente Gramalote Interactivo.')}</td></tr>
+<tr><td style="padding:14px 28px 22px;font-size:12px;color:#8a8a8a;border-top:1px solid #eee">${escapeHtml(footer || 'Este correo lo envió automáticamente Turismo Gramalote.')}</td></tr>
 </table></body></html>`
 
   const text = [
@@ -193,7 +193,7 @@ ${body}${table}${button}
     ...rows.map(([label, value]) => `${label}: ${value || '—'}`),
     ...(rows.length ? [''] : []),
     ...(action ? [`${action.label}: ${action.url}`, ''] : []),
-    footer || 'Este correo lo envió automáticamente Gramalote Interactivo.',
+    footer || 'Este correo lo envió automáticamente Turismo Gramalote.',
   ].join('\n')
 
   return { html, text }

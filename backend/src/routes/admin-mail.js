@@ -77,7 +77,7 @@ function fieldsFrom(body, current) {
   const fields = {
     enabled: Boolean(body.enabled),
     from_email: optionalEmail(body.fromEmail, 'Correo remitente'),
-    from_name: stringParam(body.fromName, { max: 120 }) ?? 'Gramalote Interactivo',
+    from_name: stringParam(body.fromName, { max: 120 }) ?? 'Turismo Gramalote',
     smtp_host: stringParam(body.host, { max: 190 }) ?? 'smtp.gmail.com',
     smtp_port: port,
     smtp_secure: body.secure === undefined ? port === 465 : Boolean(body.secure),
@@ -173,7 +173,7 @@ router.post(
     const { html, text } = renderEmail({
       title: 'Correo de prueba',
       paragraphs: [
-        'Si lees esto, Gramalote Interactivo ya puede enviar correos desde esta cuenta.',
+        'Si lees esto, Turismo Gramalote ya puede enviar correos desde esta cuenta.',
         `Lo pidió ${req.admin.name ?? req.admin.email} desde el panel.`,
       ],
       rows: [
@@ -182,7 +182,7 @@ router.post(
       ],
     })
     try {
-      await sendMail({ to, subject: 'Prueba de correo · Gramalote Interactivo', html, text, kind: 'test', settings })
+      await sendMail({ to, subject: 'Prueba de correo · Turismo Gramalote', html, text, kind: 'test', settings })
     } catch (failure) {
       throw new ApiError(502, 'MAIL_FAILED', failure.message)
     }

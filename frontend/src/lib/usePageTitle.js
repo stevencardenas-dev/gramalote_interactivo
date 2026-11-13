@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 
-const SITE = 'Gramalote Interactivo'
+const SITE = 'Turismo Gramalote'
 
-// Título de la pestaña por vista: "Bambú · Gramalote Interactivo".
+// Título de la pestaña por vista: "Bambú · Turismo Gramalote".
 // Sin título (cargando o sin datos) se deja el nombre del sitio.
 export function usePageTitle(title) {
   useEffect(() => {

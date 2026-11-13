@@ -1,7 +1,7 @@
 export default function Logo({
   variant = 'rect',
   className = 'brand__logo',
-  alt = 'Gramalote Interactivo',
+  alt = 'Turismo Gramalote',
 }) {
   const sources = {
     rect: '/brand/logo-rect.svg',

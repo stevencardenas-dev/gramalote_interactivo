@@ -79,7 +79,7 @@ export default function Sugerir() {
               <div className="suggest__done" role="status">
                 <h2>¡Gracias por tu sugerencia!</h2>
                 <p>
-                  Recibimos «{sent.name}». El equipo de Gramalote Interactivo la revisará y, si cumple con lo
+                  Recibimos «{sent.name}». El equipo de Turismo Gramalote la revisará y, si cumple con lo
                   necesario, la agregaremos al sitio.
                   {sent.email ? ' Te escribiremos al correo que dejaste.' : ''}
                 </p>

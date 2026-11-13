@@ -59,7 +59,14 @@ const BY_TYPE = [
   ['hostal', 'hostal'],
   ['hotel', 'hotel'],
 ]
-const BY_GROUP = { comer: 'restaurante', dormir: 'hotel', comprar: 'artesanias', experiencia: 'experiencias' }
+const BY_GROUP = {
+  comer: 'restaurante',
+  dormir: 'hotel',
+  comprar: 'artesanias',
+  experiencia: 'experiencias',
+  patrimonio: 'monumento',
+  extras: 'alcaldia',
+}
 // Las experiencias no tienen tipo ni icono en la base: se eligen por su ficha.
 const BY_SLUG = {
   'cascadas-arco-iris': 'cascada',

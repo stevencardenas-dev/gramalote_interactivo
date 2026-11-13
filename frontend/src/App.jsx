@@ -22,6 +22,7 @@ import Sugerir from './pages/Sugerir.jsx'
 import AdminCorreo from './pages/AdminCorreo.jsx'
 import AdminSugerencias from './pages/AdminSugerencias.jsx'
 import AdminExtras from './pages/AdminExtras.jsx'
+import AdminPatrimonio from './pages/AdminPatrimonio.jsx'
 import Admin from './pages/Admin.jsx'
 import AdminUsuarios from './pages/AdminUsuarios.jsx'
 import AdminPaginas from './pages/AdminPaginas.jsx'
@@ -103,6 +104,14 @@ export default function App() {
           }
         />
         <Route
+          path="admin/lugares/patrimonio"
+          element={
+            <RequireAdmin>
+              <AdminPatrimonio />
+            </RequireAdmin>
+          }
+        />
+        <Route
           path="admin/lugares/extras"
           element={
             <RequireAdmin>
@@ -123,6 +132,7 @@ export default function App() {
         <Route path="admin/establecimientos/:id" element={<LegacyDetalle section="establecimientos" />} />
         <Route path="admin/experiencias" element={<Navigate to="/admin/lugares/experiencias" replace />} />
         <Route path="admin/experiencias/:id" element={<LegacyDetalle section="experiencias" />} />
+        <Route path="admin/patrimonio" element={<Navigate to="/admin/lugares/patrimonio" replace />} />
         <Route path="admin/extras" element={<Navigate to="/admin/lugares/extras" replace />} />
         <Route path="admin/sugerencias" element={<Navigate to="/admin/lugares/sugerencias" replace />} />
         <Route

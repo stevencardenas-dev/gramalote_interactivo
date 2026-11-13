@@ -54,6 +54,8 @@ async function activeAdmins() {
 }
 
 // «Más nuevo» = id mayor (las cuentas se numeran por orden de creación).
+// Cambiar rol, nombre o estado de una cuenta anterior también cuenta como
+// editarla: está bloqueado igual que cambiarle el correo o eliminarla.
 router.get(
   '/admin/users',
   requireAuth,
@@ -123,6 +125,17 @@ router.patch(
     )
     if (!target) throw new ApiError(404, 'NOT_FOUND', 'Usuario no encontrado')
 
+    // Las cuentas anteriores a la propia son de solo lectura: un admin más
+    // nuevo no puede cambiarles el rol, desactivarlas ni editarlas. Cada cuenta
+    // anterior conserva el control de sí misma.
+    if (id !== req.admin.id && id < req.admin.id) {
+      throw new ApiError(
+        403,
+        'FORBIDDEN',
+        'Solo puedes editar cuentas más nuevas que la tuya; las cuentas anteriores son de solo lectura',
+      )
+    }
+
     const name =
       req.body?.name === undefined ? target.name : stringParam(req.body.name, { max: 160 })
     const role = req.body?.role ?? target.role
@@ -182,6 +195,14 @@ router.post(
       [id],
     )
     if (!target) throw new ApiError(404, 'NOT_FOUND', 'Usuario no encontrado')
+    // Enviar un enlace de contraseña también es controlar una cuenta anterior.
+    if (id !== req.admin.id && id < req.admin.id) {
+      throw new ApiError(
+        403,
+        'FORBIDDEN',
+        'Solo puedes enviar enlaces a cuentas más nuevas que la tuya; las cuentas anteriores son de solo lectura',
+      )
+    }
     if (!(await isMailReady())) {
       throw new ApiError(503, 'MAIL_OFF', 'El correo saliente no está configurado (Panel › Correo)')
     }

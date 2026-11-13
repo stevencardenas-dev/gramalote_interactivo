@@ -393,13 +393,29 @@ button.stars__button:focus-visible {
     margin-bottom: 10px;
   }
 
-  .feature-card__title {
+  /* El título base (1.5rem) tiene más especificidad que la clase y no se
+     reducía en móvil: «Contactos útiles» se partía y desalineaba su pie. */
+  .feature-card h3.feature-card__title {
     padding: 5px 12px;
     font-size: 1.0625rem;
+    line-height: 1.15;
+    text-align: center;
   }
 
   .feature-card p {
     font-size: 0.875rem;
+  }
+}
+
+/* En anchos muy angostos el título puede volver a partirse: se reserva la
+   altura de dos líneas para que los pies de una misma fila sigan alineados. */
+@media (max-width: 380px) {
+  .feature-card h3.feature-card__title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.9em;
+    box-sizing: border-box;
   }
 }
 

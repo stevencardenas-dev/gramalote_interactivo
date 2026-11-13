@@ -2,6 +2,11 @@
 // se muestra con el mismo diseño que tiene en el inicio y lleva a su página.
 // `design`: 'quick' (tarjeta con foto, como «Accede rápido») o 'feature'
 // (ilustración con título, como «Información práctica»).
+//
+// Criterio de las fotos: la sección usa una imagen fija de diseño que representa
+// su página de destino (no la portada de una ficha). Se corrige aquí una vez y
+// no se edita desde el panel; las fichas de establecimientos y experiencias sí
+// muestran su portada editable en los resultados.
 export const componentCatalog = [
   {
     id: 'que-hacer',
@@ -64,7 +69,9 @@ export const componentCatalog = [
     description: 'Explora los lugares en el mapa.',
     to: '/mapa',
     design: 'quick',
-    photo: '/img/home/explora.jpg',
+    // Vista aérea del pueblo viejo: diferencia el mapa de «Dónde ir», que usa
+    // la foto del nuevo Gramalote.
+    photo: '/img/home/hero-gramalote-viejo.jpg',
   },
   {
     id: 'informacion-practica',

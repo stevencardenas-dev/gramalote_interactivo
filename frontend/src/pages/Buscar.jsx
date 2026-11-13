@@ -4,8 +4,8 @@ import PageHero from '../components/ui/PageHero.jsx'
 import IconMask from '../components/ui/IconMask.jsx'
 import Photo from '../components/ui/Photo.jsx'
 import { componentCatalog } from '../data/componentCatalog.js'
-import { activities } from '../data/experiences.js'
-import { useEstablishments } from '../lib/contentApi.js'
+import { activities as staticActivities } from '../data/experiences.js'
+import { useActivities, useEstablishments } from '../lib/contentApi.js'
 import { compact, score } from '../lib/searchIndex.js'
 
 export default function Buscar() {
@@ -14,6 +14,9 @@ export default function Buscar() {
   const rawQuery = params.get('q') ?? ''
   const query = rawQuery.trim()
   const { data: establishments } = useEstablishments()
+  // Las experiencias muestran su portada editable, igual que su tarjeta en
+  // «Qué hacer»; si la API no responde se usa la copia estática.
+  const activities = useActivities(staticActivities)
 
   // Si lo escrito es exactamente el nombre de una sección («Dónde comer»,
   // «Información práctica»…), se va directo a ella sin pasar por resultados.

@@ -1,5 +1,5 @@
 export const site = {
-  name: 'Gramalote Interactivo',
+  name: 'Turismo Gramalote',
   place: 'Gramalote · Norte de Santander',
   // `icon` se usa en el menú móvil; en la navegación de escritorio no se dibuja.
   nav: [

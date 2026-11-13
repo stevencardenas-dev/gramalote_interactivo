@@ -8,6 +8,7 @@ import adminRouter from './routes/admin.js'
 import adminMailRouter from './routes/admin-mail.js'
 import adminExperiencesRouter from './routes/admin-experiences.js'
 import adminExtrasRouter from './routes/admin-extras.js'
+import adminHeritageRouter from './routes/admin-heritage.js'
 import adminRatingsRouter from './routes/admin-ratings.js'
 import authRouter from './routes/auth.js'
 import curiositiesRouter from './routes/curiosities.js'
@@ -52,7 +53,7 @@ app.use(
 
 app.get('/api', (_req, res) => {
   res.json({
-    name: 'Gramalote Interactivo API',
+    name: 'Turismo Gramalote API',
     version: '0.1.0',
     endpoints: [
       'GET /api/health',
@@ -84,6 +85,8 @@ app.get('/api', (_req, res) => {
       'GET /api/map',
       'GET|POST /api/admin/extras',
       'PATCH|DELETE /api/admin/extras/:id',
+      'GET|POST /api/admin/heritage',
+      'PATCH|DELETE /api/admin/heritage/:id',
       'GET /api/search?q=',
       'GET /api/ratings/top',
       'GET|POST /api/ratings/:kind/:slug (establecimiento|experiencia)',
@@ -133,6 +136,7 @@ app.use(
   adminRouter,
   adminExperiencesRouter,
   adminExtrasRouter,
+  adminHeritageRouter,
   adminRatingsRouter,
   adminMailRouter,
   suggestionsRouter,

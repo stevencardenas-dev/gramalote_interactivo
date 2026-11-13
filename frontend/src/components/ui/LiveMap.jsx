@@ -42,6 +42,7 @@ const GROUPS = [
   { key: 'dormir', label: 'Dónde dormir', color: '#486284', radius: 10, icon: 'hotel' },
   { key: 'comprar', label: 'Dónde comprar', color: '#2f7d4f', radius: 12, icon: 'artesanias' },
   { key: 'experiencia', label: 'Experiencias', color: '#7c3aed', radius: 14, icon: 'experiencias' },
+  { key: 'patrimonio', label: 'Patrimonio', color: '#a16207', radius: 11, icon: 'monumento' },
   { key: 'extras', label: 'Extras', color: '#0f766e', radius: 9, icon: 'alcaldia' },
 ]
 const GROUP_BY_KEY = Object.fromEntries(GROUPS.map((group) => [group.key, group]))
@@ -71,16 +72,20 @@ function toPlaces(data) {
     ...(data?.establishments ?? []),
     ...(data?.experiences ?? []),
     ...(data?.extras ?? []),
+    ...(data?.heritage ?? []),
   ]
   return items
     .filter((item) => isValidCoordinates(item.coordinates))
     .map((item) => {
       const isExtra = item.kind === 'extra'
+      const isHeritage = item.kind === 'heritage'
       const group = isExtra
         ? 'extras'
-        : item.kind === 'experience'
-          ? 'experiencia'
-          : item.category?.slug
+        : isHeritage
+          ? 'patrimonio'
+          : item.kind === 'experience'
+            ? 'experiencia'
+            : item.category?.slug
       return {
         id: `${item.kind}-${item.id}`,
         slug: item.slug,
@@ -89,6 +94,7 @@ function toPlaces(data) {
         group: GROUP_BY_KEY[group] ? group : null,
         categoryName: item.category?.name ?? GROUP_BY_KEY[group]?.label ?? '',
         extraCategory: isExtra ? (item.category ?? null) : null,
+        summary: item.summary ?? null,
         zoneName: item.zone?.name ?? null,
         type: item.type ?? null,
         icon: resolveMapIcon({
@@ -174,8 +180,6 @@ export default function LiveMap({
   const [status, setStatus] = useState('loading')
   const [readyMap, setReadyMap] = useState(null)
   const [activeGroup, setActiveGroup] = useState(initialGroup)
-  // Subcategoría de Extras elegida en el filtro de categoría.
-  const [activeExtra, setActiveExtra] = useState('')
   const [activeType, setActiveType] = useState(initialType)
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState('')
@@ -191,14 +195,13 @@ export default function LiveMap({
   const places = useMemo(() => {
     const term = normalize(search)
     return allPlaces.filter((place) => {
-      // Los extras solo obedecen al filtro de categoría y al buscador: no tienen
-      // ficha, calificación ni horario con el que filtrarlos.
-      if (place.kind === 'extra') {
-        if (activeGroup && activeGroup !== 'extras') return false
-        if (activeExtra && place.extraCategory?.slug !== activeExtra) return false
+      // Extras y Patrimonio no tienen ficha, horario ni calificación. Cuando se
+      // filtra por abierto, tipo o calificación desaparecen, como el resto.
+      if (place.kind === 'extra' || place.kind === 'heritage') {
+        if (activeType || onlyOpen || minRating) return false
+        if (activeGroup && place.group !== activeGroup) return false
         return !term || normalize(`${place.name}${place.categoryName}`).includes(term)
       }
-      if (activeGroup === 'extras') return false
       return (
         (!activeGroup || place.group === activeGroup) &&
         (!activeType || place.type === activeType) &&
@@ -207,25 +210,14 @@ export default function LiveMap({
         (!term || normalize(`${place.name}${place.type ?? ''}`).includes(term))
       )
     })
-  }, [allPlaces, activeGroup, activeExtra, activeType, search, onlyOpen, minRating])
+  }, [allPlaces, activeGroup, activeType, search, onlyOpen, minRating])
 
   const selectedPlace = places.find((place) => place.id === selectedId) ?? null
   const filterCount =
-    (activeGroup ? 1 : 0) + (activeExtra ? 1 : 0) + (activeType ? 1 : 0) + (minRating ? 1 : 0) + (onlyOpen ? 1 : 0)
-
-  // Categorías propias de los extras, para el submenú del filtro Categoría.
-  const extraCategories = useMemo(() => {
-    const seen = new Map()
-    for (const place of allPlaces) {
-      if (place.kind !== 'extra' || !place.extraCategory?.slug) continue
-      if (!seen.has(place.extraCategory.slug)) seen.set(place.extraCategory.slug, place.extraCategory.name)
-    }
-    return [...seen.entries()].map(([slug, name]) => ({ slug, name }))
-  }, [allPlaces])
+    (activeGroup ? 1 : 0) + (activeType ? 1 : 0) + (minRating ? 1 : 0) + (onlyOpen ? 1 : 0)
 
   function clearFilters() {
     setActiveGroup('')
-    setActiveExtra('')
     setActiveType('')
     setMinRating(0)
     setOnlyOpen(false)
@@ -266,8 +258,9 @@ export default function LiveMap({
       })
       content.append(link)
     }
-    // Los extras no tienen ficha: el popup lleva directo a Google Maps.
-    if (place.kind === 'extra') {
+    // Extras y Patrimonio no tienen ficha todavía: el popup lleva directo a
+    // Google Maps.
+    if (place.kind === 'extra' || place.kind === 'heritage') {
       const link = document.createElement('a')
       link.href =
         place.mapsUrl ??
@@ -424,16 +417,7 @@ export default function LiveMap({
 
   const chooseGroup = (key) => {
     setActiveGroup(key)
-    setActiveExtra('')
     setActiveType('')
-    setSelectedId('')
-    setMenu(null)
-  }
-
-  // Elegir una categoría de Extras deja solo esos puntos en el mapa.
-  const chooseExtra = (slug) => {
-    setActiveGroup('extras')
-    setActiveExtra(slug)
     setSelectedId('')
     setMenu(null)
   }
@@ -467,8 +451,8 @@ export default function LiveMap({
       place.mapsUrl ??
       `https://www.google.com/maps/dir/?api=1&destination=${place.latitude},${place.longitude}`
 
-    // Extra: sin ficha, toda su información vive en esta tarjeta.
-    if (place.kind === 'extra') {
+    // Extras y Patrimonio: sin ficha todavía, su información vive en la tarjeta.
+    if (place.kind === 'extra' || place.kind === 'heritage') {
       return (
         <div className="mapa-ficha mapa-ficha--extra" role="dialog" aria-label={`Información de ${place.name}`}>
           <button type="button" className="mapa-ficha__cerrar" aria-label="Cerrar" onClick={() => setSelectedId('')}>
@@ -483,7 +467,9 @@ export default function LiveMap({
               {place.categoryName}
               {place.zoneName ? ` · ${place.zoneName}` : ''}
             </span>
-            <span className="mapa-ficha__nota">Punto complementario · sin ficha</span>
+            <span className="mapa-ficha__nota">
+              {place.kind === 'heritage' ? 'Patrimonio · ficha en preparación' : 'Punto complementario · sin ficha'}
+            </span>
             <div className="mapa-ficha__acciones">
               <a className="btn btn--primary btn--sm" href={route} target="_blank" rel="noreferrer">
                 Cómo llegar
@@ -574,8 +560,7 @@ export default function LiveMap({
   )
 
   if (explorer) {
-    const extraActivo = extraCategories.find((cat) => cat.slug === activeExtra)
-    const groupLabel = extraActivo?.name ?? (activeGroup ? GROUP_BY_KEY[activeGroup]?.label : 'Categoría')
+    const groupLabel = activeGroup ? GROUP_BY_KEY[activeGroup]?.label : 'Categoría'
     const ratingLabel = minRating ? `${String(minRating).replace('.', ',')}★ o más` : 'Calificación'
     const typeLabel = activeType || 'Tipo'
 
@@ -620,8 +605,10 @@ export default function LiveMap({
                       <strong>{place.name}</strong>
                       <span className="mapa-lugar__sub">{placeSubtitle(place)}</span>
                       <span className="mapa-lugar__pie">
-                        {place.kind === 'extra' ? (
-                          <span className="mapa-lugar__sin-ficha">Sin ficha · solo mapa</span>
+                        {place.kind === 'extra' || place.kind === 'heritage' ? (
+                          <span className="mapa-lugar__sin-ficha">
+                            {place.kind === 'heritage' ? 'Patrimonio · ficha en preparación' : 'Sin ficha · solo mapa'}
+                          </span>
                         ) : (
                           <>
                             <svg className="mapa-lugar__estrella" viewBox="0 0 24 24" aria-hidden="true">
@@ -749,61 +736,25 @@ export default function LiveMap({
                     >
                       Todas las categorías
                     </button>
-                    {visibleGroups
-                      .filter((group) => group.key !== 'extras')
-                      .map((group) => (
-                        <button
-                          key={group.key}
-                          type="button"
-                          role="menuitemradio"
-                          aria-checked={activeGroup === group.key}
-                          className={activeGroup === group.key ? 'is-on' : undefined}
-                          onClick={() => chooseGroup(group.key)}
-                        >
-                          <img
-                            className="mapa-menu__icono"
-                            src={mapIconUrl(group.icon)}
-                            alt=""
-                            width="22"
-                            height="22"
-                          />
-                          {group.label}
-                        </button>
-                      ))}
-                    {visibleGroups.some((group) => group.key === 'extras') &&
-                    extraCategories.length > 0 ? (
-                      <>
-                        <span className="mapa-menu__titulo">Extras · solo por categoría</span>
-                        <button
-                          type="button"
-                          role="menuitemradio"
-                          aria-checked={activeGroup === 'extras' && !activeExtra}
-                          className={activeGroup === 'extras' && !activeExtra ? 'is-on' : undefined}
-                          onClick={() => chooseExtra('')}
-                        >
-                          <img
-                            className="mapa-menu__icono"
-                            src={mapIconUrl('alcaldia')}
-                            alt=""
-                            width="22"
-                            height="22"
-                          />
-                          Todos los extras
-                        </button>
-                        {extraCategories.map((category) => (
-                          <button
-                            key={category.slug}
-                            type="button"
-                            role="menuitemradio"
-                            aria-checked={activeExtra === category.slug}
-                            className={activeExtra === category.slug ? 'is-on' : undefined}
-                            onClick={() => chooseExtra(category.slug)}
-                          >
-                            {category.name}
-                          </button>
-                        ))}
-                      </>
-                    ) : null}
+                    {visibleGroups.map((group) => (
+                      <button
+                        key={group.key}
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={activeGroup === group.key}
+                        className={activeGroup === group.key ? 'is-on' : undefined}
+                        onClick={() => chooseGroup(group.key)}
+                      >
+                        <img
+                          className="mapa-menu__icono"
+                          src={mapIconUrl(group.icon)}
+                          alt=""
+                          width="22"
+                          height="22"
+                        />
+                        {group.label}
+                      </button>
+                    ))}
                   </>
                 ) : null}
 

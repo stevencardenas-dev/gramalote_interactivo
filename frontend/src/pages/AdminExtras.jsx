@@ -183,7 +183,7 @@ export default function AdminExtras() {
         <div className="admin-bar">
           <div className="admin-bar__heading">
             <h1>Extras</h1>
-            <p className="admin-bar__lead">Puntos del mapa sin ficha; se filtran solo por categoría.</p>
+            <p className="admin-bar__lead">Puntos del mapa sin ficha. En el mapa son una categoría más.</p>
           </div>
           <label className="visually-hidden" htmlFor="extras-search">
             Buscar

@@ -111,7 +111,7 @@ export default function Acceder() {
         <div className="auth-card">
             <Logo variant="iso" className="auth-card__logo" alt="" />
           <h1>Acceder</h1>
-          <p>Bienvenido al área de administración. Ingresa para editar las fichas de Gramalote.</p>
+          <p>Bienvenido/a al área de administración. Ingresa para editar las fichas de Gramalote.</p>
 
           {forgot ? (
             <form onSubmit={handleForgot}>

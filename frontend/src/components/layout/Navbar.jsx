@@ -269,7 +269,7 @@ export default function Navbar({ over = false }) {
   return (
     <header className={headerClass} ref={headerRef}>
       <div className="site-header__inner container">
-        <Link className="brand" to="/" aria-label="Gramalote Interactivo, ir al inicio">
+        <Link className="brand" to="/" aria-label="Turismo Gramalote, ir al inicio">
           <Logo variant="cube" />
         </Link>
 

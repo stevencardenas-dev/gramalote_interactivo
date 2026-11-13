@@ -13,7 +13,8 @@ const KIND_LABEL = {
   password_admin: 'Enlace de contraseña',
   password_invite: 'Invitación al panel',
   password_changed: 'Aviso: contraseña cambiada',
-  email_changed: 'Aviso: correo cambiado',
+  email_changed: 'Aviso: correo cambiado (anterior)',
+  email_changed_new: 'Aviso: correo cambiado (nuevo)',
   rating_confirm: 'Confirmar calificación',
   suggestion_notify: 'Aviso de sugerencia',
   suggestion_thanks: 'Gracias por sugerir',
@@ -22,7 +23,7 @@ const KIND_LABEL = {
 const EMPTY = {
   enabled: false,
   fromEmail: '',
-  fromName: 'Gramalote Interactivo',
+  fromName: 'Turismo Gramalote',
   user: '',
   password: '',
   host: 'smtp.gmail.com',
