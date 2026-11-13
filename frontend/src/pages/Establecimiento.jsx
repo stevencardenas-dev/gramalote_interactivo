@@ -13,7 +13,7 @@ export default function Establecimiento() {
 
   if (loading) {
     return (
-      <section className="section">
+      <section className="section section--estado">
         <div className="container">
           <p className="note">Cargando ficha…</p>
         </div>
@@ -23,7 +23,7 @@ export default function Establecimiento() {
 
   if (error || !item) {
     return (
-      <section className="section">
+      <section className="section section--estado">
         <div className="container">
           <h1>No encontramos esta ficha</h1>
           <p className="page-intro">
