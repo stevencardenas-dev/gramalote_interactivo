@@ -28,7 +28,7 @@ export default function Experiencia() {
 
   if (!item) {
     return (
-      <section className="section">
+      <section className="section section--estado">
         <div className="container">
           <h1>No encontramos esta experiencia</h1>
           <p className="page-intro">El contenido puede haber cambiado de dirección.</p>

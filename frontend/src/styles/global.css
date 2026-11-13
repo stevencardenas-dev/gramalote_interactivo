@@ -95,6 +95,18 @@ ul {
   margin-top: calc(var(--header-h) * -1);
 }
 
+/* Pantallas de "no encontrado" o cargando que no tienen hero: dejan libre el
+   espacio del menú, que va superpuesto en estas rutas. */
+.section--estado {
+  padding-top: calc(var(--header-h) + clamp(32px, 5vw, 64px));
+}
+
+.section--estado .page-intro {
+  max-width: none;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
 .section [id] {
   scroll-margin-top: 110px;
 }
