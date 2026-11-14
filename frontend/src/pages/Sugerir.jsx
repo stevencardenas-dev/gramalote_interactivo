@@ -80,17 +80,25 @@ export default function Sugerir() {
           <div className="suggest__card">
             {sent ? (
               <div className="suggest__done" role="status">
-                <h2>¡Gracias por tu sugerencia!</h2>
+                <h2>{sent.pending ? 'Confirma tu correo para enviarla' : '¡Gracias por tu sugerencia!'}</h2>
                 <p>
-                  Recibimos «{sent.name}». El equipo de Turismo Gramalote la revisará y, si cumple con lo
-                  necesario, la agregaremos al sitio.
-                  {sent.email && !sent.pending ? ' Te escribiremos al correo que dejaste.' : ''}
+                  {sent.pending ? (
+                    <>
+                      Guardamos «{sent.name}», pero todavía no le llega al equipo: abre el enlace que
+                      enviamos a <strong>{sent.email}</strong> para confirmar tu correo y la enviamos.
+                    </>
+                  ) : (
+                    <>
+                      Recibimos «{sent.name}». El equipo de Turismo Gramalote la revisará y, si cumple
+                      con lo necesario, la agregaremos al sitio.
+                      {sent.email ? ' Te escribiremos al correo que dejaste.' : ''}
+                    </>
+                  )}
                 </p>
                 {sent.pending ? (
                   <p className="suggest__note">
-                    Te enviamos un enlace a <strong>{sent.email}</strong> para confirmar tu correo. Solo
-                    hace falta la primera vez: después, tus sugerencias con ese correo se envían sin
-                    este paso.
+                    Solo hace falta la primera vez: después, tus sugerencias con ese correo se envían
+                    sin este paso. Si el enlace no llega, revisa spam o promociones.
                   </p>
                 ) : null}
                 <div className="suggest__done-actions">
@@ -198,7 +206,8 @@ export default function Sugerir() {
                       />
                       <small>
                         Para agradecerte y, si hace falta, pedirte más datos. La primera vez confirmas
-                        el correo con un enlace; después no hace falta.
+                        el correo con un enlace y hasta entonces la sugerencia no le llega al equipo;
+                        después no hace falta.
                       </small>
                     </label>
                   </div>

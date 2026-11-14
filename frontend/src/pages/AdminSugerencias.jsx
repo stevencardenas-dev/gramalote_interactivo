@@ -16,7 +16,16 @@ const STATUS = {
   agregada: { label: 'Agregada', badge: 'admin-badge--ok' },
   descartada: { label: 'Descartada', badge: '' },
 }
-const FILTERS = [['', 'Todas'], ...Object.entries(STATUS).map(([key, value]) => [key, value.label])]
+// «Sin confirmar» no es un estado: son las que tienen correo sin verificar, que
+// todavía no le llegaron al equipo (meil de aviso) y esperan el enlace.
+const PENDING = 'sin-verificar'
+const FILTERS = [
+  ['', 'Todas'],
+  ...Object.entries(STATUS).map(([key, value]) => [key, value.label]),
+  [PENDING, 'Sin confirmar'],
+]
+
+const isPending = (item) => Boolean(item.suggesterEmail) && !item.emailVerified
 
 // Conmutadores de estado (Todas y los cuatro estados de la sugerencia).
 
@@ -46,7 +55,10 @@ export default function AdminSugerencias() {
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState(null)
   const { confirm } = useDialog()
-  const filtered = (items ?? []).filter((entry) => !filter || entry.status === filter)
+  const filtered =
+    filter === PENDING
+      ? (items ?? []).filter(isPending)
+      : (items ?? []).filter((entry) => !filter || entry.status === filter)
   const paged = usePaged(filtered)
 
   const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message })
@@ -103,10 +115,9 @@ export default function AdminSugerencias() {
     const many = filtered.length
     if (!many) return
     const subject = many === 1 ? 'la sugerencia' : `las ${many} sugerencias`
+    const label = filter === PENDING ? 'sin confirmar' : STATUS[filter]?.label.toLowerCase()
     const ok = await confirm({
-      title: filter
-        ? `¿Borrar ${subject} «${STATUS[filter].label.toLowerCase()}»?`
-        : `¿Borrar ${subject}?`,
+      title: filter ? `¿Borrar ${subject} «${label}»?` : `¿Borrar ${subject}?`,
       message: 'Se borran de la base de datos y no se puede deshacer.',
       confirmLabel: 'Borrar todas',
       danger: true,
@@ -114,12 +125,13 @@ export default function AdminSugerencias() {
     if (!ok) return
     setBusy(true)
     try {
-      const { deleted } = await apiRequest(`/admin/suggestions${filter ? `?status=${filter}` : ''}`, {
-        method: 'DELETE',
+      const query = filter === PENDING ? '?pending=1' : filter ? `?status=${filter}` : ''
+      const { deleted } = await apiRequest(`/admin/suggestions${query}`, { method: 'DELETE' })
+      setItems((current) => {
+        if (!filter) return []
+        if (filter === PENDING) return current.filter((entry) => !isPending(entry))
+        return current.filter((entry) => entry.status !== filter)
       })
-      setItems((current) =>
-        filter ? current.filter((entry) => entry.status !== filter) : [],
-      )
       setFilter('')
       notify('ok', 'Sugerencias borradas', `Se borraron ${deleted} ${deleted === 1 ? 'sugerencia' : 'sugerencias'}.`)
     } catch (err) {
@@ -159,7 +171,11 @@ export default function AdminSugerencias() {
             >
               {label}{' '}
               <span className="admin-tab__count">
-                {value ? (items ?? []).filter((entry) => entry.status === value).length : (items ?? []).length}
+                {value === PENDING
+                  ? (items ?? []).filter(isPending).length
+                  : value
+                    ? (items ?? []).filter((entry) => entry.status === value).length
+                    : (items ?? []).length}
               </span>
             </button>
           ))}
@@ -169,7 +185,9 @@ export default function AdminSugerencias() {
           <div className="admin-bulkbar">
             <button type="button" className="admin-btn admin-btn--danger-outline" onClick={removeAll} disabled={busy}>
               {filter
-                ? `Borrar ${filtered.length === 1 ? 'la' : `las ${filtered.length}`} «${STATUS[filter].label.toLowerCase()}»`
+                ? `Borrar ${filtered.length === 1 ? 'la' : `las ${filtered.length}`} ${
+                    filter === PENDING ? 'sin confirmar' : `«${STATUS[filter].label.toLowerCase()}»`
+                  }`
                 : 'Borrar todas'}
             </button>
           </div>

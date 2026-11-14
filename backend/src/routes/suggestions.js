@@ -60,6 +60,61 @@ function field(body, key, label, { max, required = false, min = 0 }) {
   return value
 }
 
+// Filas del aviso al equipo (mismas claves que la tabla).
+function suggestionRows(item) {
+  return [
+    ['Lugar', item.business_name],
+    ['Tipo', item.business_type],
+    ['Ubicación', item.address],
+    ['Teléfono', item.phone],
+    ['Redes / web', item.links],
+    ['¿Tiene relación?', item.is_owner],
+    ['Sugerido por', [item.suggester_name, item.suggester_email].filter(Boolean).join(' · ')],
+    ['Por qué', item.reason],
+  ]
+}
+
+// La sugerencia «cuenta» aquí: avisa al equipo y, si toca, agradece. Se llama
+// cuando entra sin correo o cuando la persona confirma el suyo; con el correo
+// sin confirmar no se envía nada, para que el paso de verificación sirva de
+// algo (el panel la guarda en «Sin confirmar» mientras tanto).
+function deliver(settings, item, { thanks }) {
+  const team = notifyList(settings)
+  if (team.length) {
+    const { html, text } = renderEmail({
+      title: `Nueva sugerencia: ${item.business_name}`,
+      paragraphs: ['Llegó una sugerencia de lugar desde el sitio.'],
+      rows: suggestionRows(item),
+      action: { label: 'Revisar en el panel', url: `${settings.siteUrl}/admin/lugares/sugerencias` },
+    })
+    trySendMail({
+      to: team,
+      subject: `Nueva sugerencia: ${item.business_name}`,
+      html,
+      text,
+      kind: 'suggestion_notify',
+      replyTo: item.suggester_email ?? undefined,
+    })
+  }
+  if (thanks && item.suggester_email) {
+    const { html, text } = renderEmail({
+      title: '¡Gracias por tu sugerencia!',
+      paragraphs: [
+        `${(item.suggester_name ?? '').split(' ')[0] || 'Hola'}:`,
+        `Recibimos tu sugerencia de «${item.business_name}». El equipo de Turismo Gramalote la revisará y, si cumple con lo necesario, la agregaremos al sitio.`,
+      ],
+      action: { label: 'Seguir explorando Gramalote', url: settings.siteUrl },
+    })
+    trySendMail({
+      to: item.suggester_email,
+      subject: 'Recibimos tu sugerencia · Turismo Gramalote',
+      html,
+      text,
+      kind: 'suggestion_thanks',
+    })
+  }
+}
+
 // Por IP: 5 sugerencias por hora y 15 por día. Además, una trampa para bots
 // (campo «website» oculto) y un tiempo mínimo de llenado.
 router.post(
@@ -144,70 +199,29 @@ router.post(
     )
 
     const settings = mailSettings
-    const rows = [
-      ['Lugar', fields.business_name],
-      ['Tipo', fields.business_type],
-      ['Dirección', fields.address],
-      ['Teléfono', fields.phone],
-      ['Redes / web', fields.links],
-      ['¿Es el dueño?', fields.is_owner],
-      ['Sugerido por', [fields.suggester_name, fields.suggester_email].filter(Boolean).join(' · ')],
-      ['Por qué', fields.reason],
-    ]
-    const team = notifyList(settings)
-    if (team.length) {
-      const { html, text } = renderEmail({
-        title: `Nueva sugerencia: ${fields.business_name}`,
-        paragraphs: ['Llegó una sugerencia de establecimiento desde el sitio.'],
-        rows,
-        action: { label: 'Revisar en el panel', url: `${settings.siteUrl}/admin/sugerencias` },
-      })
-      trySendMail({
-        to: team,
-        subject: `Nueva sugerencia: ${fields.business_name}`,
-        html,
-        text,
-        kind: 'suggestion_notify',
-        replyTo: fields.suggester_email ?? undefined,
-      })
-    }
-    if (thank && !token) {
-      const { html, text } = renderEmail({
-        title: '¡Gracias por tu sugerencia!',
-        paragraphs: [
-          `${(fields.suggester_name ?? '').split(' ')[0] || 'Hola'}:`,
-          `Recibimos tu sugerencia de «${fields.business_name}». El equipo de Turismo Gramalote la revisará y, si cumple con lo necesario, la agregaremos al sitio.`,
-        ],
-        action: { label: 'Seguir explorando Gramalote', url: settings.siteUrl },
-      })
-      trySendMail({
-        to: fields.suggester_email,
-        subject: 'Recibimos tu sugerencia · Turismo Gramalote',
-        html,
-        text,
-        kind: 'suggestion_thanks',
-      })
-    }
-
     if (token) {
+      // Sin confirmar no se avisa al equipo ni se agradece: la sugerencia queda
+      // en «Sin confirmar» del panel hasta que la persona abra el enlace.
       const url = `${settings.siteUrl}/confirmar-sugerencia?token=${token}`
       const { html, text } = renderEmail({
-        title: 'Confirma tu correo',
+        title: 'Confirma tu correo para enviar tu sugerencia',
         paragraphs: [
           `${(fields.suggester_name ?? '').split(' ')[0] || 'Hola'}:`,
-          `Recibimos tu sugerencia de «${fields.business_name}» para Turismo Gramalote. Confirma que este correo es tuyo con el botón; así podemos escribirte si hace falta.`,
-          `Solo hace falta la primera vez: después, tus sugerencias con este correo se envían sin este paso. El enlace vence en ${CONFIRM_HOURS} horas.`,
+          `Guardamos tu sugerencia de «${fields.business_name}», pero todavía no le llega al equipo: confirma que este correo es tuyo con el botón y la enviamos.`,
+          `Solo hace falta la primera vez; después, tus sugerencias con este correo se envían sin este paso. El enlace vence en ${CONFIRM_HOURS} horas.`,
         ],
-        action: { label: 'Confirmar mi correo', url },
-        footer: 'Si no enviaste ninguna sugerencia, ignora este correo.',
+        action: { label: 'Confirmar y enviar', url },
+        footer: 'Si no enviaste ninguna sugerencia, ignora este correo: sin confirmar no le llega a nadie.',
       })
       trySendMail({
         to: fields.suggester_email,
-        subject: 'Confirma tu correo · Turismo Gramalote',
+        subject: 'Confirma tu correo para enviar tu sugerencia · Turismo Gramalote',
         html,
         text,
         kind: 'suggestion_confirm',
       })
+    } else {
+      deliver(settings, fields, { thanks: thank })
     }
 
     res.status(201).json({ data: { ok: true, id: Number(result.insertId), pending: Boolean(token) } })
@@ -221,11 +235,9 @@ router.post(
   asyncHandler(async (req, res) => {
     const token = stringParam(req.body?.token, { max: 128 })
     if (!token) throw new ApiError(400, 'VALIDATION', 'Falta el enlace de confirmación')
-    const row = await queryOne(
-      `SELECT id, business_name, suggester_name, suggester_email, confirm_expires_at
-       FROM establishment_suggestions WHERE confirm_token_hash = ?`,
-      [tokenHashOf(token)],
-    )
+    const row = await queryOne('SELECT * FROM establishment_suggestions WHERE confirm_token_hash = ?', [
+      tokenHashOf(token),
+    ])
     if (!row || !row.confirm_expires_at || new Date(row.confirm_expires_at).getTime() <= Date.now()) {
       throw new ApiError(400, 'INVALID_TOKEN', 'El enlace no es válido o ya venció. Envía otra sugerencia para recibir uno nuevo.')
     }
@@ -236,22 +248,9 @@ router.post(
       [row.id],
     )
 
+    // Ahora sí: el correo está verificado y la sugerencia le llega al equipo.
     const settings = await getMailSettings()
-    const { html, text } = renderEmail({
-      title: '¡Gracias por tu sugerencia!',
-      paragraphs: [
-        `${(row.suggester_name ?? '').split(' ')[0] || 'Hola'}:`,
-        `Confirmamos tu correo. Recibimos tu sugerencia de «${row.business_name}» y el equipo de Turismo Gramalote la revisará; si cumple con lo necesario, la agregaremos al sitio.`,
-      ],
-      action: { label: 'Seguir explorando Gramalote', url: settings.siteUrl },
-    })
-    trySendMail({
-      to: row.suggester_email,
-      subject: 'Recibimos tu sugerencia · Turismo Gramalote',
-      html,
-      text,
-      kind: 'suggestion_thanks',
-    })
+    deliver(settings, row, { thanks: true })
 
     res.json({ data: { ok: true, name: row.business_name } })
   }),
@@ -300,14 +299,25 @@ router.delete(
   requireAuth,
   asyncHandler(async (req, res) => {
     const status = STATUSES.includes(req.query.status) ? req.query.status : null
+    // `pending=1`: las que tienen correo sin confirmar (las de «Sin confirmar»).
+    const pending = req.query.pending === '1'
+    const where = pending
+      ? ' WHERE suggester_email IS NOT NULL AND email_verified_at IS NULL'
+      : status
+        ? ' WHERE status = ?'
+        : ''
     const result = await query(
-      `DELETE FROM establishment_suggestions${status ? ' WHERE status = ?' : ''}`,
-      status ? [status] : [],
+      `DELETE FROM establishment_suggestions${where}`,
+      status && !pending ? [status] : [],
     )
     await query(
       `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, changes, ip_address)
        VALUES (?, 'delete', 'suggestion', NULL, ?, ?)`,
-      [req.admin.id, JSON.stringify({ status: status ?? 'todas', deleted: result.affectedRows }), clientIp(req)],
+      [
+        req.admin.id,
+        JSON.stringify({ status: pending ? 'sin-confirmar' : status ?? 'todas', deleted: result.affectedRows }),
+        clientIp(req),
+      ],
     )
     res.json({ data: { deleted: Number(result.affectedRows ?? 0) } })
   }),

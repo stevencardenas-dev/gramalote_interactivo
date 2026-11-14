@@ -30,8 +30,8 @@ export default function ConfirmarSugerencia() {
             <>
               <h1>¡Correo confirmado!</h1>
               <p>
-                Ya tenemos tu correo verificado, así que no volveremos a pedírtelo. Recibimos tu
-                sugerencia «{state.data?.name}» y el equipo la revisará.
+                Enviamos tu sugerencia «{state.data?.name}» al equipo de Turismo Gramalote, que la
+                revisará. Tu correo queda verificado, así que no volveremos a pedírtelo.
               </p>
               <Button to="/">Volver al inicio</Button>
             </>
@@ -49,8 +49,8 @@ export default function ConfirmarSugerencia() {
             <>
               <h1>Confirma tu correo</h1>
               <p>
-                Un clic más y tu correo queda verificado. Solo hace falta la primera vez: después,
-                tus sugerencias se envían sin este paso.
+                Un clic más: tu correo queda verificado y tu sugerencia le llega al equipo. Solo hace
+                falta la primera vez; después, tus sugerencias se envían sin este paso.
               </p>
               {state.error ? <p className="auth-error">{state.error}</p> : null}
               <Button type="button" onClick={confirm} disabled={state.status === 'busy'}>
