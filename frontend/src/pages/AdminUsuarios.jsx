@@ -38,6 +38,23 @@ function formatDate(value) {
   return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+// Flecha de los desplegables de la cuenta: SVG y no un carácter, que se veía
+// distinto en cada navegador.
+function Chevron() {
+  return (
+    <svg className="admin-acc__chevron" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+      <path
+        d="M6 9.5l6 6 6-6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export default function AdminUsuarios() {
   const navigate = useNavigate()
   const me = getUser()
@@ -390,10 +407,13 @@ export default function AdminUsuarios() {
             Tu correo actual: <strong>{me?.email}</strong>
           </p>
 
-          {/* Tres desplegables independientes: nombre, correo y contraseña. */}
+          {/* Tres desplegables en fila (uno debajo del otro): nombre, correo y contraseña. */}
           <div className="admin-account__cols">
             <details className="admin-acc" open>
-              <summary>Nombre</summary>
+              <summary>
+                <span>Nombre</span>
+                <Chevron />
+              </summary>
               <div className="admin-acc__body">
                 <p className="admin-account__hint">Así apareces en el panel y en el historial.</p>
                 <form className="admin-account__name" onSubmit={submitMyName}>
@@ -416,7 +436,10 @@ export default function AdminUsuarios() {
             </details>
 
             <details className="admin-acc">
-              <summary>Correo</summary>
+              <summary>
+                <span>Correo</span>
+                <Chevron />
+              </summary>
               <div className="admin-acc__body">
                 <p className="admin-account__hint">Con este correo entras al panel.</p>
                 <form className="admin-account__block" onSubmit={submitMyEmail}>
@@ -449,7 +472,10 @@ export default function AdminUsuarios() {
             </details>
 
             <details className="admin-acc">
-              <summary>Contraseña</summary>
+              <summary>
+                <span>Contraseña</span>
+                <Chevron />
+              </summary>
               <div className="admin-acc__body">
                 <p className="admin-account__hint">Mínimo 8 caracteres.</p>
                 <form className="admin-account__block" onSubmit={submitPassword}>

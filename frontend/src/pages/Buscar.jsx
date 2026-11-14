@@ -7,6 +7,7 @@ import { componentCatalog } from '../data/componentCatalog.js'
 import { activities as staticActivities } from '../data/experiences.js'
 import { useActivities, useEstablishments } from '../lib/contentApi.js'
 import { compact, score } from '../lib/searchIndex.js'
+import { usePageContent } from '../lib/pageContent.js'
 
 export default function Buscar() {
   const [params, setParams] = useSearchParams()
@@ -17,6 +18,9 @@ export default function Buscar() {
   // Las experiencias muestran su portada editable, igual que su tarjeta en
   // «Qué hacer»; si la API no responde se usa la copia estática.
   const activities = useActivities(staticActivities)
+  // Fotos de las tarjetas de sección: las de Panel › Páginas › Buscador. Sin
+  // foto guardada, cada sección conserva la imagen de su diseño.
+  const pageContent = usePageContent('buscador')
 
   // Si lo escrito es exactamente el nombre de una sección («Dónde comer»,
   // «Información práctica»…), se va directo a ella sin pasar por resultados.
@@ -64,7 +68,7 @@ export default function Buscar() {
         }))
         .filter(({ relevance }) => relevance > 0)
         .sort((a, b) => b.relevance - a.relevance)
-        .map(({ item }) => item)
+        .map(({ item }) => ({ ...item, photo: pageContent.images?.[item.id] ?? item.photo ?? null }))
     : []
 
   const nothing = query && results.length === 0 && sections.length === 0
@@ -110,7 +114,7 @@ export default function Buscar() {
               <h2 className="search-group">Secciones</h2>
               <div className="component-results">
                 {sections.map((item) =>
-                  item.design === 'quick' ? (
+                  item.design === 'quick' || item.photo ? (
                     <Link key={item.id} className="quick-card" to={item.to}>
                       <Photo src={item.photo} alt={item.name} />
                       <span>{item.name}</span>

@@ -78,7 +78,8 @@ function RatingResult({ titleId, title, email, stars, pending, before, after, on
         {pending ? (
           <>
             Te enviamos un enlace a <strong>{email}</strong>. Ábrelo y tu voto contará para{' '}
-            <strong>{title}</strong>. Si no llega, mira en spam o promociones.
+            <strong>{title}</strong>. Si no llega, mira en spam o promociones. Ya verificado ese correo,
+            tus próximas calificaciones contarán al instante.
           </>
         ) : (
           <>
@@ -205,7 +206,9 @@ function RatingDialog({ kind, slug, title, confirm, before, onClose, onSaved }) 
             <h2 id={titleId}>Califica {title}</h2>
             <p className="rating-modal__hint">
               Toca una estrella y, si quieres, cuéntanos qué te pareció.
-              {confirm ? ' Te enviaremos un correo para confirmar tu voto.' : ''}
+              {confirm
+                ? ' La primera vez confirmas tu voto con un correo; después, tus calificaciones con ese mismo correo cuentan al instante.'
+                : ''}
             </p>
             <div
               className="rating-modal__stars"

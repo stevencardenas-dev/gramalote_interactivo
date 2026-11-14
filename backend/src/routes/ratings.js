@@ -1,6 +1,7 @@
 // Calificaciones públicas. Con el correo configurado (Panel › Correo) cada voto
 // queda pendiente hasta que la persona abre el enlace que le llega; sin correo,
-// cuenta de inmediato.
+// cuenta de inmediato. Un correo que ya confirmó una calificación queda
+// verificado y sus votos siguientes cuentan al instante.
 import { Router } from 'express'
 import { createHash, randomBytes } from 'node:crypto'
 import { query, queryOne } from '../db.js'
@@ -138,10 +139,15 @@ router.post(
 
     const settings = await getMailSettings()
     const mustConfirm = settings.ratingConfirmation && mailReady(settings)
+    // El correo ya verificó una calificación antes: no se le pide confirmar otra
+    // vez. Los límites por IP y por correo siguen aplicando.
+    const knownEmail = mustConfirm
+      ? await queryOne("SELECT id FROM ratings WHERE voter_email = ? AND status = 'confirmed' LIMIT 1", [email])
+      : null
 
-    if (!mustConfirm) {
-      // Sin correo configurado (o con la confirmación apagada) el voto cuenta
-      // de inmediato, como antes.
+    if (!mustConfirm || knownEmail) {
+      // Sin correo configurado (o con la confirmación apagada, o con el correo ya
+      // verificado) el voto cuenta de inmediato.
       await query(
         `INSERT INTO ratings (target_type, target_id, voter_name, voter_email, stars, comment_text, status, confirmed_at)
          VALUES (?, ?, ?, ?, ?, ?, 'confirmed', NOW())
@@ -151,7 +157,7 @@ router.post(
            confirm_token_hash = NULL, confirm_expires_at = NULL, confirmed_at = NOW()`,
         [target.type, target.id, name, email, stars, comment],
       )
-      res.status(201).json({ data: { ...(await statsFor(target)), pending: false } })
+      res.status(201).json({ data: { ...(await statsFor(target)), pending: false, verified: Boolean(knownEmail) } })
       return
     }
 
@@ -222,7 +228,7 @@ router.post(
       throw new ApiError(502, 'MAIL_FAILED', 'No pudimos enviarte el correo de confirmación. Intenta de nuevo más tarde.')
     }
 
-    res.status(202).json({ data: { ...(await statsFor(target)), pending: true } })
+    res.status(202).json({ data: { ...(await statsFor(target)), pending: true, verified: false } })
   }),
 )
 

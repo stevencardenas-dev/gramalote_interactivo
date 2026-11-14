@@ -14,6 +14,7 @@ import {
   isWebUrl,
   whatsappUrl,
 } from '../data/pages.js'
+import { componentCatalog } from '../data/componentCatalog.js'
 import BannerCarousel from '../components/home/BannerCarousel.jsx'
 import { intervalSeconds, timingSeconds, todayKey, visibleSlides } from '../lib/carousel.js'
 import SocialIcon from '../components/ui/SocialIcon.jsx'
@@ -32,6 +33,7 @@ const TABS = [
   { key: 'que-hacer', label: 'Qué hacer', pages: ['que-hacer'] },
   { key: 'donde-ir', label: 'Dónde ir', pages: ['donde-ir', 'donde-comer', 'donde-dormir', 'donde-comprar'] },
   { key: 'redes', label: 'Redes sociales', pages: ['redes'] },
+  { key: 'buscador', label: 'Buscador', pages: ['buscador'] },
 ]
 
 const PAGE_INFO = {
@@ -43,6 +45,7 @@ const PAGE_INFO = {
   'donde-comprar': { label: 'Dónde comprar', path: '/donde-comprar' },
   redes: { label: 'Redes sociales', path: '/' },
   carrusel: { label: 'Carrusel de eventos', path: '/' },
+  buscador: { label: 'Buscador', path: '/buscar' },
 }
 
 // Redes en el orden guardado; las que aún no estaban guardadas, al final.
@@ -112,8 +115,9 @@ function MoveButtons({ index, length, onMove, label }) {
   )
 }
 
-// Miniatura con botón para abrir el selector.
-function ImageField({ label, photo, caption, onOpen, compact = false }) {
+// Miniatura con botón para abrir el selector. Con `onReset` añade el enlace
+// para volver al diseño original (lo usa el buscador).
+function ImageField({ label, photo, caption, onOpen, compact = false, onReset, resetLabel = 'Diseño original' }) {
   return (
     <div className={`admin-imgfield${compact ? ' admin-imgfield--compact' : ''}`}>
       <button type="button" className="admin-imgfield__shot" onClick={onOpen} aria-label={`Cambiar imagen: ${label}`}>
@@ -124,6 +128,11 @@ function ImageField({ label, photo, caption, onOpen, compact = false }) {
         <strong>{label}</strong>
         {caption ? <small>{caption}</small> : null}
       </span>
+      {onReset ? (
+        <button type="button" className="admin-imgfield__reset" onClick={onReset}>
+          {resetLabel}
+        </button>
+      ) : null}
     </div>
   )
 }
@@ -797,6 +806,59 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
   )
 }
 
+// ---------------------------------------------------------------- Buscador
+// Fotos de las tarjetas de sección de /buscar. Sin foto propia cada tarjeta
+// mantiene su diseño original (su foto, su icono o su ilustración); con foto,
+// se muestra como tarjeta con imagen.
+function BuscadorEditor({ draft, update, groups, openPicker, signal }) {
+  const allGroups = [groups.uploads, ...groups.experiences, ...groups.establishments]
+  const images = draft.images ?? {}
+  const clear = (id) =>
+    update((page) => {
+      delete page.images[id]
+    })
+
+  return (
+    <AdminSection
+      signal={signal}
+      title="Tarjetas de sección"
+      hint="Las que salen en /buscar al buscar una sección: Dónde ir, Curiosidades, Información práctica…"
+    >
+      <div className="admin-imggrid">
+        {componentCatalog.map((item) => (
+          <ImageField
+            key={item.id}
+            label={item.name}
+            caption={item.to}
+            photo={images[item.id] ?? item.photo ?? item.illustration ?? null}
+            resetLabel="Diseño original"
+            onReset={images[item.id] ? () => clear(item.id) : undefined}
+            onOpen={() =>
+              openPicker({
+                title: `Imagen de «${item.name}» en el buscador`,
+                hint: 'Se usa tal cual en la tarjeta de la sección. Sin foto propia queda el diseño original del buscador.',
+                groups: allGroups,
+                current: images[item.id] ?? item.photo ?? null,
+                defaultPhoto: item.photo,
+                resetLabel: 'Usar el diseño original',
+                onReset: () => clear(item.id),
+                onPick: ({ url }) =>
+                  update((page) => {
+                    page.images[item.id] = url
+                  }),
+              })
+            }
+          />
+        ))}
+      </div>
+      <p className="note">
+        Información práctica, Cómo llegar, Seguridad, Contactos y Antes de salir no llevan foto: muestran su
+        icono o su ilustración. Al elegirles una imagen, su tarjeta pasa a mostrarse con foto.
+      </p>
+    </AdminSection>
+  )
+}
+
 // ---------------------------------------------------------------- Redes
 function RedesEditor({ draft, update, signal }) {
   const rows = socialRows(draft.social)
@@ -1460,30 +1522,69 @@ export default function AdminPaginas() {
 
         {error ? <p className="auth-error">{error}</p> : null}
 
-        {/* Un desplegable en vez de la hilera de pestañas: en móvil cabía mal. */}
-        <AdminNavSelect
-          id="admin-page"
-          label="Página"
-          value={tab.key}
-          options={TABS.map((entry) => ({
-            value: entry.key,
-            label: `${entry.label}${entry.pages.some((key) => dirty[key]) ? ' •' : ''}`,
-          }))}
-          onChange={(key) => select(TABS.find((entry) => entry.key === key)?.pages[0] ?? 'inicio')}
-          hint={tab.pages.some((key) => dirty[key]) ? '• cambios sin guardar' : undefined}
-        />
+        {/* En escritorio, la hilera de pestañas de siempre; en celular y tablet,
+            el desplegable (ahí la hilera no cabía). */}
+        <nav className="admin-tabs admin-only-wide" role="tablist" aria-label="Página">
+          {TABS.map((entry) => (
+            <button
+              key={entry.key}
+              type="button"
+              role="tab"
+              aria-selected={tab.key === entry.key}
+              className={`admin-tab${tab.key === entry.key ? ' is-active' : ''}`}
+              onClick={() => select(entry.pages[0])}
+            >
+              {entry.label}
+              {entry.pages.some((key) => dirty[key]) ? (
+                <span className="admin-tab__dot" title="Cambios sin guardar" aria-label="Cambios sin guardar" />
+              ) : null}
+            </button>
+          ))}
+        </nav>
+        <div className="admin-only-narrow">
+          <AdminNavSelect
+            id="admin-page"
+            label="Página"
+            value={tab.key}
+            options={TABS.map((entry) => ({
+              value: entry.key,
+              label: `${entry.label}${entry.pages.some((key) => dirty[key]) ? ' •' : ''}`,
+            }))}
+            onChange={(key) => select(TABS.find((entry) => entry.key === key)?.pages[0] ?? 'inicio')}
+            hint={tab.pages.some((key) => dirty[key]) ? '• cambios sin guardar' : undefined}
+          />
+        </div>
 
         {tab.pages.length > 1 ? (
-          <AdminNavSelect
-            id="admin-subpage"
-            label="Subpágina"
-            value={pageKey}
-            options={tab.pages.map((key) => ({
-              value: key,
-              label: `${PAGE_INFO[key].label}${dirty[key] ? ' •' : ''}`,
-            }))}
-            onChange={select}
-          />
+          <>
+            <div className="admin-switch admin-only-wide" role="radiogroup" aria-label="Página de Dónde ir">
+              {tab.pages.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="radio"
+                  aria-checked={pageKey === key}
+                  className={`admin-switch__opt${pageKey === key ? ' is-active' : ''}`}
+                  onClick={() => select(key)}
+                >
+                  {PAGE_INFO[key].label}
+                  {dirty[key] ? <span className="admin-tab__dot" aria-label="Cambios sin guardar" /> : null}
+                </button>
+              ))}
+            </div>
+            <div className="admin-only-narrow">
+              <AdminNavSelect
+                id="admin-subpage"
+                label="Subpágina"
+                value={pageKey}
+                options={tab.pages.map((key) => ({
+                  value: key,
+                  label: `${PAGE_INFO[key].label}${dirty[key] ? ' •' : ''}`,
+                }))}
+                onChange={select}
+              />
+            </div>
+          </>
         ) : null}
 
         {!data && !error ? <p className="note">Cargando páginas…</p> : null}
@@ -1530,6 +1631,7 @@ export default function AdminPaginas() {
             {pageKey === 'inicio' ? <InicioEditor {...editorProps} /> : null}
             {pageKey === 'que-hacer' ? <QueHacerEditor {...editorProps} /> : null}
             {pageKey === 'redes' ? <RedesEditor {...editorProps} /> : null}
+            {pageKey === 'buscador' ? <BuscadorEditor {...editorProps} /> : null}
             {pageKey === 'carrusel' ? <CarruselEditor {...editorProps} /> : null}
             {pageKey.startsWith('donde-') ? <CategoryEditor key={pageKey} pageKey={pageKey} {...editorProps} /> : null}
 

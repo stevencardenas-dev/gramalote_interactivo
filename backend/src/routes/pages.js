@@ -17,7 +17,7 @@ import { parseJson, toNumber } from '../serializers.js'
 
 const router = Router()
 
-export const PAGE_KEYS = ['inicio', 'que-hacer', 'donde-ir', 'donde-comer', 'donde-dormir', 'donde-comprar', 'redes', 'carrusel']
+export const PAGE_KEYS = ['inicio', 'que-hacer', 'donde-ir', 'donde-comer', 'donde-dormir', 'donde-comprar', 'redes', 'carrusel', 'buscador']
 const settingKey = (page) => `page:${page}`
 const MAX_JSON_BYTES = 64 * 1024
 const INTERNAL_PATH = /^\/[a-z0-9\-/?=&]*$/i

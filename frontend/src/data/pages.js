@@ -241,6 +241,12 @@ PAGE_DEFAULTS.carrusel = {
   ],
 }
 
+// Imágenes de las tarjetas de sección del buscador (/buscar). La clave es el
+// `id` de data/componentCatalog.js; el valor es la foto elegida en el panel.
+// Sin foto propia, la tarjeta usa el diseño original (su foto, su icono o su
+// ilustración), que es lo que se ve si nadie ha guardado nada.
+PAGE_DEFAULTS.buscador = { images: {} }
+
 // Enlace de WhatsApp a partir de un número colombiano (10 dígitos) o con indicativo.
 export function whatsappUrl(phone, message = '') {
   let digits = String(phone ?? '').replace(/\D/g, '')

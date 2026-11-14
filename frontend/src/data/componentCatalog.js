@@ -4,9 +4,11 @@
 // (ilustración con título, como «Información práctica»).
 //
 // Criterio de las fotos: la sección usa una imagen fija de diseño que representa
-// su página de destino (no la portada de una ficha). Se corrige aquí una vez y
-// no se edita desde el panel; las fichas de establecimientos y experiencias sí
-// muestran su portada editable en los resultados.
+// su página de destino (no la portada de una ficha). Ese es el diseño original:
+// Panel › Páginas › Buscador puede darle a cada tarjeta otra foto, guardada en
+// site_settings («page:buscador»); la elegida allí manda sobre estos valores.
+// Las fichas de establecimientos y experiencias muestran su portada editable en
+// los resultados.
 export const componentCatalog = [
   {
     id: 'que-hacer',
@@ -125,6 +127,8 @@ export const componentCatalog = [
     description: 'Datos y relatos de Gramalote.',
     to: '/curiosidades',
     design: 'feature',
-    icon: 'info',
+    // Bombillo y no «info»: «Información práctica» ya usa ese icono y las dos
+    // tarjetas se veían iguales en el buscador.
+    icon: 'bombillo',
   },
 ]

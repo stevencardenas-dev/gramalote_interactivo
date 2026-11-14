@@ -2115,6 +2115,22 @@ a.admin-tile:hover {
   font-weight: 600;
 }
 
+.admin-imgfield__reset {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--a-ac-text);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-imgfield__reset:hover {
+  text-decoration: underline;
+}
+
 .admin-imgfield__label small {
   overflow: hidden;
   color: var(--a-mu);
@@ -3271,11 +3287,11 @@ a.admin-tile:hover {
   font-size: 1.05rem;
 }
 
+/* Una fila por desplegable: nombre, correo y contraseña, de arriba abajo. */
 .admin-account__cols {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
   margin-top: 16px;
 }
 
@@ -3300,11 +3316,11 @@ a.admin-tile:hover {
   display: none;
 }
 
-.admin-acc summary::after {
-  content: '⌄';
+.admin-acc__chevron {
+  flex: none;
+  width: 16px;
+  height: 16px;
   color: var(--a-mu);
-  font-size: 1.1rem;
-  line-height: 1;
   transition: transform 0.15s ease;
 }
 
@@ -3312,7 +3328,7 @@ a.admin-tile:hover {
   border-bottom: 1px solid var(--a-ln);
 }
 
-.admin-acc[open] summary::after {
+.admin-acc[open] .admin-acc__chevron {
   transform: rotate(180deg);
 }
 
@@ -3322,21 +3338,29 @@ a.admin-tile:hover {
   padding: 14px 16px 16px;
 }
 
-.admin-acc .admin-account__name {
-  display: grid;
-  gap: 10px;
+/* El formulario desplegado va en horizontal: campos alineados y botón al final. */
+.admin-acc .admin-account__name,
+.admin-acc .admin-account__block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 12px;
   padding: 0;
   border: 0;
+  margin: 0;
 }
 
-.admin-acc .admin-account__name .field {
-  flex: none;
+.admin-acc .admin-account__name .field,
+.admin-acc .admin-account__block .field {
+  flex: 1 1 200px;
+  min-width: 0;
 }
 
 .admin-acc .admin-account__name .admin-btn,
 .admin-acc .admin-account__block .admin-btn {
-  justify-self: start;
-  margin-top: 0;
+  flex: none;
+  justify-self: auto;
+  margin: 0 0 1px;
 }
 
 .admin-account__delete {
@@ -3349,8 +3373,30 @@ a.admin-tile:hover {
   flex: none;
 }
 
-@media (max-width: 1000px) {
-  .admin-account__cols {
-    grid-template-columns: 1fr;
+@media (max-width: 760px) {
+  .admin-acc .admin-account__name .field,
+  .admin-acc .admin-account__block .field,
+  .admin-acc .admin-account__name .admin-btn,
+  .admin-acc .admin-account__block .admin-btn {
+    flex: 1 1 100%;
   }
+}
+
+/* ---------------------------------- Pestañas de escritorio y desplegable móvil
+   Lugares y Páginas muestran pestañas en escritorio y un select en celular y
+   tablet: la hilera no cabe en pantallas estrechas. */
+@media (min-width: 901px) {
+  .admin-app .admin-only-narrow {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-app .admin-only-wide {
+    display: none;
+  }
+}
+
+.admin-switch {
+  margin-bottom: 18px;
 }
