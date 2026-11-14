@@ -38,7 +38,7 @@ export default function ConfirmarSugerencia() {
           ) : !token ? (
             <>
               <h1>Enlace incompleto</h1>
-              <p className="auth-error">
+              <p className="auth-error" role="alert">
                 Abre el enlace completo del correo o envía otra sugerencia para recibir uno nuevo.
               </p>
               <Link className="link-arrow" to="/sugerir">
@@ -52,7 +52,7 @@ export default function ConfirmarSugerencia() {
                 Un clic más: tu correo queda verificado y tu sugerencia le llega al equipo. Solo hace
                 falta la primera vez; después, tus sugerencias se envían sin este paso.
               </p>
-              {state.error ? <p className="auth-error">{state.error}</p> : null}
+              {state.error ? <p className="auth-error" role="alert">{state.error}</p> : null}
               <Button type="button" onClick={confirm} disabled={state.status === 'busy'}>
                 {state.status === 'busy' ? 'Confirmando…' : 'Confirmar mi correo'}
               </Button>

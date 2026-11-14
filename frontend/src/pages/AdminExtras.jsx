@@ -212,15 +212,14 @@ export default function AdminExtras() {
           </button>
         </div>
 
-        {error ? <p className="auth-error">{error}</p> : null}
+        {error ? <p className="auth-error" role="alert">{error}</p> : null}
 
-        <div className="admin-segment" role="tablist" aria-label="Filtrar por estado">
+        <div className="admin-segment" role="group" aria-label="Filtrar por estado">
           {STATUS_TABS.map((entry) => (
             <button
               key={entry.key}
               type="button"
-              role="tab"
-              aria-selected={tab === entry.key}
+              aria-pressed={tab === entry.key}
               className={`admin-tab${tab === entry.key ? ' is-active' : ''}`}
               onClick={() => setTab(entry.key)}
             >

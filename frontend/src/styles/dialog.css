@@ -73,7 +73,7 @@
 }
 
 .app-dialog__btn--primary.is-danger {
-  background: var(--c-coral);
+  background: var(--c-coral-text);
 }
 
 .app-dialog__btn--primary.is-danger:hover {

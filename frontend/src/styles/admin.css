@@ -152,7 +152,7 @@
 
 .admin-list__placeholder {
   color: var(--c-muted);
-  font-size: 11px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -188,7 +188,7 @@
   border-radius: 999px;
   background: var(--c-surface);
   color: var(--c-ink-soft);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -401,7 +401,7 @@
 
 .admin-media__dims {
   color: var(--c-muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .admin-media__actions {
@@ -418,7 +418,7 @@
   border-radius: 8px;
   background: var(--c-white);
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
 }
 
@@ -699,7 +699,8 @@
 .admin-row input:focus,
 .admin-row select:focus,
 .admin-media__alt:focus {
-  outline: none;
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
   border-color: var(--c-primary);
   box-shadow: 0 0 0 3px rgba(0, 66, 107, 0.14);
 }
@@ -931,7 +932,7 @@
 .admin-todo small {
   display: block;
   color: var(--c-muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .admin-bars {
@@ -1019,7 +1020,7 @@ a.admin-module-card:hover {
   padding: 1px 7px;
   border-radius: 999px;
   background: var(--c-surface);
-  font-size: 11px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -1117,7 +1118,7 @@ a.admin-module-card:hover {
   border-radius: 999px;
   background: var(--c-gold);
   color: var(--c-ink);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 

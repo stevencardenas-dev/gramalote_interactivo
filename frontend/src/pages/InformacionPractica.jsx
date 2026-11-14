@@ -42,7 +42,7 @@ export default function InformacionPractica() {
                   <a className="pill-link" href={route.href} target="_blank" rel="noreferrer">
                     Consultar ruta <span aria-hidden="true">↗</span>
                     <span className="visually-hidden"> {route.title.toLowerCase()} (abre Google Maps)</span>
-                  </a>
+                  <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>
                 </div>
               </article>
             ))}

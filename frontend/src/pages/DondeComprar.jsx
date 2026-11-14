@@ -61,7 +61,7 @@ export default function DondeComprar() {
           {loading ? (
             <p className="note">Cargando artesanías…</p>
           ) : error ? (
-            <p className="auth-error">{error}</p>
+            <p className="auth-error" role="alert">{error}</p>
           ) : places.length === 0 ? (
             <p className="empty">Todavía no hay artesanías publicadas.</p>
           ) : filtered.length === 0 ? (

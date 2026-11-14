@@ -76,7 +76,7 @@ export default function DondeIr() {
             <h2>{page.dormir.title}</h2>
           </div>
 
-          {error ? <p className="auth-error">{error}</p> : null}
+          {error ? <p className="auth-error" role="alert">{error}</p> : null}
 
           {loading ? (
             <p className="note">Cargando alojamientos…</p>

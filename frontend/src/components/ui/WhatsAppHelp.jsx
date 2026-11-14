@@ -58,7 +58,7 @@ export default function WhatsAppHelp() {
           <p>{MESSAGE}</p>
           <a className="wa-help__cta" href={href} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
             Abrir WhatsApp
-          </a>
+          <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>
         </div>
       ) : null}
       <button

@@ -62,7 +62,7 @@ export default function DondeComer() {
           {loading ? (
             <p className="note">Cargando establecimientos…</p>
           ) : error ? (
-            <p className="auth-error">{error}</p>
+            <p className="auth-error" role="alert">{error}</p>
           ) : places.length === 0 ? (
             <p className="empty">Todavía no hay establecimientos publicados.</p>
           ) : filtered.length === 0 ? (

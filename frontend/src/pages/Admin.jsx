@@ -83,7 +83,7 @@ export default function Admin() {
           <p className="admin-lead">¿Qué ficha quieres editar?</p>
         </div>
 
-        {error ? <p className="auth-error">{error}</p> : null}
+        {error ? <p className="auth-error" role="alert">{error}</p> : null}
 
         <form className="admin-search" role="search" onSubmit={handleSearch}>
           <label className="visually-hidden" htmlFor="home-search">

@@ -139,7 +139,7 @@ export default function AdminCorreo() {
       <section className="admin-page">
         <div className="admin-wrap">
           <h1>Correo</h1>
-          <p className="auth-error">Solo un administrador puede configurar el correo del sitio.</p>
+          <p className="auth-error" role="alert">Solo un administrador puede configurar el correo del sitio.</p>
         </div>
       </section>
     )
@@ -168,7 +168,7 @@ export default function AdminCorreo() {
         ) : (
           <form className="admin-mail" onSubmit={save}>
             {saved.passwordUnreadable ? (
-              <p className="auth-error">
+              <p className="auth-error" role="alert">
                 La contraseña guardada no se puede leer (cambió la llave del servidor). Escríbela de nuevo.
               </p>
             ) : null}
@@ -211,14 +211,14 @@ export default function AdminCorreo() {
                       Entra con la cuenta remitente a{' '}
                       <a href="https://myaccount.google.com/signinoptions/two-step-verification" target="_blank" rel="noreferrer">
                         Verificación en dos pasos
-                      </a>{' '}
+                      <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>{' '}
                       y actívala (Google lo exige).
                     </li>
                     <li>
                       Abre{' '}
                       <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer">
                         Contraseñas de aplicaciones
-                      </a>
+                      <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>
                       , escribe «Gramalote» y pulsa Crear.
                     </li>
                     <li>Copia las 16 letras aquí (con o sin espacios), guarda y envía una prueba.</li>

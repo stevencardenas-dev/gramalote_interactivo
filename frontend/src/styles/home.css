@@ -726,7 +726,7 @@
 
   .home-hero__cta {
     width: min(100%, 280px);
-    background: var(--c-coral);
+    background: var(--c-coral-text);
     color: var(--c-white);
   }
 
@@ -777,7 +777,7 @@
   display: inline-block;
   padding: 6px 22px;
   border-radius: 999px;
-  background: var(--c-orange, #d9531e);
+  background: var(--c-coral-text);
   color: #fff;
 }
 
@@ -994,4 +994,30 @@ a.banner-carousel__media:hover .banner-carousel__cta {
   .banner-carousel__progress {
     height: 5px;
   }
+}
+
+/* Pausa del cambio automático de banners (WCAG 2.2.2) */
+.banner-carousel__pause {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--c-navy);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--c-navy);
+  cursor: pointer;
+}
+
+.banner-carousel__pause svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
+.banner-carousel__pause:hover {
+  background: var(--c-navy);
+  color: var(--c-white);
 }

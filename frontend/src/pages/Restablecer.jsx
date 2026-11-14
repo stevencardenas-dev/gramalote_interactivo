@@ -49,14 +49,14 @@ export default function Restablecer() {
             </>
           ) : !token ? (
             <>
-              <p className="auth-error">Este enlace está incompleto. Pide uno nuevo desde «¿Olvidaste tu contraseña?».</p>
+              <p className="auth-error" role="alert">Este enlace está incompleto. Pide uno nuevo desde «¿Olvidaste tu contraseña?».</p>
               <Link className="link-arrow" to="/acceder">
                 Volver a acceder
               </Link>
             </>
           ) : (
             <form onSubmit={handleSubmit}>
-              {error ? <p className="auth-error">{error}</p> : null}
+              {error ? <p className="auth-error" id="auth-error" role="alert">{error}</p> : null}
               <div className="field">
                 <label htmlFor="new-password">Contraseña nueva</label>
                 <PasswordInput
@@ -64,6 +64,8 @@ export default function Restablecer() {
                   autoComplete="new-password"
                   minLength={8}
                   required
+                  aria-invalid={error ? true : undefined}
+                  aria-describedby={error ? 'auth-error' : undefined}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                 />
@@ -75,6 +77,8 @@ export default function Restablecer() {
                   autoComplete="new-password"
                   minLength={8}
                   required
+                  aria-invalid={error ? true : undefined}
+                  aria-describedby={error ? 'auth-error' : undefined}
                   value={confirm}
                   onChange={(event) => setConfirm(event.target.value)}
                 />

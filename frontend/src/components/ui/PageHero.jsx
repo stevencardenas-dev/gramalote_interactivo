@@ -51,11 +51,11 @@ export default function PageHero({
         <p className="page-hero__credit">
           <a href={credit.source} target="_blank" rel="noopener noreferrer">
             Foto: {credit.author} (recortada)
-          </a>
+          <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>
           {' · '}
           <a href={credit.license.url} target="_blank" rel="noopener noreferrer">
             {credit.license.label}
-          </a>
+          <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>
           {' · Wikimedia Commons'}
         </p>
       ) : null}

@@ -168,7 +168,7 @@ export default function AdminEstablecimiento() {
     return (
       <section className="admin-page">
         <div className="container">
-          {error ? <p className="auth-error">{error}</p> : <p className="note">Cargando ficha…</p>}
+          {error ? <p className="auth-error" role="alert">{error}</p> : <p className="note">Cargando ficha…</p>}
         </div>
       </section>
     )
@@ -423,13 +423,12 @@ export default function AdminEstablecimiento() {
           />
         ) : null}
 
-        <nav className="admin-tabs" role="tablist">
+        <nav className="admin-tabs" aria-label="Secciones de la ficha">
           {TABS.map((item) => (
             <button
               key={item.key}
               type="button"
-              role="tab"
-              aria-selected={tab === item.key}
+              aria-current={tab === item.key ? 'true' : undefined}
               className={`admin-tab ${tab === item.key ? 'is-active' : ''}`}
               onClick={() => setTab(item.key)}
             >

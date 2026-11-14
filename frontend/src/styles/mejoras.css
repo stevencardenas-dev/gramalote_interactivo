@@ -95,7 +95,7 @@ button.stars__button:focus-visible {
 
 /* Sin votos, las estrellas "saltan" una tras otra para invitar a calificar. */
 .stars__button.is-empty .stars__star {
-  animation: stars-nudge 2.4s ease-in-out infinite;
+  animation: stars-nudge 2.4s ease-in-out 3;
 }
 
 .stars__button.is-empty .stars__star:nth-child(2) { animation-delay: 0.12s; }
@@ -230,7 +230,7 @@ button.stars__button:focus-visible {
 .rating-modal__field input,
 .rating-modal__field textarea {
   padding: 12px 14px;
-  border: 1px solid var(--c-line);
+  border: 1px solid var(--c-field-border);
   border-radius: var(--radius-sm);
   background: var(--c-white);
   font: inherit;
@@ -384,7 +384,7 @@ button.stars__button:focus-visible {
 }
 
 .mobile-panel__list li:nth-child(6n + 2) a { --item: var(--c-gold); }
-.mobile-panel__list li:nth-child(6n + 3) a { --item: var(--c-coral); --item-ink: var(--c-white); }
+.mobile-panel__list li:nth-child(6n + 3) a { --item: var(--c-coral-text); --item-ink: var(--c-white); }
 .mobile-panel__list li:nth-child(6n + 4) a { --item: var(--c-green); --item-ink: var(--c-white); }
 .mobile-panel__list li:nth-child(6n + 5) a { --item: var(--c-brick); --item-ink: var(--c-white); }
 .mobile-panel__list li:nth-child(6n) a { --item: var(--c-brown); --item-ink: var(--c-white); }
@@ -748,7 +748,7 @@ button.stars__button:focus-visible {
 .rating-result__tag--gold { color: var(--c-brown); background: #ffe3a3; }
 .rating-result__tag--green { color: var(--c-green); }
 .rating-result__tag--brick { color: var(--c-brick); }
-.rating-result__tag--coral { color: var(--c-coral); }
+.rating-result__tag--coral { color: var(--c-coral-text); }
 .rating-result__tag--navy { color: var(--c-navy); }
 
 @media (prefers-reduced-motion: reduce) {

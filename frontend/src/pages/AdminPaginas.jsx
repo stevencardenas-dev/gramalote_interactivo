@@ -1520,17 +1520,16 @@ export default function AdminPaginas() {
           </div>
         </div>
 
-        {error ? <p className="auth-error">{error}</p> : null}
+        {error ? <p className="auth-error" role="alert">{error}</p> : null}
 
         {/* En escritorio, la hilera de pestañas de siempre; en celular y tablet,
             el desplegable (ahí la hilera no cabía). */}
-        <nav className="admin-tabs admin-only-wide" role="tablist" aria-label="Página">
+        <nav className="admin-tabs admin-only-wide" aria-label="Página">
           {TABS.map((entry) => (
             <button
               key={entry.key}
               type="button"
-              role="tab"
-              aria-selected={tab.key === entry.key}
+              aria-current={tab.key === entry.key ? 'true' : undefined}
               className={`admin-tab${tab.key === entry.key ? ' is-active' : ''}`}
               onClick={() => select(entry.pages[0])}
             >

@@ -249,11 +249,17 @@ button.link-arrow {
 }
 
 .search-field input::placeholder {
-  color: #6d8ea3;
+  color: #587386;
 }
 
 .search-field input:focus {
   outline: none;
+}
+
+/* El contorno va en el contenedor (pastilla blanca): azul marino sobre blanco, 10:1. */
+.search-field:focus-within {
+  outline: 2px solid var(--c-navy);
+  outline-offset: -2px;
 }
 
 .search-field__icon {
@@ -272,7 +278,7 @@ button.link-arrow {
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;

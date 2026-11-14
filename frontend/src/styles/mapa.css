@@ -490,7 +490,7 @@
 .mapa-limpiar {
   border: 0;
   background: transparent;
-  color: var(--c-coral);
+  color: var(--c-coral-text);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -1092,7 +1092,7 @@
 }
 
 .mapa-chip.is-on {
-  background: var(--c-coral);
+  background: var(--c-coral-text);
   color: var(--c-white);
   font-weight: 700;
 }

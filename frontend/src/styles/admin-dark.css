@@ -357,7 +357,8 @@ body:has(.admin-app) {
 .admin-app input:focus,
 .admin-app select:focus,
 .admin-app textarea:focus {
-  outline: none;
+  outline: 2px solid var(--a-ac);
+  outline-offset: 1px;
   border-color: var(--a-ac);
   box-shadow: 0 0 0 3px rgba(47, 111, 224, 0.2);
 }
@@ -2586,7 +2587,8 @@ a.admin-tile:hover {
 
 .admin-social__url input:focus {
   border-color: var(--a-ac);
-  outline: none;
+  outline: 2px solid var(--a-ac);
+  outline-offset: 1px;
 }
 
 .admin-social__url input[aria-invalid='true'] {

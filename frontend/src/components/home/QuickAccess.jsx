@@ -19,7 +19,7 @@ export default function QuickAccess({ items = PAGE_DEFAULTS.inicio.quickAccess }
         <div className="quick-grid">
           {items.map((item) => (
             <Link key={item.id} className="quick-card" to={item.to}>
-              <Photo src={item.photo} alt={item.label} />
+              <Photo src={item.photo} alt="" />
               <span>{item.label}</span>
             </Link>
           ))}

@@ -112,18 +112,19 @@ export default function Sugerir() {
               </div>
             ) : (
               <form onSubmit={submit} noValidate>
+                <p className="note">Los campos con <span aria-hidden="true">*</span> son obligatorios.</p>
                 <fieldset className="suggest__group">
                   <legend>El lugar</legend>
                   <label className="suggest__field">
                     <span>
-                      Nombre del lugar <em aria-hidden="true">*</em>
+                      Nombre del lugar <em aria-hidden="true">*</em><span className="visually-hidden"> (obligatorio)</span>
                     </span>
                     <input value={form.nombre} onChange={set('nombre')} maxLength={190} required autoComplete="off" />
                   </label>
 
                   <div className="suggest__field" role="radiogroup" aria-labelledby="suggest-type">
                     <span id="suggest-type">
-                      ¿Qué tipo de lugar es? <em aria-hidden="true">*</em>
+                      ¿Qué tipo de lugar es? <em aria-hidden="true">*</em><span className="visually-hidden"> (obligatorio)</span>
                     </span>
                     <div className="suggest__types">
                       {TYPES.map((type) => (
@@ -158,7 +159,7 @@ export default function Sugerir() {
                   </label>
                   <label className="suggest__field">
                     <span>
-                      ¿Por qué lo recomiendas? <em aria-hidden="true">*</em>
+                      ¿Por qué lo recomiendas? <em aria-hidden="true">*</em><span className="visually-hidden"> (obligatorio)</span>
                     </span>
                     <textarea
                       value={form.motivo}
