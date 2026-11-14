@@ -102,10 +102,11 @@ export default function AdminSugerencias() {
   async function removeAll() {
     const many = filtered.length
     if (!many) return
+    const subject = many === 1 ? 'la sugerencia' : `las ${many} sugerencias`
     const ok = await confirm({
       title: filter
-        ? `¿Borrar las ${many} sugerencias «${STATUS[filter].label.toLowerCase()}»?`
-        : `¿Borrar las ${many} sugerencias?`,
+        ? `¿Borrar ${subject} «${STATUS[filter].label.toLowerCase()}»?`
+        : `¿Borrar ${subject}?`,
       message: 'Se borran de la base de datos y no se puede deshacer.',
       confirmLabel: 'Borrar todas',
       danger: true,
@@ -167,7 +168,9 @@ export default function AdminSugerencias() {
         {filtered.length ? (
           <div className="admin-bulkbar">
             <button type="button" className="admin-btn admin-btn--danger-outline" onClick={removeAll} disabled={busy}>
-              {filter ? `Borrar las ${filtered.length} «${STATUS[filter].label.toLowerCase()}»` : 'Borrar todas'}
+              {filter
+                ? `Borrar ${filtered.length === 1 ? 'la' : `las ${filtered.length}`} «${STATUS[filter].label.toLowerCase()}»`
+                : 'Borrar todas'}
             </button>
           </div>
         ) : null}
