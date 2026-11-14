@@ -62,7 +62,7 @@ export default function Footer() {
                   href={network.url.trim()}
                   target={network.id === 'email' ? undefined : '_blank'}
                   rel="noreferrer"
-                  aria-label={network.label}
+                  aria-label={network.id === 'email' ? network.label : `${network.label} (se abre en una pestaña nueva)`}
                 >
                   <SocialIcon name={network.id} />
                 </a>

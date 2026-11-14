@@ -159,3 +159,13 @@ ul {
     scroll-behavior: auto !important;
   }
 }
+
+/* Campos obligatorios: el aviso va en texto, no solo en el atributo (WCAG 3.3.2). */
+.field:not(.auth-card .field):has(:required) > label::after,
+.admin-field:has(:required) > span::after,
+.admin-field:has(:required) > .admin-field__label::after {
+  content: ' (obligatorio)';
+  font-weight: 400;
+  font-size: 0.85em;
+  opacity: 0.85;
+}

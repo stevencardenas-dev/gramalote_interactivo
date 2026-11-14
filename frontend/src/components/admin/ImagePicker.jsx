@@ -1,4 +1,5 @@
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useModalFocus } from '../../lib/useModalFocus.js'
+import { useId, useMemo, useState } from 'react'
 
 // Popup para elegir una foto de las galerías de las fichas (Páginas). Muestra
 // las fotos agrupadas por ficha, con la elegida marcada; opcionalmente permite
@@ -22,13 +23,7 @@ export default function ImagePicker({
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    function onKeyDown(event) {
-      if (event.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  const panelRef = useModalFocus(onClose)
 
   const visible = useMemo(() => {
     const term = filter.trim().toLowerCase()
@@ -59,6 +54,7 @@ export default function ImagePicker({
     <div className="admin-dialog" role="presentation" onClick={onClose}>
       <div
         className="admin-dialog__panel admin-picker"
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -104,7 +100,7 @@ export default function ImagePicker({
             </label>
           ) : null}
         </div>
-        {error ? <p className="auth-error">{error}</p> : null}
+        {error ? <p className="auth-error" role="alert">{error}</p> : null}
 
         <div className="admin-picker__body">
           {total === 0 ? (

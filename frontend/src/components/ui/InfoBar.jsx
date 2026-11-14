@@ -10,6 +10,7 @@ function Value({ value }) {
         {line.href ? (
           <a href={line.href} target={line.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer">
             {text}
+            {line.href.startsWith('http') ? <span className="visually-hidden"> (se abre en una pestaña nueva)</span> : null}
           </a>
         ) : (
           text

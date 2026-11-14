@@ -25,6 +25,7 @@ export default function Button({
   const content = (
     <>
       {children}
+      {rest.target === '_blank' ? <span className="visually-hidden"> (se abre en una pestaña nueva)</span> : null}
       {icon ? <Icon name={icon} className="btn__icon" /> : null}
     </>
   )

@@ -115,7 +115,7 @@ export default function Acceder() {
 
           {forgot ? (
             <form onSubmit={handleForgot}>
-              {error ? <p className="auth-error">{error}</p> : null}
+              {error ? <p className="auth-error" id="auth-error" role="alert">{error}</p> : null}
               {notice ? (
                 <p role="status">{notice}</p>
               ) : (
@@ -130,6 +130,8 @@ export default function Acceder() {
                       type="email"
                       autoComplete="email"
                       required
+                      aria-invalid={error ? true : undefined}
+                      aria-describedby={error ? 'auth-error' : undefined}
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                     />
@@ -156,7 +158,7 @@ export default function Acceder() {
           ) : (
             <form onSubmit={handleSubmit}>
               {kicked && !error ? <p role="status">{kicked}</p> : null}
-              {error ? <p className="auth-error">{error}</p> : null}
+              {error ? <p className="auth-error" id="auth-error" role="alert">{error}</p> : null}
               <div className="field">
                 <label htmlFor="email">Correo electrónico</label>
                 <input
@@ -164,6 +166,8 @@ export default function Acceder() {
                   type="email"
                   autoComplete="email"
                   required
+                  aria-invalid={error ? true : undefined}
+                  aria-describedby={error ? 'auth-error' : undefined}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                 />
@@ -174,6 +178,8 @@ export default function Acceder() {
                   id="password"
                   autoComplete="current-password"
                   required
+                  aria-invalid={error ? true : undefined}
+                  aria-describedby={error ? 'auth-error' : undefined}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                 />

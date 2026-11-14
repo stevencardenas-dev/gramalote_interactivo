@@ -16,7 +16,7 @@ export default function AdminToast({ tone = 'error', title, message, onClose, se
   }, [onClose, seconds])
 
   return (
-    <div className={`admin-toast ${TONES[tone] ?? ''}`} role="status" aria-live="polite">
+    <div className={`admin-toast ${TONES[tone] ?? ''}`} role={tone === 'error' ? 'alert' : 'status'}>
       <span className="admin-toast__dot" aria-hidden="true" />
       <div className="admin-toast__body">
         {title ? <strong>{title}</strong> : null}

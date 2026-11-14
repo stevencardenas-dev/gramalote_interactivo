@@ -41,7 +41,7 @@ function linkify(value) {
     /^https?:\/\//i.test(part) ? (
       <a key={index} href={part} target="_blank" rel="noreferrer">
         {part}{' '}
-      </a>
+      <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>
     ) : (
       <span key={index}>{part} </span>
     ),
@@ -159,13 +159,12 @@ export default function AdminSugerencias() {
           </div>
         </div>
 
-        <div className="admin-segment" role="tablist" aria-label="Filtrar por estado">
+        <div className="admin-segment" role="group" aria-label="Filtrar por estado">
           {FILTERS.map(([value, label]) => (
             <button
               key={value || 'todas'}
               type="button"
-              role="tab"
-              aria-selected={filter === value}
+              aria-pressed={filter === value}
               className={`admin-tab${filter === value ? ' is-active' : ''}`}
               onClick={() => setFilter(value)}
             >

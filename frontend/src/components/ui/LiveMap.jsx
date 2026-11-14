@@ -473,12 +473,7 @@ export default function LiveMap({
             <div className="mapa-ficha__acciones">
               <a className="btn btn--primary btn--sm" href={route} target="_blank" rel="noreferrer">
                 Cómo llegar
-              </a>
-              {place.mapsUrl ? (
-                <a className="btn btn--ghost btn--sm" href={place.mapsUrl} target="_blank" rel="noreferrer">
-                  Ver en Google Maps
-                </a>
-              ) : null}
+              <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>
             </div>
           </div>
         </div>
@@ -519,7 +514,7 @@ export default function LiveMap({
             </Link>
             <a className="btn btn--ghost btn--sm" href={route} target="_blank" rel="noreferrer">
               Cómo llegar
-            </a>
+            <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>
           </div>
         </div>
       </div>
@@ -832,7 +827,6 @@ export default function LiveMap({
           {typeSelect}
         </div>
       ) : null}
-
       <div
         ref={containerRef}
         className={`mapa${fill ? ' mapa--fill' : ''}`}

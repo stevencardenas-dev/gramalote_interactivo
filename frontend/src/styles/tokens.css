@@ -8,6 +8,10 @@
   --c-gold: #eaa41e;
   --c-brick: #a5292b;
   --c-coral: #db5319;
+  /* Coral oscurecido: texto coral y fondos con texto blanco (≥ 4,5:1 sobre crema y blanco) */
+  --c-coral-text: #b53f0e;
+  /* Borde de campos de formulario (≥ 3:1 sobre blanco y crema, WCAG 1.4.11) */
+  --c-field-border: #8a7d70;
   --c-brown: #773f10;
   --c-green: #306c46;
   /* Verde hoja oscurecido para texto blanco (4.5:1) */

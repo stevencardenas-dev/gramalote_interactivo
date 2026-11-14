@@ -327,7 +327,7 @@
 }
 
 .transport-card__icon {
-  color: var(--c-coral);
+  color: var(--c-coral-text);
 }
 
 .transport-card h3 {

@@ -1,3 +1,4 @@
+import { useStartsPaused } from '../../lib/useReducedMotion.js'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from './Icon.jsx'
@@ -100,7 +101,7 @@ export default function HeroFicha({
   const base = useRef(0)
   const since = useRef(0)
   const [dot, setDot] = useState(0)
-  const [paused, setPaused] = useState(false)
+  const [paused, setPaused] = useStartsPaused()
   const [retarget, setRetarget] = useState(0)
 
   // Carrusel continuo: las fotos se deslizan sin parar hacia la izquierda; al
@@ -185,7 +186,7 @@ export default function HeroFicha({
                   title={NETWORKS[link.platform]}
                 >
                   <SocialIcon name={link.platform} />
-                </a>
+                <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>
               ))}
               {canShare ? <ShareButton title={title} /> : null}
             </div>

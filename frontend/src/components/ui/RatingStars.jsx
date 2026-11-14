@@ -1,3 +1,4 @@
+import { useModalFocus } from '../../lib/useModalFocus.js'
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { fetchRating, formatAverage, formatVotes, sendRating } from '../../lib/ratingsApi.js'
@@ -146,13 +147,7 @@ function RatingDialog({ kind, slug, title, confirm, before, onClose, onSaved }) 
   const [pending, setPending] = useState(false)
   const [after, setAfter] = useState(null)
 
-  useEffect(() => {
-    function onKey(event) {
-      if (event.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  const panelRef = useModalFocus(onClose)
 
   async function submit(event) {
     event.preventDefault()
@@ -186,7 +181,7 @@ function RatingDialog({ kind, slug, title, confirm, before, onClose, onSaved }) 
       className="rating-modal"
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
-      <div className="rating-modal__card" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <div className="rating-modal__card" ref={panelRef} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <button type="button" className="rating-modal__close" onClick={onClose} aria-label="Cerrar">
           ×
         </button>

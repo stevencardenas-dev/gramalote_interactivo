@@ -1,3 +1,4 @@
+import { useStartsPaused } from '../../lib/useReducedMotion.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CarouselArrows } from '../ui/Carousel.jsx'
@@ -74,8 +75,7 @@ function SlideBody({ slide, eager, preview, swallowClick }) {
       >
         {image}
         {cta}
-        <span className="visually-hidden"> (se abre en otra pestaña)</span>
-      </a>
+        <span className="visually-hidden"> (se abre en otra pestaña)</span></a>
     )
   }
   return (
@@ -96,6 +96,7 @@ export default function BannerCarousel({ content, preview = false }) {
   const [touching, setTouching] = useState(false)
   const [touchHold, setTouchHold] = useState(false)
   const [manual, setManual] = useState(false)
+  const [userPaused, setUserPaused] = useStartsPaused()
   const [inView, setInView] = useState(true)
   const [pageVisible, setPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden)
   const [dragX, setDragX] = useState(0)
@@ -111,7 +112,7 @@ export default function BannerCarousel({ content, preview = false }) {
   const manualResume = timingSeconds(content?.manualResume, 'manualResume') * 1000
   const autoplay = content?.autoplay !== false && count > 1
   const showBar = autoplay && !manual
-  const held = hover || focus || touching || touchHold || !inView || !pageVisible
+  const held = userPaused || hover || focus || touching || touchHold || !inView || !pageVisible
   const running = showBar && !held && dragX === 0
 
   // Reloj del avance: cuenta solo mientras corre y conserva lo que faltaba al
@@ -303,6 +304,20 @@ export default function BannerCarousel({ content, preview = false }) {
             <span className="banner-carousel__count">
               {current + 1} / {count}
             </span>
+            {autoplay ? (
+              <button
+                type="button"
+                className="banner-carousel__pause"
+                aria-pressed={userPaused}
+                aria-label={userPaused ? 'Reanudar el cambio automático de banners' : 'Pausar el cambio automático de banners'}
+                title={userPaused ? 'Reanudar' : 'Pausar'}
+                onClick={() => setUserPaused((value) => !value)}
+              >
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  {userPaused ? <path d="M5 3.2v9.6L12.6 8z" /> : <path d="M4.5 3h2.6v10H4.5zM8.9 3h2.6v10H8.9z" />}
+                </svg>
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>

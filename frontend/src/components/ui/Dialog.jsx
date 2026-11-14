@@ -1,3 +1,4 @@
+import { useModalFocus } from '../../lib/useModalFocus.js'
 import { useEffect, useId, useRef } from 'react'
 
 // Popup genérico del sitio y del panel: una sola caja para avisos y para
@@ -15,6 +16,7 @@ export default function Dialog({
 }) {
   const titleId = useId()
   const confirmRef = useRef(null)
+  const panelRef = useModalFocus()
   const isAlert = kind === 'alert'
 
   useEffect(() => {
@@ -38,6 +40,7 @@ export default function Dialog({
   return (
     <div className="app-dialog" role="presentation" onClick={() => onClose(false)}>
       <div
+        ref={panelRef}
         className="app-dialog__panel"
         role={isAlert ? 'alertdialog' : 'dialog'}
         aria-modal="true"

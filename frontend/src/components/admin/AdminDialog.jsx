@@ -1,4 +1,6 @@
-import { useEffect, useId } from 'react'
+import { useId } from 'react'
+import { useModalFocus } from '../../lib/useModalFocus.js'
+
 
 // Aviso modal del panel. Se usa cuando faltan datos obligatorios o cuando la API
 // rechaza un guardado, para que el mensaje no pase desapercibido en el pie.
@@ -12,18 +14,13 @@ export default function AdminDialog({
 }) {
   const titleId = useId()
 
-  useEffect(() => {
-    function onKeyDown(event) {
-      if (event.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  const panelRef = useModalFocus(onClose)
 
   return (
     <div className="admin-dialog" role="presentation" onClick={onClose}>
       <div
         className="admin-dialog__panel"
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

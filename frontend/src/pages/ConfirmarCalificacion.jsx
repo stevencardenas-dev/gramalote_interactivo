@@ -46,7 +46,7 @@ export default function ConfirmarCalificacion() {
           ) : !token ? (
             <>
               <h1>Enlace incompleto</h1>
-              <p className="auth-error">
+              <p className="auth-error" role="alert">
                 Abre el enlace completo del correo o vuelve a calificar para recibir uno nuevo.
               </p>
               <Link className="link-arrow" to="/">
@@ -57,7 +57,7 @@ export default function ConfirmarCalificacion() {
             <>
               <h1>Confirma tu calificación</h1>
               <p>Un clic más y tu voto queda contado. Gracias por ayudar a otros visitantes.</p>
-              {state.error ? <p className="auth-error">{state.error}</p> : null}
+              {state.error ? <p className="auth-error" role="alert">{state.error}</p> : null}
               <Button type="button" onClick={confirm} disabled={state.status === 'busy'}>
                 {state.status === 'busy' ? 'Confirmando…' : 'Confirmar mi calificación'}
               </Button>

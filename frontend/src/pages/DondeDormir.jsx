@@ -64,7 +64,7 @@ export default function DondeDormir() {
           {loading ? (
             <p className="note">Cargando alojamientos…</p>
           ) : error ? (
-            <p className="auth-error">{error}</p>
+            <p className="auth-error" role="alert">{error}</p>
           ) : places.length === 0 ? (
             <p className="empty">Todavía no hay alojamientos publicados.</p>
           ) : filtered.length === 0 ? (
@@ -108,7 +108,7 @@ export default function DondeDormir() {
 
             <div className="center-action">
               <Button to="/donde-comprar" icon="arrow">
-                {meta.relationCta}
+                {meta.relationCta ?? 'Ver dónde comprar'}
               </Button>
             </div>
           </div>
