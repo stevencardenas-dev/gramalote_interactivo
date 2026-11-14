@@ -2,16 +2,19 @@
 // de /sugerir; aquí se validan, se guardan, se avisa por correo al equipo y se
 // agradece a quien sugirió. El panel las revisa en Sugerencias.
 import { Router } from 'express'
+import { createHash, randomBytes } from 'node:crypto'
 import { requireAuth } from '../auth.js'
 import { query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, stringParam } from '../http.js'
-import { EMAIL, getMailSettings, notifyList, renderEmail, trySendMail } from '../mailer.js'
+import { EMAIL, getMailSettings, mailReady, notifyList, renderEmail, trySendMail } from '../mailer.js'
 import { clientIp, consume, limitByIp } from '../rate-limit.js'
 import { parseJson } from '../serializers.js'
 
 const router = Router()
 const STATUSES = ['nueva', 'revisada', 'agregada', 'descartada']
 const HOUR = 60 * 60 * 1000
+const CONFIRM_HOURS = 48
+const tokenHashOf = (token) => createHash('sha256').update(token).digest('hex')
 
 // Mismas opciones que muestra el formulario del sitio.
 export const SUGGESTION_TYPES = [
@@ -20,7 +23,8 @@ export const SUGGESTION_TYPES = [
   'Dónde comprar',
   'Dónde ir',
   'Experiencia o actividad',
-  'Otro',
+  'Patrimonio',
+  'Extras',
 ]
 const OWNER = ['Sí', 'No']
 
@@ -37,6 +41,7 @@ function row(item) {
     isOwner: item.is_owner,
     suggesterName: item.suggester_name,
     suggesterEmail: item.suggester_email,
+    emailVerified: Boolean(item.email_verified_at),
     rawAnswers: parseJson(item.raw_answers, null),
     status: item.status,
     adminNote: item.admin_note,
@@ -74,6 +79,8 @@ router.post(
     }
 
     const businessType = field(body, 'tipo', 'Tipo de lugar', { max: 120, required: true })
+    // Los tipos son los mismos grupos del panel: Dónde ir/comer/dormir/comprar,
+    // experiencias, patrimonio y extras.
     if (!SUGGESTION_TYPES.includes(businessType)) {
       throw new ApiError(400, 'VALIDATION', 'Tipo de lugar: elige una de las opciones')
     }
@@ -84,9 +91,9 @@ router.post(
 
     const fields = {
       source: 'web',
-      business_name: field(body, 'nombre', 'Nombre del establecimiento', { max: 190, required: true, min: 2 }),
+      business_name: field(body, 'nombre', 'Nombre del lugar', { max: 190, required: true, min: 2 }),
       business_type: businessType,
-      address: field(body, 'direccion', 'Dirección', { max: 500 }),
+      address: field(body, 'direccion', 'Ubicación', { max: 500 }),
       phone: field(body, 'telefono', 'Teléfono', { max: 120 }),
       links: field(body, 'redes', 'Redes o web', { max: 500 }),
       reason: field(body, 'motivo', '¿Por qué lo recomiendas?', { max: 2000, required: true, min: 10 }),
@@ -106,6 +113,29 @@ router.post(
       }
     }
 
+    // Primera vez con este correo: se le pide confirmarlo antes de escribirle.
+    // El correo que ya confirmó una calificación o una sugerencia no repite el
+    // paso; su sugerencia entra igual y solo cambia si le llega el enlace.
+    const mailSettings = await getMailSettings()
+    const canMail = mailReady(mailSettings)
+    let verified = true
+    if (email && canMail) {
+      const known = await queryOne(
+        `SELECT 1 AS ok FROM ratings WHERE voter_email = ? AND status = 'confirmed'
+         UNION ALL
+         SELECT 1 AS ok FROM establishment_suggestions
+          WHERE suggester_email = ? AND email_verified_at IS NOT NULL
+         LIMIT 1`,
+        [email, email],
+      )
+      verified = Boolean(known)
+    }
+    const token = email && canMail && !verified ? randomBytes(32).toString('hex') : null
+    if (token) {
+      fields.confirm_token_hash = tokenHashOf(token)
+      fields.confirm_expires_at = new Date(Date.now() + CONFIRM_HOURS * HOUR)
+    }
+
     const columns = Object.keys(fields)
     const result = await query(
       `INSERT INTO establishment_suggestions (${columns.join(', ')})
@@ -113,9 +143,9 @@ router.post(
       columns.map((column) => fields[column]),
     )
 
-    const settings = await getMailSettings()
+    const settings = mailSettings
     const rows = [
-      ['Establecimiento', fields.business_name],
+      ['Lugar', fields.business_name],
       ['Tipo', fields.business_type],
       ['Dirección', fields.address],
       ['Teléfono', fields.phone],
@@ -141,7 +171,7 @@ router.post(
         replyTo: fields.suggester_email ?? undefined,
       })
     }
-    if (thank) {
+    if (thank && !token) {
       const { html, text } = renderEmail({
         title: '¡Gracias por tu sugerencia!',
         paragraphs: [
@@ -159,7 +189,71 @@ router.post(
       })
     }
 
-    res.status(201).json({ data: { ok: true, id: Number(result.insertId) } })
+    if (token) {
+      const url = `${settings.siteUrl}/confirmar-sugerencia?token=${token}`
+      const { html, text } = renderEmail({
+        title: 'Confirma tu correo',
+        paragraphs: [
+          `${(fields.suggester_name ?? '').split(' ')[0] || 'Hola'}:`,
+          `Recibimos tu sugerencia de «${fields.business_name}» para Turismo Gramalote. Confirma que este correo es tuyo con el botón; así podemos escribirte si hace falta.`,
+          `Solo hace falta la primera vez: después, tus sugerencias con este correo se envían sin este paso. El enlace vence en ${CONFIRM_HOURS} horas.`,
+        ],
+        action: { label: 'Confirmar mi correo', url },
+        footer: 'Si no enviaste ninguna sugerencia, ignora este correo.',
+      })
+      trySendMail({
+        to: fields.suggester_email,
+        subject: 'Confirma tu correo · Turismo Gramalote',
+        html,
+        text,
+        kind: 'suggestion_confirm',
+      })
+    }
+
+    res.status(201).json({ data: { ok: true, id: Number(result.insertId), pending: Boolean(token) } })
+  }),
+)
+
+// Abre el enlace del correo: el correo queda verificado y se manda el gracias.
+router.post(
+  '/suggestions/confirm',
+  limitByIp('suggestion-confirm', [{ windowMs: HOUR, max: 30 }]),
+  asyncHandler(async (req, res) => {
+    const token = stringParam(req.body?.token, { max: 128 })
+    if (!token) throw new ApiError(400, 'VALIDATION', 'Falta el enlace de confirmación')
+    const row = await queryOne(
+      `SELECT id, business_name, suggester_name, suggester_email, confirm_expires_at
+       FROM establishment_suggestions WHERE confirm_token_hash = ?`,
+      [tokenHashOf(token)],
+    )
+    if (!row || !row.confirm_expires_at || new Date(row.confirm_expires_at).getTime() <= Date.now()) {
+      throw new ApiError(400, 'INVALID_TOKEN', 'El enlace no es válido o ya venció. Envía otra sugerencia para recibir uno nuevo.')
+    }
+    await query(
+      `UPDATE establishment_suggestions
+          SET email_verified_at = NOW(), confirm_token_hash = NULL, confirm_expires_at = NULL
+        WHERE id = ?`,
+      [row.id],
+    )
+
+    const settings = await getMailSettings()
+    const { html, text } = renderEmail({
+      title: '¡Gracias por tu sugerencia!',
+      paragraphs: [
+        `${(row.suggester_name ?? '').split(' ')[0] || 'Hola'}:`,
+        `Confirmamos tu correo. Recibimos tu sugerencia de «${row.business_name}» y el equipo de Turismo Gramalote la revisará; si cumple con lo necesario, la agregaremos al sitio.`,
+      ],
+      action: { label: 'Seguir explorando Gramalote', url: settings.siteUrl },
+    })
+    trySendMail({
+      to: row.suggester_email,
+      subject: 'Recibimos tu sugerencia · Turismo Gramalote',
+      html,
+      text,
+      kind: 'suggestion_thanks',
+    })
+
+    res.json({ data: { ok: true, name: row.business_name } })
   }),
 )
 
@@ -196,6 +290,26 @@ router.patch(
       [req.admin.id, id, JSON.stringify({ status }), clientIp(req)],
     )
     res.json({ data: row(await queryOne('SELECT * FROM establishment_suggestions WHERE id = ?', [id])) })
+  }),
+)
+
+// Borrado en bloque: todas las sugerencias o solo las de un estado. Sirve para
+// cuando se acumulan (una tanda de spam, pruebas) sin borrarlas una por una.
+router.delete(
+  '/admin/suggestions',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const status = STATUSES.includes(req.query.status) ? req.query.status : null
+    const result = await query(
+      `DELETE FROM establishment_suggestions${status ? ' WHERE status = ?' : ''}`,
+      status ? [status] : [],
+    )
+    await query(
+      `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, changes, ip_address)
+       VALUES (?, 'delete', 'suggestion', NULL, ?, ?)`,
+      [req.admin.id, JSON.stringify({ status: status ?? 'todas', deleted: result.affectedRows }), clientIp(req)],
+    )
+    res.json({ data: { deleted: Number(result.affectedRows ?? 0) } })
   }),
 )
 

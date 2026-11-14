@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
+import Pagination from '../components/admin/Pagination.jsx'
+import { usePaged } from '../lib/usePaged.js'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 import { useDialog } from '../lib/dialog.jsx'
 
@@ -44,6 +46,8 @@ export default function AdminSugerencias() {
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState(null)
   const { confirm } = useDialog()
+  const filtered = (items ?? []).filter((entry) => !filter || entry.status === filter)
+  const paged = usePaged(filtered)
 
   const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message })
 
@@ -93,6 +97,37 @@ export default function AdminSugerencias() {
     }
   }
 
+  // Borrado en bloque: si se acumulan (por ejemplo, una tanda de spam) no hay
+  // que ir una por una. Respeta el filtro de estado que esté puesto.
+  async function removeAll() {
+    const many = filtered.length
+    if (!many) return
+    const ok = await confirm({
+      title: filter
+        ? `¿Borrar las ${many} sugerencias «${STATUS[filter].label.toLowerCase()}»?`
+        : `¿Borrar las ${many} sugerencias?`,
+      message: 'Se borran de la base de datos y no se puede deshacer.',
+      confirmLabel: 'Borrar todas',
+      danger: true,
+    })
+    if (!ok) return
+    setBusy(true)
+    try {
+      const { deleted } = await apiRequest(`/admin/suggestions${filter ? `?status=${filter}` : ''}`, {
+        method: 'DELETE',
+      })
+      setItems((current) =>
+        filter ? current.filter((entry) => entry.status !== filter) : [],
+      )
+      setFilter('')
+      notify('ok', 'Sugerencias borradas', `Se borraron ${deleted} ${deleted === 1 ? 'sugerencia' : 'sugerencias'}.`)
+    } catch (err) {
+      notify('error', 'No se pudo borrar', err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <section className="admin-page">
       <div className="admin-wrap">
@@ -129,17 +164,23 @@ export default function AdminSugerencias() {
           ))}
         </div>
 
+        {filtered.length ? (
+          <div className="admin-bulkbar">
+            <button type="button" className="admin-btn admin-btn--danger-outline" onClick={removeAll} disabled={busy}>
+              {filter ? `Borrar las ${filtered.length} «${STATUS[filter].label.toLowerCase()}»` : 'Borrar todas'}
+            </button>
+          </div>
+        ) : null}
+
         {items === null ? (
           <p className="note">Cargando…</p>
         ) : items.length === 0 ? (
           <p className="note">Todavía no llegan sugerencias.</p>
-        ) : items.filter((entry) => !filter || entry.status === filter).length === 0 ? (
+        ) : paged.total === 0 ? (
           <p className="note">No hay sugerencias con ese estado.</p>
         ) : (
           <ul className="admin-suggest">
-            {items
-              .filter((entry) => !filter || entry.status === filter)
-              .map((item) => (
+            {paged.pageItems.map((item) => (
               <li key={item.id} className={`admin-suggest__item is-${item.status}`}>
                 <div className="admin-suggest__head">
                   <div>
@@ -151,6 +192,11 @@ export default function AdminSugerencias() {
                   <span className={`admin-badge ${STATUS[item.status]?.badge ?? ''}`}>
                     {STATUS[item.status]?.label ?? item.status}
                   </span>
+                  {item.suggesterEmail && !item.emailVerified ? (
+                    <span className="admin-badge admin-badge--draft" title="Aún no abre el enlace del correo; la sugerencia no se pierde">
+                      Correo sin verificar
+                    </span>
+                  ) : null}
                 </div>
                 <dl className="admin-suggest__data">
                   <dt>Dirección</dt>
@@ -209,6 +255,7 @@ export default function AdminSugerencias() {
               ))}
           </ul>
         )}
+        <Pagination {...paged} label="sugerencias" />
       </div>
       {toast ? (
         <AdminToast

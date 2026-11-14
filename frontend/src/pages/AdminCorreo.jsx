@@ -18,6 +18,7 @@ const KIND_LABEL = {
   rating_confirm: 'Confirmar calificación',
   suggestion_notify: 'Aviso de sugerencia',
   suggestion_thanks: 'Gracias por sugerir',
+  suggestion_confirm: 'Confirma tu correo (sugerencias)',
 }
 
 const EMPTY = {

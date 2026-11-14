@@ -19,6 +19,7 @@ import Acceder from './pages/Acceder.jsx'
 import Restablecer from './pages/Restablecer.jsx'
 import ConfirmarCalificacion from './pages/ConfirmarCalificacion.jsx'
 import Sugerir from './pages/Sugerir.jsx'
+import ConfirmarSugerencia from './pages/ConfirmarSugerencia.jsx'
 import AdminCorreo from './pages/AdminCorreo.jsx'
 import AdminSugerencias from './pages/AdminSugerencias.jsx'
 import AdminExtras from './pages/AdminExtras.jsx'
@@ -62,6 +63,7 @@ export default function App() {
         <Route path="restablecer" element={<Restablecer />} />
         <Route path="confirmar-calificacion" element={<ConfirmarCalificacion />} />
         <Route path="sugerir" element={<Sugerir />} />
+        <Route path="confirmar-sugerencia" element={<ConfirmarSugerencia />} />
         <Route
           path="admin"
           element={

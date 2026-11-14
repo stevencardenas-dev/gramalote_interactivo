@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import Pagination from '../components/admin/Pagination.jsx'
+import { usePaged } from '../lib/usePaged.js'
 import PasswordInput from '../components/ui/PasswordInput.jsx'
 import { useDialog } from '../lib/dialog.jsx'
 import {
@@ -77,6 +79,7 @@ export default function AdminUsuarios() {
   const [accountErr, setAccountErr] = useState('')
   // Confirmaciones dentro del panel (borrar cuenta, borrar usuario).
   const { confirm } = useDialog()
+  const paged = usePaged(users)
 
   const load = useCallback(async () => {
     try {
@@ -306,8 +309,9 @@ export default function AdminUsuarios() {
           loading ? (
             <p className="note">Cargando…</p>
           ) : (
+            <>
             <ul className="admin-rows admin-urows">
-              {users.map((user) => {
+              {paged.pageItems.map((user) => {
                 const isMe = user.id === me?.id
                 const isNewer = user.id > (me?.id ?? 0)
                 // Las cuentas anteriores no se editan: ni rol, ni estado, ni correo.
@@ -398,6 +402,8 @@ export default function AdminUsuarios() {
                 )
               })}
             </ul>
+            <Pagination {...paged} label="cuentas" />
+            </>
           )
         ) : null}
 

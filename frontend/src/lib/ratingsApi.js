@@ -62,6 +62,20 @@ export async function sendSuggestion(body) {
   return payload.data
 }
 
+// Abre el enlace del correo de una sugerencia: el correo queda verificado.
+export async function confirmSuggestion(token) {
+  const response = await fetch(`${API_URL}/suggestions/confirm`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ token }),
+  })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(payload?.error?.message || 'No pudimos confirmar tu correo')
+  }
+  return payload.data
+}
+
 // Promedio con un decimal y coma: 4,5.
 export const formatAverage = (value) => (Math.round(Number(value || 0) * 10) / 10).toFixed(1).replace('.', ',')
 export const formatVotes = (count) => `${count} ${count === 1 ? 'voto' : 'votos'}`

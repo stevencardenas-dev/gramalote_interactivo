@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
+import Pagination from '../components/admin/Pagination.jsx'
+import { usePaged } from '../lib/usePaged.js'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 
 const STATUS_TABS = [
@@ -82,6 +84,8 @@ export default function AdminEstablecimientos() {
     filtered.sort((a, b) => new Date(b.updatedAt ?? 0) - new Date(a.updatedAt ?? 0))
     return filtered
   }, [items, tab, category, query])
+
+  const paged = usePaged(visible)
 
   const hasFilters = Boolean(query || category)
 
@@ -217,7 +221,7 @@ export default function AdminEstablecimientos() {
           <p className="empty">No hay fichas que coincidan con el filtro.</p>
         ) : (
           <ul className="admin-rows">
-            {visible.map((item) => (
+            {paged.pageItems.map((item) => (
               <li key={item.id} className="admin-row-item">
                 <span className="admin-row-item__thumb">
                   {item.cover ? (
@@ -248,6 +252,7 @@ export default function AdminEstablecimientos() {
             ))}
           </ul>
         )}
+        <Pagination {...paged} label="fichas" />
       </div>
     </section>
   )

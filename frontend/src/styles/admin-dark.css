@@ -3211,6 +3211,34 @@ a.admin-tile:hover {
   }
 }
 
+/* Barra de acciones sobre una lista (borrado en bloque). */
+.admin-bulkbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 12px;
+}
+
+/* ---------------------------------------------- Paginación de las listas */
+.admin-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 14px 0 4px;
+}
+
+.admin-pager__info {
+  color: var(--a-mu);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.admin-pager .admin-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 /* ------------------------------------- Desplegables de Lugares y Páginas */
 .admin-nav-select {
   display: flex;

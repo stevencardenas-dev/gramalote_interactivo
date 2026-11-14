@@ -6,13 +6,16 @@ import { sendSuggestion } from '../lib/ratingsApi.js'
 // Sugerir un establecimiento: formulario propio del sitio. Cada envío llega a
 // Panel › Sugerencias y, con el correo activo, avisa al equipo.
 
+// Mismos grupos que el panel (Lugares): así cada sugerencia cae en una ficha
+// que existe y no en un cajón «Otro».
 const TYPES = [
   { value: 'Dónde comer', hint: 'Restaurantes, cafeterías, comidas' },
   { value: 'Dónde dormir', hint: 'Hoteles, hostales, glampings' },
   { value: 'Dónde comprar', hint: 'Tiendas, artesanías, productos' },
   { value: 'Dónde ir', hint: 'Atractivos, miradores, sitios' },
   { value: 'Experiencia o actividad', hint: 'Recorridos, talleres, planes' },
-  { value: 'Otro', hint: 'Algo que no encaja arriba' },
+  { value: 'Patrimonio', hint: 'Bienes, monumentos, memoria del pueblo' },
+  { value: 'Extras', hint: 'Bancos, salud, policía, servicios' },
 ]
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const EMPTY = {
@@ -42,18 +45,18 @@ export default function Sugerir() {
 
   async function submit(event) {
     event.preventDefault()
-    if (form.nombre.trim().length < 2) return setError('Escribe el nombre del establecimiento.')
+    if (form.nombre.trim().length < 2) return setError('Escribe el nombre del lugar.')
     if (!form.tipo) return setError('Elige qué tipo de lugar es.')
     if (form.motivo.trim().length < 10) return setError('Cuéntanos un poco más de por qué lo recomiendas.')
     if (form.correo.trim() && !EMAIL.test(form.correo.trim())) return setError('Revisa tu correo.')
     setError('')
     setBusy(true)
     try {
-      await sendSuggestion({
+      const result = await sendSuggestion({
         ...Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value.trim()])),
         elapsedMs: startedAt.current ? Date.now() - startedAt.current : 0,
       })
-      setSent({ name: form.nombre.trim(), email: form.correo.trim() })
+      setSent({ name: form.nombre.trim(), email: form.correo.trim(), pending: Boolean(result?.pending) })
       setForm(EMPTY)
       startedAt.current = 0
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -69,8 +72,8 @@ export default function Sugerir() {
       <PageHero
         className="page-hero--brown"
         eyebrow="Ayúdanos a crecer"
-        title="Sugerir un establecimiento"
-        intro="¿Conoces un restaurante, alojamiento, tienda o lugar de Gramalote que debería estar en esta guía? Cuéntanos y el equipo lo revisará."
+        title="Sugerir un lugar"
+        intro="¿Conoces un restaurante, alojamiento, tienda, experiencia, bien patrimonial o servicio de Gramalote que debería estar en esta guía? Cuéntanos y el equipo lo revisará."
       />
       <section className="section suggest">
         <div className="container suggest__layout">
@@ -81,8 +84,15 @@ export default function Sugerir() {
                 <p>
                   Recibimos «{sent.name}». El equipo de Turismo Gramalote la revisará y, si cumple con lo
                   necesario, la agregaremos al sitio.
-                  {sent.email ? ' Te escribiremos al correo que dejaste.' : ''}
+                  {sent.email && !sent.pending ? ' Te escribiremos al correo que dejaste.' : ''}
                 </p>
+                {sent.pending ? (
+                  <p className="suggest__note">
+                    Te enviamos un enlace a <strong>{sent.email}</strong> para confirmar tu correo. Solo
+                    hace falta la primera vez: después, tus sugerencias con ese correo se envían sin
+                    este paso.
+                  </p>
+                ) : null}
                 <div className="suggest__done-actions">
                   <Button type="button" onClick={() => setSent(null)}>
                     Sugerir otro lugar
@@ -98,7 +108,7 @@ export default function Sugerir() {
                   <legend>El lugar</legend>
                   <label className="suggest__field">
                     <span>
-                      Nombre del establecimiento <em aria-hidden="true">*</em>
+                      Nombre del lugar <em aria-hidden="true">*</em>
                     </span>
                     <input value={form.nombre} onChange={set('nombre')} maxLength={190} required autoComplete="off" />
                   </label>
@@ -126,7 +136,7 @@ export default function Sugerir() {
 
                   <div className="suggest__row">
                     <label className="suggest__field">
-                      <span>Dirección o cómo llegar</span>
+                      <span>Ubicación o cómo llegar</span>
                       <input value={form.direccion} onChange={set('direccion')} maxLength={500} />
                     </label>
                     <label className="suggest__field">
@@ -156,7 +166,7 @@ export default function Sugerir() {
                 <fieldset className="suggest__group">
                   <legend>Tú (opcional)</legend>
                   <div className="suggest__field" role="radiogroup" aria-labelledby="suggest-owner">
-                    <span id="suggest-owner">¿Eres el dueño o trabajas allí?</span>
+                    <span id="suggest-owner">¿Tienes relación con el lugar? (dueño, administrador, vecino)</span>
                     <div className="suggest__pills">
                       {['Sí', 'No'].map((value) => (
                         <label key={value} className={`suggest__pill${form.esDueno === value ? ' is-on' : ''}`}>
@@ -186,7 +196,10 @@ export default function Sugerir() {
                         maxLength={190}
                         autoComplete="email"
                       />
-                      <small>Para agradecerte y, si hace falta, pedirte más datos.</small>
+                      <small>
+                        Para agradecerte y, si hace falta, pedirte más datos. La primera vez confirmas
+                        el correo con un enlace; después no hace falta.
+                      </small>
                     </label>
                   </div>
                 </fieldset>

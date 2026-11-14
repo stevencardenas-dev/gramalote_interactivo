@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../../lib/auth.js'
+import { usePaged } from '../../lib/usePaged.js'
+import Pagination from './Pagination.jsx'
 import { useDialog } from '../../lib/dialog.jsx'
 
 // Pestaña «Calificaciones» de una ficha: quién votó, cuándo y cuántas
@@ -35,6 +37,7 @@ export default function RatingsPanel({ kind, id, name, onNotify }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const { confirm } = useDialog()
+  const paged = usePaged(data?.items)
 
   useEffect(() => {
     let alive = true
@@ -112,7 +115,7 @@ export default function RatingsPanel({ kind, id, name, onNotify }) {
               <span className="visually-hidden">Acciones</span>
             </span>
           </div>
-          {data.items.map((rating) => (
+          {paged.pageItems.map((rating) => (
             <div key={rating.id} className="admin-ratings__row" role="row">
               <span role="cell" title={rating.updatedAt !== rating.createdAt ? `Primera vez: ${formatStamp(rating.createdAt)}` : undefined}>
                 {formatStamp(rating.updatedAt)}
@@ -154,6 +157,7 @@ export default function RatingsPanel({ kind, id, name, onNotify }) {
           ))}
         </div>
       ) : null}
+      <Pagination {...paged} label="calificaciones" />
       <p className="note">
         Si alguien vuelve a calificar con el mismo correo, se actualiza su voto, su comentario y su
         fecha. Con el correo activo, cada voto cuenta solo cuando la persona lo confirma desde su

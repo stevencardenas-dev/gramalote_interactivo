@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
+import Pagination from '../components/admin/Pagination.jsx'
+import { usePaged } from '../lib/usePaged.js'
 import { MAP_ICONS, mapIconUrl } from '../data/mapIcons.js'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 import { useDialog } from '../lib/dialog.jsx'
@@ -97,6 +99,8 @@ export default function AdminExtras() {
       return normalize(`${item.name} ${item.category} ${item.zone ?? ''}`).includes(needle)
     })
   }, [items, tab, query])
+
+  const paged = usePaged(visible)
 
   function startNew() {
     setEditing('new')
@@ -312,7 +316,7 @@ export default function AdminExtras() {
           <p className="empty">No hay extras que coincidan con el filtro.</p>
         ) : (
           <ul className="admin-rows">
-            {visible.map((item) => (
+            {paged.pageItems.map((item) => (
               <li key={item.id} className="admin-row-item" onClick={() => startEdit(item)}>
                 <span className="admin-row-item__thumb">
                   <img src={mapIconUrl(item.mapIcon)} alt="" loading="lazy" />
@@ -354,6 +358,7 @@ export default function AdminExtras() {
             ))}
           </ul>
         )}
+        <Pagination {...paged} label="extras" />
       </div>
       {toast ? (
         <AdminToast

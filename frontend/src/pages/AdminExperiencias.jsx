@@ -4,6 +4,8 @@ import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import AdminDialog from '../components/admin/AdminDialog.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import Pagination from '../components/admin/Pagination.jsx'
+import { usePaged } from '../lib/usePaged.js'
 import { useDialog } from '../lib/dialog.jsx'
 import RatingsPanel from '../components/admin/RatingsPanel.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
@@ -176,6 +178,8 @@ export function AdminExperiencias() {
     })
   }, [items, tab, query])
 
+  const paged = usePaged(visible)
+
   // Igual que en establecimientos: se crea con los datos mínimos y se abre el
   // editor; la ficha nace sin publicar.
   async function handleCreate(event) {
@@ -325,7 +329,7 @@ export function AdminExperiencias() {
           </p>
         ) : null}
         <ul className="admin-rows">
-          {visible.map((item) => (
+          {paged.pageItems.map((item) => (
             <li key={item.id} className="admin-row-item">
               <span className="admin-row-item__thumb">
                 {item.cover ? <img src={item.cover} alt="" loading="lazy" /> : <span aria-hidden="true" />}
@@ -349,6 +353,7 @@ export function AdminExperiencias() {
             </li>
           ))}
         </ul>
+        <Pagination {...paged} label="experiencias" />
       </div>
 
       {toast ? (
