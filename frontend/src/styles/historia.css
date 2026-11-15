@@ -2586,8 +2586,8 @@
   filter: brightness(1.05) contrast(1.03);
 }
 
-/* Riel de etapas: solo en pantallas anchas, como el indicador flotante del
-   prototipo. */
+/* Riel de etapas: solo cuando la columna de lectura deja margen libre a la
+   derecha (por debajo de 1700 px se montaría encima de las tarjetas). */
 .his-rail {
   display: none;
 }
@@ -2603,7 +2603,7 @@
   }
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 1700px) {
   .his-rail {
     position: fixed;
     top: 50%;
