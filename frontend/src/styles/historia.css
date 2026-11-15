@@ -2537,3 +2537,168 @@
     font-size: 0.8125rem;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Lectura guiada del capítulo (scroll storytelling, prototipo de Stitch)
+   El bloque que cruza la banda central se enciende; el resto de su etapa se
+   atenúa y la foto da un pulso de brillo al activarse.
+--------------------------------------------------------------------------- */
+.his-event {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* Solo se atenúa lo que ya entró: si no, los bloques que todavía no han
+   aparecido perderían su animación de entrada. */
+.his-stage.is-reading .his-event.is-visible:not(.is-active) {
+  opacity: 0.42;
+}
+
+.his-event__dot {
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
+}
+
+.his-event.is-active .his-event__dot {
+  transform: translate(-50%, -50%) scale(1.16);
+  box-shadow: 0 0 0 4px rgba(219, 83, 25, 0.2);
+}
+
+.his-event__body h3,
+.his-event__body p {
+  transition: color 0.5s ease;
+}
+
+.his-event.is-active .his-event__body h3 {
+  color: var(--c-coral);
+}
+
+.his-event.is-active .his-event__body p {
+  color: #1c1917;
+  font-weight: 500;
+}
+
+.his-event__media img {
+  transition:
+    transform 1s cubic-bezier(0.22, 0.61, 0.36, 1),
+    filter 0.35s ease;
+}
+
+.his-event__media img.is-pulse {
+  filter: brightness(1.05) contrast(1.03);
+}
+
+/* Riel de etapas: solo en pantallas anchas, como el indicador flotante del
+   prototipo. */
+.his-rail {
+  display: none;
+}
+
+@keyframes his-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .his-rail {
+    position: fixed;
+    top: 50%;
+    right: 22px;
+    z-index: 40;
+    display: block;
+    transform: translateY(-50%);
+  }
+
+  .his-rail__card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 214px;
+    padding: 14px 14px 12px;
+    border: 1px solid #efe3d6;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 14px 34px rgba(60, 32, 10, 0.12);
+    backdrop-filter: blur(10px);
+  }
+
+  .his-rail__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1e7dc;
+    color: var(--c-ink-soft);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .his-rail__pct {
+    color: var(--c-coral);
+  }
+
+  .his-rail__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .his-rail__link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    color: var(--c-ink-soft);
+    font-size: 0.8rem;
+    line-height: 1.25;
+    text-decoration: none;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  .his-rail__link:hover {
+    background: rgba(119, 63, 16, 0.06);
+  }
+
+  .his-rail__link.is-active {
+    background: rgba(219, 83, 25, 0.1);
+    color: var(--c-coral);
+    font-weight: 700;
+  }
+
+  .his-rail__dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #dcd3c9;
+    transition: background-color 0.25s ease;
+  }
+
+  .his-rail__link.is-active .his-rail__dot {
+    background: var(--c-coral);
+  }
+
+  .his-rail__hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding-top: 8px;
+    border-top: 1px solid #f1e7dc;
+    color: #a99c8f;
+    font-size: 0.68rem;
+  }
+
+  .his-rail__hint svg {
+    animation: his-bob 1.8s ease-in-out infinite;
+  }
+}

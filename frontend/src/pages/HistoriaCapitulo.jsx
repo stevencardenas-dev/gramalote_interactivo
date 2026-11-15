@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Icon from '../components/ui/Icon.jsx'
 import Button from '../components/ui/Button.jsx'
@@ -12,6 +12,8 @@ export default function HistoriaCapitulo() {
   const chapter = getChapter(slug)
   const index = getChapterIndex(slug)
   const [progress, setProgress] = useState(0)
+  const [etapaActiva, setEtapaActiva] = useState(0)
+  const storyRef = useRef(null)
 
   usePageTitle(chapter ? chapter.title : 'Recorrido histórico')
 
@@ -28,6 +30,79 @@ export default function HistoriaCapitulo() {
       window.removeEventListener('resize', onScroll)
     }
   }, [slug])
+
+  // Lectura en curso, como en el prototipo de Stitch: el bloque que cruza la
+  // banda central queda a plena luz (punto con halo, título en coral) y el
+  // resto de su etapa se atenúa. Las fotos dan un pulso al activarse.
+  //
+  // Se mide con getBoundingClientRect en scroll (no con IntersectionObserver,
+  // que en pestañas ocultas no entrega avisos), igual que Reveal.
+  useEffect(() => {
+    const story = storyRef.current
+    if (!story) return undefined
+
+    const eventos = [...story.querySelectorAll('.his-event')]
+    const etapas = [...story.querySelectorAll('.his-stage')]
+    const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    let actual = null
+    let temporizador = 0
+
+    const medir = () => {
+      temporizador = 0
+      const alto = window.innerHeight
+      const arriba = alto * 0.2
+      const abajo = alto * 0.6
+
+      let candidato = null
+      for (const evento of eventos) {
+        const caja = evento.getBoundingClientRect()
+        if (caja.bottom > arriba && caja.top < abajo) {
+          candidato = evento
+          break
+        }
+      }
+      if (!candidato) {
+        // Ninguno cruza la banda: se queda el más cercano al centro.
+        let distancia = Infinity
+        for (const evento of eventos) {
+          const caja = evento.getBoundingClientRect()
+          const d = Math.abs((caja.top + caja.bottom) / 2 - alto / 2)
+          if (d < distancia) {
+            distancia = d
+            candidato = evento
+          }
+        }
+      }
+      if (!candidato || candidato === actual) return
+      actual = candidato
+
+      eventos.forEach((evento) => evento.classList.remove('is-active'))
+      candidato.classList.add('is-active')
+
+      const etapa = candidato.closest('.his-stage')
+      etapas.forEach((otra) => otra.classList.toggle('is-reading', otra === etapa))
+      setEtapaActiva(Math.max(0, etapas.indexOf(etapa)))
+
+      const imagen = candidato.querySelector('img')
+      if (imagen && suave) {
+        imagen.classList.add('is-pulse')
+        window.setTimeout(() => imagen.classList.remove('is-pulse'), 420)
+      }
+    }
+
+    const programar = () => {
+      if (!temporizador) temporizador = window.setTimeout(medir, 80)
+    }
+
+    medir()
+    window.addEventListener('scroll', programar, { passive: true })
+    window.addEventListener('resize', programar)
+    return () => {
+      window.removeEventListener('scroll', programar)
+      window.removeEventListener('resize', programar)
+      if (temporizador) window.clearTimeout(temporizador)
+    }
+  }, [slug, chapter])
 
   if (!chapter) {
     return (
@@ -79,7 +154,37 @@ export default function HistoriaCapitulo() {
 
       <SectionNav />
 
-      <div className="his-story">
+      {chapter.stages.length > 1 ? (
+        <aside className="his-rail" aria-label={`Avance del capítulo ${chapter.number}`}>
+          <div className="his-rail__card">
+            <p className="his-rail__head">
+              <span>Capítulo {chapter.number}</span>
+              <span className="his-rail__pct">{Math.round(progress)}%</span>
+            </p>
+            <nav className="his-rail__nav">
+              {chapter.stages.map((stage, stageIndex) => (
+                <a
+                  key={stage.kicker}
+                  className={`his-rail__link${stageIndex === etapaActiva ? ' is-active' : ''}`}
+                  href={`#etapa-${stageIndex + 1}`}
+                  aria-current={stageIndex === etapaActiva ? 'true' : undefined}
+                >
+                  <span className="his-rail__dot" aria-hidden="true" />
+                  <span>
+                    {String(stageIndex + 1).padStart(2, '0')} · {stage.kicker.split('·')[1]?.trim() || stage.title}
+                  </span>
+                </a>
+              ))}
+            </nav>
+            <p className="his-rail__hint">
+              <Icon name="chevron" size={13} />
+              Lectura guiada
+            </p>
+          </div>
+        </aside>
+      ) : null}
+
+      <div className="his-story" ref={storyRef}>
         <div className="container">
           {chapter.stages.map((stage, stageIndex) => (
             <section
@@ -103,6 +208,7 @@ export default function HistoriaCapitulo() {
                   <Reveal
                     as="li"
                     key={`${stage.kicker}-${event.n}`}
+                    data-step={event.n}
                     className={`his-event${eventIndex % 2 === 1 ? ' his-event--reverse' : ''}`}
                   >
                     <span className="his-event__dot" aria-hidden="true" />
