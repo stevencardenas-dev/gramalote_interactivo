@@ -12,7 +12,6 @@ export default function HistoriaCapitulo() {
   const chapter = getChapter(slug)
   const index = getChapterIndex(slug)
   const [progress, setProgress] = useState(0)
-  const [etapaActiva, setEtapaActiva] = useState(0)
   const storyRef = useRef(null)
 
   usePageTitle(chapter ? chapter.title : 'Recorrido histórico')
@@ -81,7 +80,6 @@ export default function HistoriaCapitulo() {
 
       const etapa = candidato.closest('.his-stage')
       etapas.forEach((otra) => otra.classList.toggle('is-reading', otra === etapa))
-      setEtapaActiva(Math.max(0, etapas.indexOf(etapa)))
 
       const imagen = candidato.querySelector('img')
       if (imagen && suave) {
@@ -153,36 +151,6 @@ export default function HistoriaCapitulo() {
       </header>
 
       <SectionNav />
-
-      {chapter.stages.length > 1 ? (
-        <aside className="his-rail" aria-label={`Avance del capítulo ${chapter.number}`}>
-          <div className="his-rail__card">
-            <p className="his-rail__head">
-              <span>Capítulo {chapter.number}</span>
-              <span className="his-rail__pct">{Math.round(progress)}%</span>
-            </p>
-            <nav className="his-rail__nav">
-              {chapter.stages.map((stage, stageIndex) => (
-                <a
-                  key={stage.kicker}
-                  className={`his-rail__link${stageIndex === etapaActiva ? ' is-active' : ''}`}
-                  href={`#etapa-${stageIndex + 1}`}
-                  aria-current={stageIndex === etapaActiva ? 'true' : undefined}
-                >
-                  <span className="his-rail__dot" aria-hidden="true" />
-                  <span>
-                    {String(stageIndex + 1).padStart(2, '0')} · {stage.kicker.split('·')[1]?.trim() || stage.title}
-                  </span>
-                </a>
-              ))}
-            </nav>
-            <p className="his-rail__hint">
-              <Icon name="chevron" size={13} />
-              Lectura guiada
-            </p>
-          </div>
-        </aside>
-      ) : null}
 
       <div className="his-story" ref={storyRef}>
         <div className="container">
