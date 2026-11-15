@@ -7,6 +7,7 @@ Plataforma web de turismo, cultura y memoria histórica de Gramalote, Norte de S
 - `frontend/` — React + Vite (ver `docs/README.md`).
 - `backend/` — API Express y base de datos MySQL (ver `backend/README.md`).
 - `docs/` — documentación técnica y mapeo de los diseños de Figma.
+- `migracion/` — snapshots de producción (base de datos, fotos y mapa) para reconstruir el sitio desde el repositorio. Ver `docs/MIGRACION-DEBIAN.md`.
 - `DRIVE.md` — acceso a las entregas UX/UI en Google Drive.
 
 ## Desarrollo
@@ -64,6 +65,20 @@ No se abre SSH ni se guardan llaves: el runner usa el usuario IAM
 `AWS_REGION`) con permiso solo para ECR push, SSM sobre esa instancia e
 invalidaciones de CloudFront. La instancia obtiene ECR y SSM por su instance
 profile `gramalote-ec2-ssm`.
+
+## Respaldo y migración
+
+`deploy/migracion-exportar.ps1` baja de la instancia el volcado de MySQL (esquema
+y datos), el esquema legible, las fotos de `/opt/gramalote/media` y el mapa
+PMTiles, y los deja en `migracion/<fecha>/` listos para publicar en GitHub.
+
+```powershell
+powershell -File deploy/migracion-exportar.ps1 -SoloDiagnostico   # medir sin descargar
+powershell -File deploy/migracion-exportar.ps1 -Commit            # exportar y publicar
+```
+
+El proceso completo para pasar a un servidor Debian está en
+`docs/MIGRACION-DEBIAN.md`.
 
 ## CloudFront
 
