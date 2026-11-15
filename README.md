@@ -48,9 +48,10 @@ sirve el `dist/` con fallback de SPA, gzip, cache de assets y `/healthz`.
 
 ## Despliegue continuo (EC2)
 
-`.github/workflows/deploy-ec2.yml` se lanza a mano desde Actions → Run workflow
-(rama `main`); un push no despliega. Lo puede lanzar cualquier colaborador con
-permiso de escritura:
+`.github/workflows/deploy-ec2.yml` se ejecuta solo con cada push o merge a
+`main`, y además se puede lanzar a mano desde Actions → Run workflow (rama
+`main`), lo que queda registrado con quién lo pidió y el motivo. Cualquier
+colaborador con permiso de escritura puede lanzarlo:
 
 1. **build**: lint + build de la imagen y push a Amazon ECR
    (`706637772877.dkr.ecr.us-east-2.amazonaws.com/gramalote-frontend`,
@@ -102,4 +103,4 @@ El proceso completo para pasar a un servidor Debian está en
 - Sitio: <https://d2nm90ise1l8de.cloudfront.net>
 - Origen directo (solo desde tu IP): <http://18.119.155.81>
 - Logs: `docker compose -f /opt/gramalote/docker-compose.yml logs -f`
-- Re-desplegar sin cambiar código: *Actions → CI/CD · EC2 → Run workflow*.
+- Cada push a `main` despliega solo; para re-desplegar sin cambiar código, *Actions → CI/CD · EC2 → Run workflow*.
