@@ -2155,7 +2155,7 @@
 
   .his-nav__link {
     flex: none;
-    padding: 10px 18px;
+    padding: 10px 14px;
     font-size: 0.9375rem;
     white-space: nowrap;
   }
@@ -2518,5 +2518,22 @@
 
   .hmap__pin.is-active::before {
     animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Pantallas muy angostas: las cuatro pestañas de «Conocer historia» deben
+   entrar sin deslizar. El deslizamiento queda como respaldo (con la pestaña
+   activa siempre centrada desde SectionNav).
+--------------------------------------------------------------------------- */
+@media (max-width: 420px) {
+  .his-nav__list {
+    gap: 2px;
+    padding: 6px 10px;
+  }
+
+  .his-nav__link {
+    padding: 10px;
+    font-size: 0.8125rem;
   }
 }
