@@ -10,6 +10,10 @@ import DondeDormir from './pages/DondeDormir.jsx'
 import DondeComprar from './pages/DondeComprar.jsx'
 import Establecimiento from './pages/Establecimiento.jsx'
 import Historia from './pages/Historia.jsx'
+import HistoriaCapitulo from './pages/HistoriaCapitulo.jsx'
+import HistoriaPatrimonio from './pages/HistoriaPatrimonio.jsx'
+import HistoriaPatrimonioFicha from './pages/HistoriaPatrimonioFicha.jsx'
+import HistoriaGente from './pages/HistoriaGente.jsx'
 import Curiosidades from './pages/Curiosidades.jsx'
 import CuriosidadDetalle from './pages/CuriosidadDetalle.jsx'
 import InformacionPractica from './pages/InformacionPractica.jsx'
@@ -54,6 +58,10 @@ export default function App() {
         <Route path="establecimiento/:slug" element={<Establecimiento />} />
 
         <Route path="historia" element={<Historia />} />
+        <Route path="historia/recorrido/:slug" element={<HistoriaCapitulo />} />
+        <Route path="historia/patrimonio" element={<HistoriaPatrimonio />} />
+        <Route path="historia/patrimonio/:slug" element={<HistoriaPatrimonioFicha />} />
+        <Route path="historia/gente-y-leyendas" element={<HistoriaGente />} />
         <Route path="curiosidades" element={<Curiosidades />} />
         <Route path="curiosidades/:slug" element={<CuriosidadDetalle />} />
         <Route path="informacion-practica" element={<InformacionPractica />} />

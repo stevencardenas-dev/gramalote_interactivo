@@ -15,7 +15,7 @@ const TITLES = {
   '/donde-comer': 'Dónde comer',
   '/donde-dormir': 'Dónde dormir',
   '/donde-comprar': 'Dónde comprar',
-  '/historia': 'Su historia',
+  '/historia': 'Conocer historia',
   '/curiosidades': 'Curiosidades',
   '/informacion-practica': 'Información práctica',
   '/mapa': 'Mapa',
@@ -39,6 +39,8 @@ export default function Layout() {
     pathname.startsWith('/establecimiento/') ||
     pathname.startsWith('/que-hacer/') ||
     pathname.startsWith('/curiosidades/') ||
+    pathname === '/historia/patrimonio' ||
+    pathname === '/historia/gente-y-leyendas' ||
     [
       '/donde-ir',
       '/donde-comer',
