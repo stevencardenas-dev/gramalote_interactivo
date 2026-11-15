@@ -1,0 +1,34 @@
+# Stack local (Debian → se ve desde Windows) sobre el docker-compose.yml de
+# producción. En AWS las imágenes vienen de ECR; aquí se compilan del repo.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.debian.yml up -d --build
+#
+# Con esto el comportamiento es el mismo que el sitio desplegado: nginx sirve la
+# SPA, hace proxy de /api a Express y sirve /media y /tiles desde el disco, y
+# MySQL corre con los mismos ajustes de memoria.
+services:
+  web:
+    image: gramalote-web:local
+    build:
+      context: ./frontend
+    # Se sirve en 8080 para no chocar con un nginx/apache del sistema.
+    # Para usar el 80 como en producción, borra este bloque.
+    ports: !override
+      - "8080:80"
+
+  api:
+    image: gramalote-api:local
+    build:
+      context: ./backend
+    environment:
+      # Un solo proxy delante (nginx), no dos como en AWS (CloudFront + nginx).
+      TRUST_PROXY_HOPS: "1"
+
+  db:
+    # El compose de producción monta ./database/*.sql porque deploy.sh los deja
+    # ahí; en un clon del repo viven en backend/database/.
+    volumes: !override
+      - gramalote_db:/var/lib/mysql
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./backend/database/seed-content.sql:/docker-entrypoint-initdb.d/03-seed-content.sql:ro

@@ -252,66 +252,95 @@ chmod 600 .env
 
 ### 6.5 Imágenes: ya no hay ECR
 
-En AWS las imágenes se descargaban de ECR (`docker compose pull`). Sin cuenta
-AWS, se construyen desde el repositorio. Crea un `docker-compose.override.yml`
-junto al `docker-compose.yml` (ese archivo **no** está versionado, es local):
+En AWS las imágenes se descargaban de ECR (`docker compose pull`). Sin cuenta AWS
+se compilan desde el repositorio, y para eso está el overlay versionado
+`docker-compose.debian.yml`, que se aplica **encima** del `docker-compose.yml` de
+producción. Lo que cambia:
 
-```yaml
-services:
-  web:
-    image: gramalote-web:local
-    build:
-      context: ./frontend
-  api:
-    image: gramalote-api:local
-    build:
-      context: ./backend
-```
+| Ajuste | Por qué |
+|---|---|
+| `build` de `frontend` y `backend` en vez de `pull` | no hay ECR |
+| publica en **8080** en lugar del 80 | no choca con un nginx/apache del sistema |
+| los `.sql` apuntan a `backend/database/` | el compose base los espera en `./database/`, que en la instancia crea `deploy.sh` |
+| `TRUST_PROXY_HOPS=1` | aquí solo hay un nginx delante, no CloudFront |
 
-Compila:
+Se usa siempre con los dos `-f`, en ese orden:
 
 ```bash
-docker compose build
+alias gc='docker compose -f docker-compose.yml -f docker-compose.debian.yml'
+gc build          # compila las dos imágenes
+gc up -d          # nginx + API + MySQL
 ```
 
-### 6.6 Importar la base de datos
+Ya no hace falta el `docker-compose.override.yml` manual de versiones anteriores
+de este documento. El puerto se cambia en el overlay (o con `PORT`, ver 6.6).
+
+### 6.6 Un solo comando: `deploy/local-debian.sh`
+
+`deploy/local-debian.sh` hace las secciones 6.3 a 6.7 de esta guía de una vez y
+es idempotente: si ya hay `.env`, base de datos o fotos, los respeta.
+
+1. Instala Docker si falta y comprueba el plugin `docker compose`.
+2. Copia `media/` y los `.pmtiles` del snapshot más reciente de `migracion/` a
+   `/srv/gramalote/` y ajusta permisos (UID 1000 para la API, lectura para nginx).
+3. Crea el `.env` con secretos nuevos y `CORS_ORIGIN`/`PUBLIC_SITE_URL` con la IP
+   local de la máquina.
+4. Levanta MySQL, importa el volcado **solo si la base está vacía**, compila las
+   imágenes y arranca `web` + `api`.
+5. Aplica migraciones, siembra la cuenta admin, abre el puerto en `ufw` si está
+   activo y espera a que respondan `/healthz` y `/api/health`.
 
 ```bash
-D=$(ls -d /opt/gramalote/migracion/*/ | tail -1)
+cd /opt/gramalote
+sudo bash deploy/local-debian.sh                  # http://<ip-debian>:8080
+PORT=9090 sudo -E bash deploy/local-debian.sh     # otro puerto
+```
 
-docker compose up -d db
-until [ "$(docker inspect -f '{{.State.Health.Status}}' gramalote-db 2>/dev/null)" = healthy ]; do sleep 3; done
+Al terminar imprime la URL del sitio y del panel. Desde Windows (o cualquier
+máquina de la red) se abre esa misma URL; el panel queda en `/acceder` y la API
+en `/api/health`. Conviene abrir el puerto si el firewall no lo permite:
+`sudo ufw allow 8080/tcp`. Si la Debian es una VM en Windows con red **NAT**,
+cambia el adaptador a puente o reenvía el puerto.
+
+### 6.7 Lo mismo paso a paso
+
+Si prefieres controlar cada paso —o el script falla a mitad—, se descompone así:
+
+```bash
+cd /opt/gramalote
+set -a; . ./.env; set +a                 # MYSQL_*, ADMIN_*, MEDIA_DIR, TILES_DIR
+C="docker compose -f docker-compose.yml -f docker-compose.debian.yml"
+
+D=$(ls -d migracion/*/ | tail -1)        # snapshot más reciente
+$C up -d db
+until [ "$(docker inspect -f '{{.State.Health.Status}}' gramalote-db)" = healthy ]; do sleep 3; done
 
 gunzip -c "$D"/gramalote-*.sql.gz \
-  | docker compose exec -T db sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'
+  | $C exec -T db sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'
+
+$C up -d --build
+$C exec -T api node scripts/migrate.js            # «Base de datos al día»
+$C exec -T -e ADMIN_EMAIL -e ADMIN_PASSWORD -e ADMIN_NAME \
+  api node scripts/seed-admin.js
+
+curl -s http://127.0.0.1:8080/healthz
+curl -s http://127.0.0.1:8080/api/health
 ```
 
 El volcado no crea la base: en el primer arranque el contenedor la crea con
 `schema.sql` + `seed*.sql`, y el volcado **reemplaza** las tablas con los datos
-reales (`DROP TABLE IF EXISTS` + `CREATE TABLE` + `INSERT`).
+reales (`DROP TABLE IF EXISTS` + `CREATE TABLE` + `INSERT`). Si una migración
+quedó pendiente respecto al código (poco probable, porque el snapshot es del
+mismo commit), `node scripts/migrate.js` la aplica.
 
 Verifica los conteos contra `conteos.tsv`:
 
 ```bash
-docker compose exec -T db sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -N -B "$MYSQL_DATABASE" -e "SHOW TABLES"' | while read t; do
-  n=$(docker compose exec -T db sh -c "exec mysql -uroot -p\"\$MYSQL_ROOT_PASSWORD\" -N -B \"\$MYSQL_DATABASE\" -e 'SELECT COUNT(*) FROM \`$t\`'")
-  printf '%s\t%s\n' "$t" "$n"
+$C exec -T db sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -N -B "$MYSQL_DATABASE" -e "SHOW TABLES"' | while read t; do
+  n=$($C exec -T db sh -c "exec mysql -uroot -p\"\$MYSQL_ROOT_PASSWORD\" -N -B \"\$MYSQL_DATABASE\" -e 'SELECT COUNT(*) FROM \`$t\`'")
+  printf '%s	%s\n' "$t" "$n"
 done
 ```
-
-### 6.7 Levantar el resto
-
-```bash
-docker compose up -d
-docker compose ps                       # los tres servicios en (healthy)
-docker compose exec api node scripts/migrate.js   # "Base de datos al día"
-docker compose exec api node scripts/seed-admin.js
-curl -s http://127.0.0.1/healthz
-curl -s http://127.0.0.1/api/health
-```
-
-Si una migración quedó pendiente respecto al código (poco probable, porque el
-snapshot es del mismo commit), `node scripts/migrate.js` la aplica.
 
 ### 6.8 Publicar el sitio (esto sí hay que decidirlo con calma)
 
@@ -338,8 +367,9 @@ desplegar a mano es:
 ```bash
 cd /opt/gramalote
 git pull
-docker compose build && docker compose up -d
-docker compose exec api node scripts/migrate.js
+C="docker compose -f docker-compose.yml -f docker-compose.debian.yml"
+$C up -d --build
+$C exec -T api node scripts/migrate.js
 ```
 
 Si más adelante quieres CI, lo natural es un workflow con SSH al servidor
@@ -368,7 +398,9 @@ Si más adelante quieres CI, lo natural es un workflow con SSH al servidor
 2. Exportar con `-Commit` y revisar el snapshot en GitHub (sección 4).
 3. Guardar el `.env` en el gestor de contraseñas (sección 5).
 4. Preparar el Debian y ensayar la restauración **con el snapshot** antes de
-   apagar la EC2. Un ensayo vale más que cualquier checklist.
+   apagar la EC2: `sudo bash deploy/local-debian.sh` (sección 6.6) levanta el
+   sitio completo y se comprueba desde el navegador. Un ensayo vale más que
+   cualquier checklist.
 5. Solo cuando el ensayo funcione: DNS al servidor nuevo y dar de baja la EC2.
 
 ---
