@@ -2997,3 +2997,85 @@ kbd {
     transition: none;
   }
 }
+
+/* Carrusel por épocas de la ficha de patrimonio (colores de la marca) */
+/* Marco fijo: la foto se ve completa (contain) sea horizontal o vertical, sin
+   recortes ni saltos de altura al cambiar de foto. */
+.era-carousel__stage {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: 20px;
+  background: var(--c-cream-deep);
+}
+
+.era-carousel__stage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  max-height: none;
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.era-carousel__badge {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--c-navy);
+  color: var(--c-white);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.era-carousel .carousel-arrow {
+  background: var(--c-navy);
+  color: var(--c-white);
+}
+
+.era-carousel .carousel-arrow:hover {
+  background: var(--c-navy-dark);
+}
+
+.era-carousel .carousel-dots {
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.era-carousel .carousel-dots button {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--c-navy);
+  background: transparent;
+}
+
+.era-carousel .carousel-dots button.is-active {
+  background: var(--c-coral-text);
+  border-color: var(--c-coral-text);
+}
+
+@media (max-width: 900px) {
+  .era-carousel__stage {
+    max-height: 520px;
+    margin-inline: auto;
+  }
+}
+
+/* Fotos de contenido completas: el marco conserva su proporción y la foto se
+   ajusta dentro (contain), sin recortes; lo que sobra queda en beige. Los héroes
+   a todo ancho y las miniaturas pequeñas siguen recortando a propósito. */
+.his-card__media img,
+.his-tl__media img,
+.his-cap-hero__media img,
+.his-event__media img,
+.his-row__media img,
+.his-ficha__media img,
+.his-ficha__gallery img,
+.his-story-card__cols img {
+  object-fit: contain;
+  background: var(--c-cream-deep);
+}

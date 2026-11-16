@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import Icon from '../components/ui/Icon.jsx'
 import Button from '../components/ui/Button.jsx'
+import EraCarousel from '../components/historia/EraCarousel.jsx'
 import Reveal from '../components/historia/Reveal.jsx'
 import { heritage, getHeritage } from '../data/historia.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
@@ -78,7 +79,11 @@ export default function HistoriaPatrimonioFicha() {
 
             <div className="his-ficha__aside">
               <Reveal className="his-ficha__media" delay={120}>
-                <img src={site.image} alt={site.name} />
+                {site.eras?.length > 1 ? (
+                  <EraCarousel photos={site.eras} name={site.name} />
+                ) : (
+                  <img src={site.image} alt={site.name} />
+                )}
               </Reveal>
 
               <Reveal className="his-ficha__visit" delay={180}>
