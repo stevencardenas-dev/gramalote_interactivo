@@ -2999,16 +2999,24 @@ kbd {
 }
 
 /* Carrusel por épocas de la ficha de patrimonio (colores de la marca) */
+/* Marco fijo: la foto se ve completa (contain) sea horizontal o vertical, sin
+   recortes ni saltos de altura al cambiar de foto. */
 .era-carousel__stage {
   position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: 20px;
+  background: var(--c-cream-deep);
 }
 
 .era-carousel__stage img {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3.1;
-  border-radius: 20px;
-  object-fit: cover;
+  height: 100%;
+  aspect-ratio: auto;
+  max-height: none;
+  border-radius: 0;
+  object-fit: contain;
 }
 
 .era-carousel__badge {
@@ -3051,8 +3059,8 @@ kbd {
 }
 
 @media (max-width: 900px) {
-  .era-carousel__stage img {
-    aspect-ratio: 16 / 9;
-    max-height: 420px;
+  .era-carousel__stage {
+    max-height: 520px;
+    margin-inline: auto;
   }
 }
