@@ -3064,3 +3064,18 @@ kbd {
     margin-inline: auto;
   }
 }
+
+/* Fotos de contenido completas: el marco conserva su proporción y la foto se
+   ajusta dentro (contain), sin recortes; lo que sobra queda en beige. Los héroes
+   a todo ancho y las miniaturas pequeñas siguen recortando a propósito. */
+.his-card__media img,
+.his-tl__media img,
+.his-cap-hero__media img,
+.his-event__media img,
+.his-row__media img,
+.his-ficha__media img,
+.his-ficha__gallery img,
+.his-story-card__cols img {
+  object-fit: contain;
+  background: var(--c-cream-deep);
+}
