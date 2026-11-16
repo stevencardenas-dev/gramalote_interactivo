@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '../components/ui/Icon.jsx'
 import Reveal from '../components/historia/Reveal.jsx'
@@ -30,6 +30,7 @@ export default function HistoriaPatrimonio() {
   const [view, setView] = useState('listado')
   const [expanded, setExpanded] = useState(false)
   const [selected, setSelected] = useState(heritage[0].slug)
+  const listaRef = useRef(null)
 
   const counts = useMemo(() => {
     const map = { todas: heritage.length }
@@ -49,6 +50,24 @@ export default function HistoriaPatrimonio() {
   }, [zone, query])
 
   const current = filtered.find((item) => item.slug === selected) ?? filtered[0] ?? null
+
+  // La lista del mapa tiene su propio scroll (si no, la columna derecha crecía
+  // mucho más que el mapa): al elegir un punto se trae a la vista la fila
+  // activa, que puede haber quedado fuera del recuadro.
+  useEffect(() => {
+    const lista = listaRef.current
+    const activo = lista?.querySelector('button.is-active')
+    if (!lista || !activo) return
+    const caja = lista.getBoundingClientRect()
+    const fila = activo.getBoundingClientRect()
+    const fuera = fila.top < caja.top + 4 || fila.bottom > caja.bottom - 4
+    if (!fuera) return
+    const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    lista.scrollTo({
+      top: lista.scrollTop + (fila.top - caja.top) - (caja.height - fila.height) / 2,
+      behavior: reducido ? 'auto' : 'smooth',
+    })
+  }, [current?.slug, filtered.length, view])
   const filtering = zone !== 'todas' || query.trim().length > 0
   const visible = expanded || filtering ? filtered : filtered.slice(0, 3)
 
@@ -195,26 +214,35 @@ export default function HistoriaPatrimonio() {
               <aside className="his-mapview__panel">
                 {current ? (
                   <article className="his-mapview__card">
-                    <span className={`his-tag his-tag--${ZONE_TONE[current.zone]}`}>{current.zoneLabel}</span>
-                    <h3>{current.name}</h3>
-                    <p className="his-mapview__meta">
-                      {current.zoneLabel} · {current.category}
-                    </p>
                     <img src={current.image} alt="" loading="lazy" />
-                    <p>{current.summary}</p>
-                    <Status value={current.status} />
-                    <Link className="btn btn--primary his-mapview__cta" to={`/historia/patrimonio/${current.slug}`}>
-                      Ver ficha completa
-                      <Icon name="arrow" className="btn__icon" />
-                    </Link>
+                    <div className="his-mapview__card-body">
+                      <span className={`his-tag his-tag--${ZONE_TONE[current.zone]}`}>{current.zoneLabel}</span>
+                      <h3>{current.name}</h3>
+                      <p className="his-mapview__meta">
+                        {current.zoneLabel} · {current.category}
+                      </p>
+                      <p className="his-mapview__summary">{current.summary}</p>
+                    </div>
+                    <div className="his-mapview__card-foot">
+                      <Status value={current.status} />
+                      <Link className="btn btn--primary his-mapview__cta" to={`/historia/patrimonio/${current.slug}`}>
+                        Ver ficha completa
+                        <Icon name="arrow" className="btn__icon" />
+                      </Link>
+                    </div>
                   </article>
                 ) : (
                   <p className="his-empty">No hay patrimonios para mostrar con ese filtro.</p>
                 )}
 
                 <div className="his-mapview__list">
-                  <p className="eyebrow">Explora lugares</p>
-                  <ol>
+                  <div className="his-mapview__list-head">
+                    <p className="eyebrow">Explora lugares</p>
+                    <span className="his-mapview__count">
+                      {filtered.length} {filtered.length === 1 ? 'lugar' : 'lugares'}
+                    </span>
+                  </div>
+                  <ol ref={listaRef}>
                     {filtered.map((item) => (
                       <li key={item.slug}>
                         <button

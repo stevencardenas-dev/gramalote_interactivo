@@ -850,72 +850,50 @@
   line-height: 1.6;
 }
 
+/* Sin botones: el cierre explica el gesto y deja los enlaces como texto
+   discreto, para que teclado y lectores de pantalla sigan teniendo su ruta. */
 .his-closing__nav {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 14px;
   margin-top: clamp(26px, 3vw, 40px);
 }
 
-.his-closing__prev,
-.his-closing__next {
-  display: grid;
-  gap: 6px;
-  padding: 20px 24px;
-  border: 1px solid #e7d2bd;
-  border-radius: 18px;
-  background: var(--c-white);
-  text-align: left;
-  transition: border-color 0.25s ease, transform 0.25s ease;
-}
-
-.his-closing__prev:hover,
-.his-closing__next:hover {
-  border-color: var(--c-coral);
-  transform: translateY(-2px);
-}
-
-.his-closing__next {
-  text-align: right;
-}
-
-.his-closing__prev span,
-.his-closing__next span {
-  color: var(--c-muted);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.his-closing__prev strong,
-.his-closing__next strong {
+.his-closing__hint {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
+  justify-self: center;
   gap: 8px;
-  color: var(--c-brown);
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
+  max-width: 56ch;
+  color: var(--c-ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.his-closing__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 24px;
+}
+
+.his-closing__links a {
+  color: var(--c-coral);
+  font-size: 0.92rem;
   font-weight: 600;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
 }
 
-.his-closing__next strong {
-  justify-content: flex-end;
+.his-closing__links a:hover {
+  border-bottom-color: currentColor;
 }
 
-.his-closing__prev .is-left,
-.his-closing__next .is-left,
 .his-ficha__navlink .is-left,
 .his-mapview__back .is-left {
   transform: rotate(90deg);
-}
-
-.his-closing__next strong svg {
-  transition: transform 0.3s ease;
-}
-
-.his-closing__next:hover strong svg {
-  transform: translateX(5px);
 }
 
 .his-closing__back {
@@ -1453,60 +1431,114 @@
 
 .his-mapview__panel {
   display: grid;
+  align-content: start;
   gap: 16px;
 }
 
+/* La ficha del punto elegido va en horizontal (miniatura + texto) para que la
+   columna no crezca mucho más que el mapa y quede sitio para el índice. */
 .his-mapview__card {
-  padding: 20px;
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 12px 14px;
+  padding: 16px;
   border: 1px solid #ece0d3;
   border-radius: 18px;
   background: var(--c-white);
   box-shadow: var(--shadow-card);
 }
 
-.his-mapview__card h3 {
-  margin-top: 10px;
-  color: var(--c-brown);
-  font-size: 1.5rem;
-  line-height: 1.15;
-}
-
-.his-mapview__meta {
-  margin-top: 4px;
-  color: var(--c-muted);
-  font-size: 0.85rem;
-}
-
 .his-mapview__card img {
-  width: 100%;
-  margin-top: 14px;
-  aspect-ratio: 16 / 10;
+  width: 104px;
+  height: 104px;
   border-radius: 12px;
   object-fit: cover;
 }
 
-.his-mapview__card > p:not(.his-mapview__meta) {
-  margin-top: 12px;
+.his-mapview__card-body {
+  min-width: 0;
+}
+
+.his-mapview__card h3 {
+  margin-top: 8px;
+  color: var(--c-brown);
+  font-size: 1.25rem;
+  line-height: 1.15;
+}
+
+.his-mapview__meta {
+  margin-top: 3px;
+  color: var(--c-muted);
+  font-size: 0.8rem;
+}
+
+.his-mapview__summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  margin-top: 6px;
   color: var(--c-ink-soft);
-  font-size: 0.9375rem;
-  line-height: 1.55;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.his-mapview__card-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .his-mapview__cta {
-  width: 100%;
   justify-content: center;
-  margin-top: 16px;
+  padding-block: 10px;
 }
 
 .his-mapview__list {
-  padding: 18px 20px;
+  padding: 16px 20px 18px;
   border-radius: 18px;
   background: #fdf3e8;
 }
 
+.his-mapview__list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.his-mapview__count {
+  flex: none;
+  color: var(--c-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* El índice de lugares tiene su propio scroll: si crecía libre, la columna
+   derecha duplicaba en alto al mapa y quedaba un hueco enorme a la izquierda. */
 .his-mapview__list ol {
   display: grid;
+  gap: 1px;
   margin-top: 10px;
+  max-height: clamp(180px, 26vh, 260px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #e6cdb8 transparent;
+}
+
+.his-mapview__list ol::-webkit-scrollbar {
+  width: 6px;
+}
+
+.his-mapview__list ol::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #e6cdb8;
 }
 
 .his-mapview__list button {
@@ -2038,9 +2070,48 @@
   .his-mapview {
     grid-template-columns: minmax(0, 1fr) 330px;
   }
+
+  /* Con la columna de 330px la ficha necesita miniatura y tipografía menores. */
+  .his-mapview__card {
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 10px 12px;
+  }
+
+  .his-mapview__card img {
+    width: 84px;
+    height: 84px;
+  }
+
+  .his-mapview__card h3 {
+    font-size: 1.1rem;
+  }
+
+  .his-mapview__card-foot {
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 980px) {
+  /* En tablet el hero llevaba 56/76 px de relleno y quedaba muy alto. */
+  .his-hero__inner {
+    padding-block: calc(var(--header-h) + 36px) 54px;
+  }
+
+  .his-hero--page .his-hero__inner {
+    padding-block: calc(var(--header-h) + 28px) 44px;
+  }
+
+  /* El encabezado de sección envolvía y dejaba el botón suelto a la
+     izquierda; en columna se centra bajo el texto. */
+  .his-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .his-head .btn {
+    align-self: center;
+  }
+
   .his-franja__inner,
   .his-cap-hero__grid,
   .his-ficha__top {
@@ -2049,6 +2120,41 @@
 
   .his-ficha__aside {
     position: static;
+  }
+
+  /* En una columna la foto caía después de ~500px de texto: se sube justo
+     debajo del título y la entradilla, antes del cuerpo. */
+  .his-ficha__top {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .his-ficha__main,
+  .his-ficha__aside {
+    display: contents;
+  }
+
+  .his-ficha__head {
+    order: 1;
+  }
+
+  .his-ficha__media {
+    order: 2;
+  }
+
+  /* A todo el ancho la foto de la ficha medía 550px de alto en tablet. */
+  .his-ficha__media img {
+    aspect-ratio: 16 / 9;
+    max-height: 420px;
+  }
+
+  .his-ficha__body {
+    order: 3;
+  }
+
+  .his-ficha__visit {
+    order: 4;
   }
 
   .his-franja__title {
@@ -2096,37 +2202,35 @@
 }
 
 @media (max-width: 760px) {
+  /* El hero se ajusta a su contenido: con 78svh quedaban ~300px de aire. */
   .his-hero {
-    min-height: 78svh;
+    min-height: 0;
   }
 
   .his-hero__inner {
-    padding-block: calc(var(--header-h) + 32px) 54px;
+    gap: 14px;
+    padding-block: calc(var(--header-h) + 22px) 40px;
   }
 
   .his-hero--page {
-    min-height: 54svh;
+    min-height: 0;
+  }
+
+  .his-hero--page .his-hero__inner {
+    padding-block: calc(var(--header-h) + 16px) 34px;
   }
 
   .his-hero h1 {
-    max-width: 16ch;
+    max-width: 18ch;
+    font-size: clamp(2.05rem, 8.4vw, 2.8rem);
+  }
+
+  .his-hero__cta {
+    margin-top: 4px;
   }
 
   .his-nav {
-    position: relative;
-    padding-block: 14px;
-  }
-
-  /* Pista de que la barra sigue hacia la derecha en pantallas angostas. */
-  .his-nav::after {
-    content: '';
-    position: absolute;
-    top: 14px;
-    right: 0;
-    bottom: 14px;
-    width: 34px;
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff 80%);
-    pointer-events: none;
+    padding-block: 12px;
   }
 
   .his-nav.container {
@@ -2138,13 +2242,16 @@
     padding-inline: 0;
   }
 
+  /* El conmutador se centra cuando cabe y vuelve a desplazarse si no
+     (`safe center` evita que el primer tab quede inalcanzable). */
   .his-nav__list {
     display: flex;
     grid-template-columns: none;
-    gap: 4px;
+    justify-content: safe center;
+    gap: 2px;
     width: 100%;
     overflow-x: auto;
-    padding: 6px 14px;
+    padding: 5px 8px;
     border-radius: 0;
     scrollbar-width: none;
   }
@@ -2155,18 +2262,14 @@
 
   .his-nav__link {
     flex: none;
-    padding: 10px 14px;
-    font-size: 0.9375rem;
+    padding: 9px 10px;
+    font-size: 0.875rem;
     white-space: nowrap;
   }
 
+
   .his-franja__inner {
     gap: 14px;
-  }
-
-  .his-head {
-    flex-direction: column;
-    align-items: flex-start;
   }
 
   .his-chapters__grid {
@@ -2245,8 +2348,26 @@
     min-height: 240px;
   }
 
+  /* La tarjeta «Sigue explorando» dejaba el botón pegado a la derecha. */
+  .his-nextup {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .his-nextup .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .his-cap-hero {
     padding-block: 18px 32px;
+  }
+
+  .his-cap-hero .btn {
+    width: 100%;
+    justify-content: center;
+    margin-top: 20px;
   }
 
   .his-cap-hero h1 {
@@ -2449,6 +2570,31 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* Apilado no conviene un scroll dentro de otro: el índice fluye con la página. */
+  .his-mapview__list ol {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .his-mapview__card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .his-mapview__card img {
+    width: 100%;
+    height: 170px;
+  }
+
+  .his-mapview__card-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .his-mapview__cta {
+    width: 100%;
+  }
+
   .his-ficha__nav {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
@@ -2457,6 +2603,16 @@
   .his-ficha__navlink--next {
     justify-items: start;
     text-align: left;
+  }
+
+  .his-ficha__visit-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .his-ficha__visit-foot .btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .his-ficha__navback {
@@ -2527,14 +2683,21 @@
    activa siempre centrada desde SectionNav).
 --------------------------------------------------------------------------- */
 @media (max-width: 420px) {
+  /* En una fila las cuatro pestañas no caben sin recortar la última (a 360 px
+     se salían 11 px): pasan a una rejilla 2×2, siempre centrada y sin desliz. */
   .his-nav__list {
-    gap: 2px;
-    padding: 6px 10px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+    gap: 4px;
+    padding: 5px;
+    overflow: visible;
   }
 
   .his-nav__link {
-    padding: 10px;
+    padding: 9px 8px;
     font-size: 0.8125rem;
+    white-space: normal;
   }
 }
 
@@ -2582,6 +2745,255 @@
     filter 0.35s ease;
 }
 
-.his-event__media img.is-pulse {
-  filter: brightness(1.05) contrast(1.03);
+/* La foto del bloque activo da un pulso breve al encenderse (se dispara al
+   cambiar de clase, sin tocar el DOM desde JavaScript). */
+@keyframes his-pulso {
+  0% {
+    filter: brightness(1.07) contrast(1.04);
+  }
+
+  100% {
+    filter: none;
+  }
+}
+
+.his-event.is-active .his-event__media img {
+  animation: his-pulso 0.5s ease;
+}
+
+/* ---------------------------------------------------------------------------
+   Recorrido del capítulo: flechas en escritorio, encaje tipo TikTok en móvil
+   En escritorio las flechas ← → recorren los acontecimientos y, al pasar del
+   primero o del último, se cambia de capítulo. En móvil cada acontecimiento
+   ocupa la pantalla, el scroll encaja uno a uno y un deslizamiento lateral
+   cambia de capítulo. Nada depende de botones.
+--------------------------------------------------------------------------- */
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  padding: 2px 7px;
+  border: 1px solid #e7d2bd;
+  border-bottom-width: 2px;
+  border-radius: 7px;
+  background: var(--c-white);
+  color: var(--c-brown);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.his-cap-hero__keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 10px;
+}
+
+.his-cap-hero__keys kbd {
+  min-width: 22px;
+  padding: 1px 5px;
+  font-size: 0.7rem;
+}
+
+/* Al entrar a otro capítulo el relato se asienta, sin animar el contenedor
+   completo (rompería el encabezado fijo y la barra de progreso). */
+@keyframes his-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.his-story {
+  animation: his-entrar 0.45s ease both;
+}
+
+/* Pista flotante: dice qué hacer y desaparece con la primera acción. */
+.his-guide {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  z-index: 60;
+  display: grid;
+  justify-items: center;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  background: rgba(48, 32, 20, 0.9);
+  color: #fff7ee;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0;
+  transform: translate(-50%, 14px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.his-guide.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.his-guide p {
+  margin: 0;
+}
+
+.his-guide kbd {
+  margin-inline: 3px;
+  border-color: transparent;
+  background: #fff7ee;
+  color: #302014;
+}
+
+.his-guide__mobile {
+  display: none;
+}
+
+.his-guide__arrow {
+  color: #f2a37a;
+  font-weight: 700;
+}
+
+/* Contador del deck (solo móvil): en qué acontecimiento vas. */
+.his-step-counter {
+  position: fixed;
+  right: 14px;
+  bottom: 78px;
+  z-index: 60;
+  display: none;
+  align-items: baseline;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--c-brown);
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(77, 42, 12, 0.14);
+  pointer-events: none;
+}
+
+.his-step-counter span {
+  color: var(--c-muted);
+  font-weight: 600;
+}
+
+@media (max-width: 980px) {
+  .his-guide__desktop {
+    display: none;
+  }
+
+  .his-guide__mobile {
+    display: block;
+  }
+
+  .his-guide {
+    bottom: 16px;
+  }
+
+  .his-step-counter.is-visible {
+    display: inline-flex;
+  }
+
+  .his-cap-hero__keys {
+    display: none;
+  }
+
+  /* El scroll de la página se detiene en cada bloque, como al pasar historias. */
+  html.his-deck {
+    scroll-snap-type: y proximity;
+  }
+
+  .his-deck .his-stage__band,
+  .his-deck .his-event,
+  .his-deck .his-closing {
+    scroll-snap-align: start;
+  }
+
+  .his-deck .his-events::before {
+    display: none;
+  }
+
+  .his-deck .his-stage__band {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 10px;
+    min-height: 72svh;
+    padding: calc(var(--header-h) + 10px) 22px 28px;
+  }
+
+  .his-deck .his-stage__note {
+    justify-self: start;
+    text-align: left;
+  }
+
+  .his-deck .his-event {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    gap: 18px;
+    min-height: 100svh;
+    padding-block: calc(var(--header-h) + 18px) 44px;
+    scroll-snap-stop: always;
+  }
+
+  .his-deck .his-event__media,
+  .his-deck .his-event--reverse .his-event__media {
+    grid-column: 1;
+    grid-row: auto;
+    order: -1;
+  }
+
+  .his-deck .his-event__media img {
+    aspect-ratio: 16 / 11;
+    max-height: 46svh;
+  }
+
+  .his-deck .his-event__body,
+  .his-deck .his-event--reverse .his-event__body {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .his-deck .his-event__body h3 {
+    font-size: clamp(1.5rem, 6.4vw, 1.95rem);
+  }
+
+  .his-deck .his-event__body p {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .his-deck .his-event__dot {
+    display: none;
+  }
+
+  .his-deck .his-closing {
+    display: flex;
+    align-items: center;
+    min-height: 100svh;
+    padding-block: calc(var(--header-h) + 16px) 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .his-story {
+    animation: none;
+  }
+
+  .his-guide,
+  .his-step-counter {
+    transition: none;
+  }
 }
