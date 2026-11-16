@@ -25,8 +25,9 @@ services:
       TRUST_PROXY_HOPS: "1"
 
   db:
-    # El compose de producción monta ./database/*.sql porque deploy.sh los deja
-    # ahí; en un clon del repo viven en backend/database/.
+    # El compose de producción monta ./database/*.sql porque
+    # deploy/desplegar-ec2.sh los deja ahí; en un clon del repo viven en
+    # backend/database/.
     volumes: !override
       - gramalote_db:/var/lib/mysql
       - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro

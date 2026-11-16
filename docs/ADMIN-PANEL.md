@@ -414,9 +414,9 @@ gh workflow run deploy-ec2.yml        # o Actions → Run workflow
 # Desactivar: quita la línea (o pon BACKUP_ENABLED=0) y vuelve a desplegar
 ```
 
-Con la variable en `1`, `deploy.sh` instala el timer y hace un respaldo antes de
-cada despliegue; con `0` (o sin ella) desactiva el timer. `backup.sh` siempre se
-puede ejecutar a mano.
+Con la variable en `1`, `deploy/desplegar-ec2.sh` instala el timer y hace un
+respaldo antes de cada despliegue; con `0` (o sin ella) desactiva el timer.
+`backup.sh` siempre se puede ejecutar a mano.
 
 [`deploy/backup.sh`](../deploy/backup.sh) guarda en `/opt/gramalote/backups/`
 (carpeta de root, `700`):
@@ -428,9 +428,9 @@ puede ejecutar a mano.
   si quedan menos de 1 GiB libres (`BACKUP_MIN_FREE_MB`), para no llenar el disco
   de MySQL.
 
-Activado, `deploy.sh` crea `gramalote-backup.timer` (todos los días a las **03:30
-hora de Colombia**). También hace un respaldo **antes de
-cada despliegue**, porque las migraciones pueden cambiar el esquema.
+Activado, `deploy/desplegar-ec2.sh` crea `gramalote-backup.timer` (todos los días
+a las **03:30 hora de Colombia**). También hace un respaldo **antes de cada
+despliegue**, porque las migraciones pueden cambiar el esquema.
 
 ```bash
 systemctl list-timers gramalote-backup.timer   # próxima ejecución
@@ -502,7 +502,7 @@ servicios propietarios. Checklist al mudar:
 - [x] Asociación, orden y portada de `establishment_images`.
 - [x] Script `media:prune` (dry-run por defecto) y endpoint de estadísticas.
 - [x] Script `media:import`: sube las fotos de `database/media-seed/` a las fichas
-  sin fotos; lo ejecuta `deploy.sh` en cada despliegue (idempotente).
+  sin fotos; lo ejecuta `deploy/desplegar-ec2.sh` en cada despliegue (idempotente).
 - [x] Rol `hero` y foto por plato/producto, elegible desde “Más datos”.
 - [x] UI: listado, formulario por pestañas y gestor de imágenes.
 - [x] Matriz de roles aplicada en API **y** en UI.

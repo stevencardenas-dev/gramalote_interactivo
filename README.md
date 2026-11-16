@@ -56,7 +56,7 @@ colaborador con permiso de escritura puede lanzarlo:
 1. **build**: lint + build de la imagen y push a Amazon ECR
    (`706637772877.dkr.ecr.us-east-2.amazonaws.com/gramalote-frontend`,
    tags `sha-<commit>` y `latest`).
-2. **deploy**: AWS Systems Manager (`SendCommand`) descarga `deploy/deploy.sh`
+2. **deploy**: AWS Systems Manager (`SendCommand`) descarga `deploy/desplegar-ec2.sh`
    y `docker-compose.yml` del repositorio y los ejecuta en la instancia
    `i-007da8f731134e78d`: `docker compose pull && docker compose up -d` y
    validación de `/healthz`. Al terminar invalida el caché de CloudFront.

@@ -148,8 +148,8 @@ jobs:
           RAW_BASE: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}
         run: |
           COMPOSE_URL="$RAW_BASE/docker-compose.yml"
-          SCRIPT_URL="$RAW_BASE/deploy/deploy.sh"
-          COMANDO="export AWS_REGION=$AWS_REGION ECR_REPO=$ECR_REPOSITORY ECR_REPO_API=$ECR_REPOSITORY_API IMAGE_TAG=$IMAGE_TAG COMPOSE_URL=$COMPOSE_URL; curl -fsSL $SCRIPT_URL -o /tmp/gramalote-deploy.sh && bash /tmp/gramalote-deploy.sh"
+          SCRIPT_URL="$RAW_BASE/deploy/desplegar-ec2.sh"
+          COMANDO="export AWS_REGION=$AWS_REGION ECR_REPO=$ECR_REPOSITORY ECR_REPO_API=$ECR_REPOSITORY_API IMAGE_TAG=$IMAGE_TAG COMPOSE_URL=$COMPOSE_URL; curl -fsSL $SCRIPT_URL -o /tmp/gramalote-desplegar-ec2.sh && bash /tmp/gramalote-desplegar-ec2.sh"
           PARAMS=$(printf '{"commands":["%s"]}' "$COMANDO")
 
           COMMAND_ID=$(aws ssm send-command \

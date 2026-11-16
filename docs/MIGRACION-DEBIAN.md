@@ -208,7 +208,8 @@ cd /opt/gramalote
 ```
 
 El repo es ahora la única fuente de verdad: `docker-compose.yml`,
-`deploy/deploy.sh`, los `Dockerfile` y el snapshot en `migracion/`.
+`deploy/desplegar-ec2.sh` (EC2), `deploy/levantar-debian.sh` (este servidor), los
+`Dockerfile` y el snapshot en `migracion/`.
 
 ### 6.3 Directorios de datos (fuera del repo)
 
@@ -261,7 +262,7 @@ producción. Lo que cambia:
 |---|---|
 | `build` de `frontend` y `backend` en vez de `pull` | no hay ECR |
 | publica en **8080** en lugar del 80 | no choca con un nginx/apache del sistema |
-| los `.sql` apuntan a `backend/database/` | el compose base los espera en `./database/`, que en la instancia crea `deploy.sh` |
+| los `.sql` apuntan a `backend/database/` | el compose base los espera en `./database/`, que en la instancia crea `deploy/desplegar-ec2.sh` |
 | `TRUST_PROXY_HOPS=1` | aquí solo hay un nginx delante, no CloudFront |
 
 Se usa siempre con los dos `-f`, en ese orden:
@@ -275,26 +276,50 @@ gc up -d          # nginx + API + MySQL
 Ya no hace falta el `docker-compose.override.yml` manual de versiones anteriores
 de este documento. El puerto se cambia en el overlay (o con `PORT`, ver 6.6).
 
-### 6.6 Un solo comando: `deploy/local-debian.sh`
+### 6.6 Un solo comando: `deploy/levantar-debian.sh`
 
-`deploy/local-debian.sh` hace las secciones 6.3 a 6.7 de esta guía de una vez y
-es idempotente: si ya hay `.env`, base de datos o fotos, los respeta.
+`deploy/levantar-debian.sh` hace las secciones 6.3 a 6.7 de esta guía de una vez
+y es idempotente y repetible: cada ejecución deja el sitio con **los datos del
+snapshot más reciente de `migracion/`** (base, usuarios del panel, fotos y mapa)
+y vuelve a levantar el stack.
 
 1. Instala Docker si falta y comprueba el plugin `docker compose`.
-2. Copia `media/` y los `.pmtiles` del snapshot más reciente de `migracion/` a
-   `/srv/gramalote/` y ajusta permisos (UID 1000 para la API, lectura para nginx).
+2. Sincroniza `media/` y los `.pmtiles` del snapshot a `/srv/gramalote/srv` y
+   ajusta permisos (UID 1000 para la API, lectura para nginx).
 3. Crea el `.env` con secretos nuevos y `CORS_ORIGIN`/`PUBLIC_SITE_URL` con la IP
-   local de la máquina.
-4. Levanta MySQL, importa el volcado **solo si la base está vacía**, compila las
-   imágenes y arranca `web` + `api`.
-5. Aplica migraciones, siembra la cuenta admin, abre el puerto en `ufw` si está
-   activo y espera a que respondan `/healthz` y `/api/health`.
+   local de la máquina (si ya existe, lo reutiliza y solo completa lo que falte).
+4. Levanta MySQL y **restaura el volcado cuando el snapshot cambió**: guarda el
+   sha256 del último importado en `/srv/gramalote/estado-snapshot`. Antes de pisar
+   una base con datos deja un respaldo en `/srv/gramalote/respaldos/`. Si el
+   sha256 coincide, no toca los datos.
+5. Comprueba fila por fila contra `conteos.tsv` y avisa de las diferencias.
+6. Compila las imágenes, arranca `web` + `api`, aplica migraciones y abre el
+   puerto en `ufw` si está activo.
+7. **No toca los usuarios**: los del volcado conservan sus contraseñas de la
+   EC2. Solo siembra la cuenta del `.env` si `admin_users` quedó vacía, o con
+   `--rotar-admin`.
+8. Espera `/healthz` y `/api/health` y comprueba que una foto real de `/media`
+   responde 200.
+
+Si el repositorio está en `/root` (como en la VM actual), hay que ejecutarlo como
+root (`su -`); un usuario normal sin `sudo` no puede ni leer el `.env`.
 
 ```bash
 cd /opt/gramalote
-sudo bash deploy/local-debian.sh                  # http://<ip-debian>:8080
-PORT=9090 sudo -E bash deploy/local-debian.sh     # otro puerto
+sudo bash deploy/levantar-debian.sh                  # http://<ip-debian>:8080
+PORT=9090 sudo -E bash deploy/levantar-debian.sh     # otro puerto
+sudo bash deploy/levantar-debian.sh --forzar-datos   # reimporta el volcado
+sudo bash deploy/levantar-debian.sh --rotar-admin    # rota la clave del .env
 ```
+
+Para tomar un snapshot nuevo desde la EC2 (con la llave SSH todavía en mano):
+
+```powershell
+powershell -File deploy/migracion-exportar.ps1
+```
+
+Y luego se vuelve a ejecutar `levantar-debian.sh`: al cambiar el sha256 del
+volcado, restaura la base nueva conservando los usuarios y las contraseñas.
 
 Al terminar imprime la URL del sitio y del panel. Desde Windows (o cualquier
 máquina de la red) se abre esa misma URL; el panel queda en `/acceder` y la API
@@ -398,7 +423,7 @@ Si más adelante quieres CI, lo natural es un workflow con SSH al servidor
 2. Exportar con `-Commit` y revisar el snapshot en GitHub (sección 4).
 3. Guardar el `.env` en el gestor de contraseñas (sección 5).
 4. Preparar el Debian y ensayar la restauración **con el snapshot** antes de
-   apagar la EC2: `sudo bash deploy/local-debian.sh` (sección 6.6) levanta el
+   apagar la EC2: `sudo bash deploy/levantar-debian.sh` (sección 6.6) levanta el
    sitio completo y se comprueba desde el navegador. Un ensayo vale más que
    cualquier checklist.
 5. Solo cuando el ensayo funcione: DNS al servidor nuevo y dar de baja la EC2.
@@ -413,6 +438,8 @@ Si más adelante quieres CI, lo natural es un workflow con SSH al servidor
 | `permission denied (publickey)` | Ruta de la llave equivocada: `-Llave C:\Users\...\.ssh\gramalote-key.pem`. |
 | GitHub rechaza el push por tamaño | Algún archivo pasó de 100 MB: mira `archivos-media.tsv`, sácalo con `-SinTiles` o usa Git LFS. |
 | El sitio nuevo carga sin fotos | `MEDIA_DIR` mal o permisos: `chown -R 1000:1000 /srv/gramalote/media`. |
+| La VM muestra los datos de ejemplo: sin usuarios del panel y las fichas con `cover: null` | La base tiene lo de `seed.sql` y el volcado nunca se importó (era el comportamiento del script anterior). `levantar-debian.sh` compara el sha256 del snapshot con `/srv/gramalote/estado-snapshot`; si no coincide restaura, y si quieres repetirlo: `--forzar-datos`. |
+| `ERROR 1064 (42000) ... near ' */'` al importar el volcado | mysqldump deja el `;` final del cuerpo del trigger dentro del comentario de versión y MySQL corta ahí la sentencia. El script quita ese `;` al importar. A mano: `gunzip -c volcado.sql.gz \| sed 's/; \*\/;;$/ *\/;;/' \| docker compose exec -T db sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" gramalote'`. |
 | El mapa sale en blanco | Falta el `.pmtiles` en `/srv/gramalote/tiles` (o `VITE_MAP_PMTILES_URL` mal). Se regenera con `deploy/tiles/build-tiles.sh`. |
 | El panel dice «sesión expirada» para todos | Cambiaste `JWT_SECRET`: es esperado, hay que volver a entrar. |
 | Login falla con 401 y la web responde bien | La base se importó pero `users` está vacía: ejecuta `npm run seed:admin`. |
