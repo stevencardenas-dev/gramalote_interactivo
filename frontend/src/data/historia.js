@@ -757,6 +757,12 @@ export const heritage = [
     mapsUrl: 'https://maps.app.goo.gl/ThZgudsNGKhbZf2c8',
     image: '/img/historia/pat-01.jpg',
     gallery: [],
+    // Carrusel por épocas: sustituye a la foto única en la ficha.
+    eras: [
+      { src: '/img/historia/tiempo-07.jpg', label: '1910 – 1953', alt: 'Templo de San Rafael entre 1910 y 1953' },
+      { src: '/img/historia/tiempo-07a.jpg', label: '1957 – 2010', alt: 'Templo de San Rafael entre 1957 y 2010' },
+      { src: '/img/historia/tiempo-07b.jpg', label: 'Desde 2010', alt: 'Ruinas del templo de San Rafael desde 2010' },
+    ],
   },
   {
     n: '02',

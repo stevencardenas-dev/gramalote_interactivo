@@ -2997,3 +2997,62 @@ kbd {
     transition: none;
   }
 }
+
+/* Carrusel por épocas de la ficha de patrimonio (colores de la marca) */
+.era-carousel__stage {
+  position: relative;
+}
+
+.era-carousel__stage img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3.1;
+  border-radius: 20px;
+  object-fit: cover;
+}
+
+.era-carousel__badge {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--c-navy);
+  color: var(--c-white);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.era-carousel .carousel-arrow {
+  background: var(--c-navy);
+  color: var(--c-white);
+}
+
+.era-carousel .carousel-arrow:hover {
+  background: var(--c-navy-dark);
+}
+
+.era-carousel .carousel-dots {
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.era-carousel .carousel-dots button {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--c-navy);
+  background: transparent;
+}
+
+.era-carousel .carousel-dots button.is-active {
+  background: var(--c-coral-text);
+  border-color: var(--c-coral-text);
+}
+
+@media (max-width: 900px) {
+  .era-carousel__stage img {
+    aspect-ratio: 16 / 9;
+    max-height: 420px;
+  }
+}
