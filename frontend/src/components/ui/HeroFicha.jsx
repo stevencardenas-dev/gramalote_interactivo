@@ -92,17 +92,67 @@ export default function HeroFicha({
   const slides = images?.length ? images : image ? [image] : []
   const total = slides.length
   const multiple = total > 1
+  // Identifica el juego de fotos: con esto se espera a que la primera esté
+  // lista y no se vuelve a esperar si la ficha no cambió.
+  const slidesKey = slides.join('|')
   const trackRef = useRef(null)
-  // La posición (0..total) sale del reloj, no de sumar fotogramas: con fotos
-  // grandes el navegador baja de 20 fps y, sumando fotogramas con tope, la
-  // rotación se arrastraba. `base` es la posición al empezar este tramo y
-  // `since` el instante en que empezó.
+  // `progress` es la posición (0..total); `base`, la posición al empezar el
+  // tramo actual de animación.
   const progress = useRef(0)
   const base = useRef(0)
-  const since = useRef(0)
   const [dot, setDot] = useState(0)
   const [paused, setPaused] = useState(false)
   const [retarget, setRetarget] = useState(0)
+  // El movimiento no arranca hasta que la primera foto está decodificada y
+  // pintada: si no, el reloj corre mientras el navegador decodifica la foto
+  // grande y el carrusel se ve trabado los primeros segundos.
+  const [readyKey, setReadyKey] = useState('')
+  const ready = multiple && readyKey === slidesKey
+
+  useEffect(() => {
+    if (!multiple) return undefined
+    const first = trackRef.current?.querySelector('img')
+    if (!first) return undefined
+    let alive = true
+    let frame
+    // Dos vueltas al bucle de pintado: el compuesto ya tiene la foto dentro.
+    const start = () => {
+      frame = requestAnimationFrame(() => {
+        frame = requestAnimationFrame(() => {
+          if (alive) setReadyKey(slidesKey)
+        })
+      })
+    }
+    // `complete` también es true si la foto falló: en ese caso no llega ningún
+    // evento y el carrusel se quedaría quieto.
+    if (first.complete) {
+      start()
+    } else {
+      first.addEventListener('load', start, { once: true })
+      first.addEventListener('error', start, { once: true })
+    }
+    return () => {
+      alive = false
+      if (frame) cancelAnimationFrame(frame)
+      first.removeEventListener('load', start)
+      first.removeEventListener('error', start)
+    }
+  }, [multiple, slidesKey])
+
+  // Las demás fotos se decodifican por detrás: así no hay tirón cuando una
+  // nueva entra al encabezado.
+  useEffect(() => {
+    if (!multiple) return
+    slidesKey
+      .split('|')
+      .slice(1)
+      .filter(Boolean)
+      .forEach((src) => {
+        const image = new Image()
+        image.decoding = 'async'
+        image.src = src
+      })
+  }, [multiple, slidesKey])
 
   // Carrusel continuo: las fotos se deslizan sin parar hacia la izquierda; al
   // terminar la última asoma otra vez la primera (hay una copia al final). El
@@ -110,21 +160,21 @@ export default function HeroFicha({
   // con requestAnimationFrame y no con CSS porque la hoja global anula las
   // animaciones CSS cuando el visitante pidió «reducir movimiento».
   useEffect(() => {
-    if (!multiple || paused) return undefined
+    if (!multiple || paused || !ready) return undefined
     base.current = progress.current
-    since.current = performance.now()
     let frame
-    let last = since.current
+    let last = performance.now()
+    // Recorrido acumulado en milisegundos con un tope por fotograma: si el
+    // navegador se queda ocupado (foto decodificándose, vuelta desde otra
+    // pestaña) el carrusel avanza solo 250 ms en ese hueco. Ni salta como con
+    // el reloj, ni se congela como cuando se descartaba el hueco entero.
+    let travelled = 0
     let shown = -1
+    const MAX_STEP = 250
     function tick(now) {
-      const gap = now - last
+      travelled += Math.min(now - last, MAX_STEP)
       last = now
-      // Al entrar en la ficha (o al volver de una pestaña oculta) el primer
-      // fotograma llega con mucho retraso, y con el reloj la primera foto
-      // aparecía a mitad de camino. Se descarta ese hueco; los tirones normales
-      // de la máquina (hasta 200 ms) sí cuentan, para no frenar el ritmo.
-      if (gap > 200) since.current += gap - 16
-      const value = (base.current + (now - since.current) / (SLIDE_SECONDS * 1000)) % total
+      const value = (base.current + travelled / (SLIDE_SECONDS * 1000)) % total
       progress.current = value
       paint(trackRef.current, value, total)
       const next = Math.round(value) % total
@@ -136,7 +186,7 @@ export default function HeroFicha({
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [multiple, paused, total, retarget])
+  }, [multiple, paused, total, retarget, ready])
 
   function goTo(index) {
     progress.current = index
@@ -161,11 +211,13 @@ export default function HeroFicha({
                 key={`${src}-${index}`}
                 src={src}
                 alt={index === dot ? imageAlt : ''}
+                decoding="async"
+                fetchPriority={index === 0 ? 'high' : 'low'}
               />
             ))}
           </div>
         ) : image || slides[0] ? (
-          <img src={slides[0]} alt={imageAlt} />
+          <img src={slides[0]} alt={imageAlt} decoding="async" fetchPriority="high" />
         ) : null}
       </div>
 

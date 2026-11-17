@@ -3,7 +3,7 @@ import InfoBar from '../components/ui/InfoBar.jsx'
 import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
 import { locationButtonProps } from '../lib/maps.js'
-import { contactLines } from '../lib/contact.js'
+import { fichaInfoItems } from '../lib/fichaInfo.js'
 import RelatedPlaces from '../components/cards/RelatedPlaces.jsx'
 import { categories } from '../data/establishments.js'
 
@@ -34,14 +34,7 @@ export default function EstablecimientoDormir({ item }) {
       />
 
       <div className="container">
-        <InfoBar
-          items={[
-            { icon: 'horario', label: 'Llegada / Salida', value: item.checkin },
-            { icon: 'ubicacion', label: 'Ubicación', value: item.address },
-            { icon: 'billetera', label: 'Precios', value: item.priceRange },
-            { icon: 'telefono', label: 'Contacto', value: contactLines(item) },
-          ]}
-        />
+        <InfoBar items={fichaInfoItems(item)} />
       </div>
 
       <section className="ficha-section ficha-section--dormir">

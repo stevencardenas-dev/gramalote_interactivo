@@ -21,7 +21,8 @@ export function contactLines(item) {
     const sameWhatsapp = whatsapp && digits(whatsapp) === digits(phone)
     lines.push(sameWhatsapp ? `${phone} · WhatsApp` : phone)
   }
-  if (secondary) lines.push(secondary)
+  // El secundario no se repite si es el mismo número del principal.
+  if (secondary && digits(secondary) !== digits(phone)) lines.push(secondary)
   if (whatsapp && digits(whatsapp) !== digits(phone) && digits(whatsapp) !== digits(secondary)) {
     lines.push(`${whatsapp} · WhatsApp`)
   }

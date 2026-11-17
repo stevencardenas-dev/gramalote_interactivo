@@ -289,6 +289,221 @@
   margin-bottom: 10px;
 }
 
+/* Tab «Servicios y extras»: tarjetas de platos/productos, enlaces y sugerencias. */
+.admin-link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--c-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.admin-extras-empty {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: var(--fs-xs);
+}
+
+.admin-extras-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.admin-extras-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  background: var(--c-white);
+}
+
+.admin-extras-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-extras-card__head strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--fs-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-extras-card__index {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-extras-card__remove {
+  border: 1px solid var(--c-line);
+  border-radius: 8px;
+  background: var(--c-white);
+  padding: 4px 10px;
+  color: var(--c-muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.admin-extras-card textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  resize: vertical;
+}
+
+.admin-extras-links {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-extras-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: 12px;
+  background: var(--c-white);
+}
+
+.admin-extras-link select {
+  width: auto;
+  min-width: 132px;
+}
+
+.admin-extras-link input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.admin-extras-link__open {
+  color: var(--c-primary);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.admin-extras-link button {
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-white);
+  padding: 7px 12px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+.admin-extras-search {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+}
+
+.admin-extras-picks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.admin-extras-pick {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-white);
+  cursor: pointer;
+}
+
+.admin-extras-pick input {
+  margin-top: 2px;
+  accent-color: var(--c-primary);
+}
+
+.admin-extras-pick strong {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.admin-extras-pick small {
+  display: block;
+  color: var(--c-muted);
+  font-size: 11px;
+}
+
+.admin-extras-pick.is-on {
+  border-color: var(--c-primary);
+  background: var(--c-surface);
+}
+
+.admin-extras-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+}
+
+.admin-extras-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 12px;
+  border-radius: 999px;
+  background: var(--c-surface);
+  font-size: var(--fs-xs);
+}
+
+.admin-extras-chips button {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-white);
+  color: var(--c-muted);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
 .admin-section-head {
   display: flex;
   align-items: center;
@@ -1173,43 +1388,137 @@ a.admin-module-card:hover {
   gap: 14px;
 }
 
+.admin-hours__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 10px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: 12px;
+  background: var(--c-surface);
+  color: var(--c-muted);
+  font-size: var(--fs-xs);
+}
+
+.admin-hours__summary-item strong {
+  margin-right: 4px;
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+}
+
+.admin-hours__summary-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Fila de botones del horario (también la usa ScheduleEditor). */
+.admin-hours__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .admin-hours__week {
   display: grid;
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
+  gap: 10px;
 }
 
 .admin-hours__day {
   display: grid;
-  grid-template-columns: 96px 140px minmax(0, 1fr);
-  align-items: center;
+  align-content: start;
   gap: 10px;
-  padding-block: 6px;
-  border-bottom: 1px solid var(--c-line);
+  padding: 12px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  background: var(--c-white);
+}
+
+.admin-hours__day[data-mode='open'] {
+  box-shadow: inset 3px 0 0 var(--c-primary);
+}
+
+.admin-hours__day[data-mode='unknown'] {
+  border-style: dashed;
+}
+
+.admin-hours__day-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-hours__day-head strong {
   font-size: var(--fs-sm);
+}
+
+.admin-hours__seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--c-line);
+  border-radius: 999px;
+  background: var(--c-surface);
+}
+
+.admin-hours .admin-hours__seg .admin-hours__seg-btn {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--c-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-hours .admin-hours__seg .admin-hours__seg-btn.is-active {
+  background: var(--c-primary);
+  color: var(--c-white);
 }
 
 .admin-hours__slots {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 14px;
+  gap: 8px;
 }
 
 .admin-hours__slot {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--c-line);
+  border-radius: 12px;
+  background: var(--c-surface);
+}
+
+.admin-hours__dash {
+  color: var(--c-muted);
+  font-size: var(--fs-xs);
 }
 
 .admin-hours select,
 .admin-hours input {
-  padding: 8px 10px;
+  padding: 7px 10px;
   border: 1px solid var(--c-line);
-  border-radius: 10px;
+  border-radius: 9px;
   background: var(--c-white);
   font-family: var(--font-sans);
   font-size: var(--fs-sm);
   color: var(--c-ink);
+}
+
+.admin-hours .admin-hours__slot input[type='time'] {
+  width: 104px;
+  border-color: transparent;
+  background: transparent;
+  font-variant-numeric: tabular-nums;
 }
 
 .admin-hours button {
@@ -1231,20 +1540,70 @@ a.admin-module-card:hover {
   border-style: dashed;
 }
 
-.admin-hours__tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.admin-hours .admin-hours__slot .admin-hours__remove {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 999px;
+  color: var(--c-muted);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.admin-hours__state {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: var(--fs-xs);
 }
 
 .admin-hours__preview {
-  margin: 0;
-  color: var(--c-ink-soft);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px dashed var(--c-line);
+  border-radius: 12px;
+  background: var(--c-surface);
+}
+
+.admin-hours__preview small {
+  display: block;
+  color: var(--c-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-hours__preview p {
+  margin: 4px 0 0;
+  color: var(--c-ink);
   font-size: var(--fs-sm);
 }
 
+.admin-hours__exceptions {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-hours__exceptions-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.admin-hours__exceptions-head small {
+  color: var(--c-muted);
+  font-size: var(--fs-xs);
+}
+
 .admin-hours__subtitle {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   font-size: 1rem;
 }
 
@@ -1253,19 +1612,27 @@ a.admin-module-card:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: 12px;
+  background: var(--c-white);
 }
 
-.admin-hours__exception input:not([type]) {
+.admin-hours__exception .admin-hours__note {
   flex: 1 1 180px;
 }
 
+.admin-hours .admin-hours__exception .admin-hours__remove-text {
+  padding: 6px 10px;
+}
+
 @media (max-width: 760px) {
-  .admin-hours__day {
-    grid-template-columns: 1fr 1fr;
+  .admin-hours__week {
+    grid-template-columns: 1fr;
   }
 
-  .admin-hours__slots {
-    grid-column: 1 / -1;
+  .admin-hours__summary-tools {
+    margin-left: 0;
   }
 }
 

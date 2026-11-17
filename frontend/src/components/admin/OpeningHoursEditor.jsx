@@ -1,11 +1,20 @@
 // Horario por día y excepciones (festivos, cierres). Es lo que usa la API para
 // calcular "Abierto hoy"; el texto de la ficha se puede generar desde aquí.
+//
+// Cada día es una tarjeta con su estado (abierto / cerrado / sin dato) y sus
+// turnos, igual que el horario de las experiencias. Un día sin filas es "sin
+// dato": la API no sabe si está abierto.
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 const DEFAULT_SLOT = { opensAt: '08:00', closesAt: '18:00' }
+const MAX_SLOTS = 3
+const STATES = [
+  { key: 'open', label: 'Abierto' },
+  { key: 'closed', label: 'Cerrado' },
+  { key: 'unknown', label: 'Sin dato' },
+]
 
 const hhmm = (value) => (value ? String(value).slice(0, 5) : '')
 
-// Un día sin filas es "sin dato": la API no sabe si está abierto.
 function dayMode(slots) {
   if (slots.length === 0) return 'unknown'
   return slots.every((slot) => slot.closed) ? 'closed' : 'open'
@@ -53,21 +62,23 @@ function hoursToText(hours) {
     else if (text) groups.push({ from: index, to: index, text })
   })
 
-  return groups
-    .map(({ from, to, text }) => {
-      const days =
-        from === to
-          ? DAYS[from]
-          : `${DAYS[from]} a ${DAYS[to].toLowerCase()}`
-      return `${days}, ${text}`
-    })
-    .join(' · ')
+  const parts = groups.map(({ from, to, text }) => {
+    const days = from === to ? DAYS[from] : `${DAYS[from]} a ${DAYS[to].toLowerCase()}`
+    return `${days}, ${text}`
+  })
+  const unknown = byDay
+    .map((slots, index) => (dayMode(slots) === 'unknown' ? DAYS[index] : null))
+    .filter(Boolean)
+  if (unknown.length && parts.length) parts.push(`${unknown.join(', ')}, sin dato`)
+  return parts.join(' · ')
 }
 
 export default function OpeningHoursEditor({ hours, exceptions, onChange, onExceptionsChange, onUseText }) {
   const setHours = (next) => onChange(normalize(next))
 
   function setMode(day, mode) {
+    const current = dayMode(hours.filter((slot) => slot.dayOfWeek === day))
+    if (current === mode) return
     const others = hours.filter((slot) => slot.dayOfWeek !== day)
     if (mode === 'unknown') setHours(others)
     if (mode === 'closed') setHours([...others, { dayOfWeek: day, closed: true }])
@@ -90,12 +101,12 @@ export default function OpeningHoursEditor({ hours, exceptions, onChange, onExce
     ])
   }
 
-  // Copia el horario del lunes al resto de días hábiles.
-  function copyMonday() {
+  // Reparte el horario del lunes entre los días indicados.
+  function copyMonday(days) {
     const monday = hours.filter((slot) => slot.dayOfWeek === 1)
-    const rest = hours.filter((slot) => slot.dayOfWeek > 5)
-    const weekdays = [2, 3, 4, 5].flatMap((day) => monday.map((slot) => ({ ...slot, dayOfWeek: day })))
-    setHours([...monday, ...weekdays, ...rest])
+    const rest = hours.filter((slot) => slot.dayOfWeek !== 1 && !days.includes(slot.dayOfWeek))
+    const copies = days.flatMap((day) => monday.map((slot) => ({ ...slot, dayOfWeek: day })))
+    setHours([...monday, ...copies, ...rest])
   }
 
   function updateException(index, patch) {
@@ -103,14 +114,35 @@ export default function OpeningHoursEditor({ hours, exceptions, onChange, onExce
   }
 
   const text = hoursToText(hours)
+  const hasMonday = hours.some((slot) => slot.dayOfWeek === 1)
+  const openDays = DAYS.filter((_label, index) => dayMode(hours.filter((slot) => slot.dayOfWeek === index + 1)) === 'open')
 
   return (
     <div className="admin-hours">
       <p className="note">
-        Con este horario el sitio calcula “Abierto hoy” (hora de Colombia). Un día “sin dato”
+        Con este horario el sitio calcula “Abierto hoy” (hora de Colombia). Un día «sin dato»
         no cuenta ni como abierto ni como cerrado. Si cierra después de medianoche, pon la hora
         de cierre menor que la de apertura.
       </p>
+
+      <div className="admin-hours__summary">
+        <span className="admin-hours__summary-item">
+          <strong>{openDays.length}</strong>
+          {openDays.length === 1 ? 'día abierto' : 'días abiertos'}
+        </span>
+        <span className="admin-hours__summary-item">
+          <strong>{exceptions.length}</strong>
+          {exceptions.length === 1 ? 'excepción' : 'excepciones'}
+        </span>
+        <span className="admin-hours__summary-tools">
+          <button type="button" disabled={!hasMonday} onClick={() => copyMonday([2, 3, 4, 5])}>
+            Copiar lunes a mar–vie
+          </button>
+          <button type="button" disabled={!hasMonday} onClick={() => copyMonday([2, 3, 4, 5, 6, 7])}>
+            Copiar lunes a todos
+          </button>
+        </span>
+      </div>
 
       <div className="admin-hours__week">
         {DAYS.map((label, index) => {
@@ -118,128 +150,162 @@ export default function OpeningHoursEditor({ hours, exceptions, onChange, onExce
           const slots = hours.filter((slot) => slot.dayOfWeek === day)
           const mode = dayMode(slots)
           return (
-            <div key={day} className="admin-hours__day">
-              <strong>{label}</strong>
-              <select
-                aria-label={`Estado del ${label.toLowerCase()}`}
-                value={mode}
-                onChange={(event) => setMode(day, event.target.value)}
-              >
-                <option value="open">Abierto</option>
-                <option value="closed">Cerrado</option>
-                <option value="unknown">Sin dato</option>
-              </select>
-              <div className="admin-hours__slots">
-                {mode === 'open'
-                  ? slots.map((slot, position) => (
-                      <span key={position} className="admin-hours__slot">
-                        <input
-                          type="time"
-                          aria-label={`${label}: abre`}
-                          value={hhmm(slot.opensAt)}
-                          onChange={(event) => updateSlot(slot, { opensAt: event.target.value })}
-                        />
-                        <span aria-hidden="true">a</span>
-                        <input
-                          type="time"
-                          aria-label={`${label}: cierra`}
-                          value={hhmm(slot.closesAt)}
-                          onChange={(event) => updateSlot(slot, { closesAt: event.target.value })}
-                        />
-                        {slots.length > 1 ? (
-                          <button
-                            type="button"
-                            aria-label={`Quitar turno del ${label.toLowerCase()}`}
-                            onClick={() => setHours(hours.filter((item) => item !== slot))}
-                          >
-                            ×
-                          </button>
-                        ) : null}
-                      </span>
-                    ))
-                  : null}
-                {mode === 'open' && slots.length < 3 ? (
-                  <button type="button" className="admin-hours__add" onClick={() => addSlot(day)}>
-                    + Turno
-                  </button>
-                ) : null}
+            <div key={day} className="admin-hours__day" data-mode={mode}>
+              <div className="admin-hours__day-head">
+                <strong>{label}</strong>
+                <div className="admin-hours__seg" role="group" aria-label={`Estado del ${label.toLowerCase()}`}>
+                  {STATES.map((state) => (
+                    <button
+                      key={state.key}
+                      type="button"
+                      className={`admin-hours__seg-btn${mode === state.key ? ' is-active' : ''}`}
+                      aria-pressed={mode === state.key}
+                      onClick={() => setMode(day, state.key)}
+                    >
+                      {state.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {mode === 'open' ? (
+                <div className="admin-hours__slots">
+                  {slots.map((slot, position) => (
+                    <span key={position} className="admin-hours__slot">
+                      <input
+                        type="time"
+                        aria-label={`${label}: abre`}
+                        value={hhmm(slot.opensAt)}
+                        onChange={(event) => updateSlot(slot, { opensAt: event.target.value })}
+                      />
+                      <span className="admin-hours__dash" aria-hidden="true">
+                        –
+                      </span>
+                      <input
+                        type="time"
+                        aria-label={`${label}: cierra`}
+                        value={hhmm(slot.closesAt)}
+                        onChange={(event) => updateSlot(slot, { closesAt: event.target.value })}
+                      />
+                      {slots.length > 1 ? (
+                        <button
+                          type="button"
+                          className="admin-hours__remove"
+                          aria-label={`Quitar turno del ${label.toLowerCase()}`}
+                          onClick={() => setHours(hours.filter((item) => item !== slot))}
+                        >
+                          ×
+                        </button>
+                      ) : null}
+                    </span>
+                  ))}
+                  {slots.length < MAX_SLOTS ? (
+                    <button type="button" className="admin-hours__add" onClick={() => addSlot(day)}>
+                      + Turno
+                    </button>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="admin-hours__state">
+                  {mode === 'closed'
+                    ? 'Cerrado todo el día.'
+                    : 'Sin horario definido para este día.'}
+                </p>
+              )}
             </div>
           )
         })}
       </div>
 
-      <div className="admin-hours__tools">
-        <button type="button" onClick={copyMonday}>
-          Copiar el lunes de martes a viernes
-        </button>
-        <button type="button" disabled={!text} onClick={() => onUseText(text)}>
-          Usar como texto de la ficha
-        </button>
-      </div>
-      {text ? <p className="admin-hours__preview">Vista previa: {text}</p> : null}
-
-      <h3 className="admin-hours__subtitle">Excepciones (festivos y cierres)</h3>
-      {exceptions.map((item, index) => (
-        <div key={index} className="admin-hours__exception">
-          <input
-            type="date"
-            aria-label="Fecha"
-            value={String(item.date ?? '').slice(0, 10)}
-            onChange={(event) => updateException(index, { date: event.target.value })}
-          />
-          <select
-            aria-label="Estado ese día"
-            value={item.closed ? 'closed' : 'open'}
-            onChange={(event) =>
-              updateException(
-                index,
-                event.target.value === 'closed'
-                  ? { closed: true }
-                  : { closed: false, opensAt: item.opensAt ?? DEFAULT_SLOT.opensAt, closesAt: item.closesAt ?? DEFAULT_SLOT.closesAt },
-              )
-            }
-          >
-            <option value="closed">Cerrado</option>
-            <option value="open">Horario especial</option>
-          </select>
-          {item.closed ? null : (
-            <span className="admin-hours__slot">
-              <input
-                type="time"
-                aria-label="Abre"
-                value={hhmm(item.opensAt)}
-                onChange={(event) => updateException(index, { opensAt: event.target.value })}
-              />
-              <span aria-hidden="true">a</span>
-              <input
-                type="time"
-                aria-label="Cierra"
-                value={hhmm(item.closesAt)}
-                onChange={(event) => updateException(index, { closesAt: event.target.value })}
-              />
-            </span>
-          )}
-          <input
-            placeholder="Nota (p. ej. Navidad)"
-            value={item.note ?? ''}
-            onChange={(event) => updateException(index, { note: event.target.value })}
-          />
-          <button
-            type="button"
-            onClick={() => onExceptionsChange(exceptions.filter((_item, position) => position !== index))}
-          >
-            Quitar
+      {text ? (
+        <div className="admin-hours__preview">
+          <div>
+            <small>Texto para la ficha</small>
+            <p>{text}</p>
+          </div>
+          <button type="button" onClick={() => onUseText(text)}>
+            Usar en la ficha
           </button>
         </div>
-      ))}
-      <button
-        type="button"
-        className="admin-hours__add"
-        onClick={() => onExceptionsChange([...exceptions, { date: '', closed: true, note: '' }])}
-      >
-        + Excepción
-      </button>
+      ) : null}
+
+      <div className="admin-hours__exceptions">
+        <div className="admin-hours__exceptions-head">
+          <h3 className="admin-hours__subtitle">Excepciones</h3>
+          <small>Festivos, cierres puntuales o horarios especiales.</small>
+        </div>
+
+        {exceptions.length === 0 ? (
+          <p className="admin-hours__state">Sin excepciones: todos los días siguen el horario de arriba.</p>
+        ) : (
+          exceptions.map((item, index) => (
+            <div key={index} className="admin-hours__exception">
+              <input
+                type="date"
+                aria-label="Fecha"
+                value={String(item.date ?? '').slice(0, 10)}
+                onChange={(event) => updateException(index, { date: event.target.value })}
+              />
+              <select
+                aria-label="Estado ese día"
+                value={item.closed ? 'closed' : 'open'}
+                onChange={(event) =>
+                  updateException(
+                    index,
+                    event.target.value === 'closed'
+                      ? { closed: true }
+                      : { closed: false, opensAt: item.opensAt ?? DEFAULT_SLOT.opensAt, closesAt: item.closesAt ?? DEFAULT_SLOT.closesAt },
+                  )
+                }
+              >
+                <option value="closed">Cerrado</option>
+                <option value="open">Horario especial</option>
+              </select>
+              {item.closed ? null : (
+                <span className="admin-hours__slot">
+                  <input
+                    type="time"
+                    aria-label="Abre"
+                    value={hhmm(item.opensAt)}
+                    onChange={(event) => updateException(index, { opensAt: event.target.value })}
+                  />
+                  <span className="admin-hours__dash" aria-hidden="true">
+                    –
+                  </span>
+                  <input
+                    type="time"
+                    aria-label="Cierra"
+                    value={hhmm(item.closesAt)}
+                    onChange={(event) => updateException(index, { closesAt: event.target.value })}
+                  />
+                </span>
+              )}
+              <input
+                className="admin-hours__note"
+                placeholder="Nota (p. ej. Navidad)"
+                aria-label="Nota de la excepción"
+                value={item.note ?? ''}
+                onChange={(event) => updateException(index, { note: event.target.value })}
+              />
+              <button
+                type="button"
+                className="admin-hours__remove-text"
+                onClick={() => onExceptionsChange(exceptions.filter((_item, position) => position !== index))}
+              >
+                Quitar
+              </button>
+            </div>
+          ))
+        )}
+
+        <button
+          type="button"
+          className="admin-hours__add admin-hours__add--wide"
+          onClick={() => onExceptionsChange([...exceptions, { date: '', closed: true, note: '' }])}
+        >
+          + Excepción
+        </button>
+      </div>
     </div>
   )
 }

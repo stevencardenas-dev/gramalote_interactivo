@@ -25,7 +25,15 @@ function formatStamp(value) {
   return date.toLocaleString('es-CO', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-const PLATFORMS = ['facebook', 'instagram', 'whatsapp', 'tiktok', 'youtube', 'x', 'website']
+const PLATFORMS = [
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'facebook', label: 'Facebook' },
+  { key: 'whatsapp', label: 'WhatsApp' },
+  { key: 'tiktok', label: 'TikTok' },
+  { key: 'youtube', label: 'YouTube' },
+  { key: 'x', label: 'X (Twitter)' },
+  { key: 'website', label: 'Sitio web' },
+]
 const ROLE_LABELS = { cover: 'Portada', hero: 'Encabezado', gallery: 'Galería', logo: 'Logo' }
 
 // Elige una de las fotos ya subidas a la ficha para un plato o producto.
@@ -108,6 +116,7 @@ export default function AdminEstablecimiento() {
   const fileInput = useRef(null)
 
   const [tab, setTab] = useState('info')
+  const [relatedQuery, setRelatedQuery] = useState('')
   const [signal, setSignal] = useState({ open: false, n: 0 })
   const [auditPage, setAuditPage] = useState(0)
   const [form, setForm] = useState(null)
@@ -176,9 +185,29 @@ export default function AdminEstablecimiento() {
 
   const cover = form.images.find((image) => image.role === 'cover') ?? null
 
+  // Fichas que se pueden sugerir en «También puedes visitar».
+  const relatedQueryText = relatedQuery.trim().toLowerCase()
+  const relatedCandidates = allEstablishments
+    .filter((item) => item.id !== form.id)
+    .filter((item) => {
+      if (!relatedQueryText) return true
+      return (
+        String(item.name ?? '').toLowerCase().includes(relatedQueryText) ||
+        String(item.category?.name ?? '').toLowerCase().includes(relatedQueryText)
+      )
+    })
+
   function update(patch) {
     setForm((current) => ({ ...current, ...patch }))
     setNotice('')
+  }
+
+  function toggleRelated(target) {
+    update({
+      relatedIds: form.relatedIds.includes(target)
+        ? form.relatedIds.filter((value) => value !== target)
+        : [...form.relatedIds, target],
+    })
   }
 
   function updateList(key, index, patch) {
@@ -562,12 +591,6 @@ export default function AdminEstablecimiento() {
                     onChange={(event) => update({ address: event.target.value })}
                   />
                 </Field>
-                <Field label="Detalle de ubicación">
-                  <input
-                    value={form.locationDetail ?? ''}
-                    onChange={(event) => update({ locationDetail: event.target.value })}
-                  />
-                </Field>
                 <Field label="Enlace de Google Maps (opcional)" hint="Si lo dejas vacío, el botón usa las coordenadas.">
                   <input
                     type="url"
@@ -612,12 +635,6 @@ export default function AdminEstablecimiento() {
                     onChange={(event) => update({ phone: event.target.value })}
                   />
                 </Field>
-                <Field label="Teléfono secundario">
-                  <input
-                    value={form.phoneSecondary ?? ''}
-                    onChange={(event) => update({ phoneSecondary: event.target.value })}
-                  />
-                </Field>
                 <Field label="WhatsApp">
                   <input
                     value={form.whatsapp ?? ''}
@@ -635,49 +652,28 @@ export default function AdminEstablecimiento() {
               <p className="admin-hint">El sitio web y las redes se agregan en «Redes sociales».</p>
               </Section>
 
-              <Section title="Horarios y precios" hint="Textos libres para la ficha y rangos numéricos para ordenar y filtrar." signal={signal}>
+              <Section
+                title="Horarios y pagos"
+                hint="Textos libres que se leen en la ficha."
+                signal={signal}
+              >
               <div className="admin-grid">
-                <Field label="Horario (texto de la ficha)">
+                <Field label="Horario (texto de la ficha)" hint="Se puede generar desde «Horario por día».">
                   <input
                     value={form.hoursText ?? ''}
                     onChange={(event) => update({ hoursText: event.target.value })}
                   />
                 </Field>
-                <Field label="Check-in / check-out">
+                <Field label="Horario de entrada y salida" hint="Se muestra bajo «Horario» en la ficha.">
                   <input
                     value={form.checkinText ?? ''}
                     onChange={(event) => update({ checkinText: event.target.value })}
                   />
                 </Field>
-                <Field label="Rango de precio (texto)">
+                <Field label="Rango de precios (texto)" hint="Se lee tal cual en la ficha, p. ej. $15.000 – $40.000.">
                   <input
                     value={form.priceText ?? ''}
                     onChange={(event) => update({ priceText: event.target.value })}
-                  />
-                </Field>
-                <Field label="Precio mínimo (COP)">
-                  <input
-                    type="number"
-                    value={form.priceMin ?? ''}
-                    onChange={(event) =>
-                      update({ priceMin: event.target.value === '' ? null : event.target.value })
-                    }
-                  />
-                </Field>
-                <Field label="Precio máximo (COP)">
-                  <input
-                    type="number"
-                    value={form.priceMax ?? ''}
-                    onChange={(event) =>
-                      update({ priceMax: event.target.value === '' ? null : event.target.value })
-                    }
-                  />
-                </Field>
-                <Field label="Orden en el listado">
-                  <input
-                    type="number"
-                    value={form.sortOrder ?? 0}
-                    onChange={(event) => update({ sortOrder: Number(event.target.value) })}
                   />
                 </Field>
               </div>
@@ -813,7 +809,22 @@ export default function AdminEstablecimiento() {
 
           {tab === 'extras' ? (
             <div className="admin-extras">
-              <Section title="Servicios" signal={signal}>
+              <Section
+                title="Servicios"
+                hint={`${form.serviceIds.length} de ${meta?.services?.length ?? 0} seleccionados`}
+                signal={signal}
+                actions={
+                  form.serviceIds.length ? (
+                    <button
+                      type="button"
+                      className="admin-link-btn"
+                      onClick={() => update({ serviceIds: [] })}
+                    >
+                      Quitar todos
+                    </button>
+                  ) : null
+                }
+              >
                 <div className="admin-checks">
                   {(meta?.services ?? []).map((service) => (
                     <label key={service.id} className="admin-check">
@@ -834,7 +845,11 @@ export default function AdminEstablecimiento() {
                 </div>
               </Section>
 
-              <Section title="Formas de pago" signal={signal}>
+              <Section
+                title="Formas de pago"
+                hint={`${form.paymentIds.length} de ${meta?.paymentMethods?.length ?? 0} seleccionadas`}
+                signal={signal}
+              >
                 <div className="admin-checks">
                   {(meta?.paymentMethods ?? []).map((payment) => (
                     <label key={payment.id} className="admin-check">
@@ -855,52 +870,10 @@ export default function AdminEstablecimiento() {
                 </div>
               </Section>
 
-              <Section title="Platos y servicios destacados" signal={signal}
-                actions={
-                  <button
-                    type="button"
-                    className="admin-btn admin-btn--accent-outline"
-                    onClick={() =>
-                      addToList('features', {
-                        title: '',
-                        description: '',
-                        icon: '',
-                        sortOrder: (form.features.length + 1) * 10,
-                      })
-                    }
-                  >
-                    + Añadir tarjeta
-                  </button>
-                }>
-                {form.features.map((feature, index) => (
-                  <div key={index} className="admin-row">
-                    <input
-                      placeholder="Título"
-                      value={feature.title}
-                      onChange={(event) =>
-                        updateList('features', index, { title: event.target.value })
-                      }
-                    />
-                    <input
-                      placeholder="Descripción"
-                      value={feature.description ?? ''}
-                      onChange={(event) =>
-                        updateList('features', index, { description: event.target.value })
-                      }
-                    />
-                    <PhotoSelect
-                      images={form.images}
-                      value={feature.mediaId}
-                      onChange={(mediaId) => updateList('features', index, { mediaId })}
-                    />
-                    <button type="button" onClick={() => removeFromList('features', index)}>
-                      Quitar
-                    </button>
-                  </div>
-                ))}
-              </Section>
-
-              <Section title="Productos" signal={signal}
+              <Section
+                title="Productos"
+                hint={`${form.products.length} ${form.products.length === 1 ? 'producto' : 'productos'} con precio`}
+                signal={signal}
                 actions={
                   <button
                     type="button"
@@ -916,44 +889,70 @@ export default function AdminEstablecimiento() {
                   >
                     + Añadir producto
                   </button>
-                }>
-                {form.products.map((product, index) => (
-                  <div key={index} className="admin-row admin-row--product">
-                    <input
-                      placeholder="Nombre"
-                      value={product.name}
-                      onChange={(event) =>
-                        updateList('products', index, { name: event.target.value })
-                      }
-                    />
-                    <input
-                      placeholder="Precio COP"
-                      type="number"
-                      value={product.price ?? ''}
-                      onChange={(event) =>
-                        updateList('products', index, { price: event.target.value })
-                      }
-                    />
-                    <input
-                      placeholder="Descripción"
-                      value={product.description ?? ''}
-                      onChange={(event) =>
-                        updateList('products', index, { description: event.target.value })
-                      }
-                    />
-                    <PhotoSelect
-                      images={form.images}
-                      value={product.mediaId}
-                      onChange={(mediaId) => updateList('products', index, { mediaId })}
-                    />
-                    <button type="button" onClick={() => removeFromList('products', index)}>
-                      Quitar
-                    </button>
-                  </div>
-                ))}
+                }
+              >
+                {form.products.length === 0 ? (
+                  <p className="admin-extras-empty">Sin productos todavía.</p>
+                ) : null}
+                <div className="admin-extras-cards">
+                  {form.products.map((product, index) => (
+                    <article key={index} className="admin-extras-card">
+                      <header className="admin-extras-card__head">
+                        <span className="admin-extras-card__index">{index + 1}</span>
+                        <strong>{product.name || 'Producto sin nombre'}</strong>
+                        <button
+                          type="button"
+                          className="admin-extras-card__remove"
+                          onClick={() => removeFromList('products', index)}
+                        >
+                          Quitar
+                        </button>
+                      </header>
+                      <Field label="Nombre">
+                        <input
+                          placeholder="P. ej. Sancocho"
+                          value={product.name}
+                          onChange={(event) =>
+                            updateList('products', index, { name: event.target.value })
+                          }
+                        />
+                      </Field>
+                      <Field label="Precio (COP)">
+                        <input
+                          type="number"
+                          placeholder="25000"
+                          value={product.price ?? ''}
+                          onChange={(event) =>
+                            updateList('products', index, { price: event.target.value })
+                          }
+                        />
+                      </Field>
+                      <Field label="Descripción">
+                        <textarea
+                          rows={2}
+                          placeholder="Qué incluye"
+                          value={product.description ?? ''}
+                          onChange={(event) =>
+                            updateList('products', index, { description: event.target.value })
+                          }
+                        />
+                      </Field>
+                      <Field label="Foto">
+                        <PhotoSelect
+                          images={form.images}
+                          value={product.mediaId}
+                          onChange={(mediaId) => updateList('products', index, { mediaId })}
+                        />
+                      </Field>
+                    </article>
+                  ))}
+                </div>
               </Section>
 
-              <Section title="Redes sociales" signal={signal}
+              <Section
+                title="Redes sociales"
+                hint="Botones de contacto que salen en la cabecera de la ficha."
+                signal={signal}
                 actions={
                   <button
                     type="button"
@@ -962,57 +961,119 @@ export default function AdminEstablecimiento() {
                   >
                     + Añadir red
                   </button>
-                }>
-                {form.social.map((link, index) => (
-                  <div key={index} className="admin-row">
-                    <select
-                      value={link.platform}
-                      onChange={(event) =>
-                        updateList('social', index, { platform: event.target.value })
-                      }
-                    >
-                      {PLATFORMS.map((platform) => (
-                        <option key={platform} value={platform}>
-                          {platform}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      placeholder="https://"
-                      value={link.url}
-                      onChange={(event) =>
-                        updateList('social', index, { url: event.target.value })
-                      }
-                    />
-                    <button type="button" onClick={() => removeFromList('social', index)}>
-                      Quitar
-                    </button>
-                  </div>
-                ))}
+                }
+              >
+                {form.social.length === 0 ? (
+                  <p className="admin-extras-empty">Sin redes ni sitio web.</p>
+                ) : null}
+                <div className="admin-extras-links">
+                  {form.social.map((link, index) => (
+                    <div key={index} className="admin-extras-link">
+                      <select
+                        aria-label={`Red ${index + 1}`}
+                        value={link.platform}
+                        onChange={(event) =>
+                          updateList('social', index, { platform: event.target.value })
+                        }
+                      >
+                        {PLATFORMS.map((platform) => (
+                          <option key={platform.key} value={platform.key}>
+                            {platform.label}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        placeholder="https://"
+                        aria-label={`Enlace de ${link.platform}`}
+                        value={link.url}
+                        onChange={(event) =>
+                          updateList('social', index, { url: event.target.value })
+                        }
+                      />
+                      {link.url ? (
+                        <a
+                          className="admin-extras-link__open"
+                          href={link.url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Abrir ↗
+                        </a>
+                      ) : null}
+                      <button type="button" onClick={() => removeFromList('social', index)}>
+                        Quitar
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </Section>
 
-              <Section title="También puedes visitar" signal={signal}>
-                <select
-                  multiple
-                  className="admin-multiselect"
-                  value={form.relatedIds.map(String)}
-                  onChange={(event) =>
-                    update({
-                      relatedIds: [...event.target.selectedOptions].map((option) =>
-                        Number(option.value),
-                      ),
-                    })
-                  }
-                >
-                  {allEstablishments
-                    .filter((item) => item.id !== form.id)
-                    .map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
+              <Section
+                title="También puedes visitar"
+                hint="Sugerencias que salen al final de la ficha."
+                signal={signal}
+              >
+                {form.relatedIds.length ? (
+                  <ul className="admin-extras-chips">
+                    {form.relatedIds.map((relatedId) => {
+                      const item = allEstablishments.find((entry) => entry.id === relatedId)
+                      const label = item?.name ?? `Ficha ${relatedId}`
+                      return (
+                        <li key={relatedId}>
+                          <span>{label}</span>
+                          <button
+                            type="button"
+                            aria-label={`Quitar ${label}`}
+                            onClick={() =>
+                              update({
+                                relatedIds: form.relatedIds.filter((value) => value !== relatedId),
+                              })
+                            }
+                          >
+                            ×
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                ) : (
+                  <p className="admin-extras-empty">Todavía no hay sugerencias.</p>
+                )}
+
+                <input
+                  type="search"
+                  className="admin-extras-search"
+                  placeholder="Buscar ficha por nombre o categoría…"
+                  aria-label="Buscar ficha para sugerir"
+                  value={relatedQuery}
+                  onChange={(event) => setRelatedQuery(event.target.value)}
+                />
+
+                {relatedCandidates.length === 0 ? (
+                  <p className="admin-extras-empty">Ninguna ficha coincide con la búsqueda.</p>
+                ) : (
+                  <div className="admin-extras-picks">
+                    {relatedCandidates.map((item) => (
+                      <label
+                        key={item.id}
+                        className={`admin-extras-pick${form.relatedIds.includes(item.id) ? ' is-on' : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={form.relatedIds.includes(item.id)}
+                          onChange={() => toggleRelated(item.id)}
+                        />
+                        <span>
+                          <strong>{item.name}</strong>
+                          <small>
+                            {item.category?.name ?? ''}
+                            {item.zone?.name ? ` · ${item.zone.name}` : ''}
+                          </small>
+                        </span>
+                      </label>
                     ))}
-                </select>
-                <p className="note">Ctrl/Cmd + clic para elegir varias.</p>
+                  </div>
+                )}
               </Section>
             </div>
           ) : null}

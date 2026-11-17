@@ -415,7 +415,7 @@ export default function AdminUsuarios() {
 
           {/* Tres desplegables en fila (uno debajo del otro): nombre, correo y contraseña. */}
           <div className="admin-account__cols">
-            <details className="admin-acc" open>
+            <details className="admin-acc">
               <summary>
                 <span>Nombre</span>
                 <Chevron />
