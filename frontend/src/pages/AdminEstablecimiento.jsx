@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import OpeningHoursEditor from '../components/admin/OpeningHoursEditor.jsx'
+import { hoursToText } from '../lib/openingHours.js'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import RatingsPanel from '../components/admin/RatingsPanel.jsx'
@@ -217,6 +218,16 @@ export default function AdminEstablecimiento() {
         ? form.relatedIds.filter((value) => value !== target)
         : [...form.relatedIds, target],
     })
+  }
+
+  // El texto de la ficha sigue al horario por día mientras el admin no escriba
+  // uno propio: así el resumen y la semana no dicen cosas distintas.
+  function handleHoursChange(openingHours) {
+    const generated = hoursToText(openingHours)
+    const current = (form.hoursText ?? '').trim()
+    const previous = hoursToText(form.openingHours ?? []).trim()
+    const follows = !current || current === previous
+    update({ openingHours, ...(follows && generated ? { hoursText: generated } : {}) })
   }
 
   function updateList(key, index, patch) {
@@ -662,44 +673,42 @@ export default function AdminEstablecimiento() {
               </Section>
 
               <Section
-                title="Horarios y pagos"
-                hint="Textos libres que se leen en la ficha."
-                signal={signal}
-              >
-              <div className="admin-grid">
-                <Field label="Horario (texto de la ficha)" hint="Se puede generar desde «Horario por día».">
-                  <input
-                    value={form.hoursText ?? ''}
-                    onChange={(event) => update({ hoursText: event.target.value })}
-                  />
-                </Field>
-                <Field label="Horario de entrada y salida" hint="Se muestra bajo «Horario» en la ficha.">
-                  <input
-                    value={form.checkinText ?? ''}
-                    onChange={(event) => update({ checkinText: event.target.value })}
-                  />
-                </Field>
-                <Field label="Rango de precios (texto)" hint="Se lee tal cual en la ficha, p. ej. $15.000 – $40.000.">
-                  <input
-                    value={form.priceText ?? ''}
-                    onChange={(event) => update({ priceText: event.target.value })}
-                  />
-                </Field>
-              </div>
-              </Section>
-
-              <Section
-                title="Horario por día"
-                hint="Calcula “Abierto hoy”; el texto de arriba es el que se lee en la ficha."
+                title="Horario y pagos"
+                hint="El horario por día calcula “Abierto hoy” y arma el resumen que se lee en la ficha."
                 signal={signal}
               >
                 <OpeningHoursEditor
                   hours={form.openingHours ?? []}
                   exceptions={form.openingHoursExceptions ?? []}
-                  onChange={(openingHours) => update({ openingHours })}
+                  onChange={handleHoursChange}
                   onExceptionsChange={(openingHoursExceptions) => update({ openingHoursExceptions })}
                   onUseText={(hoursText) => update({ hoursText })}
                 />
+
+                <h3 className="admin-hours__subtitle admin-hours__subtitle--fields">Textos de la ficha</h3>
+                <div className="admin-grid">
+                  <Field
+                    label="Horario (texto de la ficha)"
+                    hint="Se actualiza solo con el horario por día mientras no escribas uno propio."
+                  >
+                    <input
+                      value={form.hoursText ?? ''}
+                      onChange={(event) => update({ hoursText: event.target.value })}
+                    />
+                  </Field>
+                  <Field label="Horario de entrada y salida" hint="Se muestra bajo «Horario» en la ficha.">
+                    <input
+                      value={form.checkinText ?? ''}
+                      onChange={(event) => update({ checkinText: event.target.value })}
+                    />
+                  </Field>
+                  <Field label="Rango de precios (texto)" hint="Se lee tal cual en la ficha, p. ej. $15.000 – $40.000.">
+                    <input
+                      value={form.priceText ?? ''}
+                      onChange={(event) => update({ priceText: event.target.value })}
+                    />
+                  </Field>
+                </div>
               </Section>
             </>
           ) : null}

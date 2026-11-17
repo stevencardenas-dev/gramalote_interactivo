@@ -1607,6 +1607,13 @@ a.admin-module-card:hover {
   font-size: 1rem;
 }
 
+/* Textos de la ficha dentro de la sección unificada de horario. */
+.admin-hours__subtitle--fields {
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid var(--c-line);
+}
+
 .admin-hours__exception {
   display: flex;
   flex-wrap: wrap;

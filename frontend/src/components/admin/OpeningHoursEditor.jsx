@@ -4,7 +4,8 @@
 // Cada día es una tarjeta con su estado (abierto / cerrado / sin dato) y sus
 // turnos, igual que el horario de las experiencias. Un día sin filas es "sin
 // dato": la API no sabe si está abierto.
-const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+import { DAYS, dayMode, hhmm, hoursToText } from '../../lib/openingHours.js'
+
 const DEFAULT_SLOT = { opensAt: '08:00', closesAt: '18:00' }
 const MAX_SLOTS = 3
 const STATES = [
@@ -13,14 +14,6 @@ const STATES = [
   { key: 'unknown', label: 'Sin dato' },
 ]
 
-const hhmm = (value) => (value ? String(value).slice(0, 5) : '')
-
-function dayMode(slots) {
-  if (slots.length === 0) return 'unknown'
-  return slots.every((slot) => slot.closed) ? 'closed' : 'open'
-}
-
-// sort_order es único por día: se renumera cada vez que cambia algo.
 function normalize(hours) {
   const counters = {}
   return [...hours]
@@ -29,48 +22,6 @@ function normalize(hours) {
       counters[slot.dayOfWeek] = (counters[slot.dayOfWeek] ?? -1) + 1
       return { ...slot, sortOrder: counters[slot.dayOfWeek] }
     })
-}
-
-function formatTime(value) {
-  const [hours, minutes] = hhmm(value).split(':').map(Number)
-  if (!Number.isFinite(hours)) return ''
-  const suffix = hours < 12 ? 'a. m.' : 'p. m.'
-  const twelve = hours % 12 === 0 ? 12 : hours % 12
-  return `${twelve}:${String(minutes).padStart(2, '0')} ${suffix}`
-}
-
-// "Lunes a viernes, de 8:00 a. m. a 6:00 p. m. · Domingo, cerrado"
-function hoursToText(hours) {
-  const byDay = DAYS.map((_label, index) =>
-    hours.filter((slot) => slot.dayOfWeek === index + 1),
-  )
-  const describe = (slots) => {
-    const mode = dayMode(slots)
-    if (mode === 'unknown') return null
-    if (mode === 'closed') return 'cerrado'
-    return slots
-      .filter((slot) => !slot.closed)
-      .map((slot) => `de ${formatTime(slot.opensAt)} a ${formatTime(slot.closesAt)}`)
-      .join(' y ')
-  }
-
-  const groups = []
-  byDay.forEach((slots, index) => {
-    const text = describe(slots)
-    const last = groups.at(-1)
-    if (text && last && last.text === text && last.to === index - 1) last.to = index
-    else if (text) groups.push({ from: index, to: index, text })
-  })
-
-  const parts = groups.map(({ from, to, text }) => {
-    const days = from === to ? DAYS[from] : `${DAYS[from]} a ${DAYS[to].toLowerCase()}`
-    return `${days}, ${text}`
-  })
-  const unknown = byDay
-    .map((slots, index) => (dayMode(slots) === 'unknown' ? DAYS[index] : null))
-    .filter(Boolean)
-  if (unknown.length && parts.length) parts.push(`${unknown.join(', ')}, sin dato`)
-  return parts.join(' · ')
 }
 
 export default function OpeningHoursEditor({ hours, exceptions, onChange, onExceptionsChange, onUseText }) {

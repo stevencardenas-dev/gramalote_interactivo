@@ -1,5 +1,6 @@
 import HeroFicha from '../components/ui/HeroFicha.jsx'
 import InfoBar from '../components/ui/InfoBar.jsx'
+import FichaHorario from '../components/ui/FichaHorario.jsx'
 import Photo from '../components/ui/Photo.jsx'
 import Button from '../components/ui/Button.jsx'
 import { locationButtonProps } from '../lib/maps.js'
@@ -61,6 +62,8 @@ export default function EstablecimientoComer({ item }) {
       <div className="container">
         <InfoBar items={fichaInfoItems(item)} />
       </div>
+
+      <FichaHorario item={item} />
 
       <section className="ficha-section ficha-section--comer">
         <div className="container">

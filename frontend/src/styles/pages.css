@@ -878,6 +878,144 @@ button.social-dot {
   line-height: 1.45;
 }
 
+/* Horario de la semana: detalle del horario por día, bajo la franja de datos */
+.ficha-hours {
+  position: relative;
+  z-index: 2;
+  margin-top: 26px;
+}
+
+.ficha-hours__card {
+  display: grid;
+  gap: 18px;
+  padding: 26px 30px;
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.ficha-hours__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 18px;
+}
+
+.ficha-hours__head h2 {
+  font-size: 1.4rem;
+}
+
+.ficha-hours__status {
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-3);
+  color: var(--c-ink-soft);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.ficha-hours__status.is-open {
+  background: #e3f0e4;
+  color: var(--c-green);
+}
+
+.ficha-hours__status.is-closed {
+  background: var(--c-peach);
+  color: var(--c-coral-text);
+}
+
+.ficha-hours__week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ficha-hours__day {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+}
+
+.ficha-hours__day.is-today {
+  background: var(--c-navy);
+  color: var(--c-white);
+}
+
+.ficha-hours__day-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ficha-hours__day-name em {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--c-gold);
+  color: var(--c-ink);
+  font-size: 0.6875rem;
+  font-style: normal;
+  letter-spacing: 0.02em;
+}
+
+.ficha-hours__day-value {
+  display: block;
+  margin-top: 6px;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+
+.ficha-hours__day[data-mode='closed'] .ficha-hours__day-value,
+.ficha-hours__day[data-mode='unknown'] .ficha-hours__day-value {
+  color: var(--c-muted);
+}
+
+.ficha-hours__day.is-today .ficha-hours__day-value {
+  color: var(--c-white);
+}
+
+.ficha-hours__notes {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--c-ink-soft);
+  font-size: var(--fs-sm);
+}
+
+.ficha-hours__extra {
+  color: var(--c-ink-soft);
+  font-size: var(--fs-sm);
+}
+
+.ficha-hours__extra strong {
+  color: var(--c-ink);
+}
+
+@media (max-width: 900px) {
+  .ficha-hours {
+    margin-top: 18px;
+  }
+
+  .ficha-hours__card {
+    padding: 20px;
+  }
+
+  .ficha-hours__week {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* Secciones internas */
 .ficha-section {
   --ficha-head-gap: 48px;
