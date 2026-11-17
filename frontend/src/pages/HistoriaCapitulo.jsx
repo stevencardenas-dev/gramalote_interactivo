@@ -263,16 +263,14 @@ export default function HistoriaCapitulo() {
     }
   }, [slug, chapter])
 
-  // Transición entre fragmentos en móvil: mientras se desliza, el bloque que sale
-  // se atenúa y se encoge un poco y el que entra sube y se aclara (--vis, de 0 a 1,
-  // lo leen las reglas de historia.css). El anillo de abajo se llena a medida que
-  // se avanza hacia el siguiente fragmento, para que se note que al seguir
-  // deslizando se cambia de uno a otro.
+  // Transición entre fragmentos: mientras se desplaza, el bloque que sale se
+  // atenúa y se encoge un poco y el que entra sube y se aclara (--vis, de 0 a 1,
+  // lo leen las reglas de historia.css). El anillo de abajo se llena en móvil a
+  // medida que se avanza hacia el siguiente fragmento.
   const siguienteRef = useRef(null)
   useEffect(() => {
     const story = storyRef.current
     if (!chapter || !story) return undefined
-    const movil = window.matchMedia('(max-width: 980px)')
     const cierre = document.querySelector('.his-closing')
     const bloques = [...story.querySelectorAll('.his-event'), ...(cierre ? [cierre] : [])]
     let marco = 0
@@ -280,7 +278,7 @@ export default function HistoriaCapitulo() {
     const pintar = () => {
       marco = 0
       const ring = siguienteRef.current
-      if (!movil.matches || esReducido()) {
+      if (esReducido()) {
         bloques.forEach((bloque) => bloque.style.removeProperty('--vis'))
         ring?.style.setProperty('--p', '0')
         return
@@ -306,8 +304,10 @@ export default function HistoriaCapitulo() {
       ring?.classList.toggle('is-end', siguiente === undefined)
     }
 
+    // setTimeout y no requestAnimationFrame: una pestaña en segundo plano no
+    // entrega frames y el bloque se quedaría sin su transición.
     const programar = () => {
-      if (!marco) marco = window.requestAnimationFrame(pintar)
+      if (!marco) marco = window.setTimeout(pintar, 16)
     }
 
     pintar()
@@ -316,7 +316,7 @@ export default function HistoriaCapitulo() {
     return () => {
       window.removeEventListener('scroll', programar)
       window.removeEventListener('resize', programar)
-      if (marco) window.cancelAnimationFrame(marco)
+      if (marco) window.clearTimeout(marco)
       bloques.forEach((bloque) => bloque.style.removeProperty('--vis'))
     }
   }, [slug, chapter])
@@ -373,6 +373,9 @@ export default function HistoriaCapitulo() {
               <span className="his-cap-hero__keys">
                 <kbd>←</kbd>
                 <kbd>→</kbd>
+                <span className="his-cap-hero__keys-or">o</span>
+                <kbd>↑</kbd>
+                <kbd>↓</kbd>
                 para recorrerlos
               </span>
             </p>
@@ -475,6 +478,8 @@ export default function HistoriaCapitulo() {
               <p className="his-closing__hint his-closing__hint--desktop">
                 <kbd>←</kbd>
                 <kbd>→</kbd>
+                <kbd>↑</kbd>
+                <kbd>↓</kbd>
                 <span>recorren los acontecimientos. Para cambiar de capítulo, usa los botones.</span>
               </p>
               <p className="his-closing__hint his-closing__hint--mobile">
@@ -538,6 +543,8 @@ export default function HistoriaCapitulo() {
         <p className="his-guide__desktop">
           <kbd>←</kbd>
           <kbd>→</kbd>
+          <kbd>↑</kbd>
+          <kbd>↓</kbd>
           para recorrer la línea del tiempo
         </p>
         <p className="his-guide__mobile">

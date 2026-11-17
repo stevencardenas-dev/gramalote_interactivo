@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '../components/ui/Icon.jsx'
 import Button from '../components/ui/Button.jsx'
@@ -36,6 +36,8 @@ export default function Historia() {
   // En móvil la línea del tiempo es un carrusel horizontal con los 16 hitos:
   // no se resume ni se esconde detrás de «Ver completa».
   const [compact, setCompact] = useState(() => window.matchMedia('(max-width: 760px)').matches)
+  const tlRef = useRef(null)
+  const tlProgressRef = useRef(null)
   const resumen = timeline.filter((event) => timelineResumen.includes(event.n))
   const visibles = compact || expanded ? timeline : resumen
 
@@ -45,6 +47,60 @@ export default function Historia() {
     query.addEventListener('change', update)
     return () => query.removeEventListener('change', update)
   }, [])
+
+  // El carrusel móvil se mueve con una ligera entrada de las tarjetas y una
+  // barra de avance; no pasa por estado de React para no re-renderizar en cada
+  // fotograma del desplazamiento.
+  useEffect(() => {
+    if (!compact) return undefined
+    const scroller = tlRef.current
+    if (!scroller) return undefined
+    const cards = [...scroller.children]
+    let frame = 0
+
+    const paint = () => {
+      frame = 0
+      const max = scroller.scrollWidth - scroller.clientWidth
+      const progress = max > 0 ? Math.min(1, Math.max(0, scroller.scrollLeft / max)) : 0
+      const viewport = scroller.getBoundingClientRect()
+      const center = viewport.left + viewport.width / 2
+      // Primero se leen todas las cajas y después se escriben los estilos: así
+      // el desplazamiento no encadena un cálculo de layout por tarjeta.
+      const rects = cards.map((card) => card.getBoundingClientRect())
+
+      if (tlProgressRef.current) {
+        tlProgressRef.current.style.transform = `scaleX(${progress.toFixed(4)})`
+      }
+
+      cards.forEach((card, i) => {
+        const rect = rects[i]
+        const distance = Math.abs(rect.left + rect.width / 2 - center)
+        const near = Math.max(0, Math.min(1, 1 - distance / (viewport.width * 0.95)))
+        card.style.setProperty('--near', near.toFixed(3))
+      })
+    }
+
+    // setTimeout y no requestAnimationFrame: el panel de vista previa (y una
+    // pestaña en segundo plano) no entrega frames, y la barra se quedaría fija.
+    const schedule = () => {
+      if (!frame) {
+        frame = window.setTimeout(() => {
+          frame = 0
+          paint()
+        }, 16)
+      }
+    }
+
+    paint()
+    scroller.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    return () => {
+      scroller.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+      if (frame) window.clearTimeout(frame)
+      cards.forEach((card) => card.style.removeProperty('--near'))
+    }
+  }, [compact, visibles.length])
 
   return (
     <>
@@ -133,11 +189,16 @@ export default function Historia() {
             </div>
 
             <div className={`his-timeline__body${expanded ? ' is-expanded' : ''}`} id="linea-del-tiempo">
-              <ol className="his-tl" aria-label="Línea del tiempo de Gramalote">
+              <ol className="his-tl" ref={tlRef} aria-label="Línea del tiempo de Gramalote">
                 {visibles.map((event, index) => (
                   <TimelineRow key={event.n} event={event} index={index} />
                 ))}
               </ol>
+              {compact ? (
+                <div className="his-tl__progress" aria-hidden="true">
+                  <span ref={tlProgressRef} />
+                </div>
+              ) : null}
             </div>
 
             {compact ? null : (

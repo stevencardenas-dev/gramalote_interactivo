@@ -355,6 +355,10 @@
   animation: his-fade 0.5s ease both;
 }
 
+.his-tl__progress {
+  display: none;
+}
+
 /* global.css solo reinicia `ul`: las listas ordenadas de la sección pierden
    aquí el padding por defecto del navegador. */
 .his-tl,
@@ -2464,6 +2468,7 @@
     padding: 4px 16px 18px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
+    scroll-behavior: smooth;
     scroll-snap-type: x mandatory;
     scroll-padding-inline: 16px;
     scrollbar-width: none;
@@ -2502,6 +2507,35 @@
     grid-column: auto;
     grid-row: auto;
     text-align: left;
+  }
+
+  /* La tarjeta que se acerca al centro se asienta; el resto queda un poco
+     atrás para que el desplazamiento se sienta vivo. */
+  .his-tl__row > * {
+    opacity: calc(0.82 + 0.18 * var(--near, 1));
+    transform: translateY(calc((1 - var(--near, 1)) * 10px)) scale(calc(0.985 + 0.015 * var(--near, 1)));
+    transform-origin: 50% 20%;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  .his-tl__progress {
+    display: block;
+    height: 3px;
+    margin: 0 2px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(119, 63, 16, 0.16);
+  }
+
+  .his-tl__progress span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left center;
+    border-radius: inherit;
+    background: var(--c-coral);
+    transition: transform 0.12s linear;
   }
 
   /* Sin foto, el texto se centra en el alto de la tarjeta. */
@@ -3215,6 +3249,11 @@ kbd {
   font-size: 0.7rem;
 }
 
+.his-cap-hero__keys-or {
+  color: var(--c-muted);
+  font-size: 0.72rem;
+}
+
 /* Al entrar a otro capítulo el relato se asienta, sin animar el contenedor
    completo (rompería el encabezado fijo y la barra de progreso). */
 @keyframes his-entrar {
@@ -3528,13 +3567,61 @@ kbd {
 }
 
 /* ---------------------------------------------------------------------------
-   Recorrido en móvil: el scroll encaja de verdad en cada fragmento, la etapa va
-   dentro de su primer acontecimiento (sin un bloque de pantalla casi vacío) y
-   hay una transición visible entre fragmentos.
+   Recorrido: la etapa va dentro de su primer acontecimiento (también en
+   escritorio) y el bloque que se acerca al centro entra con una transición
+   suave, para que el desplazamiento no se sienta rígido.
 --------------------------------------------------------------------------- */
-.his-event__stage,
 .his-next {
   display: none;
+}
+
+.his-event__stage {
+  display: grid;
+  gap: 6px;
+  grid-column: 1 / -1;
+  grid-row: auto;
+  order: -2;
+  margin-bottom: 4px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--c-coral-text);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--c-coral-text) 9%, var(--c-cream));
+}
+
+.his-event__stage .his-stage__count {
+  color: var(--c-coral-text);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.his-event__stage h2 {
+  margin: 0;
+  color: var(--c-brown);
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 5.4vw, 1.6rem);
+  line-height: 1.15;
+}
+
+.his-event__stage p {
+  margin: 0;
+  color: var(--c-ink-soft);
+  font-size: 0.9rem;
+}
+
+/* Las etapas ya no ocupan una pantalla aparte: viven sobre su primer suceso. */
+.his-deck .his-stage__band {
+  display: none;
+}
+
+.his-deck .his-event > .his-event__media,
+.his-deck .his-event > .his-event__body,
+.his-deck .his-event > .his-event__stage {
+  opacity: calc(0.25 + 0.75 * var(--vis, 1));
+  transform: translateY(calc((1 - var(--vis, 1)) * 34px)) scale(calc(0.94 + 0.06 * var(--vis, 1)));
+  transform-origin: 50% 40%;
+  will-change: opacity, transform;
 }
 
 @media (max-width: 980px) {
@@ -3548,6 +3635,12 @@ kbd {
   .his-deck .his-nav {
     scroll-snap-align: start;
     scroll-margin-top: var(--header-h);
+  }
+
+  /* El encabezado del capítulo también es un punto de encaje: al subir desde
+     el primer acontecimiento se puede volver a leer, no rebota a la etapa. */
+  .his-deck .his-cap-hero {
+    scroll-snap-align: start;
   }
 
   /* La etapa ya no ocupa su propia pantalla. */
@@ -3677,5 +3770,15 @@ kbd {
   .his-deck .his-event > .his-event__stage {
     opacity: 1;
     transform: none;
+  }
+
+  .his-tl__row > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .his-tl__progress span {
+    transition: none;
   }
 }
