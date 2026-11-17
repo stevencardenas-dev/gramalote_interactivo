@@ -8,13 +8,12 @@ import { chapters, getChapter, getChapterIndex } from '../data/historia.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
 
 // Navegación del capítulo:
-//   · escritorio: las flechas del teclado recorren la línea del tiempo; al
-//     pasar del primer o del último acontecimiento se cambia de capítulo.
-//   · móvil: cada acontecimiento ocupa la pantalla y el scroll encaja uno a
-//     uno (como en TikTok); un deslizamiento lateral cambia de capítulo.
+//   · escritorio: la rueda y las flechas del teclado pasan de un bloque al
+//     siguiente (cada bloque ocupa una pantalla); al pasar del primero o del
+//     último acontecimiento se cambia de capítulo.
+//   · móvil: un deslizamiento lateral cambia de capítulo.
 // En ambos casos una pista breve explica qué hacer, y el cierre repite la
 // indicación en lugar de ofrecer botones.
-const ANGOSTO = '(max-width: 980px)'
 const SIN_MOVIMIENTO = '(prefers-reduced-motion: reduce)'
 const TECLAS = {
   ArrowRight: 1,
@@ -25,7 +24,6 @@ const TECLAS = {
   PageUp: -1,
 }
 
-const esAngosto = () => window.matchMedia(ANGOSTO).matches
 const esReducido = () => window.matchMedia(SIN_MOVIMIENTO).matches
 
 // Los enlaces del panel y del menú tienen sus propios acordes: si el foco está
@@ -107,8 +105,9 @@ export default function HistoriaCapitulo() {
 
       bloques[destino].scrollIntoView({
         behavior: esReducido() ? 'auto' : 'smooth',
-        // En el deck móvil cada bloque encaja al principio de la pantalla.
-        block: esAngosto() ? 'start' : 'center',
+        // Cada bloque es una pantalla: su borde superior queda bajo el menú
+        // (el scroll-margin de historia.css lo alinea con el encabezado).
+        block: 'start',
       })
     },
     [irACapitulo],

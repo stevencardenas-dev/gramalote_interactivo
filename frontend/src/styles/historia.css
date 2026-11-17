@@ -2762,11 +2762,66 @@
 }
 
 /* ---------------------------------------------------------------------------
+   Recorrido del capítulo: una pantalla por bloque, también en escritorio
+   En el resto del sitio --ui-scale encoge todo para que quepa más; aquí se
+   busca lo contrario: cada etapa, cada acontecimiento y el cierre son un
+   componente de una pantalla, y solo se ve uno a la vez. Por eso el recorrido
+   vuelve a la escala 1 y el scroll encaja en cada bloque.
+--------------------------------------------------------------------------- */
+html.his-deck {
+  zoom: 1;
+}
+
+.his-deck .his-stage__band,
+.his-deck .his-event,
+.his-deck .his-closing {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Escritorio: cada bloque mide exactamente la pantalla que queda libre bajo el
+   menú, sin huecos entre etapas (un hueco dejaría asomar el bloque vecino). */
+@media (min-width: 981px) {
+  html.his-deck {
+    scroll-snap-type: y proximity;
+  }
+
+  .his-deck .his-story {
+    padding-block: 0;
+  }
+
+  .his-deck .his-stage + .his-stage,
+  .his-deck .his-events {
+    margin-top: 0;
+  }
+
+  .his-deck .his-stage__band,
+  .his-deck .his-event,
+  .his-deck .his-closing {
+    min-height: calc(100svh - var(--header-h));
+    /* El encabezado del sitio es fijo: el bloque se detiene justo debajo. */
+    scroll-margin-top: var(--header-h);
+  }
+
+  .his-deck .his-stage__band {
+    align-content: center;
+  }
+
+  .his-deck .his-stage {
+    scroll-margin-top: var(--header-h);
+  }
+
+  .his-deck .his-closing {
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* ---------------------------------------------------------------------------
    Recorrido del capítulo: flechas en escritorio, encaje tipo TikTok en móvil
    En escritorio las flechas ← → recorren los acontecimientos y, al pasar del
-   primero o del último, se cambia de capítulo. En móvil cada acontecimiento
-   ocupa la pantalla, el scroll encaja uno a uno y un deslizamiento lateral
-   cambia de capítulo. Nada depende de botones.
+   primero o del último, se cambia de capítulo. En móvil un deslizamiento
+   lateral cambia de capítulo. Nada depende de botones.
 --------------------------------------------------------------------------- */
 kbd {
   display: inline-flex;
@@ -2912,12 +2967,6 @@ kbd {
   /* El scroll de la página se detiene en cada bloque, como al pasar historias. */
   html.his-deck {
     scroll-snap-type: y proximity;
-  }
-
-  .his-deck .his-stage__band,
-  .his-deck .his-event,
-  .his-deck .his-closing {
-    scroll-snap-align: start;
   }
 
   .his-deck .his-events::before {

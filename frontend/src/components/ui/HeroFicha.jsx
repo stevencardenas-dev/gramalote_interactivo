@@ -1,4 +1,3 @@
-import { useStartsPaused } from '../../lib/useReducedMotion.js'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from './Icon.jsx'
@@ -87,8 +86,9 @@ export default function HeroFicha({
   const canShare = Array.isArray(social) ? social.includes('share') : Boolean(social)
   const networks = links.filter((link) => NETWORKS[link.platform] && link.url)
 
-  // Con varios encabezados la ficha los va rotando solos; hay botón de pausa
-  // (y con «reducir movimiento» el cambio es instantáneo, sin fundido).
+  // Con varios encabezados la ficha los va rotando solos; hay botón de pausa.
+  // Arranca en movimiento aunque el sistema pida «reducir movimiento»: quien
+  // lo necesite tiene el botón para detenerlo.
   const slides = images?.length ? images : image ? [image] : []
   const total = slides.length
   const multiple = total > 1
@@ -101,7 +101,7 @@ export default function HeroFicha({
   const base = useRef(0)
   const since = useRef(0)
   const [dot, setDot] = useState(0)
-  const [paused, setPaused] = useStartsPaused()
+  const [paused, setPaused] = useState(false)
   const [retarget, setRetarget] = useState(0)
 
   // Carrusel continuo: las fotos se deslizan sin parar hacia la izquierda; al
