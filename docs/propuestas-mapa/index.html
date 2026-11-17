@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuestas del mapa</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+/* Base compartida por las 3 propuestas de /mapa (prototipo local, no producción). */
+:root {
+  --c-cream: #fff2e3;
+  --c-cream-deep: #ebdccf;
+  --c-navy: #00426b;
+  --c-navy-dark: #00324f;
+  --c-coral: #db5319;
+  --c-coral-dark: #b9410f;
+  --c-gold: #eaa41e;
+  --c-ink: #141414;
+  --c-ink-soft: #4b3b2f;
+  --c-muted: #6b6158;
+  --c-line: #e6d7c8;
+  --c-white: #ffffff;
+  --c-open: #2f7d4f;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --header-h: 100px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-pill: 999px;
+  --shadow-chip: 0 2px 10px rgba(20, 20, 20, 0.14);
+  --shadow-soft: 0 18px 40px rgba(20, 20, 20, 0.16);
+}
+@media (max-width: 760px) {
+  :root { --header-h: 64px; }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: var(--font-sans);
+  color: var(--c-ink);
+  background: var(--c-cream);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+/* Cabecera simulada del sitio (solo contexto) */
+.sitio {
+  height: var(--header-h);
+  background: var(--c-navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(16px, 4vw, 56px);
+}
+.sitio__marca { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; }
+.sitio__marca small { display: block; font-family: var(--font-sans); font-size: .7rem; font-weight: 500; opacity: .75; letter-spacing: .08em; text-transform: uppercase; }
+.sitio nav { display: flex; gap: 28px; font-size: .95rem; }
+.sitio nav a { color: #fff; text-decoration: none; opacity: .85; }
+.sitio nav a.is-on { opacity: 1; font-weight: 700; border-bottom: 2px solid var(--c-gold); padding-bottom: 4px; }
+.sitio__menu { display: none; background: none; border: 0; color: #fff; font-size: 1.6rem; }
+@media (max-width: 760px) {
+  .sitio nav { display: none; }
+  .sitio__menu { display: block; }
+  .sitio__marca { font-size: 1.2rem; }
+}
+
+/* Etiqueta de la propuesta (no va en producción) */
+.propuesta-tag {
+  position: fixed; z-index: 2000; left: 50%; bottom: 10px; transform: translateX(-50%);
+  background: rgba(20, 20, 20, .82); color: #fff; font-size: .75rem;
+  padding: 6px 12px; border-radius: var(--radius-pill); pointer-events: none; white-space: nowrap;
+}
+.propuesta-tag a { pointer-events: auto; color: var(--c-gold); }
+@media (max-width: 760px) {
+  .propuesta-tag { left: 10px; bottom: 26px; transform: none; font-size: .66rem; }
+  /* En móvil se hace zoom con los dedos; los botones + / − estorban */
+  .leaflet-control-zoom { display: none; }
+}
+
+/* Mapa */
+#mapa { position: absolute; inset: 0; background: #e8e2d6; }
+.leaflet-container { font-family: var(--font-sans); }
+.pin { background: none; border: 0; }
+.pin img {
+  width: 40px; height: 40px; display: block;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.35));
+  transition: transform .15s;
+}
+.pin.is-sel img { transform: scale(1.3); }
+
+/* Calificación: número + estrella (0 si no hay votos) */
+.nota {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-weight: 700; font-size: .85rem; color: var(--c-ink); white-space: nowrap;
+}
+.nota svg { width: 14px; height: 14px; fill: var(--c-gold); }
+.nota.is-cero { color: var(--c-muted); }
+.nota.is-cero svg { fill: #cfc4b8; }
+.estrellas { display: inline-flex; gap: 1px; }
+.estrellas svg { width: 13px; height: 13px; fill: var(--c-gold); }
+.estrellas svg.vacia { fill: #d8cdbf; }
+
+.estado { font-size: .75rem; font-weight: 700; }
+.estado.is-open { color: var(--c-open); }
+.estado.is-closed { color: var(--c-muted); }
+
+/* Ficha emergente sobre el mapa */
+.ficha .leaflet-popup-content-wrapper { border-radius: var(--radius-md); padding: 0; overflow: hidden; }
+.ficha .leaflet-popup-content { margin: 0; width: 250px !important; }
+.ficha img { width: 100%; height: 120px; object-fit: cover; display: block; background: var(--c-cream-deep); }
+.ficha__txt { padding: 12px 14px 14px; display: grid; gap: 4px; }
+.ficha__txt strong { font-size: 1rem; }
+.ficha__txt span { color: var(--c-muted); font-size: .82rem; }
+.ficha__acc { display: flex; gap: 8px; margin-top: 8px; }
+.ficha__acc a {
+  flex: 1; text-align: center; text-decoration: none; font-size: .8rem; font-weight: 700;
+  padding: 8px 10px; border-radius: var(--radius-pill);
+}
+.ficha__acc a:first-child { background: var(--c-navy); color: #fff; }
+.ficha__acc a:last-child { border: 1px solid var(--c-line); color: var(--c-navy); }
+
+/* Botón X para quitar filtros */
+.quitar {
+  display: none; align-items: center; justify-content: center; gap: 6px;
+  height: 40px; min-width: 40px; padding: 0 12px;
+  border-radius: var(--radius-pill); border: 0;
+  background: var(--c-ink); color: #fff; font-weight: 700; font-size: .85rem;
+  box-shadow: var(--shadow-chip); flex: none;
+}
+.quitar.is-visible { display: inline-flex; }
+
+/* Menú desplegable de un filtro (A y C) */
+.pop {
+  position: fixed; z-index: 1500; min-width: 210px; max-height: 60vh; overflow: auto;
+  background: #fff; border-radius: var(--radius-sm); box-shadow: var(--shadow-soft);
+  padding: 6px; display: none;
+}
+.pop.is-open { display: block; }
+.pop button {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  border: 0; background: none; text-align: left; padding: 10px 12px; border-radius: 8px; font-size: .9rem;
+}
+.pop button:hover { background: var(--c-cream); }
+.pop button.is-on { background: #fde6da; color: var(--c-coral-dark); font-weight: 700; }
+.pop .punto { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.pop .vacio { color: var(--c-muted); font-size: .85rem; padding: 10px 12px; }
+
+/* Velo para ventanas emergentes en móvil */
+.velo { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1200; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.velo.is-open { opacity: 1; pointer-events: auto; }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+<style>
+body { padding: 40px 20px; }
+main { max-width: 900px; margin: 0 auto; }
+h1 { font-family: var(--font-serif); color: var(--c-navy); margin: 0 0 8px; }
+p.intro { color: var(--c-ink-soft); margin: 0 0 28px; }
+.tarjetas { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+a.t { display: block; background: #fff; border-radius: var(--radius-md); padding: 20px; text-decoration: none; color: inherit; border: 1px solid var(--c-line); }
+a.t:hover { box-shadow: var(--shadow-chip); }
+a.t b { display: block; font-size: 1.1rem; color: var(--c-navy); margin-bottom: 8px; }
+a.t ul { margin: 0; padding-left: 18px; font-size: .88rem; color: var(--c-ink-soft); display: grid; gap: 4px; }
+.comun { margin-top: 28px; font-size: .88rem; color: var(--c-ink-soft); background: #fff; border-radius: var(--radius-md); padding: 16px 20px; border: 1px solid var(--c-line); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Propuestas de layout · /mapa</h1>
+  <p class="intro">Prototipos locales con los 30 lugares reales. Cambia el ancho de la ventana (o abre en el móvil) para ver la versión móvil.</p>
+  <div class="tarjetas">
+    <a class="t" href="a-chips.html"><b>A · Chips con menú</b><ul>
+      <li>Escritorio: chips sueltos sobre el mapa; cada uno abre un menú propio.</li>
+      <li>Lista con foto, calificación y estado.</li>
+      <li>Móvil: botón redondo → hoja inferior (78 %) con el mapa asomando.</li></ul></a>
+    <a class="t" href="b-barra.html"><b>B · Barra única</b><ul>
+      <li>Escritorio: una sola barra blanca segmentada con selectores nativos.</li>
+      <li>Lista compacta agrupada por categoría, con el icono del mapa en vez de foto.</li>
+      <li>Móvil: botón «Lista · N» → lista a pantalla completa con «✕ Mapa».</li></ul></a>
+    <a class="t" href="c-plegable.html"><b>C · Panel plegable</b><ul>
+      <li>Escritorio: categorías como pastillas con icono (un toque); la lista se puede ocultar («) para ver el mapa completo.</li>
+      <li>Lista en tarjetas con foto grande.</li>
+      <li>Móvil: botón cuadrado → ventana flotante con márgenes.</li></ul></a>
+  </div>
+  <div class="comun"><b>Común a las tres:</b> filtros blancos que se vuelven naranja al aplicarse; Categoría, Calificación (número + estrellas), Tipo (depende de la categoría) y «Abierto» (casilla, desmarcada por defecto); la ✕ aparece solo con algún filtro activo; la lista y los pines se actualizan al instante y cada lugar muestra su promedio (0 si no tiene votos). En móvil: buscador arriba a la izquierda, filtros debajo en una fila desplazable y botón de lista abajo a la derecha.</div>
+</main>
+</body>
+</html>

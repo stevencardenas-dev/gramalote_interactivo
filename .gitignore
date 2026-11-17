@@ -36,3 +36,4 @@ gcp-oauth.keys.json
 # Mapa PMTiles (cientos de MB; se genera con deploy/tiles/build-tiles.sh)
 *.pmtiles
 /frontend/public/tiles/
+docs/Documento Investigativo/

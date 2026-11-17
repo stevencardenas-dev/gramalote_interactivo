@@ -400,6 +400,36 @@ $C exec -T api node scripts/migrate.js
 Si más adelante quieres CI, lo natural es un workflow con SSH al servidor
 (llave dedicada en los *secrets* del repo) o un runner autoalojado.
 
+### 6.10 Desmontar el stack
+
+`deploy/desmontar-debian.sh` hace lo contrario del anterior y **no necesita el
+repositorio**: localiza los contenedores, la red, el volumen y las imágenes por
+nombre y por las etiquetas de `docker compose`, así que funciona aunque ya hayas
+borrado la carpeta del proyecto (que es justo lo que deja `gramalote-web`
+sirviendo en el `:8080` sin nada desde donde hacer `docker compose down`).
+
+```bash
+sudo bash deploy/desmontar-debian.sh --estado        # solo enseña qué hay
+sudo bash deploy/desmontar-debian.sh                 # contenedores + red + imágenes
+sudo bash deploy/desmontar-debian.sh --borrar-datos  # + /srv/gramalote y el volumen
+sudo bash deploy/desmontar-debian.sh --todo          # + mysql:8.4 y el motor Docker
+sudo bash deploy/desmontar-debian.sh --instalar      # copia fija fuera del repo
+```
+
+- Sin opciones **conserva los datos** (`/srv/gramalote` y el volumen
+  `gramalote_gramalote_db`); `--borrar-datos` los elimina y `--todo` añade la
+  imagen base y la desinstalación de Docker. Para dejarlo todo limpio **menos el
+  motor** (la máquina conserva Docker y el grupo `docker`): `--borrar-datos
+  --borrar-base`.
+- Cierra la regla `8080/tcp` de `ufw` y borra el clon del repo si lo encuentra
+  (`/opt/gramalote`, `/root/gramalote_interactivo`, `/root/gramalote`,
+  `/srv/gramalote-interactivo`, el directorio actual o el que pase `--repo=RUTA`).
+- Si el propio script está dentro del repo que va a borrar, se relanza desde
+  `/tmp` para no quedarse sin archivo a medio ejecutar.
+- `--instalar` deja una copia en `/usr/local/sbin/gramalote-desmontar` y otra en
+  `/root/gramalote-desmontar.sh`: eso es lo que sobrevive a `rm -rf` del repo.
+
+
 ---
 
 ## 7. Lo que GitHub **no** recupera
@@ -443,3 +473,4 @@ Si más adelante quieres CI, lo natural es un workflow con SSH al servidor
 | El mapa sale en blanco | Falta el `.pmtiles` en `/srv/gramalote/tiles` (o `VITE_MAP_PMTILES_URL` mal). Se regenera con `deploy/tiles/build-tiles.sh`. |
 | El panel dice «sesión expirada» para todos | Cambiaste `JWT_SECRET`: es esperado, hay que volver a entrar. |
 | Login falla con 401 y la web responde bien | La base se importó pero `users` está vacía: ejecuta `npm run seed:admin`. |
+| `git clone` va a ~100 KB/s y tarda horas (con la red de la máquina a 10 MB/s) | La VM resuelve GitHub por IPv6 y esa ruta no funciona: `curl -6` da 0 B/s e `curl -4` va a 10 MB/s. Prefiere IPv4 con `echo 'precedence ::ffff:0:0/96  100' >> /etc/gai.conf` (o desactiva IPv6 en el adaptador de la VM) y repite el clon. |

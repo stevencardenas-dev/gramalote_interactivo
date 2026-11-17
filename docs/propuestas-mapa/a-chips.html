@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mapa · Propuesta A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+/* Base compartida por las 3 propuestas de /mapa (prototipo local, no producción). */
+:root {
+  --c-cream: #fff2e3;
+  --c-cream-deep: #ebdccf;
+  --c-navy: #00426b;
+  --c-navy-dark: #00324f;
+  --c-coral: #db5319;
+  --c-coral-dark: #b9410f;
+  --c-gold: #eaa41e;
+  --c-ink: #141414;
+  --c-ink-soft: #4b3b2f;
+  --c-muted: #6b6158;
+  --c-line: #e6d7c8;
+  --c-white: #ffffff;
+  --c-open: #2f7d4f;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --header-h: 100px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-pill: 999px;
+  --shadow-chip: 0 2px 10px rgba(20, 20, 20, 0.14);
+  --shadow-soft: 0 18px 40px rgba(20, 20, 20, 0.16);
+}
+@media (max-width: 760px) {
+  :root { --header-h: 64px; }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: var(--font-sans);
+  color: var(--c-ink);
+  background: var(--c-cream);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+/* Cabecera simulada del sitio (solo contexto) */
+.sitio {
+  height: var(--header-h);
+  background: var(--c-navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(16px, 4vw, 56px);
+}
+.sitio__marca { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; }
+.sitio__marca small { display: block; font-family: var(--font-sans); font-size: .7rem; font-weight: 500; opacity: .75; letter-spacing: .08em; text-transform: uppercase; }
+.sitio nav { display: flex; gap: 28px; font-size: .95rem; }
+.sitio nav a { color: #fff; text-decoration: none; opacity: .85; }
+.sitio nav a.is-on { opacity: 1; font-weight: 700; border-bottom: 2px solid var(--c-gold); padding-bottom: 4px; }
+.sitio__menu { display: none; background: none; border: 0; color: #fff; font-size: 1.6rem; }
+@media (max-width: 760px) {
+  .sitio nav { display: none; }
+  .sitio__menu { display: block; }
+  .sitio__marca { font-size: 1.2rem; }
+}
+
+/* Etiqueta de la propuesta (no va en producción) */
+.propuesta-tag {
+  position: fixed; z-index: 2000; left: 50%; bottom: 10px; transform: translateX(-50%);
+  background: rgba(20, 20, 20, .82); color: #fff; font-size: .75rem;
+  padding: 6px 12px; border-radius: var(--radius-pill); pointer-events: none; white-space: nowrap;
+}
+.propuesta-tag a { pointer-events: auto; color: var(--c-gold); }
+@media (max-width: 760px) {
+  .propuesta-tag { left: 10px; bottom: 26px; transform: none; font-size: .66rem; }
+  /* En móvil se hace zoom con los dedos; los botones + / − estorban */
+  .leaflet-control-zoom { display: none; }
+}
+
+/* Mapa */
+#mapa { position: absolute; inset: 0; background: #e8e2d6; }
+.leaflet-container { font-family: var(--font-sans); }
+.pin { background: none; border: 0; }
+.pin img {
+  width: 40px; height: 40px; display: block;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.35));
+  transition: transform .15s;
+}
+.pin.is-sel img { transform: scale(1.3); }
+
+/* Calificación: número + estrella (0 si no hay votos) */
+.nota {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-weight: 700; font-size: .85rem; color: var(--c-ink); white-space: nowrap;
+}
+.nota svg { width: 14px; height: 14px; fill: var(--c-gold); }
+.nota.is-cero { color: var(--c-muted); }
+.nota.is-cero svg { fill: #cfc4b8; }
+.estrellas { display: inline-flex; gap: 1px; }
+.estrellas svg { width: 13px; height: 13px; fill: var(--c-gold); }
+.estrellas svg.vacia { fill: #d8cdbf; }
+
+.estado { font-size: .75rem; font-weight: 700; }
+.estado.is-open { color: var(--c-open); }
+.estado.is-closed { color: var(--c-muted); }
+
+/* Ficha emergente sobre el mapa */
+.ficha .leaflet-popup-content-wrapper { border-radius: var(--radius-md); padding: 0; overflow: hidden; }
+.ficha .leaflet-popup-content { margin: 0; width: 250px !important; }
+.ficha img { width: 100%; height: 120px; object-fit: cover; display: block; background: var(--c-cream-deep); }
+.ficha__txt { padding: 12px 14px 14px; display: grid; gap: 4px; }
+.ficha__txt strong { font-size: 1rem; }
+.ficha__txt span { color: var(--c-muted); font-size: .82rem; }
+.ficha__acc { display: flex; gap: 8px; margin-top: 8px; }
+.ficha__acc a {
+  flex: 1; text-align: center; text-decoration: none; font-size: .8rem; font-weight: 700;
+  padding: 8px 10px; border-radius: var(--radius-pill);
+}
+.ficha__acc a:first-child { background: var(--c-navy); color: #fff; }
+.ficha__acc a:last-child { border: 1px solid var(--c-line); color: var(--c-navy); }
+
+/* Botón X para quitar filtros */
+.quitar {
+  display: none; align-items: center; justify-content: center; gap: 6px;
+  height: 40px; min-width: 40px; padding: 0 12px;
+  border-radius: var(--radius-pill); border: 0;
+  background: var(--c-ink); color: #fff; font-weight: 700; font-size: .85rem;
+  box-shadow: var(--shadow-chip); flex: none;
+}
+.quitar.is-visible { display: inline-flex; }
+
+/* Menú desplegable de un filtro (A y C) */
+.pop {
+  position: fixed; z-index: 1500; min-width: 210px; max-height: 60vh; overflow: auto;
+  background: #fff; border-radius: var(--radius-sm); box-shadow: var(--shadow-soft);
+  padding: 6px; display: none;
+}
+.pop.is-open { display: block; }
+.pop button {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  border: 0; background: none; text-align: left; padding: 10px 12px; border-radius: 8px; font-size: .9rem;
+}
+.pop button:hover { background: var(--c-cream); }
+.pop button.is-on { background: #fde6da; color: var(--c-coral-dark); font-weight: 700; }
+.pop .punto { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.pop .vacio { color: var(--c-muted); font-size: .85rem; padding: 10px 12px; }
+
+/* Velo para ventanas emergentes en móvil */
+.velo { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1200; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.velo.is-open { opacity: 1; pointer-events: auto; }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+<style>
+/* ===== Propuesta A · Chips con menú desplegable ===== */
+.app { display: grid; grid-template-columns: 360px 1fr; height: calc(100dvh - var(--header-h)); }
+.lado { display: flex; flex-direction: column; background: #fff; border-right: 1px solid var(--c-line); min-height: 0; z-index: 2; }
+.lado__cab { padding: 20px 20px 12px; }
+.lado__cab h1 { font-family: var(--font-serif); font-size: 1.5rem; margin: 0 0 14px; color: var(--c-navy); }
+
+.buscar { position: relative; display: block; }
+.buscar svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); stroke: var(--c-muted); fill: none; stroke-width: 2; }
+.buscar input {
+  width: 100%; height: 46px; padding: 0 14px 0 42px; border-radius: var(--radius-pill);
+  border: 1px solid var(--c-line); background: var(--c-cream); outline: none;
+}
+.buscar input:focus { border-color: var(--c-navy); background: #fff; box-shadow: 0 0 0 3px rgba(0,66,107,.12); }
+.cuenta { margin: 12px 0 0; font-size: .85rem; color: var(--c-muted); }
+.cuenta b { color: var(--c-ink); }
+
+.lista { list-style: none; margin: 0; padding: 0 12px 20px; overflow: auto; flex: 1; }
+.lugar {
+  display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; width: 100%;
+  padding: 10px; border: 0; border-radius: var(--radius-sm); background: none; text-align: left;
+}
+.lugar:hover { background: var(--c-cream); }
+.lugar.is-sel { background: #fde6da; }
+.lugar img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: var(--c-cream-deep); }
+.lugar__txt { min-width: 0; display: grid; gap: 2px; }
+.lugar__txt strong { font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lugar__txt span { font-size: .78rem; color: var(--c-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lugar__der { display: grid; justify-items: end; gap: 4px; }
+.sin { padding: 24px 12px; color: var(--c-muted); font-size: .9rem; text-align: center; }
+
+.escena { position: relative; min-width: 0; }
+
+/* Barra de filtros sobre el mapa */
+.filtros {
+  position: absolute; z-index: 1100; top: 16px; left: 16px; right: 16px;
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center; pointer-events: none;
+}
+.filtros > * { pointer-events: auto; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px;
+  border-radius: var(--radius-pill); border: 0; background: #fff; color: var(--c-ink);
+  font-weight: 500; font-size: .9rem; box-shadow: var(--shadow-chip); white-space: nowrap; flex: none;
+}
+.chip:hover { background: var(--c-cream); }
+.chip .flecha { font-size: .7rem; opacity: .7; transition: transform .15s; }
+.chip[aria-expanded="true"] .flecha { transform: rotate(180deg); }
+.chip.is-on { background: var(--c-coral); color: #fff; font-weight: 700; }
+.chip.is-on:hover { background: var(--c-coral-dark); }
+.chip.is-on .nota, .chip.is-on .nota svg { color: #fff; fill: #fff; }
+.chip--check input { appearance: none; width: 18px; height: 18px; margin: 0; border: 2px solid #b8aa9b; border-radius: 5px; background: #fff; display: grid; place-items: center; }
+.chip--check input:checked { border-color: #fff; }
+.chip--check input:checked::after { content: ''; width: 9px; height: 5px; border: solid var(--c-coral); border-width: 0 0 2.5px 2.5px; transform: rotate(-45deg) translate(1px, -1px); }
+.chip--check { cursor: pointer; }
+
+/* Botón de lista (solo móvil) */
+.fab { display: none; }
+
+/* Hoja con la lista (solo móvil) */
+.hoja {
+  position: fixed; z-index: 1300; left: 0; right: 0; bottom: 0; height: 78dvh;
+  background: #fff; border-radius: 20px 20px 0 0; box-shadow: var(--shadow-soft);
+  display: flex; flex-direction: column; transform: translateY(105%); transition: transform .25s ease;
+}
+.hoja.is-open { transform: none; }
+.hoja__asa { width: 40px; height: 5px; border-radius: 3px; background: var(--c-line); margin: 8px auto 0; }
+.hoja__cab { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px 8px; border-bottom: 1px solid var(--c-line); }
+.hoja__cab h2 { font-size: 1.05rem; margin: 0; }
+.hoja__cab small { display: block; color: var(--c-muted); font-weight: 400; font-size: .78rem; }
+.cerrar { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--c-cream); font-size: 1.1rem; }
+.hoja .lista { padding: 8px; }
+
+@media (max-width: 760px) {
+  .app { display: block; position: relative; }
+  .escena { position: absolute; inset: 0; }
+  .lado { position: absolute; z-index: 1150; top: 12px; left: 12px; right: 12px; background: none; border: 0; display: block; }
+  .lado__cab { padding: 0; }
+  .lado__cab h1, .lado .cuenta, .lado .lista { display: none; }
+  .buscar input { background: #fff; border: 0; box-shadow: var(--shadow-chip); height: 46px; }
+  .filtros {
+    top: 66px; left: 0; right: 0; padding: 4px 12px 8px; flex-wrap: nowrap; overflow-x: auto;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .filtros::-webkit-scrollbar { display: none; }
+  .quitar { order: -1; }
+  .fab {
+    display: grid; place-items: center; position: absolute; z-index: 1100; right: 16px; bottom: 28px;
+    width: 58px; height: 58px; border-radius: 50%; border: 0; background: var(--c-navy); color: #fff;
+    box-shadow: var(--shadow-soft);
+  }
+  .fab svg { width: 26px; height: 26px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; }
+  .fab__n { position: absolute; top: -4px; right: -4px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; background: var(--c-coral); font-size: .75rem; font-weight: 700; display: grid; place-items: center; border: 2px solid #fff; }
+}
+</style>
+</head>
+<body>
+<header class="sitio">
+  <div class="sitio__marca">Gramalote<small>Turismo</small></div>
+  <nav><a href="#">Inicio</a><a href="#">Qué hacer</a><a href="#">Dónde ir</a><a href="#" class="is-on">Mapa</a><a href="#">Información</a></nav>
+  <button class="sitio__menu" aria-label="Menú">☰</button>
+</header>
+
+<div class="app">
+  <aside class="lado" aria-label="Lugares del mapa">
+    <div class="lado__cab">
+      <h1>Explora el mapa</h1>
+      <label class="buscar">
+        <span class="sr">Buscar lugares</span>
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="q" type="search" placeholder="Buscar lugares, tipos…" autocomplete="off">
+      </label>
+      <p class="cuenta" id="cuenta" aria-live="polite"></p>
+    </div>
+    <ul class="lista" id="lista"></ul>
+  </aside>
+
+  <main class="escena">
+    <div id="mapa"></div>
+    <div class="filtros" role="toolbar" aria-label="Filtros del mapa">
+      <button type="button" class="chip" id="f-cat" aria-haspopup="menu" aria-expanded="false"></button>
+      <button type="button" class="chip" id="f-nota" aria-haspopup="menu" aria-expanded="false"></button>
+      <button type="button" class="chip" id="f-tipo" aria-haspopup="menu" aria-expanded="false"></button>
+      <label class="chip chip--check" id="f-abierto"><input type="checkbox" id="abierto"> Abierto ahora</label>
+      <button type="button" class="quitar" id="quitar" aria-label="Quitar filtros">✕</button>
+    </div>
+    <button type="button" class="fab" id="fab" aria-label="Ver lista de lugares" aria-controls="hoja">
+      <svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>
+      <span class="fab__n" id="fab-n"></span>
+    </button>
+  </main>
+</div>
+
+<div class="velo" id="velo"></div>
+<section class="hoja" id="hoja" role="dialog" aria-modal="true" aria-labelledby="hoja-t">
+  <div class="hoja__asa"></div>
+  <div class="hoja__cab">
+    <h2 id="hoja-t"><span id="hoja-n"></span><small id="hoja-f"></small></h2>
+    <button type="button" class="cerrar" id="cerrar" aria-label="Cerrar lista y volver al mapa">✕</button>
+  </div>
+  <ul class="lista" id="lista-m"></ul>
+</section>
+
+<div class="propuesta-tag">Propuesta A · Chips con menú · <a href="index.html">otras</a></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* Datos y lógica compartida por las 3 propuestas de /mapa (prototipo local).
+   Lugares tomados de GET /api/map de producción (2026-11-11). */
+(function () {
+  const BASE = 'https://d2nm90ise1l8de.cloudfront.net'
+  const ICONOS = '../../frontend/public/img/mapa/iconos/'
+
+  const GROUPS = [
+    { key: 'comer', label: 'Dónde comer', short: 'Comer', color: '#c2410c', icon: 'restaurante' },
+    { key: 'dormir', label: 'Dónde dormir', short: 'Dormir', color: '#486284', icon: 'hotel' },
+    { key: 'comprar', label: 'Dónde comprar', short: 'Comprar', color: '#2f7d4f', icon: 'artesanias' },
+    { key: 'experiencia', label: 'Experiencias', short: 'Experiencias', color: '#7c3aed', icon: 'experiencias' },
+  ]
+  const GROUP = Object.fromEntries(GROUPS.map((g) => [g.key, g]))
+
+  // n nombre · k tipo de registro · c categoría · t tipo · r promedio · o abierto ahora · ic icono · cv portada
+  const RAW = [
+    ['Bambú','e','comer','Comidas rápidas',0,false,7.9164,-72.7869,'comidas-rapidas','/media/establishments/1/544e60a3-de83-4b24-882c-dbace0f08842-cover.webp'],
+    ['Dulce Paseo','e','comer','Cafetería',0,true,7.9157,-72.788,'cafeteria','/media/establishments/2/f1b66ec3-d27e-4283-895d-ed732e974320-cover.webp'],
+    ['Doña Claudia','e','comer','Comida casera',4,null,7.9134677,-72.7878309,'comidas-caseras','/media/establishments/3/72254720-fbe9-4b80-880f-df4fa12ae397-cover.webp'],
+    ['Fresas con Crema Carvajal','e','comer','Postres',0,true,7.919,-72.786,'postres','/media/establishments/4/49a761e3-86f5-4a44-b62e-6dbe9e253fa7-cover.webp'],
+    ['La Comarca','e','comer','Heladería',0,null,7.9166,-72.7867,'heladeria','/media/establishments/5/09e58462-209c-4e64-99b0-1e9d9db80a31-cover.webp'],
+    ['La Sazón de la Tía','e','comer','Comida ejecutiva',5,false,7.916,-72.7881,'comidas-caseras','/media/establishments/6/99c8f68b-92d8-4432-a45d-f27a50bd2f04-cover.webp'],
+    ['Origen Cocina de Autor','e','comer','Restaurante',0,false,7.9174536,-72.7878984,'restaurante','/media/establishments/7/71d67fe8-8ea5-4046-bd5e-5bd96bc43323-cover.webp'],
+    ['Glamping Vista Antigua','e','dormir','Glamping',0,null,7.898,-72.7835,'glamping','/media/establishments/8/043e7c5d-e5d6-4f5f-b885-0db71dc9bd55-cover.webp'],
+    ['VerdeSer Glampings','e','dormir','Glamping',0,null,7.9225,-72.791111,'glamping','/media/establishments/9/d12eafb0-56a6-43e3-b6cc-e68a6d88ab02-cover.webp'],
+    ['Hostal Campestre Camino Real','e','dormir','Hostal',0,null,7.9131,-72.7849,'hostal','/media/establishments/10/3493ff8f-16d0-4ff3-9f9b-ab4e68323695-cover.webp'],
+    ['Hostal Luna Azul','e','dormir','Hostal',0,null,7.9135867,-72.7905758,'hostal','/media/establishments/11/19168abb-32f6-415a-b138-5606e2daf556-cover.webp'],
+    ['Casa Hiedra Hotel Boutique','e','dormir','Hotel boutique',0,null,7.9187065,-72.7883109,'hotel','/media/establishments/12/01dec0d6-30cd-4e30-9f80-ca978fa3e26a-cover.webp'],
+    ['Cabañas El Peñón','e','dormir','Cabañas',0,null,7.8676839,-72.7811843,'cabana','/media/establishments/13/0802875e-00e8-4d98-9b61-0bfb3b56b5df-cover.webp'],
+    ['Chelinarte','e','comprar','Artesanía',0,null,7.9158,-72.7869,'artesanias','/media/establishments/14/9bdbb984-f2a2-4678-a707-9bfb46eac632-cover.webp'],
+    ['Aroma Twins','e','comprar','Otro',0,null,7.917544,-72.789285,'artesanias','/media/establishments/15/62496a40-f563-4bde-902a-1143bee22ef3-cover.webp'],
+    ['Mi Hermoso Edén','e','comprar','Artesanía',0,null,7.8804,-72.7863,'artesanias','/media/establishments/17/39bf9c46-7587-47a1-bc04-d42ddbcc837d-cover.webp'],
+    ['Maestros de la Madera','e','comprar','Artesanía',0,null,7.916,-72.7866,'artesanias','/media/establishments/18/b52816d6-8ccb-4764-b3ee-66c7847837dd-cover.webp'],
+    ['Mi Gordita Bella','e','comprar','Artesanía',0,null,7.91608,-72.785622,'artesanias','/media/establishments/19/caa286d7-522e-4a40-9fd5-8ed2670d5101-cover.webp'],
+    ['ArteLu','e','comprar','Artesanía',0,null,7.9184375,-72.7894375,'artesanias','/media/establishments/22/7b38659b-9bc3-4108-b914-f7f0278bac22-cover.webp'],
+    ['Bisutería MG','e','comprar','Artesanía',0,null,7.923257,-72.791304,'artesanias','/media/establishments/25/41f57c08-0378-494a-bab4-6aaee0d94822-cover.webp'],
+    ['Caliopes','e','comprar','Artesanía',0,null,7.9083831,-72.8306801,'artesanias','/media/establishments/24/5e71a41c-76c2-4638-b6b9-9e64ba28b6dd-cover.webp'],
+    ['El Sabor Gramalotero','e','comer','Restaurante',0,null,7.9172,-72.7899,'restaurante','/media/establishments/28/f0ada12f-7b06-447b-87f0-215ef2a6435a-cover.webp'],
+    ['Lonchería Romero','e','comer','Restaurante',0,false,7.915291,-72.786325,'comidas-ejecutivas','/media/establishments/27/ec994c9c-21db-44c3-a494-bf8fa9fc307d-cover.webp'],
+    ['Sombreros TECHA','e','comprar','Artesanía',0,false,7.9161583,-72.7875621,'artesanias','/media/establishments/26/95df01ed-1b51-4945-8e8e-c31cc0e7d459-cover.webp'],
+    ['Yawart','e','comprar','Artesanía',0,null,7.9195026,-72.7847273,'artesanias','/media/establishments/23/055eb98c-397f-42c4-abea-50f96b01a80f-cover.webp'],
+    ['Pueblo Viejo','x','experiencia','Patrimonio',0,null,7.9015955,-72.7983908,'monumento','/img/que-hacer/pueblo-viejo.jpg'],
+    ['Las ruinas del antiguo Gramalote','x','experiencia','Patrimonio',0,null,7.8878061,-72.7977203,'monumento','/img/que-hacer/ruinas.jpg'],
+    ['Nuevo Gramalote','x','experiencia','Patrimonio',0,null,7.9150179,-72.7855365,'monumento','/img/que-hacer/nuevo-gramalote.jpg'],
+    ['Cascadas Arco Iris','x','experiencia','Naturaleza',0,null,7.8827262,-72.7803418,'cascada','/img/experiencias/cascadas/hero.jpg'],
+    ['Café Marquetalia','x','experiencia','Naturaleza',0,null,7.93,-72.796,'cafeteria','/img/que-hacer/marquetalia.jpg'],
+  ]
+
+  const PLACES = RAW.map((r, i) => ({
+    id: 'p' + i,
+    name: r[0],
+    group: r[2],
+    categoryName: GROUP[r[2]].label,
+    type: r[3],
+    rating: r[4],
+    openNow: r[5],
+    lat: r[6],
+    lng: r[7],
+    icon: ICONOS + r[8] + '.svg',
+    photo: BASE + r[9],
+  }))
+
+  const RATINGS = [
+    { value: 0, label: 'Cualquiera' },
+    { value: 1, label: '1+' },
+    { value: 2, label: '2+' },
+    { value: 3, label: '3+' },
+    { value: 4, label: '4+' },
+    { value: 5, label: '5' },
+  ]
+
+  // ---------- Estado y filtrado ----------
+  const state = { q: '', group: '', minRating: 0, type: '', open: false, selected: '' }
+  const listeners = []
+
+  const normalize = (v) =>
+    String(v ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, '')
+
+  function typesFor(group) {
+    const set = new Set(PLACES.filter((p) => !group || p.group === group).map((p) => p.type))
+    return [...set].sort((a, b) => a.localeCompare(b, 'es'))
+  }
+
+  function filtered() {
+    const q = normalize(state.q)
+    return PLACES.filter(
+      (p) =>
+        (!state.group || p.group === state.group) &&
+        (!state.type || p.type === state.type) &&
+        p.rating >= state.minRating &&
+        (!state.open || p.openNow === true) &&
+        (!q || normalize(p.name + p.type + p.categoryName).includes(q)),
+    ).sort((a, b) => b.rating - a.rating || a.name.localeCompare(b.name, 'es'))
+  }
+
+  // La búsqueda no cuenta como filtro: la X solo limpia los filtros de la barra.
+  function activeCount() {
+    return (state.group ? 1 : 0) + (state.minRating ? 1 : 0) + (state.type ? 1 : 0) + (state.open ? 1 : 0)
+  }
+
+  function set(patch) {
+    Object.assign(state, patch)
+    if ('group' in patch && state.type && !typesFor(state.group).includes(state.type)) state.type = ''
+    listeners.forEach((fn) => fn(state))
+  }
+  function clearFilters() {
+    set({ group: '', minRating: 0, type: '', open: false })
+  }
+  function onChange(fn) {
+    listeners.push(fn)
+  }
+
+  // ---------- Fragmentos de HTML ----------
+  const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>'
+  const fmt = (n) => n.toLocaleString('es-CO', { maximumFractionDigits: 1 })
+
+  function nota(avg) {
+    return `<span class="nota${avg ? '' : ' is-cero'}" aria-label="Calificación ${fmt(avg)} de 5">${fmt(avg)}${STAR}</span>`
+  }
+  function estrellas(n) {
+    let html = '<span class="estrellas" aria-hidden="true">'
+    for (let i = 1; i <= 5; i++) html += STAR.replace('<svg', i <= n ? '<svg' : '<svg class="vacia"')
+    return html + '</span>'
+  }
+  function estado(p) {
+    if (p.openNow === true) return '<span class="estado is-open">Abierto</span>'
+    if (p.openNow === false) return '<span class="estado is-closed">Cerrado</span>'
+    return ''
+  }
+  const subtitulo = (p) => `${p.categoryName} · ${p.type}`
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+
+  // ---------- Mapa (Leaflet solo para el prototipo; producción usa MapLibre) ----------
+  function initMap(el, opts = {}) {
+    const map = L.map(el, { zoomControl: false, attributionControl: true }).setView([7.912, -72.789], 14)
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap',
+    }).addTo(map)
+    L.control.zoom({ position: opts.zoomPosition || 'bottomright' }).addTo(map)
+
+    const markers = {}
+    PLACES.forEach((p) => {
+      const m = L.marker([p.lat, p.lng], {
+        icon: L.divIcon({ className: 'pin', html: `<img src="${p.icon}" alt="">`, iconSize: [40, 40], iconAnchor: [20, 36] }),
+        title: p.name,
+      })
+      m.on('click', () => select(p.id))
+      markers[p.id] = m
+    })
+
+    function popupHtml(p) {
+      return `<img src="${p.photo}" alt="" onerror="this.style.visibility='hidden'">
+        <div class="ficha__txt"><strong>${esc(p.name)}</strong><span>${esc(subtitulo(p))}</span>
+        <div style="display:flex;gap:10px;align-items:center">${nota(p.rating)} ${estado(p)}</div>
+        <div class="ficha__acc"><a href="#">Ver ficha</a><a href="#">Cómo llegar</a></div></div>`
+    }
+
+    function select(id, fly) {
+      const p = PLACES.find((x) => x.id === id)
+      if (!p) return
+      Object.values(markers).forEach((m) => m.getElement()?.classList.remove('is-sel'))
+      markers[id].getElement()?.classList.add('is-sel')
+      if (fly) map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 16), { duration: 0.5 })
+      L.popup({ className: 'ficha', offset: [0, -30], maxWidth: 260, autoPanPaddingTopLeft: opts.padTL || [20, 120] })
+        .setLatLng([p.lat, p.lng]).setContent(popupHtml(p)).openOn(map)
+      set({ selected: id })
+    }
+
+    let lastKey = ''
+    function render() {
+      const list = filtered()
+      const visible = new Set(list.map((p) => p.id))
+      PLACES.forEach((p) => {
+        const m = markers[p.id]
+        if (visible.has(p.id)) m.addTo(map)
+        else m.remove()
+      })
+      const key = list.map((p) => p.id).join()
+      if (key !== lastKey && list.length) {
+        lastKey = key
+        map.invalidateSize()
+        map.fitBounds(L.latLngBounds(list.map((p) => [p.lat, p.lng])), {
+          paddingTopLeft: opts.padTL || [40, 120], paddingBottomRight: [40, 40], maxZoom: 16,
+        })
+      }
+    }
+    onChange(render)
+    render()
+    return { map, select }
+  }
+
+  // ---------- Menú desplegable posicionado bajo un chip ----------
+  const pop = document.createElement('div')
+  pop.className = 'pop'
+  pop.setAttribute('role', 'menu')
+  document.addEventListener('DOMContentLoaded', () => document.body.append(pop))
+  let popAnchor = null
+  function openPop(anchor, items, onPick) {
+    if (popAnchor === anchor && pop.classList.contains('is-open')) return closePop()
+    popAnchor = anchor
+    pop.innerHTML = ''
+    if (!items.length) pop.innerHTML = '<div class="vacio">Sin opciones</div>'
+    items.forEach((it) => {
+      const b = document.createElement('button')
+      b.type = 'button'
+      b.setAttribute('role', 'menuitemradio')
+      b.setAttribute('aria-checked', String(!!it.on))
+      if (it.on) b.className = 'is-on'
+      b.innerHTML = it.html
+      b.addEventListener('click', () => { onPick(it.value); closePop() })
+      pop.append(b)
+    })
+    const r = anchor.getBoundingClientRect()
+    pop.classList.add('is-open')
+    const w = pop.offsetWidth
+    pop.style.top = r.bottom + 6 + 'px'
+    pop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px'
+    anchor.setAttribute('aria-expanded', 'true')
+  }
+  function closePop() {
+    pop.classList.remove('is-open')
+    popAnchor?.setAttribute('aria-expanded', 'false')
+    popAnchor = null
+  }
+  document.addEventListener('click', (e) => {
+    if (popAnchor && !pop.contains(e.target) && !popAnchor.contains(e.target)) closePop()
+  })
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop() })
+  addEventListener('resize', closePop)
+  document.addEventListener('scroll', closePop, true)
+
+  // Opciones listas para los menús
+  const groupItems = () => [
+    { value: '', html: 'Todas las categorías', on: !state.group },
+    ...GROUPS.map((g) => ({ value: g.key, on: state.group === g.key, html: `<span class="punto" style="background:${g.color}"></span>${g.label}` })),
+  ]
+  const ratingItems = () =>
+    RATINGS.map((r) => ({
+      value: r.value, on: state.minRating === r.value,
+      html: r.value ? `<b style="min-width:22px">${r.label}</b>${estrellas(r.value)}` : 'Cualquier calificación',
+    }))
+  const typeItems = () => [
+    { value: '', html: 'Todos los tipos', on: !state.type },
+    ...typesFor(state.group).map((t) => ({ value: t, html: esc(t), on: state.type === t })),
+  ]
+
+  window.Mapa = {
+    GROUPS, GROUP, PLACES, RATINGS, STAR, state, set, clearFilters, onChange, filtered, typesFor, activeCount,
+    nota, estrellas, estado, subtitulo, esc, initMap, openPop, closePop, groupItems, ratingItems, typeItems,
+    isMobile: () => matchMedia('(max-width: 760px)').matches,
+  }
+})()
+</script>
+<script>
+const M = window.Mapa
+const $ = (id) => document.getElementById(id)
+const mapa = M.initMap($('mapa'), { padTL: [40, 90] })
+const flecha = '<span class="flecha" aria-hidden="true">▼</span>'
+
+$('q').addEventListener('input', (e) => M.set({ q: e.target.value }))
+$('abierto').addEventListener('change', (e) => M.set({ open: e.target.checked }))
+$('quitar').addEventListener('click', M.clearFilters)
+$('f-cat').addEventListener('click', (e) => M.openPop(e.currentTarget, M.groupItems(), (v) => M.set({ group: v })))
+$('f-nota').addEventListener('click', (e) => M.openPop(e.currentTarget, M.ratingItems(), (v) => M.set({ minRating: v })))
+$('f-tipo').addEventListener('click', (e) => M.openPop(e.currentTarget, M.typeItems(), (v) => M.set({ type: v })))
+
+function abrirHoja(abrir) {
+  $('hoja').classList.toggle('is-open', abrir)
+  $('velo').classList.toggle('is-open', abrir)
+  if (abrir) $('cerrar').focus()
+}
+$('fab').addEventListener('click', () => abrirHoja(true))
+$('cerrar').addEventListener('click', () => abrirHoja(false))
+$('velo').addEventListener('click', () => abrirHoja(false))
+
+function item(p, s) {
+  return `<li><button type="button" class="lugar${s.selected === p.id ? ' is-sel' : ''}" data-id="${p.id}">
+    <img src="${p.photo}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+    <span class="lugar__txt"><strong>${M.esc(p.name)}</strong><span>${M.esc(M.subtitulo(p))}</span></span>
+    <span class="lugar__der">${M.nota(p.rating)}${M.estado(p)}</span></button></li>`
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('.lugar')
+  if (!b) return
+  abrirHoja(false)
+  mapa.select(b.dataset.id, true)
+})
+
+function render(s) {
+  const list = M.filtered()
+  const g = M.GROUP[s.group]
+  $('f-cat').innerHTML = (g ? g.label : 'Categoría') + flecha
+  $('f-cat').classList.toggle('is-on', !!g)
+  $('f-nota').innerHTML = (s.minRating ? `${M.RATINGS.find((r) => r.value === s.minRating).label} ${M.STAR.replace('<svg', '<svg width="14" height="14" fill="currentColor"')}` : 'Calificación') + flecha
+  $('f-nota').classList.toggle('is-on', !!s.minRating)
+  $('f-tipo').innerHTML = (s.type ? M.esc(s.type) : 'Tipo') + flecha
+  $('f-tipo').classList.toggle('is-on', !!s.type)
+  $('abierto').checked = s.open
+  $('f-abierto').classList.toggle('is-on', s.open)
+  const n = M.activeCount()
+  $('quitar').classList.toggle('is-visible', n > 0)
+
+  const html = list.length ? list.map((p) => item(p, s)).join('') : '<li class="sin">Ningún lugar coincide. Prueba quitando algún filtro.</li>'
+  $('lista').innerHTML = html
+  $('lista-m').innerHTML = html
+  const txt = `<b>${list.length}</b> ${list.length === 1 ? 'lugar' : 'lugares'}`
+  $('cuenta').innerHTML = txt + (n ? ` · ${n} ${n === 1 ? 'filtro' : 'filtros'}` : '')
+  $('hoja-n').innerHTML = txt
+  $('hoja-f').textContent = n || s.q ? 'Según tu búsqueda y filtros' : 'Todos los lugares'
+  $('fab-n').textContent = list.length
+}
+M.onChange(render)
+render(M.state)
+</script>
+</body>
+</html>
