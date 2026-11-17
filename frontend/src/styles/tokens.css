@@ -45,6 +45,14 @@
   --fs-sm: 0.875rem;
   --fs-xs: 0.8125rem;
 
+  /* Escala de la interfaz en escritorio. El diseño está dibujado sobre frames
+     de 1440 px, así que a 100 % del navegador todo queda grande en un
+     portátil y el menú y los títulos dominan la pantalla. 0.7 equivale a ver
+     el sitio con el navegador al 70 % (texto, espaciados, imágenes y
+     encabezado bajan en la misma proporción). Es el único valor que hay que
+     tocar para agrandar o encoger el sitio entero; lo aplica global.css. */
+  --ui-scale: 0.7;
+
   /* Layout (contenido 1281 px a 1440 de viewport) */
   --container: 1281px;
   --gutter: clamp(20px, 5.55vw, 80px);
