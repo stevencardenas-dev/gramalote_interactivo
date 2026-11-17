@@ -4282,3 +4282,24 @@ button.audit__hd:focus-visible {
     scroll-snap-align: center;
   }
 }
+
+/* Cambio de modo en móvil: sale del menú desplegable y va en la barra, a la
+   izquierda del botón «Menú». En escritorio sigue en la esquina derecha. */
+.theme-toggle--bar {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .theme-toggle--bar {
+    display: inline-grid;
+    margin-left: auto;
+  }
+
+  .theme-toggle--bar + .admin-nav__toggle {
+    margin-left: 8px;
+  }
+
+  .admin-nav__end .theme-toggle {
+    display: none;
+  }
+}

@@ -3,7 +3,7 @@ import { useAdminTheme } from '../../lib/adminTheme.js'
 // Cambio de modo del panel: botón redondo con sol/luna, en su propio hueco de la
 // barra para no confundirse con los enlaces de navegación ni con la cuenta.
 // Los iconos son de trazo redondeado, a juego con el resto de la interfaz.
-export default function ThemeToggle() {
+export default function ThemeToggle({ className = '' }) {
   const { theme, toggle } = useAdminTheme()
   const toDark = theme === 'light'
   const label = toDark ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'
@@ -11,7 +11,7 @@ export default function ThemeToggle() {
   return (
     <button
       type="button"
-      className="theme-toggle"
+      className={`theme-toggle ${className}`.trim()}
       onClick={toggle}
       aria-label={label}
       title={label}
