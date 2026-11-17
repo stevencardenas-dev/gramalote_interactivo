@@ -13,6 +13,7 @@ import { buildMapStyle } from '../../lib/mapStyle.js'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import '../../styles/mapa.css'
 import { getJson } from '../../lib/api.js'
+import { heritageFichaFor } from '../../lib/heritageFicha.js'
 import { mapIconUrl, resolveMapIcon } from '../../data/mapIcons.js'
 import { StarsRow } from './RatingStars.jsx'
 import { formatAverage, formatVotes } from '../../lib/ratingsApi.js'
@@ -77,6 +78,7 @@ function toPlaces(data) {
   return items
     .filter((item) => isValidCoordinates(item.coordinates))
     .map((item) => {
+      const ficha = item.kind === 'heritage' ? heritageFichaFor(item.slug) : null
       const isExtra = item.kind === 'extra'
       const isHeritage = item.kind === 'heritage'
       const group = isExtra
@@ -103,7 +105,8 @@ function toPlaces(data) {
           type: item.type,
           group,
         }),
-        photo: item.cover?.url ?? null,
+        photo: item.cover?.url ?? ficha?.image ?? null,
+        fichaUrl: ficha ? `/historia/patrimonio/${ficha.slug}` : null,
         openNow: item.openNow ?? null,
         rating: item.rating ?? { average: 0, votes: 0 },
         mapsUrl: item.mapsUrl ?? null,
@@ -258,8 +261,19 @@ export default function LiveMap({
       })
       content.append(link)
     }
-    // Extras y Patrimonio no tienen ficha todavía: el popup lleva directo a
-    // Google Maps.
+    // Patrimonio con ficha en Historia: el popup la abre sin recargar.
+    if (place.fichaUrl) {
+      const fichaLink = document.createElement('a')
+      fichaLink.href = place.fichaUrl
+      fichaLink.textContent = 'Ver ficha'
+      fichaLink.className = 'mapa-popup__enlace'
+      fichaLink.addEventListener('click', (event) => {
+        event.preventDefault()
+        navigate(place.fichaUrl)
+      })
+      content.append(fichaLink)
+    }
+    // Extras y Patrimonio sin ficha: el popup lleva directo a Google Maps.
     if (place.kind === 'extra' || place.kind === 'heritage') {
       const link = document.createElement('a')
       link.href =
@@ -467,11 +481,21 @@ export default function LiveMap({
               {place.categoryName}
               {place.zoneName ? ` · ${place.zoneName}` : ''}
             </span>
-            <span className="mapa-ficha__nota">
-              {place.kind === 'heritage' ? 'Patrimonio · ficha en preparación' : 'Punto complementario · sin ficha'}
-            </span>
+            {place.kind === 'heritage' ? null : (
+              <span className="mapa-ficha__nota">Punto complementario · sin ficha</span>
+            )}
             <div className="mapa-ficha__acciones">
-              <a className="btn btn--primary btn--sm" href={route} target="_blank" rel="noreferrer">
+              {place.fichaUrl ? (
+                <Link className="btn btn--primary btn--sm" to={place.fichaUrl}>
+                  Ver ficha
+                </Link>
+              ) : null}
+              <a
+                className={`btn ${place.fichaUrl ? 'btn--ghost' : 'btn--primary'} btn--sm`}
+                href={route}
+                target="_blank"
+                rel="noreferrer"
+              >
                 Cómo llegar
               <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>
             </div>
@@ -601,9 +625,9 @@ export default function LiveMap({
                       <span className="mapa-lugar__sub">{placeSubtitle(place)}</span>
                       <span className="mapa-lugar__pie">
                         {place.kind === 'extra' || place.kind === 'heritage' ? (
-                          <span className="mapa-lugar__sin-ficha">
-                            {place.kind === 'heritage' ? 'Patrimonio · ficha en preparación' : 'Sin ficha · solo mapa'}
-                          </span>
+                          place.kind === 'heritage' ? null : (
+                            <span className="mapa-lugar__sin-ficha">Sin ficha · solo mapa</span>
+                          )
                         ) : (
                           <>
                             <svg className="mapa-lugar__estrella" viewBox="0 0 24 24" aria-hidden="true">

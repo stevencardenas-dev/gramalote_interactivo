@@ -755,6 +755,7 @@ export const heritage = [
         'Consultar previamente con la Alcaldía las condiciones de seguridad y autorización. No acercarse ni ingresar a las ruinas sin permiso.',
     },
     mapsUrl: 'https://maps.app.goo.gl/ThZgudsNGKhbZf2c8',
+    coords: [-72.7978318, 7.8888743], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-01.jpg',
     gallery: [],
     // Carrusel por épocas: sustituye a la foto única en la ficha.
@@ -787,6 +788,7 @@ export const heritage = [
       recommendation: 'Consultar previamente las condiciones de ingreso y respetar los horarios y actividades religiosas.',
     },
     mapsUrl: 'https://maps.app.goo.gl/K7D5x8YcVH4LNmsQ8',
+    coords: [-72.7860123, 7.9161523], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-02.jpg',
     gallery: [],
   },
@@ -813,6 +815,7 @@ export const heritage = [
       recommendation: 'Visitar durante el día y recorrer respetuosamente sus espacios públicos.',
     },
     mapsUrl: 'https://maps.app.goo.gl/aYVe7HsQt7FJEPZV6',
+    coords: [-72.7865937, 7.9154771], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-03.jpg',
     gallery: [],
   },
@@ -840,6 +843,7 @@ export const heritage = [
         'No ingresar a las ruinas. Consultar con la Alcaldía si existe un punto seguro de observación y autorización para acercarse.',
     },
     mapsUrl: 'https://maps.app.goo.gl/9xsMX9KDFJYgKWMd7',
+    coords: [-72.7981812, 7.8886254], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-04.jpg',
     gallery: [],
   },
@@ -867,6 +871,7 @@ export const heritage = [
         'Visitar durante el día. Transitar con precaución y comprobar previamente el estado de la vía; no detenerse en zonas que comprometan la seguridad vial.',
     },
     mapsUrl: 'https://maps.app.goo.gl/gDAeBfpcjWaGHKWf6',
+    coords: [-72.793939, 7.8851011], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-05.jpg',
     gallery: [],
   },
@@ -894,6 +899,7 @@ export const heritage = [
         'Es un centro de salud en funcionamiento: respetar las áreas de atención, la privacidad de los pacientes y las normas del establecimiento. No realizar visitas turísticas que interfieran con los servicios médicos.',
     },
     mapsUrl: 'https://maps.app.goo.gl/kP7R8drs9PrDULjs5',
+    coords: [-72.7872526, 7.914146], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-06.jpg',
     gallery: ['/img/historia/pat-06b.jpg'],
   },
@@ -921,6 +927,7 @@ export const heritage = [
         'Consultar previamente con la institución. No ingresar a las instalaciones sin autorización ni interrumpir las actividades académicas.',
     },
     mapsUrl: 'https://maps.app.goo.gl/E569mY89DG6AsPgb7',
+    coords: [-72.7883649, 7.9148731], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-07.jpg',
     gallery: ['/img/historia/pat-07b.jpg'],
   },
@@ -948,6 +955,7 @@ export const heritage = [
         'Conocer su historia mediante fotografías, testimonios y documentos históricos. No ofrecer una visita física a las ruinas sin confirmación de su existencia, acceso y seguridad.',
     },
     mapsUrl: 'https://maps.app.goo.gl/YqZGKan3MpQvM7Dk6',
+    coords: [-72.79725, 7.88845], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-08.jpg',
     gallery: [],
   },
@@ -974,7 +982,10 @@ export const heritage = [
       recommendation:
         'No acercarse sin verificar previamente las condiciones de seguridad, el estado del terreno y la autorización de acceso.',
     },
-    mapsUrl: 'https://maps.app.goo.gl/YqZGKan3MpQvM7Dk6',
+    // Sin coordenada propia en la matriz: se ubica de forma aproximada junto al Puente Gregorio Montes.
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=7.9022955,-72.7977908',
+    coords: [-72.7977908, 7.9022955],
+    coordsApprox: true,
     image: '/img/historia/pat-09.jpg',
     gallery: [],
   },
@@ -1002,6 +1013,8 @@ export const heritage = [
         'Consultar fotografías y registros históricos. Antes de ofrecer una visita física, confirmar con la Alcaldía dónde se encuentra actualmente la escultura.',
     },
     mapsUrl: 'https://maps.app.goo.gl/itwtwRQNMGM4MbuDA',
+    coords: [-72.7861, 7.9159], // [longitud, latitud] de la matriz de patrimonio (migración 027)
+    mapZone: 'nuevo-gramalote', // el pin cae en Nuevo Gramalote; la ficha conserva su zona
     image: '/img/historia/pat-10.jpg',
     gallery: [],
   },
@@ -1029,6 +1042,7 @@ export const heritage = [
         'Verificar con la Alcaldía la ubicación actual y las condiciones de acceso antes de realizar el recorrido.',
     },
     mapsUrl: 'https://maps.app.goo.gl/ZSTwUqccSi1KSTAF9',
+    coords: [-72.786362, 7.915631], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-11.jpg',
     gallery: [],
   },
@@ -1055,6 +1069,7 @@ export const heritage = [
       recommendation: 'Visitar durante el día y recorrer la plaza, respetando el espacio público y a sus visitantes.',
     },
     mapsUrl: 'https://maps.app.goo.gl/MmKW4C8SE9kwmXfLA',
+    coords: [-72.786818, 7.915442], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-12.jpg',
     gallery: [],
   },
@@ -1081,6 +1096,7 @@ export const heritage = [
       recommendation: 'Visitar durante el día y verificar previamente el estado del camino y las condiciones del terreno.',
     },
     mapsUrl: 'https://maps.app.goo.gl/QFZ1AnYq5ZVgRULm8',
+    coords: [-72.7983908, 7.9015955], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-13.jpg',
     gallery: [],
   },

@@ -5,6 +5,7 @@ import App from './App.jsx'
 import { DialogProvider } from './lib/dialog.jsx'
 import { registerServiceWorker } from './lib/offline.js'
 import { initAdminTheme } from './lib/adminTheme.js'
+import { initImageOrientation } from './lib/imageOrientation.js'
 import './styles/tokens.css'
 import './styles/global.css'
 import './styles/ui.css'
@@ -21,6 +22,7 @@ import './styles/admin-light.css'
 
 // Tema guardado del panel, puesto antes del primer pintado.
 initAdminTheme()
+initImageOrientation()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
