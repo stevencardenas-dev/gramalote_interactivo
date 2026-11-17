@@ -110,6 +110,9 @@ function Section({ title, hint, actions, defaultOpen = false, signal, children }
   )
 }
 
+// Tarjetas que caben en «También puedes disfrutar en Gramalote».
+const RELATED_LIMIT = 3
+
 export default function AdminEstablecimiento() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -203,7 +206,12 @@ export default function AdminEstablecimiento() {
     setNotice('')
   }
 
+  // La ficha del sitio tiene sitio para tres tarjetas: no se pueden sugerir más.
   function toggleRelated(target) {
+    if (!form.relatedIds.includes(target) && form.relatedIds.length >= RELATED_LIMIT) {
+      setNotice(`Ya hay ${RELATED_LIMIT} sugerencias. Quita una para añadir otra.`)
+      return
+    }
     update({
       relatedIds: form.relatedIds.includes(target)
         ? form.relatedIds.filter((value) => value !== target)
@@ -1011,7 +1019,7 @@ export default function AdminEstablecimiento() {
 
               <Section
                 title="También puedes visitar"
-                hint="Sugerencias que salen al final de la ficha; solo se ofrecen fichas publicadas."
+                hint={`${form.relatedIds.length} de ${RELATED_LIMIT} sugerencias; salen al final de la ficha y solo se ofrecen fichas publicadas.`}
                 signal={signal}
               >
                 {form.relatedIds.length ? (
@@ -1064,6 +1072,10 @@ export default function AdminEstablecimiento() {
                         <input
                           type="checkbox"
                           checked={form.relatedIds.includes(item.id)}
+                          disabled={
+                            !form.relatedIds.includes(item.id) &&
+                            form.relatedIds.length >= RELATED_LIMIT
+                          }
                           onChange={() => toggleRelated(item.id)}
                         />
                         <span>

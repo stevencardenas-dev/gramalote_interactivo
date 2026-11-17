@@ -700,6 +700,8 @@ async function replaceChildren(connection, id, body) {
     await connection.query('DELETE FROM establishment_relations WHERE establishment_id = ?', [id])
     const related = [...new Set(body.relatedIds.map((value) => integer(value, 'relacionado')))]
       .filter((value) => value && value !== id)
+      // El diseño de la ficha contempla tres tarjetas: el panel tampoco deja pasar de 3.
+      .slice(0, 3)
     for (const [index, relatedId] of related.entries()) {
       await connection.query(
         `INSERT IGNORE INTO establishment_relations
