@@ -85,7 +85,7 @@ export async function downloadForOffline(onProgress = () => {}) {
   // 1. Listados y mapa; de ahí salen las fichas.
   const lists = [listUrl(), listUrl('comer'), listUrl('dormir'), listUrl('comprar')]
   const payloads = await Promise.all(
-    [...lists, `${API_URL}/map`].map(async (url) => (await store(apiCache, url)).json()),
+    [...lists, `${API_URL}/map`, `${API_URL}/heritage`].map(async (url) => (await store(apiCache, url)).json()),
   )
   // /api/map devuelve un objeto; las fichas salen de los listados.
   const listed = payloads.slice(0, lists.length).flatMap((payload) => payload.data ?? [])
@@ -95,6 +95,8 @@ export async function downloadForOffline(onProgress = () => {}) {
     // public/img, public/brand y public/icons (lista generada al compilar).
     ...manifest.files.map((file) => file.url),
     ...listed.flatMap(photosOf),
+    // Fotos de las fichas de patrimonio (las subidas desde el panel viven en /media).
+    ...(payloads[lists.length + 1]?.data ?? []).flatMap((item) => (item.images ?? []).map((image) => image.url)),
   ])
 
   // 2. Cada ficha y sus fotos; 3. el resto de fotos e ilustraciones.
