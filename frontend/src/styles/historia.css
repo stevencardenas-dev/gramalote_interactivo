@@ -3760,6 +3760,64 @@ kbd {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Flechas y contador del recorrido: juntos, abajo a la izquierda
+   En móvil la esquina inferior derecha es de «volver arriba» y WhatsApp; el
+   avance de la línea del tiempo vive al otro lado, en una sola fila.
+--------------------------------------------------------------------------- */
+.his-floats {
+  display: contents;
+}
+
+@media (max-width: 980px) {
+  .his-floats {
+    position: fixed;
+    left: 14px;
+    bottom: 84px;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .his-floats .his-next {
+    position: static;
+    right: auto;
+    bottom: auto;
+  }
+
+  .his-floats .his-step-counter.is-visible {
+    position: static;
+    right: auto;
+    bottom: auto;
+    display: inline-flex;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Arranque del capítulo: el primer suceso de la primera etapa va pegado a la
+   descripción del capítulo. A ese bloque no se llega desplazándose, así que no
+   necesita ocupar una pantalla entera: si lo hiciera, entre el encabezado y la
+   etapa quedaría un hueco blanco enorme. En el resto de etapas el bloque sí
+   llena la pantalla y la animación de entrada (--vis) se mantiene igual.
+--------------------------------------------------------------------------- */
+.his-deck .his-stage:first-of-type .his-events {
+  margin-top: 0;
+}
+
+.his-deck .his-stage:first-of-type .his-events > .his-event:first-child {
+  min-height: 0;
+  align-content: start;
+  padding-block: 10px 18px;
+}
+
+@media (max-width: 980px) {
+  .his-deck .his-stage:first-of-type .his-events > .his-event:first-child {
+    padding-block: 6px 22px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .his-next__arrow {
     animation: none;

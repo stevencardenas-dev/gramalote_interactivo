@@ -388,17 +388,21 @@ export default function HistoriaCapitulo() {
 
       <SectionNav />
 
-      <div className="his-next" ref={siguienteRef} aria-hidden="true">
-        <svg viewBox="0 0 44 44">
-          <circle className="his-next__track" cx="22" cy="22" r="19" />
-          <circle className="his-next__fill" cx="22" cy="22" r="19" pathLength="100" />
-        </svg>
-        <span className="his-next__arrow">↓</span>
+      {/* Abajo a la izquierda van juntos la flecha de avance y el contador del
+          suceso; la esquina derecha queda para «volver arriba» y WhatsApp. */}
+      <div className="his-floats" aria-hidden="true">
+        <div className="his-next" ref={siguienteRef}>
+          <svg viewBox="0 0 44 44">
+            <circle className="his-next__track" cx="22" cy="22" r="19" />
+            <circle className="his-next__fill" cx="22" cy="22" r="19" pathLength="100" />
+          </svg>
+          <span className="his-next__arrow">↓</span>
+        </div>
+        <p className={`his-step-counter${totalEvents > 1 ? ' is-visible' : ''}`}>
+          {String(paso + 1).padStart(2, '0')}
+          <span>/ {String(totalEvents).padStart(2, '0')}</span>
+        </p>
       </div>
-      <p className={`his-step-counter${totalEvents > 1 ? ' is-visible' : ''}`} aria-hidden="true">
-        {String(paso + 1).padStart(2, '0')}
-        <span>/ {String(totalEvents).padStart(2, '0')}</span>
-      </p>
 
       <div className="his-story" ref={storyRef} key={slug}>
         <div className="container">

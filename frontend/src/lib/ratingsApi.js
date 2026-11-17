@@ -1,3 +1,5 @@
+import { enqueue, isNetworkFailure } from './outbox.js'
+
 const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 
 export async function fetchRating(kind, slug, signal) {
@@ -10,11 +12,20 @@ export async function fetchRating(kind, slug, signal) {
 }
 
 export async function sendRating(kind, slug, body) {
-  const response = await fetch(`${API_URL}/ratings/${kind}/${encodeURIComponent(slug)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify(body),
-  })
+  const url = `${API_URL}/ratings/${kind}/${encodeURIComponent(slug)}`
+  let response
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(body),
+    })
+  } catch (error) {
+    // Sin conexión: el voto no se pierde, se guarda para reenviarlo al volver la señal.
+    if (!isNetworkFailure(error)) throw error
+    enqueue(url, body)
+    return { queued: true, pending: false }
+  }
   const payload = await response.json().catch(() => ({}))
   if (!response.ok) {
     throw new Error(payload?.error?.message || 'No pudimos guardar tu calificación')
@@ -50,11 +61,20 @@ export async function confirmRating(token) {
 
 // Envía una sugerencia de establecimiento (formulario de /sugerir).
 export async function sendSuggestion(body) {
-  const response = await fetch(`${API_URL}/suggestions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify(body),
-  })
+  const url = `${API_URL}/suggestions`
+  let response
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(body),
+    })
+  } catch (error) {
+    // Sin conexión: la sugerencia queda guardada y sale al recuperar la señal.
+    if (!isNetworkFailure(error)) throw error
+    enqueue(url, body)
+    return { queued: true, pending: false }
+  }
   const payload = await response.json().catch(() => ({}))
   if (!response.ok) {
     throw new Error(payload?.error?.message || 'No pudimos enviar tu sugerencia. Intenta de nuevo.')

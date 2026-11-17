@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { DialogProvider } from './lib/dialog.jsx'
 import { registerServiceWorker } from './lib/offline.js'
+import { startOutbox } from './lib/outbox.js'
 import { initAdminTheme } from './lib/adminTheme.js'
 import { initImageOrientation } from './lib/imageOrientation.js'
 import './styles/tokens.css'
@@ -35,3 +36,5 @@ createRoot(document.getElementById('root')).render(
 )
 
 registerServiceWorker()
+// Reenvía calificaciones y sugerencias guardadas cuando vuelve la señal.
+startOutbox()

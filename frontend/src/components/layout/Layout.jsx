@@ -4,6 +4,7 @@ import Navbar from './Navbar.jsx'
 import Footer from './Footer.jsx'
 import AdminNav from '../admin/AdminNav.jsx'
 import WhatsAppHelp from '../ui/WhatsAppHelp.jsx'
+import OutboxNotice from '../ui/OutboxNotice.jsx'
 import ScrollTopButton from '../ui/ScrollTopButton.jsx'
 import { usePageTitle } from '../../lib/usePageTitle.js'
 
@@ -113,6 +114,7 @@ export default function Layout() {
       <Footer />
       <ScrollTopButton />
       <WhatsAppHelp />
+      <OutboxNotice />
     </>
   )
 }

@@ -38,7 +38,38 @@ export function StarsRow({ value = 0 }) {
 
 
 // Resumen que se ve al enviar: colores y figuras en lugar de un párrafo.
-function RatingResult({ titleId, title, email, stars, pending, before, after, onClose }) {
+function RatingResult({ titleId, title, email, stars, pending, queued, before, after, onClose }) {
+  // Sin conexión el voto queda en la cola local: no hay promedio nuevo que mostrar.
+  if (queued) {
+    return (
+      <div className="rating-result">
+        <div className="rating-result__badge is-pending" aria-hidden="true">
+          <span className="rating-result__core">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5zm1.8.6v.2l7.2 5 7.2-5v-.2zm14.4 2.6-6.8 4.7a.7.7 0 0 1-.8 0L4.8 9.7v7.8h14.4z" />
+            </svg>
+          </span>
+        </div>
+
+        <h2 id={titleId}>Guardada sin conexión</h2>
+        <p className="rating-result__lead">
+          No hay señal ahora mismo. Guardamos tu calificación de <strong>{title}</strong> en este
+          dispositivo y la enviaremos sola en cuanto vuelva la conexión. No hace falta que vuelvas a
+          calificar.
+        </p>
+
+        <div className="rating-result__mine" role="img" aria-label={`Tu voto: ${plural(stars)}`}>
+          <StarsRow value={stars} />
+          <span>Tu voto · por enviar</span>
+        </div>
+
+        <button type="button" className="btn btn--primary" onClick={onClose}>
+          Entendido
+        </button>
+      </div>
+    )
+  }
+
   const votesBefore = before?.votes ?? 0
   const averageBefore = before?.average ?? 0
   const shown = pending ? before : after
@@ -145,6 +176,7 @@ function RatingDialog({ kind, slug, title, confirm, before, onClose, onSaved }) 
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [pending, setPending] = useState(false)
+  const [queued, setQueued] = useState(false)
   const [after, setAfter] = useState(null)
 
   const panelRef = useModalFocus(onClose)
@@ -163,6 +195,12 @@ function RatingDialog({ kind, slug, title, confirm, before, onClose, onSaved }) 
         stars,
         comment: comment.trim(),
       })
+      if (stats?.queued) {
+        // Sin señal: el voto está a salvo en la cola local.
+        setQueued(true)
+        setDone(true)
+        return
+      }
       onSaved(stats)
       setAfter(stats)
       setPending(Boolean(stats?.pending))
@@ -192,6 +230,7 @@ function RatingDialog({ kind, slug, title, confirm, before, onClose, onSaved }) 
             email={email.trim()}
             stars={stars}
             pending={pending}
+            queued={queued}
             before={before}
             after={after}
             onClose={onClose}

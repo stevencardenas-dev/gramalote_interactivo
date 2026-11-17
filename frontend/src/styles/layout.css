@@ -645,6 +645,32 @@
   }
 }
 
+/* Aviso de la cola sin conexión: calificaciones y sugerencias guardadas. */
+.outbox-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 92px;
+  z-index: 95;
+  max-width: min(420px, calc(100vw - 160px));
+  margin: 0;
+  padding: 10px 16px;
+  transform: translateX(-50%);
+  border-radius: 14px;
+  background: var(--c-navy, #00426b);
+  color: #fff;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  text-align: center;
+  box-shadow: 0 10px 26px rgba(20, 20, 20, 0.24);
+}
+
+@media (max-width: 520px) {
+  .outbox-toast {
+    bottom: 108px;
+    max-width: calc(100vw - 32px);
+  }
+}
+
 @media print {
   .wa-help {
     display: none;

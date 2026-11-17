@@ -56,7 +56,12 @@ export default function Sugerir() {
         ...Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value.trim()])),
         elapsedMs: startedAt.current ? Date.now() - startedAt.current : 0,
       })
-      setSent({ name: form.nombre.trim(), email: form.correo.trim(), pending: Boolean(result?.pending) })
+      setSent({
+        name: form.nombre.trim(),
+        email: form.correo.trim(),
+        pending: Boolean(result?.pending),
+        queued: Boolean(result?.queued),
+      })
       setForm(EMPTY)
       startedAt.current = 0
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -80,9 +85,22 @@ export default function Sugerir() {
           <div className="suggest__card">
             {sent ? (
               <div className="suggest__done" role="status">
-                <h2>{sent.pending ? 'Confirma tu correo para enviarla' : '¡Gracias por tu sugerencia!'}</h2>
+                <h2>
+                  {sent.queued
+                    ? 'Guardada sin conexión'
+                    : sent.pending
+                      ? 'Confirma tu correo para enviarla'
+                      : '¡Gracias por tu sugerencia!'}
+                </h2>
                 <p>
-                  {sent.pending ? (
+                  {sent.queued ? (
+                    <>
+                      No hay señal ahora mismo. Guardamos «{sent.name}» en este dispositivo y la
+                      enviaremos automáticamente en cuanto vuelva la conexión; no hace falta que la
+                      escribas otra vez. Si el equipo tarda en verla, es porque todavía no se ha
+                      enviado.
+                    </>
+                  ) : sent.pending ? (
                     <>
                       Guardamos «{sent.name}», pero todavía no le llega al equipo: abre el enlace que
                       enviamos a <strong>{sent.email}</strong> para confirmar tu correo y la enviamos.
