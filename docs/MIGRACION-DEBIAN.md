@@ -5,6 +5,13 @@ repositorio de GitHub, y cómo reconstruir el sitio en un servidor Debian
 **cuando lo único a lo que tendrás acceso es el repositorio**: sin consola de
 AWS, sin perfil IAM y sin llave SSH.
 
+> El nombre del documento y del script (`levantar-debian.sh`) es histórico: el
+> stack es el mismo en cualquier Linux con Docker y systemd. El script detecta
+> Ubuntu, Fedora/RHEL/Rocky/Alma, openSUSE y Arch, instala Docker con el gestor
+> de paquetes que haya, abre el puerto en `ufw` **o** `firewalld` y añade `:z` a
+> los montajes cuando SELinux está en enforcing. Los pasos manuales de este
+> documento son los de Debian/Ubuntu (`apt`).
+
 > Resumen en una línea: el **código** ya está en Git; lo que falta son la **base
 > de datos**, las **fotos subidas** y el **mapa**. Para eso está
 > `deploy/migracion-exportar.ps1`.
@@ -192,12 +199,19 @@ Dos avisos importantes:
 
 ### 6.1 Paquetes base
 
+> Si vas a usar el script de la sección 6.6, **sáltate este paso**: él instala
+> Docker con `apt`, `dnf`, `zypper` o `pacman` según la distribución.
+
 ```bash
 sudo apt update
 sudo apt install -y git curl ca-certificates
 curl -fsSL https://get.docker.com | sudo sh          # instala docker + compose plugin
 sudo usermod -aG docker "$USER"                       # cerrar y abrir sesión después
 ```
+
+Necesita **Docker Compose ≥ 2.24**: el overlay usa la etiqueta YAML `!override`.
+El paquete `docker-compose-v2` de los repos de Ubuntu 22.04 es más viejo, así que
+instala Docker con `get.docker.com` (lo que hace el script), no con `apt`.
 
 ### 6.2 Traer el repositorio
 
@@ -283,9 +297,14 @@ y es idempotente y repetible: cada ejecución deja el sitio con **los datos del
 snapshot más reciente de `migracion/`** (base, usuarios del panel, fotos y mapa)
 y vuelve a levantar el stack.
 
-1. Instala Docker si falta y comprueba el plugin `docker compose`.
-2. Sincroniza `media/` y los `.pmtiles` del snapshot a `/srv/gramalote/srv` y
-   ajusta permisos (UID 1000 para la API, lectura para nginx).
+1. Detecta la distribución e instala Docker si falta (`get.docker.com` en
+   Debian/Ubuntu/Fedora/RHEL; `zypper`/`pacman` en openSUSE/Arch), y comprueba
+   que el plugin `docker compose` sea ≥ 2.24.
+2. Sincroniza `media/` y los `.pmtiles` del snapshot a `/srv/gramalote/media` y `/srv/gramalote/tiles`, y
+   ajusta permisos (UID 1000 para la API, lectura para nginx). Si **SELinux** está
+   en enforcing (RHEL/Fedora/Rocky/Alma) genera
+   `/srv/gramalote/compose-selinux.yml` con `:z` en los montajes; en el resto no
+   existe ese archivo y no se usa.
 3. Crea el `.env` con secretos nuevos y `CORS_ORIGIN`/`PUBLIC_SITE_URL` con la IP
    local de la máquina (si ya existe, lo reutiliza y solo completa lo que falte).
 4. Levanta MySQL y **restaura el volcado cuando el snapshot cambió**: guarda el
@@ -294,7 +313,8 @@ y vuelve a levantar el stack.
    sha256 coincide, no toca los datos.
 5. Comprueba fila por fila contra `conteos.tsv` y avisa de las diferencias.
 6. Compila las imágenes, arranca `web` + `api`, aplica migraciones y abre el
-   puerto en `ufw` si está activo.
+   puerto en `ufw` o `firewalld` si están activos (con `nftables`/`iptables` a
+   mano solo avisa con el comando exacto).
 7. **No toca los usuarios**: los del volcado conservan sus contraseñas de la
    EC2. Solo siembra la cuenta del `.env` si `admin_users` quedó vacía, o con
    `--rotar-admin`.
@@ -323,9 +343,10 @@ volcado, restaura la base nueva conservando los usuarios y las contraseñas.
 
 Al terminar imprime la URL del sitio y del panel. Desde Windows (o cualquier
 máquina de la red) se abre esa misma URL; el panel queda en `/acceder` y la API
-en `/api/health`. Conviene abrir el puerto si el firewall no lo permite:
-`sudo ufw allow 8080/tcp`. Si la Debian es una VM en Windows con red **NAT**,
-cambia el adaptador a puente o reenvía el puerto.
+en `/api/health`. El script abre el puerto él mismo si encuentra `ufw` o
+`firewalld` activos; si no, avisa con el comando que hay que lanzar. Si la Debian
+es una VM en Windows con red **NAT**, cambia el adaptador a puente o reenvía el
+puerto.
 
 ### 6.7 Lo mismo paso a paso
 
@@ -384,21 +405,46 @@ Recuerda que el `frontend` pide la API por rutas relativas (`/api`, `/media`,
 `/tiles`), así que nginx sirve todo y el dominio nuevo solo necesita HTTPS y
 `CORS_ORIGIN`/`PUBLIC_SITE_URL` correctos en el `.env`.
 
-### 6.9 Despliegues futuros sin AWS
+### 6.9 Actualizar un despliegue existente
 
-El workflow `deploy-ec2.yml` usa SSM y ECR: en Debian no sirve. Mientras tanto,
-desplegar a mano es:
+`levantar-debian.sh` **no hace `git pull`**: el orden es código primero, script
+después. El script sí recompila siempre (con caché de Docker, así que si el
+código no cambió no recrea nada), aplica migraciones, sincroniza fotos y mapa y
+vuelve a comprobar el sitio.
 
-```bash
-cd /opt/gramalote
-git pull
-C="docker compose -f docker-compose.yml -f docker-compose.debian.yml"
-$C up -d --build
-$C exec -T api node scripts/migrate.js
-```
+| Qué cambió | Qué hacer | Qué toca |
+|---|---|---|
+| **Código** (frontend/backend) | `cd /opt/gramalote && sudo git pull` y luego `sudo bash deploy/levantar-debian.sh --sin-fotos` | Recompila y, si la imagen cambió, recrea `web`/`api`; aplica migraciones. No toca base, fotos ni mapa. |
+| **Fotos** subidas desde el panel de producción | Snapshot nuevo (sección 3) + `git pull` + script **sin** `--sin-fotos` | Copia `media/` encima (no borra: lo subido en este servidor se queda). |
+| **Mapa** (`.pmtiles`) | Regenerarlo con `deploy/tiles/build-tiles.sh` (dejando `OUT` dentro del snapshot) o copiar el archivo a `/srv/gramalote/tiles/` | nginx lo sirve del disco: reemplazarlo basta. Solo reinicia si además recompilas. |
+| **Datos** (fichas, usuarios, textos) | Panel del sitio, o snapshot nuevo | Con snapshot nuevo, el script respalda la base actual y restaura la del volcado. |
+| **Todo a la vez** | Snapshot nuevo con `pwsh -File deploy/migracion-exportar.ps1 -Commit`, `git pull` y `bash deploy/levantar-debian.sh` sin flags | Es el escenario completo: base + usuarios + fotos + mapa + código. |
 
-Si más adelante quieres CI, lo natural es un workflow con SSH al servidor
-(llave dedicada en los *secrets* del repo) o un runner autoalojado.
+Trampas que conviene saber:
+
+- **El `.pmtiles` del snapshot pisa el del servidor** en cada ejecución (salvo
+  `--sin-fotos`). Si refrescaste el mapa a mano, guárdalo también en el snapshot
+  o ejecuta con `--sin-fotos` las veces siguientes.
+- `/tiles/` se sirve con `Cache-Control: max-age=86400`: tras cambiar el mapa,
+  el navegador puede seguir con el viejo hasta un día (recarga forzada). El
+  nombre del archivo lo fija el build (`VITE_MAP_PMTILES_URL`), así que si lo
+  renombras hay que recompilar el frontend.
+- Si restauras un snapshot **antiguo**, la base vuelve a ese estado: las fotos
+  subidas después dejan de estar referenciadas aunque los archivos sigan en
+  `/srv/gramalote/media` (quedan huérfanos, no rompen nada).
+- El aviso «N tabla(s) no coinciden» de `conteos.tsv` es normal si el sitio se
+  usó después del snapshot; no es un fallo del despliegue.
+- El script avisa (`AVISO`) pero no falla si una tabla difiere o si una
+  migración no se pudo aplicar: mira el final del log antes de darlo por bueno.
+
+Cuando la EC2 ya no exista, «todo» deja de venir de un snapshot: las fotos
+nuevas se suben desde el panel de este servidor (viven en `/srv/gramalote/media`),
+los datos se editan en el panel y solo el **código** llega por `git pull`. El
+snapshot queda como respaldo histórico y como forma de resembrar la base.
+
+Si más adelante quieres CI para el servidor, lo natural es un workflow con SSH
+(con llave dedicada en los *secrets* del repo) o un runner autoalojado; hoy no
+existe.
 
 ### 6.10 Desmontar el stack
 
@@ -473,4 +519,7 @@ sudo bash deploy/desmontar-debian.sh --instalar      # copia fija fuera del repo
 | El mapa sale en blanco | Falta el `.pmtiles` en `/srv/gramalote/tiles` (o `VITE_MAP_PMTILES_URL` mal). Se regenera con `deploy/tiles/build-tiles.sh`. |
 | El panel dice «sesión expirada» para todos | Cambiaste `JWT_SECRET`: es esperado, hay que volver a entrar. |
 | Login falla con 401 y la web responde bien | La base se importó pero `users` está vacía: ejecuta `npm run seed:admin`. |
+| En RHEL/Fedora/Rocky el sitio carga pero `/media` da **403** y el panel no deja subir fotos | SELinux en enforcing con el contexto del host. El script genera `/srv/gramalote/compose-selinux.yml` con `:z`; si lo lanzaste a mano, añade `:z` a los montajes o ejecuta `sudo chcon -Rt container_file_t /srv/gramalote`. |
+| Desde otra máquina no se ve el sitio, pero `curl localhost:8080` sí funciona | Cortafuegos del host: `sudo firewall-cmd --permanent --add-port=8080/tcp && sudo firewall-cmd --reload` (firewalld) o `sudo ufw allow 8080/tcp` (ufw). El script lo hace solo si detecta alguno activo. |
+| `unexpected tag !override` al arrancar | `docker compose` < 2.24. Instala Docker con `get.docker.com` en vez del paquete `docker-compose-v2` de la distro. |
 | `git clone` va a ~100 KB/s y tarda horas (con la red de la máquina a 10 MB/s) | La VM resuelve GitHub por IPv6 y esa ruta no funciona: `curl -6` da 0 B/s e `curl -4` va a 10 MB/s. Prefiere IPv4 con `echo 'precedence ::ffff:0:0/96  100' >> /etc/gai.conf` (o desactiva IPv6 en el adaptador de la VM) y repite el clon. |
