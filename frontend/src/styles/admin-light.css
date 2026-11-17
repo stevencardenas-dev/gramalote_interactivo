@@ -27,7 +27,7 @@ html[data-admin-theme='light'] .admin-app {
 
   --c-ink-soft: #4b3b2f;
   --c-primary-dark: #1f56b8;
-  --c-coral: #db5319;
+  --c-coral: #b53f0e;
 
   color-scheme: light;
 }
@@ -100,4 +100,90 @@ html[data-admin-theme='light'] .admin-media__shot .admin-media__dims {
 /* El isotipo va en blanco sobre el fondo oscuro; en claro se deja el original. */
 html[data-admin-theme='light'] .admin-nav__logo {
   filter: none;
+}
+
+/* Inicio del panel, tema claro: azul y accesos en colores sólidos de la marca */
+html[data-admin-theme='light'] .admin-home__hero {
+  background: linear-gradient(120deg, #a5292b 0%, #db5319 55%, #eaa41e 100%);
+}
+
+html[data-admin-theme='light'] .admin-search input {
+  border-color: transparent;
+  background: #fff;
+  color: #1d1b18;
+}
+
+html[data-admin-theme='light'] .admin-search input::placeholder,
+html[data-admin-theme='light'] .admin-search__icon {
+  color: #6b6158;
+}
+
+html[data-admin-theme='light'] .admin-tile--places { --c1: #00426b; --c2: #00426b; }
+html[data-admin-theme='light'] .admin-tile--users { --c1: #306c46; --c2: #306c46; }
+html[data-admin-theme='light'] .admin-tile--mail { --c1: #8a5a10; --c2: #8a5a10; }
+html[data-admin-theme='light'] .admin-tile--pages { --c1: #b53f0e; --c2: #b53f0e; }
+
+html[data-admin-theme='light'] .admin-tile {
+  border-color: transparent;
+}
+
+html[data-admin-theme='light'] a.admin-tile:hover {
+  box-shadow: 0 10px 24px rgba(77, 42, 12, 0.18);
+}
+
+html[data-admin-theme='light'] .admin-ring {
+  --ring: #00426b;
+}
+
+html[data-admin-theme='light'] .admin-ring.is-warn {
+  --ring: #b53f0e;
+}
+
+html[data-admin-theme='light'] a.admin-tile {
+  color: #fff;
+}
+
+html[data-admin-theme='light'] .admin-nav__out {
+  color: #9a3510;
+}
+
+/* Inicio, tema claro: el recuadro de imágenes se distingue del fondo */
+html[data-admin-theme='light'] .admin-storage-tile {
+  border: 1px solid #cdbfae;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(77, 42, 12, 0.08);
+}
+
+html[data-admin-theme='light'] .admin-ring {
+  background: conic-gradient(var(--ring) calc(var(--p) * 1%), #e1d9ce 0);
+}
+
+html[data-admin-theme='light'] .admin-ring b {
+  background: #fff;
+}
+
+html[data-admin-theme='light'] .admin-storage-tile__text span {
+  color: #4b3b2f;
+}
+
+/* Inicio, tema claro: botón Buscar blanco con texto azul marino */
+html[data-admin-theme='light'] .admin-home .admin-search .admin-btn {
+  border-color: #fff;
+  background: #fff;
+  color: #00426b;
+}
+
+html[data-admin-theme='light'] .admin-home .admin-search .admin-btn:hover:not(:disabled) {
+  border-color: #fff2e3;
+  background: #fff2e3;
+}
+
+/* Estilo Q1 en el tema claro: bandas y pestañas en colores sólidos de la marca */
+html[data-admin-theme='light'] .admin-app {
+  --sb1a: #00426b; --sb1b: #00426b;
+  --sb2a: #8a5a10; --sb2b: #8a5a10;
+  --sb3a: #306c46; --sb3b: #306c46;
+  --sb4a: #b53f0e; --sb4b: #b53f0e;
+  --tb1: #00426b; --tb2: #8a5a10; --tb3: #306c46; --tb4: #b53f0e; --tb5: #a5292b; --tb6: #6f7a14;
+  --rb1: #db5319; --rb2: #eaa41e; --rb3: #306c46; --rb4: #00426b;
 }

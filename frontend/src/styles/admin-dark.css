@@ -196,8 +196,8 @@ body:has(.admin-app) {
   outline-offset: 2px;
 }
 
-/* Cambio de modo: botón redondo con sol/luna, en su propio hueco entre los
-   enlaces y la cuenta. */
+/* Cambio de modo: botón redondo con sol/luna, en la esquina derecha de la barra,
+   después de la cuenta. */
 .theme-toggle {
   display: inline-grid;
   place-items: center;
@@ -400,40 +400,109 @@ body:has(.admin-app) {
   color: var(--a-wn);
 }
 
-/* Inicio */
+/* Inicio: encabezado azul plano, accesos horizontales con icono y almacenamiento
+   en anillo. Aquí va el tema oscuro (colores profundos de la paleta); el claro
+   los pone sólidos en admin-light.css. */
 .admin-home .admin-wrap {
-  width: min(760px, calc(100% - 32px));
+  width: min(780px, calc(100% - 32px));
   gap: 16px;
-  padding-top: 12px;
+  padding-top: 16px;
+}
+
+.admin-home__hero {
+  display: grid;
+  gap: 14px;
+  padding: 24px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #3b4753 0%, #232b33 100%);
+}
+
+.admin-home__hero h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.7rem, 4vw, 2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #fff;
 }
 
 .admin-search {
+  position: relative;
   display: flex;
   gap: 8px;
 }
 
+.admin-search__icon {
+  position: absolute;
+  top: 50%;
+  left: 18px;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  color: #d7e3ec;
+  pointer-events: none;
+}
+
 .admin-search input {
   flex: 1;
-  min-height: 48px;
-  padding: 0 16px;
+  min-height: 50px;
+  padding: 0 18px 0 44px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
   font-size: 1rem;
 }
 
-.admin-search .admin-btn {
-  min-height: 48px;
-  padding-inline: 22px;
+.admin-search input::placeholder {
+  color: #d7e3ec;
 }
 
-/* Los accesos se reparten el ancho disponible: dos por fila y, si el total
-   es impar, el último ocupa la fila entera (nunca queda uno angosto suelto). */
+/* Foco del buscador del inicio: aro blanco (se ve sobre el azul) en vez del azul. */
+.admin-home .admin-search input:focus {
+  border-color: #fff;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.admin-search .admin-btn {
+  min-height: 50px;
+  padding-inline: 24px;
+  border-radius: 999px;
+}
+
+/* Botón Buscar naranja ladrillo en el tema oscuro (el claro lo pone blanco en
+   admin-light.css); sin el azul del panel en borde, hover ni foco. */
+.admin-home .admin-search .admin-btn {
+  border-color: #b53f0e;
+  background: #b53f0e;
+  color: #fff;
+  font-weight: 700;
+}
+
+.admin-home .admin-search .admin-btn:hover:not(:disabled) {
+  border-color: #9a3510;
+  background: #9a3510;
+}
+
+.admin-home .admin-search .admin-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Dos accesos por fila; si el total es impar, el último ocupa la fila entera. */
 .admin-tiles {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
 }
 
 .admin-tiles > .admin-tile {
-  flex: 1 1 calc((100% - 12px) / 2);
+  flex: 1 1 calc((100% - 14px) / 2);
   min-width: 0;
 }
 
@@ -444,79 +513,165 @@ body:has(.admin-app) {
 }
 
 .admin-tile {
-  display: grid;
-  gap: 4px;
-  align-content: start;
-  padding: 18px 20px;
-  border: 1px solid var(--a-ln);
-  border-radius: 12px;
-  background: var(--a-sf);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 92px;
+  padding: 14px 44px 14px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--c1), var(--c2));
+  color: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
+.admin-tile--places { --c1: #0b4a74; --c2: #08324f; }
+.admin-tile--users { --c1: #2a6b45; --c2: #1c4a30; }
+.admin-tile--mail { --c1: #7a5410; --c2: #553a0a; }
+.admin-tile--pages { --c1: #a23a12; --c2: #74290c; }
 
 a.admin-tile:hover {
-  border-color: var(--a-ac);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
 
-.admin-tile strong {
-  font-size: 1.05rem;
-  font-weight: 600;
+a.admin-tile:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
 }
 
-.admin-tile span {
-  color: var(--a-mu);
+.admin-tile__icon {
+  display: grid;
+  flex: none;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
 }
 
-.admin-tile em {
-  font-style: normal;
+.admin-tile__icon svg {
+  width: 30px;
+  height: 30px;
 }
 
-.admin-tile .is-warn {
-  color: var(--a-wn);
+.admin-tile__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
 }
 
-.admin-tile .admin-tile__go {
-  margin-top: 8px;
-  color: var(--a-ac-text);
-  font-weight: 600;
+.admin-tile__text strong {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
-.admin-storage-tile {
-  gap: 0;
+.admin-tile__sub {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.86rem;
 }
 
-.admin-storage-tile__head {
-  display: flex;
-  justify-content: space-between;
-}
-
-.admin-storage-tile__head strong {
-  font-size: 0.9rem;
-}
-
-.admin-meter {
-  height: 6px;
-  margin-top: 10px;
+.admin-tile__badge {
+  display: inline-flex;
+  width: max-content;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 3px 11px;
   border-radius: 999px;
-  background: var(--a-sf2);
-  overflow: hidden;
-}
-
-.admin-meter i {
-  display: block;
-  height: 100%;
-  min-width: 3px;
-  border-radius: 999px;
-  background: var(--a-ac);
-}
-
-.admin-meter i.is-warn {
-  background: #ff8a5c;
-}
-
-.admin-foot {
-  margin: 0;
-  color: var(--a-mu);
+  background: rgba(0, 0, 0, 0.28);
+  color: #ffe3a3;
   font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.admin-tile__badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f4c15f;
+}
+
+.admin-tile__chev {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  width: 22px;
+  height: 22px;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  transition: transform 0.2s ease;
+}
+
+a.admin-tile:hover .admin-tile__chev {
+  transform: translate(4px, -50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a.admin-tile:hover {
+    transform: none;
+  }
+
+  a.admin-tile:hover .admin-tile__chev {
+    transform: translateY(-50%);
+  }
+}
+
+/* Almacenamiento: anillo con el porcentaje y el uso en texto (sin repetir el dato) */
+.admin-storage-tile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 0;
+  padding: 16px 20px;
+  border: 1px solid var(--a-ln);
+  background: var(--a-sf);
+  color: var(--a-tx);
+}
+
+.admin-ring {
+  --ring: #2f6fe0;
+  display: grid;
+  flex: none;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(var(--ring) calc(var(--p) * 1%), var(--a-sf2) 0);
+}
+
+.admin-ring b {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--a-sf);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-ring.is-warn {
+  --ring: #ff8a5c;
+}
+
+.admin-storage-tile__text {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-storage-tile__text strong {
+  font-size: 0.95rem;
+}
+
+.admin-storage-tile__text span {
+  color: var(--a-mu);
+  font-size: 0.86rem;
 }
 
 /* Listado de establecimientos */
@@ -3429,4 +3584,288 @@ a.admin-tile:hover {
 
 .admin-switch {
   margin-bottom: 18px;
+}
+
+/* ==========================================================================
+   Estilo Q1 en todo el panel: título con cinta de la paleta, pestañas con el
+   color de su posición y secciones con banda de color e icono en bloque (como
+   los accesos del inicio). Aquí van los tonos profundos del tema oscuro; el
+   claro los pone sólidos en admin-light.css.
+   ========================================================================== */
+.admin-app {
+  --sb1a: #0b4a74; --sb1b: #08324f;
+  --sb2a: #7a5410; --sb2b: #553a0a;
+  --sb3a: #2a6b45; --sb3b: #1c4a30;
+  --sb4a: #a23a12; --sb4b: #74290c;
+  --tb1: #0b4a74; --tb2: #7a5410; --tb3: #2a6b45; --tb4: #a23a12; --tb5: #8f2a2c; --tb6: #5f6a12;
+  --rb1: #ff8a5c; --rb2: #f4c15f; --rb3: #6fc08e; --rb4: #6cb2e6;
+}
+
+/* Título con tipografía de marca y cinta de colores */
+.admin-app .admin-page h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.7rem, 4vw, 2rem);
+  font-weight: 700;
+}
+
+.admin-app .admin-page h1::after {
+  content: '';
+  display: block;
+  width: 84px;
+  height: 5px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--rb1) 0 25%, var(--rb2) 25% 50%, var(--rb3) 50% 75%, var(--rb4) 75%);
+}
+
+.admin-app .admin-home__hero h1::after {
+  content: none;
+}
+
+/* Pestañas: píldora con el color de su posición cuando está activa */
+.admin-app .admin-tabs {
+  gap: 6px;
+  border-bottom: 0;
+}
+
+.admin-app .admin-tab {
+  margin-bottom: 0;
+  padding: 8px 16px;
+  border: 1px solid var(--a-ln);
+  border-radius: 12px;
+  background: var(--a-sf);
+  color: var(--a-tx);
+}
+
+.admin-app .admin-tab:hover {
+  border-color: var(--tc, var(--a-ac));
+}
+
+.admin-app .admin-tabs .admin-tab:nth-child(6n + 1),
+.admin-app .admin-segment button:nth-child(6n + 1) { --tc: var(--tb1); }
+.admin-app .admin-tabs .admin-tab:nth-child(6n + 2),
+.admin-app .admin-segment button:nth-child(6n + 2) { --tc: var(--tb2); }
+.admin-app .admin-tabs .admin-tab:nth-child(6n + 3),
+.admin-app .admin-segment button:nth-child(6n + 3) { --tc: var(--tb3); }
+.admin-app .admin-tabs .admin-tab:nth-child(6n + 4),
+.admin-app .admin-segment button:nth-child(6n + 4) { --tc: var(--tb4); }
+.admin-app .admin-tabs .admin-tab:nth-child(6n + 5),
+.admin-app .admin-segment button:nth-child(6n + 5) { --tc: var(--tb5); }
+.admin-app .admin-tabs .admin-tab:nth-child(6n + 6),
+.admin-app .admin-segment button:nth-child(6n + 6) { --tc: var(--tb6); }
+
+.admin-app .admin-tab.is-active,
+.admin-app .admin-tab.active,
+.admin-app .admin-segment button.is-active {
+  border-color: transparent;
+  background: var(--tc, var(--tb1));
+  color: #fff;
+}
+
+.admin-app .admin-tab.is-active .admin-tab__count,
+.admin-app .admin-segment button.is-active .admin-tab__count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+/* Secciones plegables: banda de color + icono en bloque + flecha a la derecha */
+.admin-app .admin-section {
+  overflow: hidden;
+  border: 1px solid var(--a-ln);
+  border-radius: 14px;
+}
+
+.admin-app .admin-section__bar {
+  background: linear-gradient(135deg, var(--sa, var(--sb1a)), var(--sb, var(--sb1b)));
+  color: #fff;
+}
+
+.admin-app section.admin-section:nth-of-type(4n + 1) { --sa: var(--sb1a); --sb: var(--sb1b); }
+.admin-app section.admin-section:nth-of-type(4n + 2) { --sa: var(--sb2a); --sb: var(--sb2b); }
+.admin-app section.admin-section:nth-of-type(4n + 3) { --sa: var(--sb3a); --sb: var(--sb3b); }
+.admin-app section.admin-section:nth-of-type(4n + 4) { --sa: var(--sb4a); --sb: var(--sb4b); }
+
+.admin-app .admin-section__toggle {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 14px;
+  min-height: 62px;
+  padding: 10px 8px 10px 14px;
+  color: #fff;
+}
+
+.admin-app .admin-section__toggle::before {
+  content: '';
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6'/%3E%3C/svg%3E")
+    center / 22px no-repeat;
+}
+
+.admin-app .admin-section__title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.admin-app .admin-section__title small {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.admin-app .admin-section__chevron {
+  margin-right: 10px;
+  margin-left: auto;
+}
+
+.admin-app .admin-section__toggle:hover .admin-section__chevron {
+  color: #fff;
+}
+
+.admin-app .admin-section__bar .admin-btn {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.22);
+  color: #fff;
+}
+
+.admin-app .admin-section__body {
+  border-top: 0;
+}
+
+.admin-app .admin-section__toggle:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -4px;
+}
+
+/* Cambio de tema con fundido (clase temporal que pone lib/adminTheme.js) */
+html.admin-theme-fade,
+html.admin-theme-fade body,
+html.admin-theme-fade .admin-app,
+html.admin-theme-fade .admin-app *,
+html.admin-theme-fade .admin-app *::before,
+html.admin-theme-fade .admin-app *::after {
+  transition:
+    background-color 0.45s ease,
+    color 0.45s ease,
+    border-color 0.45s ease,
+    box-shadow 0.45s ease,
+    fill 0.45s ease,
+    stroke 0.45s ease;
+}
+
+
+/* Cambio de tema en círculo: la vista nueva se revela sobre la vieja (el recorte
+   lo anima lib/adminTheme.js). Solo mientras dura la transición. */
+html.admin-theme-circle::view-transition-old(root),
+html.admin-theme-circle::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html.admin-theme-circle::view-transition-old(root) {
+  z-index: 1;
+}
+
+html.admin-theme-circle::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* Sol y luna: al cambiar de tema el icono que sale gira y se encoge mientras el
+   que entra gira hacia su sitio (con un pequeño rebote). */
+.theme-toggle {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle svg {
+  transition:
+    transform 0.6s cubic-bezier(0.4, 1.4, 0.5, 1),
+    opacity 0.35s ease;
+}
+
+.theme-toggle__moon {
+  position: absolute;
+}
+
+/* Tema oscuro: se muestra el sol (lleva al claro). Tema claro: la luna. */
+html[data-admin-theme='dark'] .theme-toggle__moon,
+html[data-admin-theme='light'] .theme-toggle__sun {
+  opacity: 0;
+}
+
+html[data-admin-theme='dark'] .theme-toggle__moon {
+  transform: rotate(-90deg) scale(0.4);
+}
+
+html[data-admin-theme='light'] .theme-toggle__sun {
+  transform: rotate(90deg) scale(0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle svg {
+    transition: none;
+  }
+}
+
+/* Usuarios: los desplegables de la cuenta (nombre, correo y contraseña) usan la
+   misma banda de color con icono en bloque que las secciones del resto del panel. */
+.admin-app .admin-acc {
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.admin-app .admin-account__cols > .admin-acc:nth-child(3n + 1) { --sa: var(--sb1a); --sb: var(--sb1b); }
+.admin-app .admin-account__cols > .admin-acc:nth-child(3n + 2) { --sa: var(--sb3a); --sb: var(--sb3b); }
+.admin-app .admin-account__cols > .admin-acc:nth-child(3n + 3) { --sa: var(--sb2a); --sb: var(--sb2b); }
+
+.admin-app .admin-acc summary {
+  gap: 14px;
+  min-height: 62px;
+  padding: 10px 16px 10px 14px;
+  background: linear-gradient(135deg, var(--sa, var(--sb1a)), var(--sb, var(--sb1b)));
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.admin-app .admin-acc summary::before {
+  content: '';
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.18);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 22px;
+  /* usuario (nombre) por defecto */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 19v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 17.5V19M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z'/%3E%3C/svg%3E");
+}
+
+.admin-app .admin-account__cols > .admin-acc:nth-child(2) summary::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h16v12H4zM4 7l8 6 8-6'/%3E%3C/svg%3E");
+}
+
+.admin-app .admin-account__cols > .admin-acc:nth-child(3) summary::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 11h12v9H6zM9 11V8a3 3 0 0 1 6 0v3'/%3E%3C/svg%3E");
+}
+
+/* El nombre ocupa el espacio y la flecha va a la derecha, en blanco */
+.admin-app .admin-acc summary > span {
+  flex: 1;
+}
+
+.admin-app .admin-acc__chevron {
+  color: #fff;
+}
+
+.admin-app .admin-acc[open] summary {
+  border-bottom: 0;
+}
+
+.admin-app .admin-acc summary:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -4px;
 }
