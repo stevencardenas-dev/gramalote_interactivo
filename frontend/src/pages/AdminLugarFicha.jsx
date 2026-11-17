@@ -21,17 +21,15 @@ const HERITAGE_CATEGORIES = ['Histórico', 'Religioso', 'Espacio público', 'Ins
 
 const ROLE_LABELS = {
   cover: 'Portada',
-  historic: 'Histórica',
-  current: 'Actual',
   gallery: 'Galería',
-  detail: 'Detalle',
+  // Usos anteriores a la migración 033: se muestran como galería.
+  historic: 'Galería',
+  current: 'Galería',
+  detail: 'Galería',
 }
 const ROLE_HELP = {
   cover: 'La que se ve en tarjetas, listados y el mapa. Solo una.',
-  historic: 'Foto de otra época; con su época forma el carrusel de la ficha.',
-  current: 'Cómo se ve hoy.',
-  gallery: 'Fotos complementarias.',
-  detail: 'Un elemento o detalle del bien.',
+  gallery: 'Fotos complementarias. Si le pones época, entran al carrusel de la ficha.',
 }
 
 const KINDS = {
@@ -60,8 +58,8 @@ const KINDS = {
         title: 'Textos de la ficha',
         hint: 'Lo que se lee en Historia › Patrimonio.',
         fields: [
-          { key: 'subtitle', label: 'Subtítulo', max: 200, wide: true },
           { key: 'intro', label: 'Frase introductoria', type: 'textarea', rows: 2, max: 600, wide: true },
+          { key: 'subtitle', label: 'Subtítulo', max: 200, wide: true },
           { key: 'summary', label: 'Resumen (tarjetas y mapa)', type: 'textarea', rows: 2, max: 320, wide: true },
           {
             key: 'description',
@@ -92,7 +90,6 @@ const KINDS = {
         fields: [
           { key: 'latitude', label: 'Latitud', type: 'number', required: true, step: 'any' },
           { key: 'longitude', label: 'Longitud', type: 'number', required: true, step: 'any' },
-          { key: 'coordsApprox', label: 'La ubicación es aproximada', type: 'checkbox' },
           { key: 'mapsUrl', label: 'Enlace de Google Maps', max: 500, wide: true },
           { key: 'mapIcon', label: 'Icono del mapa', type: 'icon' },
           { key: 'matrixRef', label: 'Referencia de la matriz', max: 16 },
@@ -115,26 +112,20 @@ const KINDS = {
     sections: [
       {
         title: 'Datos principales',
-        hint: 'Nombre, categoría y descripción del punto.',
+        hint: 'Nombre, categoría y la frase que se lee al abrir su punto en el mapa.',
         fields: [
           { key: 'name', label: 'Nombre', required: true, max: 180 },
           { key: 'category', label: 'Categoría', required: true, max: 80 },
           { key: 'zone', label: 'Zona o referencia', max: 120 },
-          { key: 'summary', label: 'Resumen', type: 'textarea', rows: 2, max: 320, wide: true },
-          { key: 'description', label: 'Descripción', type: 'textarea', rows: 6, max: 8000, wide: true, help: 'Separa los párrafos con una línea en blanco.' },
-        ],
-      },
-      {
-        title: 'Contacto y horario',
-        hint: 'Cómo ubicarlo y contactarlo.',
-        fields: [
-          { key: 'locationDetail', label: 'Cómo ubicarlo', max: 180, wide: true },
-          { key: 'address', label: 'Dirección', max: 255 },
-          { key: 'hoursText', label: 'Horario', max: 255 },
-          { key: 'phone', label: 'Teléfono', max: 40 },
-          { key: 'whatsapp', label: 'WhatsApp', max: 40 },
-          { key: 'email', label: 'Correo', type: 'email', max: 190 },
-          { key: 'website', label: 'Sitio web', max: 500 },
+          {
+            key: 'summary',
+            label: 'Resumen de la tarjeta',
+            type: 'textarea',
+            rows: 2,
+            max: 320,
+            wide: true,
+            help: 'Es el texto que se ve en la tarjeta del punto en /mapa.',
+          },
         ],
       },
       {
@@ -145,8 +136,6 @@ const KINDS = {
           { key: 'longitude', label: 'Longitud', type: 'number', required: true, step: 'any' },
           { key: 'mapsUrl', label: 'Enlace de Google Maps', max: 500, wide: true },
           { key: 'mapIcon', label: 'Icono del mapa', type: 'icon' },
-          { key: 'matrixRef', label: 'Referencia de la matriz', max: 16 },
-          { key: 'slug', label: 'Enlace (slug)', max: 160 },
           { key: 'sortOrder', label: 'Orden', type: 'number', step: '1' },
         ],
       },
@@ -249,6 +238,8 @@ function Field({ spec, value, onChange }) {
 
 function ImageCard({ image, index, total, kindKey, roles, busy, onSave, onRemove, onMove }) {
   const [draft, setDraft] = useState({ role: image.role, eraLabel: image.eraLabel ?? '', altText: image.altText, caption: image.caption, credit: image.credit })
+  // Un extra no tiene ficha: su única foto es la portada, sin uso que elegir.
+  const single = kindKey === 'extras'
   const dirty =
     draft.role !== image.role ||
     draft.eraLabel !== (image.eraLabel ?? '') ||
@@ -261,23 +252,25 @@ function ImageCard({ image, index, total, kindKey, roles, busy, onSave, onRemove
     <li className="place-img">
       <div className="place-img__thumb">
         <img src={image.url} alt="" loading="lazy" />
-        <span className={`place-img__role place-img__role--${image.role}`}>{ROLE_LABELS[image.role]}</span>
+        <span className={`place-img__role place-img__role--${image.role}`}>{ROLE_LABELS[image.role] ?? 'Portada'}</span>
       </div>
       <div className="place-img__body">
         <div className="admin-grid">
-          <label className="admin-field">
-            <span>Uso</span>
-            <select value={draft.role} onChange={set('role')}>
-              {roles.map((role) => (
-                <option key={role} value={role}>
-                  {ROLE_LABELS[role]}
-                </option>
-              ))}
-            </select>
-          </label>
-          {kindKey === 'heritage' ? (
+          {!single ? (
             <label className="admin-field">
-              <span>Época (fotos históricas)</span>
+              <span>Uso</span>
+              <select value={draft.role} onChange={set('role')}>
+                {roles.map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          {kindKey === 'heritage' && draft.role !== 'cover' ? (
+            <label className="admin-field">
+              <span>Época (si es de otra época)</span>
               <input value={draft.eraLabel} onChange={set('eraLabel')} maxLength={60} placeholder="1910 – 1953" />
             </label>
           ) : null}
@@ -298,12 +291,16 @@ function ImageCard({ image, index, total, kindKey, roles, busy, onSave, onRemove
           <button type="button" className="admin-btn admin-btn--primary" disabled={!dirty || busy} onClick={() => onSave(image, draft)}>
             Guardar foto
           </button>
-          <button type="button" className="admin-btn" disabled={index === 0 || busy} onClick={() => onMove(index, -1)} aria-label="Subir">
-            ↑
-          </button>
-          <button type="button" className="admin-btn" disabled={index === total - 1 || busy} onClick={() => onMove(index, 1)} aria-label="Bajar">
-            ↓
-          </button>
+          {!single ? (
+            <>
+              <button type="button" className="admin-btn" disabled={index === 0 || busy} onClick={() => onMove(index, -1)} aria-label="Subir">
+                ↑
+              </button>
+              <button type="button" className="admin-btn" disabled={index === total - 1 || busy} onClick={() => onMove(index, 1)} aria-label="Bajar">
+                ↓
+              </button>
+            </>
+          ) : null}
           <button type="button" className="admin-btn admin-btn--danger-outline" disabled={busy} onClick={() => onRemove(image)}>
             Quitar
           </button>
@@ -327,7 +324,13 @@ export default function AdminLugarFicha({ kind: kindKey }) {
   const [busyImage, setBusyImage] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState(null)
-  const [upload, setUpload] = useState({ role: 'gallery', eraLabel: '', altText: '', caption: '', credit: '' })
+  const [upload, setUpload] = useState(() => ({
+    role: kindKey === 'extras' ? 'cover' : 'gallery',
+    eraLabel: '',
+    altText: '',
+    caption: '',
+    credit: '',
+  }))
 
   const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message, close: () => setToast(null) })
 
@@ -379,6 +382,10 @@ export default function AdminLugarFicha({ kind: kindKey }) {
     const file = fileInput.current?.files?.[0]
     if (!file) {
       setError('Elige una foto para subir.')
+      return
+    }
+    if (kindKey === 'extras' && !upload.altText.trim()) {
+      setError('La portada necesita un texto alternativo que describa la foto.')
       return
     }
     setBusyImage(true)
@@ -461,6 +468,37 @@ export default function AdminLugarFicha({ kind: kindKey }) {
     }
   }
 
+  // Publicar y despublicar se guardan al instante, igual que en las fichas de
+  // establecimientos: el botón de la pestaña Publicación hace el cambio solo.
+  async function updatePublication(patch, title, message) {
+    setError('')
+    try {
+      const detail = await apiRequest(`${kind.api}/${id}`, { method: 'PATCH', body: patch })
+      // No se pisa el formulario: puede haber texto sin guardar. Solo cambian los
+      // interruptores de publicación, también en la base del cálculo de cambios.
+      setForm((current) => ({
+        ...current,
+        published: detail.published,
+        showOnMap: detail.showOnMap,
+        audit: detail.audit,
+        updatedAt: detail.updatedAt,
+      }))
+      setBaseline((current) => {
+        try {
+          const parsed = JSON.parse(current)
+          parsed.published = detail.published
+          parsed.showOnMap = detail.showOnMap
+          return JSON.stringify(parsed)
+        } catch {
+          return current
+        }
+      })
+      notify('ok', title, message)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   if (!form) {
     return (
       <section className="admin-page">
@@ -474,7 +512,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
     )
   }
 
-  const roles = form.imageRoles ?? Object.keys(ROLE_LABELS)
+  const roles = form.imageRoles ?? (kindKey === 'extras' ? ['cover'] : ['cover', 'gallery'])
   const cover = form.images.find((image) => image.role === 'cover') ?? form.images[0] ?? null
 
   return (
@@ -544,48 +582,56 @@ export default function AdminLugarFicha({ kind: kindKey }) {
 
           {tab === 'images' ? (
             <div className="place-images">
-              <AdminSection title="Subir una foto" hint="Elige el archivo y dile a la ficha para qué sirve." defaultOpen>
-                <div className="admin-grid">
-                  <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
-                    <span>Archivo (JPG, PNG o WebP, mínimo 200 × 200 px)</span>
-                    <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" />
-                  </label>
-                  <label className="admin-field">
-                    <span>Uso</span>
-                    <select value={upload.role} onChange={(event) => setUpload({ ...upload, role: event.target.value })}>
-                      {roles.map((role) => (
-                        <option key={role} value={role}>
-                          {ROLE_LABELS[role]}
-                        </option>
-                      ))}
-                    </select>
-                    <small className="admin-hint">{ROLE_HELP[upload.role]}</small>
-                  </label>
-                  {kindKey === 'heritage' ? (
-                    <label className="admin-field">
-                      <span>Época (si es histórica)</span>
-                      <input value={upload.eraLabel} onChange={(event) => setUpload({ ...upload, eraLabel: event.target.value })} placeholder="1910 – 1953" maxLength={60} />
+              {kindKey === 'extras' && form.images.length > 0 ? (
+                <p className="note">
+                  Los extras llevan una sola foto: la portada. Para cambiarla, quita la actual y sube otra.
+                </p>
+              ) : (
+                <AdminSection title="Subir una foto" hint="Elige el archivo y dile a la ficha para qué sirve." defaultOpen>
+                  <div className="admin-grid">
+                    <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
+                      <span>Archivo (JPG, PNG o WebP, mínimo 200 × 200 px)</span>
+                      <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" />
                     </label>
-                  ) : null}
-                  <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
-                    <span>Texto alternativo (describe la foto)</span>
-                    <input value={upload.altText} onChange={(event) => setUpload({ ...upload, altText: event.target.value })} maxLength={255} />
-                  </label>
-                  <label className="admin-field">
-                    <span>Pie de foto</span>
-                    <input value={upload.caption} onChange={(event) => setUpload({ ...upload, caption: event.target.value })} maxLength={500} />
-                  </label>
-                  <label className="admin-field">
-                    <span>Crédito o fuente</span>
-                    <input value={upload.credit} onChange={(event) => setUpload({ ...upload, credit: event.target.value })} maxLength={255} />
-                  </label>
-                </div>
-                <div>
-                  <button type="button" className="admin-btn admin-btn--primary" onClick={uploadImage} disabled={busyImage}>
-                    {busyImage ? 'Subiendo…' : 'Subir foto'}
-                  </button>
-                </div>
-              </AdminSection>
+                    {kindKey === 'heritage' ? (
+                      <label className="admin-field">
+                        <span>Uso</span>
+                        <select value={upload.role} onChange={(event) => setUpload({ ...upload, role: event.target.value })}>
+                          {roles.map((role) => (
+                            <option key={role} value={role}>
+                              {ROLE_LABELS[role]}
+                            </option>
+                          ))}
+                        </select>
+                        <small className="admin-hint">{ROLE_HELP[upload.role]}</small>
+                      </label>
+                    ) : null}
+                    {kindKey === 'heritage' && upload.role !== 'cover' ? (
+                      <label className="admin-field">
+                        <span>Época (si es de otra época)</span>
+                        <input value={upload.eraLabel} onChange={(event) => setUpload({ ...upload, eraLabel: event.target.value })} placeholder="1910 – 1953" maxLength={60} />
+                      </label>
+                    ) : null}
+                    <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
+                      <span>{kindKey === 'extras' ? 'Texto alternativo (obligatorio)' : 'Texto alternativo (describe la foto)'}</span>
+                      <input value={upload.altText} onChange={(event) => setUpload({ ...upload, altText: event.target.value })} maxLength={255} />
+                    </label>
+                    <label className="admin-field">
+                      <span>Pie de foto</span>
+                      <input value={upload.caption} onChange={(event) => setUpload({ ...upload, caption: event.target.value })} maxLength={500} />
+                    </label>
+                    <label className="admin-field">
+                      <span>Crédito o fuente</span>
+                      <input value={upload.credit} onChange={(event) => setUpload({ ...upload, credit: event.target.value })} maxLength={255} />
+                    </label>
+                  </div>
+                  <div>
+                    <button type="button" className="admin-btn admin-btn--primary" onClick={uploadImage} disabled={busyImage}>
+                      {busyImage ? 'Subiendo…' : 'Subir foto'}
+                    </button>
+                  </div>
+                </AdminSection>
+              )}
 
               {form.images.length === 0 ? (
                 <p className="note">Esta ficha todavía no tiene fotos.</p>
@@ -612,26 +658,69 @@ export default function AdminLugarFicha({ kind: kindKey }) {
 
           {tab === 'publish' ? (
             <div className="admin-publish">
-              <h2>Publicación</h2>
-              <p className="note">Qué se ve en el sitio. Se guarda con «Guardar cambios».</p>
-              {kind.publication.map((item) => (
-                <label key={item.key} className="admin-field admin-field--check">
-                  <input type="checkbox" checked={Boolean(form[item.key])} onChange={(event) => set(item.key)(event.target.checked)} />
-                  <span>
-                    {item.label}
-                    <small className="admin-hint">{item.help}</small>
-                  </span>
-                </label>
-              ))}
-              <div className="admin-account__danger">
-                <div>
-                  <strong>Borrar esta ficha</strong>
-                  <p>Se borra con sus fotos y no se puede deshacer.</p>
-                </div>
-                <button type="button" className="admin-btn admin-btn--danger-outline" onClick={removePlace}>
-                  Borrar ficha
+              <h2>Estado de la ficha</h2>
+              <p>
+                {form.published
+                  ? kindKey === 'heritage'
+                    ? 'La ficha es visible en Historia › Patrimonio.'
+                    : 'El punto es visible en el mapa.'
+                  : kindKey === 'heritage'
+                    ? 'La ficha no está publicada y no aparece en Historia › Patrimonio.'
+                    : 'El punto no está publicado y no aparece en el mapa.'}
+              </p>
+              <div className="admin-publish__actions">
+                <button
+                  type="button"
+                  className={`admin-btn ${form.published ? 'admin-btn--danger' : 'admin-btn--primary'}`}
+                  onClick={() =>
+                    updatePublication(
+                      { published: !form.published },
+                      form.published ? 'Despublicado' : 'Publicado',
+                      form.published
+                        ? kindKey === 'heritage'
+                          ? 'La ficha dejó de verse en el sitio.'
+                          : 'El punto dejó de verse en el mapa.'
+                        : kindKey === 'heritage'
+                          ? 'La ficha ya se ve en el sitio.'
+                          : 'El punto ya se ve en el mapa.',
+                    )
+                  }
+                >
+                  {form.published ? 'Despublicar' : kindKey === 'heritage' ? 'Publicar ficha' : 'Publicar en el mapa'}
+                </button>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--danger-outline"
+                  onClick={removePlace}
+                  disabled={form.published}
+                  title={form.published ? 'Despublica la ficha para poder borrarla' : undefined}
+                >
+                  Borrar
                 </button>
               </div>
+              {form.published ? <p className="note">Para borrar la ficha, primero despublica.</p> : null}
+
+              {kindKey === 'heritage' ? (
+                <>
+                  <h2>Mapa</h2>
+                  <p>{form.showOnMap ? 'Su pin aparece en /mapa.' : 'Su pin no aparece en /mapa.'}</p>
+                  <div className="admin-publish__actions">
+                    <button
+                      type="button"
+                      className="admin-btn"
+                      onClick={() =>
+                        updatePublication(
+                          { showOnMap: !form.showOnMap },
+                          form.showOnMap ? 'Quitado del mapa' : 'Añadido al mapa',
+                          form.showOnMap ? 'El pin dejó de verse en /mapa.' : 'El pin ya se ve en /mapa.',
+                        )
+                      }
+                    >
+                      {form.showOnMap ? 'Quitar del mapa' : 'Mostrar en el mapa'}
+                    </button>
+                  </div>
+                </>
+              ) : null}
             </div>
           ) : null}
 

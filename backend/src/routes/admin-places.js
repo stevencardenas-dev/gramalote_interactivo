@@ -82,7 +82,9 @@ const KINDS = {
     entity: 'heritage',
     notFound: 'Lugar de patrimonio no encontrado',
     fields: HERITAGE_FIELDS,
-    roles: ['cover', 'historic', 'current', 'gallery', 'detail'],
+    // La ficha solo distingue portada y galería: las fotos de galería con época
+    // forman el carrusel de la ficha y el resto, la cuadrícula de fotos.
+    roles: ['cover', 'gallery'],
   },
   extras: {
     path: '/admin/extras',
@@ -92,7 +94,8 @@ const KINDS = {
     entity: 'extra',
     notFound: 'Extra no encontrado',
     fields: EXTRA_FIELDS,
-    roles: ['cover', 'current', 'gallery', 'detail'],
+    // Un extra no tiene ficha: su única foto es la portada del punto en el mapa.
+    roles: ['cover'],
   },
 }
 
@@ -237,7 +240,7 @@ async function loadImages(kind, id) {
             m.alt_text, m.caption, m.credit, m.storage_disk
      FROM ${kind.images} i JOIN media m ON m.id = i.media_id
      WHERE i.${kind.fk} = ?
-     ORDER BY FIELD(i.role, 'cover', 'historic', 'current', 'gallery', 'detail'), i.sort_order, i.id`,
+     ORDER BY FIELD(i.role, 'cover', 'gallery', 'historic', 'current', 'detail'), i.sort_order, i.id`,
     [id],
   )
   return rows.map((row) => ({
@@ -385,7 +388,17 @@ for (const kind of Object.values(KINDS)) {
       await findRow(kind, id)
       if (!req.file?.buffer) throw new ApiError(400, 'VALIDATION', 'Falta el archivo de la imagen')
 
-      const role = pickRole(kind, req.body?.role)
+      if (kind.entity === 'extra') {
+        const existing = await queryOne(`SELECT id FROM ${kind.images} WHERE ${kind.fk} = ? LIMIT 1`, [id])
+        if (existing) {
+          throw new ApiError(
+            400,
+            'VALIDATION',
+            'Los extras solo admiten una foto (la portada). Quita la actual para subir otra.',
+          )
+        }
+      }
+      const role = kind.entity === 'extra' ? 'cover' : pickRole(kind, req.body?.role)
       const eraLabel = kind.entity === 'heritage' ? shortText(req.body?.eraLabel, 'Época', 60) : null
       await assertQuota(req.file.size)
       await ensureDir(mediaRoot())

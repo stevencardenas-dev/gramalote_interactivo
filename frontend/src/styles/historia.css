@@ -945,6 +945,39 @@
   max-width: 100%;
 }
 
+/* Filtro de zona en móvil: un solo bloque redondeado con las zonas dentro. */
+.his-zone-filter {
+  position: relative;
+  display: none;
+}
+
+.his-zone-filter select {
+  width: 100%;
+  appearance: none;
+  padding: 12px 44px 12px 18px;
+  border: 1px solid #d9c4ae;
+  border-radius: var(--radius-pill);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.his-zone-filter select:focus-visible {
+  outline: 2px solid var(--c-coral);
+  outline-offset: 2px;
+}
+
+.his-zone-filter__chev {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--c-coral);
+}
+
 .his-tools {
   min-width: 0;
   max-width: 100%;
@@ -2436,10 +2469,13 @@
     align-items: stretch;
   }
 
-  /* Los cuatro filtros caben en dos filas: mejor que una tira cortada. */
+  /* En móvil las zonas no son una tira de chips: son un desplegable. */
   .his-filters {
-    flex-wrap: wrap;
-    gap: 8px;
+    display: none;
+  }
+
+  .his-zone-filter {
+    display: block;
   }
 
   .his-chip {
@@ -2462,32 +2498,58 @@
     align-self: flex-start;
   }
 
+  /* Tarjeta en móvil: número, título y etiquetas arriba de la foto; el resumen,
+     el estado y el enlace debajo. El cuerpo se disuelve en la rejilla para
+     poder subir su encabezado por encima de la imagen. */
   .his-row {
-    grid-template-columns: 74px minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
-      'num media'
-      'body body'
+      'num heading'
+      'media media'
+      'text text'
+      'status status'
       'cta cta';
-    gap: 14px;
-    padding-block: 20px;
+    align-items: start;
+    gap: 10px 12px;
+    padding-block: 22px;
   }
 
   .his-row__num {
     grid-area: num;
     font-size: 1.5rem;
+    line-height: 1.1;
   }
 
   .his-row__media {
     grid-area: media;
+    margin-top: 4px;
     aspect-ratio: 16 / 10;
   }
 
   .his-row__body {
-    grid-area: body;
+    display: contents;
   }
 
-  .his-row__body h3 {
-    margin-top: 8px;
+  .his-row__heading {
+    grid-area: heading;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 6px;
+  }
+
+  .his-row__heading h3 {
+    margin-top: 0;
+  }
+
+  .his-row__body p {
+    grid-area: text;
+    margin-top: 0;
+  }
+
+  .his-row .his-status {
+    grid-area: status;
+    margin-top: 0;
+    justify-self: start;
   }
 
   .his-row__cta {

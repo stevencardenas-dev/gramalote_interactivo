@@ -98,6 +98,19 @@ export default function HistoriaPatrimonio() {
           </Reveal>
 
           <Reveal className="his-explorer__bar" delay={80}>
+            {/* En móvil los filtros de zona son un solo desplegable redondeado. */}
+            <label className="his-zone-filter">
+              <span className="visually-hidden">Filtrar patrimonio por zona</span>
+              <select value={zone} onChange={(event) => setZone(event.target.value)}>
+                {ZONES.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+              <Icon name="chevron" size={16} className="his-zone-filter__chev" />
+            </label>
+
             <div className="his-filters" role="group" aria-label="Filtrar por zona">
               {ZONES.map((item) => (
                 <button
@@ -155,13 +168,15 @@ export default function HistoriaPatrimonio() {
                         <img src={item.image} alt="" loading="lazy" />
                       </Link>
                       <div className="his-row__body">
-                        <div className="his-tags">
-                          <span className={`his-tag his-tag--${ZONE_TONE[item.zone]}`}>{item.zoneLabel}</span>
-                          <span className="his-tag his-tag--cat">{item.category}</span>
+                        <div className="his-row__heading">
+                          <div className="his-tags">
+                            <span className={`his-tag his-tag--${ZONE_TONE[item.zone]}`}>{item.zoneLabel}</span>
+                            <span className="his-tag his-tag--cat">{item.category}</span>
+                          </div>
+                          <h3>
+                            <Link to={`/historia/patrimonio/${item.slug}`}>{item.name}</Link>
+                          </h3>
                         </div>
-                        <h3>
-                          <Link to={`/historia/patrimonio/${item.slug}`}>{item.name}</Link>
-                        </h3>
                         <p>{item.summary}</p>
                         <Status value={item.status} />
                       </div>

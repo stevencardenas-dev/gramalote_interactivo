@@ -16,6 +16,7 @@ html[data-admin-theme='light'] .admin-app {
   --a-ln: #e1d9ce;
   --a-tx: #1d1b18;
   --a-mu: #6a6157;
+  --a-track: rgba(29, 27, 24, 0.16);
   --a-ac: #2f6fe0;
   --a-ac-text: #1f56b8;
   --a-onac: #ffffff;

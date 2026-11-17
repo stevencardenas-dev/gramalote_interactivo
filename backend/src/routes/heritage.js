@@ -49,6 +49,10 @@ async function loadImages(ids) {
 function serialize(row, images = []) {
   const cover = images.find((image) => image.role === 'cover') ?? null
   const hasVisit = row.visit_location || row.visit_access || row.visit_recommendation
+  // En el panel todas las fotos que no son portada son «galería»: las que llevan
+  // época forman el carrusel de la ficha y el resto, la cuadrícula de fotos.
+  // «historic», «current» y «detail» se aceptan todavía por las filas viejas.
+  const isEra = (image) => Boolean(image.eraLabel) && ['gallery', 'historic'].includes(image.role)
   return {
     slug: row.slug,
     name: row.name,
@@ -81,9 +85,9 @@ function serialize(row, images = []) {
     imageAlt: cover?.alt ?? null,
     imageCaption: cover?.caption ?? null,
     eras: images
-      .filter((image) => image.role === 'historic')
+      .filter(isEra)
       .map((image) => ({ src: image.url, label: image.eraLabel, alt: image.alt })),
-    gallery: images.filter((image) => ['gallery', 'current', 'detail'].includes(image.role)).map((image) => image.url),
+    gallery: images.filter((image) => !isEra(image) && image.role !== 'cover').map((image) => image.url),
     images,
   }
 }
