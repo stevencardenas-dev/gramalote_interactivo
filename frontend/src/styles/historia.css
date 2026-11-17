@@ -296,9 +296,27 @@
 }
 
 .his-timeline__card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   padding: clamp(28px, 4vw, 56px);
   border-radius: 28px;
   background: #fdf3e8;
+}
+
+/* El encabezado de /sugerir usa el patrón en crema sobre café. Aquí se
+   invierte —café sobre crema— y baja la opacidad: es un uso distinto y no
+   debe competir con las tarjetas de la línea del tiempo. */
+.his-timeline__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--c-brown);
+  -webkit-mask: url('/brand/patron-hero.svg') center / cover no-repeat;
+  mask: url('/brand/patron-hero.svg') center / cover no-repeat;
+  opacity: 0.065;
+  pointer-events: none;
 }
 
 .his-timeline__head {
@@ -858,6 +876,29 @@
   margin-top: clamp(26px, 3vw, 40px);
 }
 
+.his-closing__start {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 18px;
+  border: 1px solid #e2c9b2;
+  border-radius: var(--radius-pill);
+  background: var(--c-white);
+  color: var(--c-brown);
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.his-closing__start:hover {
+  border-color: var(--c-coral);
+  background: #fff8f0;
+  transform: translateY(-1px);
+}
+
 .his-closing__hint {
   display: inline-flex;
   flex-wrap: wrap;
@@ -871,24 +912,80 @@
   line-height: 1.55;
 }
 
+.his-closing__hint--mobile {
+  display: none;
+}
+
 .his-closing__links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 10px 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  text-align: left;
 }
 
-.his-closing__links a {
+.his-closing__link {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 15px 18px;
+  border: 1px solid #e7d2bd;
+  border-radius: 18px;
+  background: var(--c-white);
+  color: var(--c-brown);
+  box-shadow: 0 8px 20px rgba(77, 42, 12, 0.06);
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.his-closing__link:hover {
+  transform: translateY(-2px);
+  border-color: var(--c-coral);
+  box-shadow: 0 14px 28px rgba(77, 42, 12, 0.12);
+}
+
+.his-closing__link:focus-visible {
+  outline: 2px solid var(--c-coral);
+  outline-offset: 3px;
+}
+
+.his-closing__link-kicker {
+  color: var(--c-coral-text);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.his-closing__link strong {
+  font-size: 0.96rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.his-closing__link-arrow {
   color: var(--c-coral);
-  font-size: 0.92rem;
-  font-weight: 600;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s ease;
+  font-weight: 700;
 }
 
-.his-closing__links a:hover {
-  border-bottom-color: currentColor;
+.his-closing__link--next {
+  border-color: var(--c-coral);
+  background: var(--c-coral);
+  color: var(--c-white);
+  box-shadow: 0 12px 26px rgba(219, 83, 25, 0.24);
+}
+
+.his-closing__link--next .his-closing__link-kicker,
+.his-closing__link--next .his-closing__link-arrow {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.his-closing__link--next:hover {
+  border-color: var(--c-coral-text);
+  background: var(--c-coral-text);
+}
+
+.his-closing__link--next:focus-visible {
+  outline-color: var(--c-brown);
 }
 
 .his-ficha__navlink .is-left,
@@ -955,17 +1052,23 @@
   width: 100%;
   appearance: none;
   padding: 12px 44px 12px 18px;
-  border: 1px solid #d9c4ae;
+  border: 1px solid var(--c-coral);
   border-radius: var(--radius-pill);
-  background: var(--c-white);
-  color: var(--c-ink);
+  background: var(--c-coral);
+  color: var(--c-white);
   font: inherit;
   font-size: 0.9375rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
+.his-zone-filter option {
+  background: var(--c-white);
+  color: var(--c-ink);
+}
+
 .his-zone-filter select:focus-visible {
-  outline: 2px solid var(--c-coral);
+  outline: 2px solid var(--c-brown);
   outline-offset: 2px;
 }
 
@@ -975,7 +1078,7 @@
   right: 18px;
   transform: translateY(-50%);
   pointer-events: none;
-  color: var(--c-coral);
+  color: var(--c-white);
 }
 
 .his-tools {
@@ -1457,9 +1560,29 @@
   gap: clamp(18px, 2.4vw, 28px);
 }
 
+.his-mapview__map {
+  position: relative;
+}
+
 .his-mapview__map .hmap__canvas {
   min-height: 470px;
   aspect-ratio: 1000 / 700;
+}
+
+/* Botón y hoja de la lista: solo aparecen en móvil (ver media query). */
+.hmap__action {
+  position: absolute;
+  right: 10px;
+  bottom: 38px;
+  z-index: 5;
+}
+
+.his-mapview__list-btn {
+  display: none;
+}
+
+.his-mapview__list--sheet {
+  display: none;
 }
 
 .his-mapview__panel {
@@ -2333,44 +2456,95 @@
     font-size: 0.72rem;
   }
 
-  .his-tl::before {
-    left: 7px;
-    transform: none;
+  /* Línea del tiempo horizontal: una tarjeta por hito y todas visibles. */
+  .his-tl {
+    display: flex;
+    gap: 14px;
+    margin: 22px -16px 0;
+    padding: 4px 16px 18px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    scrollbar-width: none;
   }
 
-  .his-tl__row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-    padding-block: 18px 18px;
-    padding-left: 26px;
+  .his-tl::-webkit-scrollbar {
+    display: none;
+  }
+
+  .his-tl::before {
+    display: none;
+  }
+
+  .his-tl__row,
+  .his-tl__row--reverse {
+    flex: 0 0 min(82vw, 310px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    min-height: 430px;
+    padding: 14px;
+    border-radius: 20px;
+    background: var(--c-white);
+    box-shadow: 0 14px 30px rgba(77, 42, 12, 0.1);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   .his-tl__body,
-  .his-tl__row--reverse .his-tl__body,
-  .his-tl__media,
-  .his-tl__row--reverse .his-tl__media {
-    grid-column: 1;
-    grid-row: auto;
-  }
-
   .his-tl__row--reverse .his-tl__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    grid-column: auto;
+    grid-row: auto;
     text-align: left;
   }
 
-  .his-tl__dot {
-    top: 22px;
-    left: 7px;
-    width: 11px;
-    height: 11px;
-    transform: translate(-50%, 0);
+  /* Sin foto, el texto se centra en el alto de la tarjeta. */
+  .his-tl__row--text {
+    justify-content: center;
   }
 
-  .his-tl__media {
+  .his-tl__row--text .his-tl__body {
+    flex: 0 1 auto;
+  }
+
+  .his-tl__media,
+  .his-tl__row--reverse .his-tl__media {
     order: -1;
+    width: 100%;
+    flex: none;
+    grid-column: auto;
+    grid-row: auto;
+    border-radius: 14px;
   }
 
   .his-tl__media img {
     aspect-ratio: 16 / 10;
+  }
+
+  .his-tl__dot {
+    display: none;
+  }
+
+  .his-tl__date {
+    margin-bottom: 6px;
+    padding: 5px 12px;
+    font-size: 0.7rem;
+  }
+
+  .his-tl__body h3 {
+    font-size: 1.18rem;
+  }
+
+  .his-tl__body p {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    line-height: 1.55;
   }
 
   .his-explore__grid {
@@ -2456,6 +2630,22 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .his-closing__start {
+    width: 100%;
+  }
+
+  .his-closing__hint--desktop {
+    display: none;
+  }
+
+  .his-closing__hint--mobile {
+    display: inline-flex;
+  }
+
+  .his-closing__links {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .his-closing__next {
     text-align: left;
   }
@@ -2464,9 +2654,33 @@
     justify-content: flex-start;
   }
 
+  /* Zonas y conmutador comparten la primera fila; la búsqueda va debajo. */
   .his-explorer__bar {
-    flex-direction: column;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 12px;
+  }
+
+  .his-zone-filter {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  /* La fila comparte espacio con el conmutador: el texto de la zona debe
+     caber sin recortarse en pantallas de 360 px. */
+  .his-zone-filter select {
+    padding: 12px 34px 12px 14px;
+    font-size: 0.84rem;
+  }
+
+  .his-zone-filter__chev {
+    right: 12px;
+  }
+
+  .his-switch button {
+    padding: 8px 12px;
+    font-size: 0.82rem;
   }
 
   /* En móvil las zonas no son una tira de chips: son un desplegable. */
@@ -2485,17 +2699,20 @@
   }
 
   .his-tools {
-    flex-direction: column;
-    align-items: stretch;
+    display: contents;
   }
 
   .his-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
     min-width: 0;
     width: 100%;
   }
 
   .his-switch {
-    align-self: flex-start;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
   }
 
   /* Tarjeta en móvil: número, título y etiquetas arriba de la foto; el resumen,
@@ -2602,7 +2819,8 @@
   }
 
   .his-mapview__map .hmap__canvas {
-    aspect-ratio: 1 / 0.95;
+    height: min(56svh, 420px);
+    aspect-ratio: auto;
   }
 
   .hmap__legend-title {
@@ -2626,6 +2844,80 @@
 
   .his-mapview__map .hmap__canvas {
     min-height: 0;
+  }
+
+  .his-mapview__map {
+    overflow: hidden;
+  }
+
+  .his-mapview__list-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--c-coral);
+    color: var(--c-white);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(20, 20, 20, 0.24);
+    cursor: pointer;
+  }
+
+  /* La lista del lateral se reemplaza por la hoja que cubre el mapa. */
+  .his-mapview__panel .his-mapview__list {
+    display: none;
+  }
+
+  .his-mapview__list--sheet {
+    position: absolute;
+    inset: 0;
+    z-index: 9;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: #fdf3e8;
+  }
+
+  .his-mapview__list--sheet[hidden] {
+    display: none;
+  }
+
+  .his-mapview__list--sheet .his-mapview__list-head {
+    position: relative;
+    padding-right: 42px;
+  }
+
+  .his-mapview__list--sheet ol {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .his-mapview__list--sheet .his-mapview__sheet-close {
+    position: absolute;
+    top: -4px;
+    right: 0;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #e7d2bd;
+    border-radius: 50%;
+    background: var(--c-white);
+    color: var(--c-brown);
+    cursor: pointer;
+  }
+
+  .his-mapview__list--sheet .his-mapview__sheet-close svg {
+    color: currentColor;
+    opacity: 1;
   }
 
   .his-mapview__panel {
@@ -2723,7 +3015,6 @@
     display: none;
   }
 
-  .his-tl__row,
   .his-event {
     padding-left: 0;
   }
@@ -3028,6 +3319,8 @@ kbd {
   }
 
   .his-step-counter.is-visible {
+    right: 70px;
+    bottom: 93px;
     display: inline-flex;
   }
 
@@ -3245,9 +3538,16 @@ kbd {
 }
 
 @media (max-width: 980px) {
-  /* Un deslizamiento corto basta para pasar al siguiente fragmento. */
+  /* Un deslizamiento corto basta para pasar al siguiente fragmento, pero al
+     llegar al primero se puede seguir subiendo hasta la barra de secciones
+     (el encaje «proximity» no obliga a quedarse en el acontecimiento). */
   html.his-deck {
-    scroll-snap-type: y mandatory;
+    scroll-snap-type: y proximity;
+  }
+
+  .his-deck .his-nav {
+    scroll-snap-align: start;
+    scroll-margin-top: var(--header-h);
   }
 
   /* La etapa ya no ocupa su propia pantalla. */
@@ -3308,8 +3608,8 @@ kbd {
   .his-next {
     --p: 0;
     position: fixed;
-    left: 14px;
-    bottom: 18px;
+    right: 16px;
+    bottom: 86px;
     z-index: 40;
     display: grid;
     width: 46px;

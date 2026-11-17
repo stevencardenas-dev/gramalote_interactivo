@@ -33,6 +33,7 @@ export default function HistoriaPatrimonio() {
   const [view, setView] = useState('listado')
   const [expanded, setExpanded] = useState(false)
   const [selected, setSelected] = useState(heritage[0]?.slug ?? '')
+  const [listOpen, setListOpen] = useState(false)
   const listaRef = useRef(null)
 
   const counts = useMemo(() => {
@@ -71,6 +72,28 @@ export default function HistoriaPatrimonio() {
       behavior: reducido ? 'auto' : 'smooth',
     })
   }, [current?.slug, filtered.length, view])
+
+  // La lista de lugares del mapa se abre como una hoja sobre el mapa en móvil.
+  // Al elegir un punto se cierra y el mapa lo centra; la ficha queda debajo.
+  useEffect(() => {
+    if (!listOpen) return undefined
+    const cerrar = (event) => {
+      if (event.key === 'Escape') setListOpen(false)
+    }
+    document.addEventListener('keydown', cerrar)
+    return () => document.removeEventListener('keydown', cerrar)
+  }, [listOpen])
+
+  const pickPlace = (slug) => {
+    setSelected(slug)
+    setListOpen(false)
+  }
+
+  const changeView = (next) => {
+    setView(next)
+    setListOpen(false)
+  }
+
   const filtering = zone !== 'todas' || query.trim().length > 0
   const visible = expanded || filtering ? filtered : filtered.slice(0, 3)
 
@@ -90,12 +113,14 @@ export default function HistoriaPatrimonio() {
 
       <section className="section his-patrimonio">
         <div className="container">
-          <Reveal className="his-explorer__head">
-            <p className="eyebrow">Explorar patrimonio</p>
-            <p className="his-explorer__lead">
-              {filtered.length} de {heritage.length} lugares · filtra por zona o busca por nombre y categoría.
-            </p>
-          </Reveal>
+          {view === 'listado' ? (
+            <Reveal className="his-explorer__head">
+              <p className="eyebrow">Explorar patrimonio</p>
+              <p className="his-explorer__lead">
+                {filtered.length} de {heritage.length} lugares · filtra por zona o busca por nombre y categoría.
+              </p>
+            </Reveal>
+          ) : null}
 
           <Reveal className="his-explorer__bar" delay={80}>
             {/* En móvil los filtros de zona son un solo desplegable redondeado. */}
@@ -140,7 +165,7 @@ export default function HistoriaPatrimonio() {
                 <button
                   type="button"
                   className={view === 'listado' ? 'is-active' : ''}
-                  onClick={() => setView('listado')}
+                  onClick={() => changeView('listado')}
                   aria-pressed={view === 'listado'}
                 >
                   Listado
@@ -148,7 +173,7 @@ export default function HistoriaPatrimonio() {
                 <button
                   type="button"
                   className={view === 'mapa' ? 'is-active' : ''}
-                  onClick={() => setView('mapa')}
+                  onClick={() => changeView('mapa')}
                   aria-pressed={view === 'mapa'}
                 >
                   Mapa
@@ -211,13 +236,13 @@ export default function HistoriaPatrimonio() {
                     <h2>Patrimonio en el mapa</h2>
                     <p>Explora la ubicación de los 13 patrimonios en el territorio de Gramalote.</p>
                   </div>
-                  <button type="button" className="btn btn--primary" onClick={() => setView('mapa')}>
+                  <button type="button" className="btn btn--primary" onClick={() => changeView('mapa')}>
                     Explorar en el mapa
                     <Icon name="arrow" className="btn__icon" />
                   </button>
                 </div>
                 <Suspense fallback={<p className="note">Cargando mapa…</p>}>
-                  <HeritageMap items={heritage} interactive={false} onSelect={() => setView('mapa')} />
+                  <HeritageMap items={heritage} interactive={false} onSelect={() => changeView('mapa')} />
                 </Suspense>
               </Reveal>
             </>
@@ -228,9 +253,60 @@ export default function HistoriaPatrimonio() {
                   <HeritageMap
                     items={filtered}
                     selectedId={current?.slug ?? ''}
-                    onSelect={(item) => setSelected(item.slug)}
+                    onSelect={(item) => pickPlace(item.slug)}
+                    showHint={false}
+                    action={
+                      <button
+                        type="button"
+                        className="his-mapview__list-btn"
+                        onClick={() => setListOpen(true)}
+                        aria-expanded={listOpen}
+                        aria-controls="his-mapview-list"
+                      >
+                        Lista lugares
+                      </button>
+                    }
                   />
                 </Suspense>
+
+                <div
+                  className="his-mapview__list his-mapview__list--sheet"
+                  id="his-mapview-list"
+                  role="dialog"
+                  aria-label="Lista de lugares"
+                  hidden={!listOpen}
+                >
+                  <div className="his-mapview__list-head">
+                    <p className="eyebrow">Explora lugares</p>
+                    <span className="his-mapview__count">
+                      {filtered.length} {filtered.length === 1 ? 'lugar' : 'lugares'}
+                    </span>
+                    <button
+                      type="button"
+                      className="his-mapview__sheet-close"
+                      onClick={() => setListOpen(false)}
+                      aria-label="Cerrar lista"
+                    >
+                      <Icon name="close" size={20} />
+                    </button>
+                  </div>
+                  <ol>
+                    {filtered.map((item) => (
+                      <li key={item.slug}>
+                        <button
+                          type="button"
+                          className={item.slug === current?.slug ? 'is-active' : ''}
+                          onClick={() => pickPlace(item.slug)}
+                        >
+                          <span>
+                            {item.n}. {item.name}
+                          </span>
+                          <Icon name="pin" size={18} />
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
               </Reveal>
 
               <aside className="his-mapview__panel">
@@ -270,7 +346,7 @@ export default function HistoriaPatrimonio() {
                         <button
                           type="button"
                           className={item.slug === current?.slug ? 'is-active' : ''}
-                          onClick={() => setSelected(item.slug)}
+                          onClick={() => pickPlace(item.slug)}
                         >
                           <span>
                             {item.n}. {item.name}
@@ -283,7 +359,7 @@ export default function HistoriaPatrimonio() {
                 </div>
               </aside>
 
-              <button type="button" className="his-mapview__back" onClick={() => setView('listado')}>
+              <button type="button" className="his-mapview__back" onClick={() => changeView('listado')}>
                 <Icon name="chevron" className="is-left" />
                 Volver al listado
               </button>

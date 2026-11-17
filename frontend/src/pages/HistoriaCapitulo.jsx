@@ -9,11 +9,11 @@ import { usePageTitle } from '../lib/usePageTitle.js'
 
 // Navegación del capítulo:
 //   · escritorio: la rueda y las flechas del teclado pasan de un bloque al
-//     siguiente (cada bloque ocupa una pantalla); al pasar del primero o del
-//     último acontecimiento se cambia de capítulo.
+//     siguiente (cada bloque ocupa una pantalla). En los extremos no se fuerza
+//     el cambio de capítulo: para eso están los botones del cierre.
 //   · móvil: un deslizamiento lateral cambia de capítulo.
-// En ambos casos una pista breve explica qué hacer, y el cierre repite la
-// indicación en lugar de ofrecer botones.
+// El cierre explica los atajos de cada modo y ofrece botones para volver al
+// inicio y para cambiar de capítulo.
 const SIN_MOVIMIENTO = '(prefers-reduced-motion: reduce)'
 const TECLAS = {
   ArrowRight: 1,
@@ -94,14 +94,9 @@ export default function HistoriaCapitulo() {
       }
 
       const destino = actual + salto
-      if (destino < 0) {
-        irACapitulo('prev')
-        return
-      }
-      if (destino >= bloques.length) {
-        irACapitulo('next')
-        return
-      }
+      // Al llegar al primero o al último no se salta de capítulo: el cierre
+      // ofrece los botones y el inicio tiene su propio regreso.
+      if (destino < 0 || destino >= bloques.length) return
 
       bloques[destino].scrollIntoView({
         behavior: esReducido() ? 'auto' : 'smooth',
@@ -110,7 +105,7 @@ export default function HistoriaCapitulo() {
         block: 'start',
       })
     },
-    [irACapitulo],
+    [],
   )
 
   // Pista de uso: aparece al entrar y desaparece con la primera acción.
@@ -472,35 +467,61 @@ export default function HistoriaCapitulo() {
             <p>{chapter.closing.text}</p>
 
             <div className="his-closing__nav">
-              <p className="his-closing__hint">
+              <a className="his-closing__start" href="#etapa-1">
+                <Icon name="arrow-up" size={18} />
+                Volver al inicio del capítulo
+              </a>
+
+              <p className="his-closing__hint his-closing__hint--desktop">
                 <kbd>←</kbd>
                 <kbd>→</kbd>
-                <span>
-                  Pasa al {next ? 'siguiente' : 'anterior'} capítulo con las flechas del
-                  teclado o deslizando la pantalla
-                </span>
+                <span>recorren los acontecimientos. Para cambiar de capítulo, usa los botones.</span>
+              </p>
+              <p className="his-closing__hint his-closing__hint--mobile">
+                <span>Desliza hacia arriba para releer el capítulo o usa los botones para cambiar de capítulo.</span>
               </p>
 
-              <p className="his-closing__links">
+              <div className="his-closing__links">
                 {previous ? (
-                  <Link to={`/historia/recorrido/${previous.slug}`}>
-                    <span aria-hidden="true">←</span> Capítulo {previous.number} · {previous.title}
+                  <Link
+                    className="his-closing__link his-closing__link--prev"
+                    to={`/historia/recorrido/${previous.slug}`}
+                  >
+                    <span className="his-closing__link-kicker">Capítulo {previous.number}</span>
+                    <strong>
+                      <span className="his-closing__link-arrow" aria-hidden="true">←</span>{' '}
+                      {previous.title}
+                    </strong>
                   </Link>
                 ) : (
-                  <Link to="/historia">
-                    <span aria-hidden="true">←</span> Conocer historia
+                  <Link className="his-closing__link his-closing__link--prev" to="/historia">
+                    <span className="his-closing__link-kicker">Volver</span>
+                    <strong>
+                      <span className="his-closing__link-arrow" aria-hidden="true">←</span> Conocer historia
+                    </strong>
                   </Link>
                 )}
                 {next ? (
-                  <Link to={`/historia/recorrido/${next.slug}`}>
-                    Siguiente: {next.title} <span aria-hidden="true">→</span>
+                  <Link
+                    className="his-closing__link his-closing__link--next"
+                    to={`/historia/recorrido/${next.slug}`}
+                  >
+                    <span className="his-closing__link-kicker">Capítulo {next.number}</span>
+                    <strong>
+                      {next.title}{' '}
+                      <span className="his-closing__link-arrow" aria-hidden="true">→</span>
+                    </strong>
                   </Link>
                 ) : (
-                  <Link to="/historia/patrimonio">
-                    Explorar patrimonio <span aria-hidden="true">→</span>
+                  <Link className="his-closing__link his-closing__link--next" to="/historia/patrimonio">
+                    <span className="his-closing__link-kicker">Siguiente parada</span>
+                    <strong>
+                      Explorar patrimonio{' '}
+                      <span className="his-closing__link-arrow" aria-hidden="true">→</span>
+                    </strong>
                   </Link>
                 )}
-              </p>
+              </div>
             </div>
 
             {next ? null : (

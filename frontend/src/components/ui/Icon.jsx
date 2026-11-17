@@ -8,6 +8,7 @@ const paths = {
   user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-8 9a8 8 0 0 1 16 0',
   lock: 'M7 10V7a5 5 0 0 1 10 0v3M5 10h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Zm7 4v3',
   arrow: 'M5 12h14M13 6l6 6-6 6',
+  'arrow-up': 'M12 19V5M6 11l6-6 6 6',
   menu: 'M4 7h16M4 12h16M4 17h16',
   close: 'M6 6l12 12M18 6 6 18',
   chevron: 'm6 9 6 6 6-6',

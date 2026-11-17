@@ -99,6 +99,8 @@ export default function HeritageMap({
   onSelect,
   interactive = true,
   showLegend = true,
+  showHint = true,
+  action = null,
   className = '',
 }) {
   const containerRef = useRef(null)
@@ -281,6 +283,7 @@ export default function HeritageMap({
             role="region"
             aria-label="Mapa de los patrimonios de Gramalote"
           />
+          {action ? <div className="hmap__action">{action}</div> : null}
         </div>
 
         {showLegend ? (
@@ -296,13 +299,15 @@ export default function HeritageMap({
           </div>
         ) : null}
       </div>
-      <p className="hmap__hint">
-        {interactive ? 'Toca cada punto para ver el patrimonio de esa zona.' : 'Toca el mapa para explorarlo.'} Las zonas
-        sombreadas son aproximadas.
-        {unlocated.length
-          ? ` Sin ubicación todavía: ${unlocated.map((item) => `${item.n}. ${item.name}`).join(', ')}.`
-          : ''}
-      </p>
+      {showHint ? (
+        <p className="hmap__hint">
+          {interactive ? 'Toca cada punto para ver el patrimonio de esa zona.' : 'Toca el mapa para explorarlo.'} Las zonas
+          sombreadas son aproximadas.
+          {unlocated.length
+            ? ` Sin ubicación todavía: ${unlocated.map((item) => `${item.n}. ${item.name}`).join(', ')}.`
+            : ''}
+        </p>
+      ) : null}
     </div>
   )
 }

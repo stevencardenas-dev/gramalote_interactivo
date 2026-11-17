@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '../components/ui/Icon.jsx'
 import Button from '../components/ui/Button.jsx'
@@ -33,7 +33,18 @@ function TimelineRow({ event, index }) {
 export default function Historia() {
   usePageTitle('Conocer historia')
   const [expanded, setExpanded] = useState(false)
+  // En móvil la línea del tiempo es un carrusel horizontal con los 16 hitos:
+  // no se resume ni se esconde detrás de «Ver completa».
+  const [compact, setCompact] = useState(() => window.matchMedia('(max-width: 760px)').matches)
   const resumen = timeline.filter((event) => timelineResumen.includes(event.n))
+  const visibles = compact || expanded ? timeline : resumen
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 760px)')
+    const update = () => setCompact(query.matches)
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
 
   return (
     <>
@@ -122,25 +133,27 @@ export default function Historia() {
             </div>
 
             <div className={`his-timeline__body${expanded ? ' is-expanded' : ''}`} id="linea-del-tiempo">
-              <ol className="his-tl">
-                {(expanded ? timeline : resumen).map((event, index) => (
+              <ol className="his-tl" aria-label="Línea del tiempo de Gramalote">
+                {visibles.map((event, index) => (
                   <TimelineRow key={event.n} event={event} index={index} />
                 ))}
               </ol>
             </div>
 
-            <div className="his-timeline__foot">
-              <button
-                type="button"
-                className="his-toggle"
-                onClick={() => setExpanded((value) => !value)}
-                aria-expanded={expanded}
-                aria-controls="linea-del-tiempo"
-              >
-                {expanded ? 'Ver menos' : 'Ver línea de tiempo completa'}
-                <Icon name={expanded ? 'chevron' : 'arrow'} className={expanded ? 'is-up' : ''} />
-              </button>
-            </div>
+            {compact ? null : (
+              <div className="his-timeline__foot">
+                <button
+                  type="button"
+                  className="his-toggle"
+                  onClick={() => setExpanded((value) => !value)}
+                  aria-expanded={expanded}
+                  aria-controls="linea-del-tiempo"
+                >
+                  {expanded ? 'Ver menos' : 'Ver línea de tiempo completa'}
+                  <Icon name={expanded ? 'chevron' : 'arrow'} className={expanded ? 'is-up' : ''} />
+                </button>
+              </div>
+            )}
           </Reveal>
         </div>
       </section>
