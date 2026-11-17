@@ -3155,3 +3155,10 @@ kbd {
   font-size: var(--fs-sm);
   line-height: 1.5;
 }
+
+.his-ficha__sources {
+  margin-top: 6px;
+  color: var(--c-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+}

@@ -28,6 +28,7 @@ import AdminCorreo from './pages/AdminCorreo.jsx'
 import AdminSugerencias from './pages/AdminSugerencias.jsx'
 import AdminExtras from './pages/AdminExtras.jsx'
 import AdminPatrimonio from './pages/AdminPatrimonio.jsx'
+import AdminLugarFicha from './pages/AdminLugarFicha.jsx'
 import Admin from './pages/Admin.jsx'
 import AdminUsuarios from './pages/AdminUsuarios.jsx'
 import AdminPaginas from './pages/AdminPaginas.jsx'
@@ -118,6 +119,22 @@ export default function App() {
           element={
             <RequireAdmin>
               <AdminPatrimonio />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/lugares/patrimonio/:id"
+          element={
+            <RequireAdmin>
+              <AdminLugarFicha kind="heritage" />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/lugares/extras/:id"
+          element={
+            <RequireAdmin>
+              <AdminLugarFicha kind="extras" />
             </RequireAdmin>
           }
         />

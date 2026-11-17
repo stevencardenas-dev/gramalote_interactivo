@@ -13,7 +13,6 @@ import { buildMapStyle } from '../../lib/mapStyle.js'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import '../../styles/mapa.css'
 import { getJson } from '../../lib/api.js'
-import { heritageFichaFor } from '../../lib/heritageFicha.js'
 import { mapIconUrl, resolveMapIcon } from '../../data/mapIcons.js'
 import { StarsRow } from './RatingStars.jsx'
 import { formatAverage, formatVotes } from '../../lib/ratingsApi.js'
@@ -78,7 +77,6 @@ function toPlaces(data) {
   return items
     .filter((item) => isValidCoordinates(item.coordinates))
     .map((item) => {
-      const ficha = item.kind === 'heritage' ? heritageFichaFor(item.slug) : null
       const isExtra = item.kind === 'extra'
       const isHeritage = item.kind === 'heritage'
       const group = isExtra
@@ -105,8 +103,8 @@ function toPlaces(data) {
           type: item.type,
           group,
         }),
-        photo: item.cover?.url ?? ficha?.image ?? null,
-        fichaUrl: ficha ? `/historia/patrimonio/${ficha.slug}` : null,
+        photo: item.cover?.url ?? null,
+        fichaUrl: isHeritage ? `/historia/patrimonio/${item.slug}` : null,
         openNow: item.openNow ?? null,
         rating: item.rating ?? { average: 0, votes: 0 },
         mapsUrl: item.mapsUrl ?? null,
@@ -481,6 +479,7 @@ export default function LiveMap({
               {place.categoryName}
               {place.zoneName ? ` · ${place.zoneName}` : ''}
             </span>
+            {place.summary ? <span className="mapa-ficha__nota">{place.summary}</span> : null}
             {place.kind === 'heritage' ? null : (
               <span className="mapa-ficha__nota">Punto complementario · sin ficha</span>
             )}

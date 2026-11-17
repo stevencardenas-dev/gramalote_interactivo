@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import Pagination from '../components/admin/Pagination.jsx'
@@ -55,6 +56,7 @@ function normalize(value) {
 }
 
 export default function AdminExtras() {
+  const navigate = useNavigate()
   const [items, setItems] = useState(null)
   const [tab, setTab] = useState('published')
   const [query, setQuery] = useState('')
@@ -108,19 +110,9 @@ export default function AdminExtras() {
     setError('')
   }
 
+  // Cada fila abre su ficha completa (datos, imágenes, publicación e historial).
   function startEdit(item) {
-    setEditing(item.id)
-    setForm({
-      name: item.name,
-      category: item.category,
-      zone: item.zone ?? '',
-      latitude: String(item.latitude ?? ''),
-      longitude: String(item.longitude ?? ''),
-      mapsUrl: item.mapsUrl ?? '',
-      mapIcon: item.mapIcon ?? 'parque',
-      published: item.published,
-    })
-    setError('')
+    navigate(`/admin/lugares/extras/${item.id}`)
   }
 
   const set = (key) => (event) => {
@@ -137,6 +129,7 @@ export default function AdminExtras() {
         const created = await apiRequest('/admin/extras', { method: 'POST', body: form })
         setItems((current) => [...(current ?? []), created])
         setEditing(null)
+        navigate(`/admin/lugares/extras/${created.id}`)
         notify('ok', 'Extra creado', `${created.name} ya aparece en el panel.`)
       } else {
         const updated = await apiRequest(`/admin/extras/${editing}`, { method: 'PATCH', body: form })

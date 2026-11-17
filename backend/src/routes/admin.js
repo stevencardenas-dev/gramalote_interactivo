@@ -105,6 +105,17 @@ function time(value) {
   return raw.length === 5 ? `${raw}:00` : raw
 }
 
+// La columna JSON llega ya como objeto o como texto según el driver.
+function parseChanges(value) {
+  if (!value) return null
+  if (typeof value === 'object') return value
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
+}
+
 async function recordAudit(connection, req, { action, entityType, entityId, changes }) {
   await connection.query(
     `INSERT INTO audit_log (admin_user_id, action, entity_type, entity_id, changes, ip_address)
@@ -275,12 +286,13 @@ router.get(
           [id],
         ),
         query(
-          `SELECT a.id, a.action, a.entity_type, a.entity_id, a.created_at, u.name AS user_name
+          `SELECT a.id, a.action, a.entity_type, a.entity_id, a.changes, a.created_at, u.name AS user_name
            FROM audit_log a LEFT JOIN admin_users u ON u.id = a.admin_user_id
-           WHERE a.entity_type IN ('establishment', 'establishment_image', 'media')
-             AND (a.entity_id = ? OR (a.entity_type = 'media'))
-           ORDER BY a.id DESC LIMIT 20`,
-          [id],
+           WHERE (a.entity_type = 'establishment' AND a.entity_id = ?)
+              OR (a.entity_type = 'media'
+                  AND a.entity_id IN (SELECT media_id FROM establishment_images WHERE establishment_id = ?))
+           ORDER BY a.id DESC LIMIT 60`,
+          [id, id],
         ),
       ])
 
@@ -359,6 +371,7 @@ router.get(
           action: entry.action,
           entityType: entry.entity_type,
           entityId: toNumber(entry.entity_id),
+          changes: parseChanges(entry.changes),
           userName: entry.user_name ?? null,
           createdAt: entry.created_at,
         })),
@@ -530,7 +543,13 @@ router.patch(
         ],
       )
 
+      const childrenBefore = await snapshotChildren(connection, id)
       await replaceChildren(connection, id, body)
+      const childrenAfter = await snapshotChildren(connection, id)
+      for (const group of Object.keys(childrenAfter)) {
+        const { added, removed } = diffList(childrenBefore[group], childrenAfter[group])
+        if (added.length || removed.length) changes[`list:${group}`] = { added, removed }
+      }
 
       const published = Boolean(current.is_published)
       await connection.query(
@@ -548,12 +567,16 @@ router.patch(
         ],
       )
 
-      await recordAudit(connection, req, {
-        action: 'update',
-        entityType: 'establishment',
-        entityId: id,
-        changes,
-      })
+      // Solo se registra en el historial cuando de verdad cambió algo; guardar sin
+      // modificar nada no deja rastro.
+      if (Object.keys(changes).length > 0) {
+        await recordAudit(connection, req, {
+          action: 'update',
+          entityType: 'establishment',
+          entityId: id,
+          changes,
+        })
+      }
 
       const [updated] = await connection.query(
         'SELECT updated_at FROM establishments WHERE id = ?',
@@ -565,6 +588,89 @@ router.patch(
     res.json({ data: { id, updatedAt } })
   }),
 )
+
+const WEEKDAYS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+
+function hhmm(value) {
+  return value ? String(value).slice(0, 5) : ''
+}
+
+// Foto de lo que cuelga de la ficha (servicios, horarios, productos…) como listas
+// de textos legibles, para poder decir qué se agregó o quitó al guardar.
+async function snapshotChildren(connection, id) {
+  const rows = async (sql) => (await connection.query(sql, [id]))[0]
+
+  const features = await rows('SELECT title FROM establishment_features WHERE establishment_id = ? ORDER BY sort_order')
+  const products = await rows(
+    'SELECT name, price_cop FROM establishment_products WHERE establishment_id = ? ORDER BY sort_order',
+  )
+  const services = await rows(
+    `SELECT s.name FROM establishment_services es JOIN services s ON s.id = es.service_id
+     WHERE es.establishment_id = ? ORDER BY s.name`,
+  )
+  const payments = await rows(
+    `SELECT p.name FROM establishment_payments ep JOIN payment_methods p ON p.id = ep.payment_method_id
+     WHERE ep.establishment_id = ? ORDER BY p.name`,
+  )
+  const social = await rows(
+    'SELECT platform, url FROM establishment_social_links WHERE establishment_id = ? ORDER BY sort_order',
+  )
+  const hours = await rows(
+    `SELECT day_of_week, opens_at, closes_at, is_closed, note FROM opening_hours
+     WHERE establishment_id = ? ORDER BY day_of_week, sort_order`,
+  )
+  const exceptions = await rows(
+    `SELECT exception_date, is_closed, opens_at, closes_at, note FROM opening_hours_exceptions
+     WHERE establishment_id = ? ORDER BY exception_date`,
+  )
+  const related = await rows(
+    `SELECT e.name FROM establishment_relations r JOIN establishments e ON e.id = r.related_establishment_id
+     WHERE r.establishment_id = ? ORDER BY r.sort_order`,
+  )
+
+  const date = (value) => (value instanceof Date ? value.toISOString().slice(0, 10) : String(value ?? '').slice(0, 10))
+
+  return {
+    features: features.map((row) => row.title),
+    products: products.map((row) =>
+      row.price_cop === null || row.price_cop === undefined
+        ? row.name
+        : `${row.name} ($ ${Number(row.price_cop).toLocaleString('es-CO')})`,
+    ),
+    services: services.map((row) => row.name),
+    payments: payments.map((row) => row.name),
+    social: social.map((row) => `${row.platform}: ${row.url}`),
+    hours: hours.map(
+      (row) =>
+        `${WEEKDAYS[row.day_of_week] ?? row.day_of_week}: ${
+          row.is_closed ? 'cerrado' : `${hhmm(row.opens_at)}–${hhmm(row.closes_at)}`
+        }${row.note ? ` (${row.note})` : ''}`,
+    ),
+    exceptions: exceptions.map(
+      (row) =>
+        `${date(row.exception_date)}: ${row.is_closed ? 'cerrado' : `${hhmm(row.opens_at)}–${hhmm(row.closes_at)}`}${
+          row.note ? ` (${row.note})` : ''
+        }`,
+    ),
+    related: related.map((row) => row.name),
+  }
+}
+
+// Qué se agregó y qué se quitó entre dos listas (cuenta repetidos).
+function diffList(before, after) {
+  const count = (list) => list.reduce((map, item) => map.set(item, (map.get(item) ?? 0) + 1), new Map())
+  const left = count(before)
+  const right = count(after)
+  const added = []
+  const removed = []
+  for (const [item, total] of right) {
+    for (let i = 0; i < total - (left.get(item) ?? 0); i += 1) added.push(item)
+  }
+  for (const [item, total] of left) {
+    for (let i = 0; i < total - (right.get(item) ?? 0); i += 1) removed.push(item)
+  }
+  return { added, removed }
+}
 
 async function replaceChildren(connection, id, body) {
   if (Array.isArray(body.features)) {
