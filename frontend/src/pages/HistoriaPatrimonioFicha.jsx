@@ -62,7 +62,7 @@ export default function HistoriaPatrimonioFicha() {
             <div className="his-ficha__main">
               <Reveal className="his-ficha__head">
                 <div className="his-tags">
-                  <span className={`his-tag his-tag--${ZONE_TONE[site.zone]}`}>{site.zoneLabel}</span>
+                  <span className={`his-tag his-tag--${ZONE_TONE[site.zone]}`}>{site.zoneTag ?? site.zoneLabel}</span>
                   <span className="his-tag his-tag--cat">{site.category}</span>
                 </div>
                 <h1>{site.name}</h1>
@@ -82,10 +82,12 @@ export default function HistoriaPatrimonioFicha() {
                 {site.eras?.length > 1 ? (
                   <EraCarousel photos={site.eras} name={site.name} />
                 ) : (
-                  <img src={site.image} alt={site.name} />
+                  <img src={site.image} alt={site.imageAlt ?? site.name} />
                 )}
+                {site.imageCaption ? <p className="his-ficha__caption">{site.imageCaption}</p> : null}
               </Reveal>
 
+              {site.visit ? (
               <Reveal className="his-ficha__visit" delay={180}>
                 <h3>Información para visitarlo</h3>
                 <dl>
@@ -110,6 +112,7 @@ export default function HistoriaPatrimonioFicha() {
                   </a>
                 </div>
               </Reveal>
+              ) : null}
             </div>
           </div>
 
