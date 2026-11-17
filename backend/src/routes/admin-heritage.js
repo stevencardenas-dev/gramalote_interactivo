@@ -73,6 +73,8 @@ function serialize(row) {
     mapIcon: row.map_icon,
     summary: row.summary ?? null,
     description: row.description ?? null,
+    coverUrl: row.cover_url ?? null,
+    coverAlt: row.cover_alt ?? null,
     sortOrder: toNumber(row.sort_order) ?? 0,
     published: Boolean(row.is_published),
     updatedAt: row.updated_at,
@@ -105,7 +107,19 @@ router.get(
   '/admin/heritage',
   requireAuth,
   asyncHandler(async (_req, res) => {
-    const rows = await query('SELECT * FROM heritage_sites ORDER BY sort_order, name')
+    // El listado del panel muestra la portada de cada ficha; sin esta consulta
+    // caía siempre en el icono del mapa aunque la ficha tuviera fotos.
+    const rows = await query(
+      `SELECT h.*,
+              (SELECT m.public_url FROM heritage_images i JOIN media m ON m.id = i.media_id
+               WHERE i.heritage_id = h.id AND i.role = 'cover'
+               ORDER BY i.sort_order, i.id LIMIT 1) AS cover_url,
+              (SELECT m.alt_text FROM heritage_images i JOIN media m ON m.id = i.media_id
+               WHERE i.heritage_id = h.id AND i.role = 'cover'
+               ORDER BY i.sort_order, i.id LIMIT 1) AS cover_alt
+       FROM heritage_sites h
+       ORDER BY h.sort_order, h.name`,
+    )
     res.json({ data: rows.map(serialize), meta: { total: rows.length } })
   }),
 )

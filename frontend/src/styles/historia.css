@@ -2834,6 +2834,15 @@ html.his-deck {
   zoom: 1;
 }
 
+/* El relato vuelve a escala 1 para que cada bloque llene la pantalla, pero el
+   encabezado debe conservar el tamaño del resto del sitio: sin esto, al
+   empezar el recorrido el menú crecía de golpe en escritorio. */
+@media (min-width: 901px) {
+  html.his-deck .site-header {
+    zoom: var(--ui-scale);
+  }
+}
+
 .his-deck .his-stage__band,
 .his-deck .his-event,
 .his-deck .his-closing {
@@ -2860,9 +2869,9 @@ html.his-deck {
   .his-deck .his-stage__band,
   .his-deck .his-event,
   .his-deck .his-closing {
-    min-height: calc(100svh - var(--header-h));
+    min-height: calc(100svh - var(--header-h) * var(--ui-scale));
     /* El encabezado del sitio es fijo: el bloque se detiene justo debajo. */
-    scroll-margin-top: var(--header-h);
+    scroll-margin-top: calc(var(--header-h) * var(--ui-scale));
   }
 
   .his-deck .his-stage__band {
@@ -2870,7 +2879,7 @@ html.his-deck {
   }
 
   .his-deck .his-stage {
-    scroll-margin-top: var(--header-h);
+    scroll-margin-top: calc(var(--header-h) * var(--ui-scale));
   }
 
   .his-deck .his-closing {

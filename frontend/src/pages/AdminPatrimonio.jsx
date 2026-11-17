@@ -325,7 +325,7 @@ export default function AdminPatrimonio() {
             {paged.pageItems.map((item) => (
               <li key={item.id} className="admin-row-item" onClick={() => startEdit(item)}>
                 <span className="admin-row-item__thumb">
-                  <img src={mapIconUrl(item.mapIcon)} alt="" loading="lazy" />
+                  <img src={item.coverUrl ?? mapIconUrl(item.mapIcon)} alt="" loading="lazy" />
                 </span>
                 <div className="admin-row-item__main">
                   <button
