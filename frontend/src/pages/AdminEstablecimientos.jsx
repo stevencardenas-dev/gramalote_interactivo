@@ -1,3 +1,4 @@
+import EditedDate from '../components/admin/EditedDate.jsx'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
@@ -12,13 +13,6 @@ const STATUS_TABS = [
 
 function normalize(text) {
   return (text ?? '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-}
-
-function formatDate(value) {
-  if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 export default function AdminEstablecimientos() {
@@ -238,7 +232,7 @@ export default function AdminEstablecimientos() {
                     {item.cover ? '' : ' · sin portada'}
                   </small>
                 </div>
-                <span className="admin-row-item__date">{formatDate(item.updatedAt)}</span>
+                <EditedDate value={item.updatedAt} />
                 <span
                   className={`admin-badge ${item.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
                 >
