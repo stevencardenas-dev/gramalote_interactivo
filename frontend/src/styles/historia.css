@@ -1230,9 +1230,9 @@
   overflow: hidden;
   width: 100%;
   aspect-ratio: 1000 / 620;
-  border: 1px solid #cfe3c2;
+  border: 1px solid var(--c-line);
   border-radius: 20px;
-  background: #e4f2da;
+  background: #f4f1ea;
 }
 
 .hmap__art {
@@ -3065,6 +3065,10 @@ kbd {
   aspect-ratio: auto;
   max-height: none;
   border-radius: 0;
+  object-fit: cover;
+}
+
+.era-carousel__stage img[data-orient='portrait'] {
   object-fit: contain;
 }
 
@@ -3114,17 +3118,33 @@ kbd {
   }
 }
 
-/* Fotos de contenido completas: el marco conserva su proporción y la foto se
-   ajusta dentro (contain), sin recortes; lo que sobra queda en beige. Los héroes
-   a todo ancho y las miniaturas pequeñas siguen recortando a propósito. */
-.his-card__media img,
-.his-tl__media img,
-.his-cap-hero__media img,
-.his-event__media img,
-.his-row__media img,
-.his-ficha__media img,
-.his-ficha__gallery img,
-.his-story-card__cols img {
+/* Fotos verticales completas: solo las verticales (data-orient="portrait", ver
+   lib/imageOrientation.js) se ajustan dentro del marco (contain) sobre crema;
+   las horizontales siguen llenando su marco como antes. Los héroes a todo ancho
+   y las miniaturas pequeñas no cambian. */
+.his-card__media img[data-orient='portrait'],
+.his-tl__media img[data-orient='portrait'],
+.his-cap-hero__media img[data-orient='portrait'],
+.his-event__media img[data-orient='portrait'],
+.his-row__media img[data-orient='portrait'],
+.his-ficha__media img[data-orient='portrait'],
+.his-ficha__gallery img[data-orient='portrait'],
+.his-story-card__cols img[data-orient='portrait'] {
   object-fit: contain;
   background: var(--c-cream-deep);
+}
+
+/* Mapa de patrimonios con teselas de Protomaps (MapLibre) */
+.hmap__canvas .hmap__map {
+  position: absolute;
+  inset: 0;
+}
+
+.hmap__holder {
+  width: 0;
+  height: 0;
+}
+
+.hmap__map .maplibregl-ctrl-attrib {
+  font-size: 0.7rem;
 }

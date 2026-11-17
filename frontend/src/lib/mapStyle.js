@@ -1,7 +1,8 @@
 // Estilo del mapa con teselas propias (PMTiles vectoriales de Protomaps, datos
 // de OpenStreetMap). No hay peticiones a servidores de terceros: el archivo
 // .pmtiles, las tipografías y los sprites los sirve el mismo nginx.
-import { addProtocol } from 'maplibre-gl'
+import { addProtocol, setWorkerUrl } from 'maplibre-gl'
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { Protocol } from 'pmtiles'
 import { layers, namedFlavor } from '@protomaps/basemaps'
 
@@ -10,6 +11,10 @@ const PMTILES_URL = import.meta.env.VITE_MAP_PMTILES_URL || '/tiles/norte-de-san
 const ATTRIBUTION =
   '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a> · ' +
   '<a href="https://protomaps.com" target="_blank" rel="noopener">Protomaps</a>'
+
+// MapLibre busca su worker junto a su propio archivo, que Vite empaqueta en otro
+// lugar: se le indica el que trae el paquete npm (sin CDN externo).
+setWorkerUrl(workerUrl)
 
 let registered = false
 

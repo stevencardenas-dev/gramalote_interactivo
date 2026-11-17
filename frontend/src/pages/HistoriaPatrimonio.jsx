@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '../components/ui/Icon.jsx'
 import Reveal from '../components/historia/Reveal.jsx'
 import SectionNav from '../components/historia/SectionNav.jsx'
-import HeritageMap from '../components/historia/HeritageMap.jsx'
 import { ZONES, heritage, heritageHero } from '../data/historia.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
+
+const HeritageMap = lazy(() => import('../components/historia/HeritageMap.jsx'))
 
 const STATUS_TONE = {
   Visitable: 'ok',
@@ -198,17 +199,21 @@ export default function HistoriaPatrimonio() {
                     <Icon name="arrow" className="btn__icon" />
                   </button>
                 </div>
-                <HeritageMap items={heritage} interactive={false} onSelect={() => setView('mapa')} />
+                <Suspense fallback={<p className="note">Cargando mapa…</p>}>
+                  <HeritageMap items={heritage} interactive={false} onSelect={() => setView('mapa')} />
+                </Suspense>
               </Reveal>
             </>
           ) : (
             <div className="his-mapview">
               <Reveal className="his-mapview__map">
-                <HeritageMap
-                  items={filtered}
-                  selectedId={current?.slug ?? ''}
-                  onSelect={(item) => setSelected(item.slug)}
-                />
+                <Suspense fallback={<p className="note">Cargando mapa…</p>}>
+                  <HeritageMap
+                    items={filtered}
+                    selectedId={current?.slug ?? ''}
+                    onSelect={(item) => setSelected(item.slug)}
+                  />
+                </Suspense>
               </Reveal>
 
               <aside className="his-mapview__panel">
