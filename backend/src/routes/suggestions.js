@@ -11,7 +11,7 @@ import { clientIp, consume, limitByIp } from '../rate-limit.js'
 import { parseJson } from '../serializers.js'
 
 const router = Router()
-const STATUSES = ['nueva', 'revisada', 'agregada', 'descartada']
+const STATUSES = ['nueva', 'agregada', 'descartada']
 const HOUR = 60 * 60 * 1000
 const CONFIRM_HOURS = 48
 const tokenHashOf = (token) => createHash('sha256').update(token).digest('hex')
@@ -77,7 +77,7 @@ function suggestionRows(item) {
 // La sugerencia «cuenta» aquí: avisa al equipo y, si toca, agradece. Se llama
 // cuando entra sin correo o cuando la persona confirma el suyo; con el correo
 // sin confirmar no se envía nada, para que el paso de verificación sirva de
-// algo (el panel la guarda en «Sin confirmar» mientras tanto).
+// algo (el panel la muestra atenuada hasta que se confirme).
 function deliver(settings, item, { thanks }) {
   const team = notifyList(settings)
   if (team.length) {
@@ -264,7 +264,7 @@ router.get(
     const rows = await query(
       `SELECT * FROM establishment_suggestions
        ${status ? 'WHERE status = ?' : ''}
-       ORDER BY FIELD(status, 'nueva', 'revisada', 'agregada', 'descartada'), created_at DESC
+       ORDER BY FIELD(status, 'nueva', 'agregada', 'descartada'), created_at DESC
        LIMIT 300`,
       status ? [status] : [],
     )

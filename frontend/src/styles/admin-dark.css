@@ -2908,6 +2908,17 @@ a.admin-tile:hover {
   opacity: 0.65;
 }
 
+/* Correo sin confirmar: el aviso no le llegó al equipo. Se atenúa en vez de
+   llevar texto; el title de la tarjeta lo explica al pasar el ratón. */
+.admin-suggest__item.is-unconfirmed {
+  opacity: 0.55;
+}
+
+.admin-suggest__item.is-unconfirmed:hover,
+.admin-suggest__item.is-unconfirmed:focus-within {
+  opacity: 0.85;
+}
+
 .admin-suggest__head {
   display: flex;
   align-items: flex-start;
