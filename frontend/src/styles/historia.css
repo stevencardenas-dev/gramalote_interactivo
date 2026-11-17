@@ -3162,3 +3162,149 @@ kbd {
   font-size: var(--fs-sm);
   line-height: 1.55;
 }
+
+/* ---------------------------------------------------------------------------
+   Recorrido en móvil: el scroll encaja de verdad en cada fragmento, la etapa va
+   dentro de su primer acontecimiento (sin un bloque de pantalla casi vacío) y
+   hay una transición visible entre fragmentos.
+--------------------------------------------------------------------------- */
+.his-event__stage,
+.his-next {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  /* Un deslizamiento corto basta para pasar al siguiente fragmento. */
+  html.his-deck {
+    scroll-snap-type: y mandatory;
+  }
+
+  /* La etapa ya no ocupa su propia pantalla. */
+  .his-deck .his-stage__band {
+    display: none;
+  }
+
+  .his-deck .his-event__stage {
+    display: grid;
+    gap: 6px;
+    grid-column: 1;
+    grid-row: auto;
+    order: -2;
+    margin-bottom: 4px;
+    padding: 14px 16px;
+    border-left: 4px solid var(--c-coral-text);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--c-coral-text) 9%, var(--c-cream));
+  }
+
+  .his-deck .his-event__stage .his-stage__count {
+    color: var(--c-coral-text);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .his-deck .his-event__stage h2 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: clamp(1.25rem, 5.4vw, 1.6rem);
+    line-height: 1.15;
+  }
+
+  .his-deck .his-event__stage p {
+    margin: 0;
+    color: var(--c-ink-soft);
+    font-size: 0.9rem;
+  }
+
+  /* La primera pantalla de una etapa lleva más contenido: la foto cede espacio. */
+  .his-deck .his-event:has(.his-event__stage) .his-event__media img {
+    max-height: 36svh;
+  }
+
+  /* Transición entre fragmentos: lo que se aleja del centro se atenúa y baja. */
+  .his-deck .his-event > .his-event__media,
+  .his-deck .his-event > .his-event__body,
+  .his-deck .his-event > .his-event__stage {
+    opacity: calc(0.25 + 0.75 * var(--vis, 1));
+    transform: translateY(calc((1 - var(--vis, 1)) * 34px)) scale(calc(0.94 + 0.06 * var(--vis, 1)));
+    transform-origin: 50% 40%;
+    will-change: opacity, transform;
+  }
+
+  /* Anillo que se llena al acercarse al siguiente fragmento. */
+  .his-next {
+    --p: 0;
+    position: fixed;
+    left: 14px;
+    bottom: 18px;
+    z-index: 40;
+    display: grid;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255, 242, 227, 0.92);
+    box-shadow: 0 6px 18px rgba(20, 20, 20, 0.22);
+    pointer-events: none;
+  }
+
+  .his-next svg {
+    position: absolute;
+    inset: 1px;
+    width: 44px;
+    height: 44px;
+    transform: rotate(-90deg);
+  }
+
+  .his-next circle {
+    fill: none;
+    stroke-width: 3;
+  }
+
+  .his-next__track {
+    stroke: rgba(0, 66, 107, 0.18);
+  }
+
+  .his-next__fill {
+    stroke: var(--c-coral-text);
+    stroke-dasharray: 100;
+    stroke-dashoffset: calc(100 - var(--p) * 100);
+    stroke-linecap: round;
+  }
+
+  .his-next__arrow {
+    color: var(--c-navy);
+    font-size: 1.15rem;
+    font-weight: 700;
+    animation: his-next-bounce 1.6s ease-in-out infinite;
+  }
+
+  .his-next.is-end {
+    opacity: 0.5;
+  }
+}
+
+@keyframes his-next-bounce {
+  0%,
+  100% {
+    transform: translateY(-2px);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .his-next__arrow {
+    animation: none;
+  }
+
+  .his-deck .his-event > .his-event__media,
+  .his-deck .his-event > .his-event__body,
+  .his-deck .his-event > .his-event__stage {
+    opacity: 1;
+    transform: none;
+  }
+}
