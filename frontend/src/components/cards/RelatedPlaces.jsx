@@ -5,26 +5,30 @@ import { StarsRow } from '../ui/RatingStars.jsx'
 import Photo from '../ui/Photo.jsx'
 import Icon from '../ui/Icon.jsx'
 
-// Recomienda los mejor calificados (sin la ficha actual); si la API no responde
-// o aún no hay datos, usa la lista editorial recibida en items.
+// Recomienda lo elegido en «También puedes visitar» del panel. Solo si la ficha
+// no tiene ninguna selección se muestran los mejor calificados. Las dos fuentes
+// vienen de la API ya filtradas por publicadas y sin borradores.
 export default function RelatedPlaces({
-  items: fallback = [],
+  items: chosen = [],
   exclude,
   category,
   title = 'También puedes disfrutar en Gramalote',
   text = 'Explora otras opciones del municipio y descubre lugares con propuestas para compartir.',
 }) {
   const [top, setTop] = useState([])
+  const selected = chosen.filter((item) => item && item.slug !== exclude)
+  const hasSelection = selected.length > 0
 
   useEffect(() => {
+    if (hasSelection) return undefined
     const controller = new AbortController()
     fetchTopRated({ exclude, category, limit: 3 }, controller.signal)
       .then(setTop)
       .catch(() => {})
     return () => controller.abort()
-  }, [exclude, category])
+  }, [hasSelection, exclude, category])
 
-  const items = top.length > 0 ? top : fallback.filter((item) => item.slug !== exclude)
+  const items = hasSelection ? selected : top
   if (items.length === 0) return null
 
   return (

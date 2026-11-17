@@ -189,6 +189,7 @@ export default function AdminEstablecimiento() {
   const relatedQueryText = relatedQuery.trim().toLowerCase()
   const relatedCandidates = allEstablishments
     .filter((item) => item.id !== form.id)
+    .filter((item) => item.published)
     .filter((item) => {
       if (!relatedQueryText) return true
       return (
@@ -1010,14 +1011,16 @@ export default function AdminEstablecimiento() {
 
               <Section
                 title="También puedes visitar"
-                hint="Sugerencias que salen al final de la ficha."
+                hint="Sugerencias que salen al final de la ficha; solo se ofrecen fichas publicadas."
                 signal={signal}
               >
                 {form.relatedIds.length ? (
                   <ul className="admin-extras-chips">
                     {form.relatedIds.map((relatedId) => {
                       const item = allEstablishments.find((entry) => entry.id === relatedId)
-                      const label = item?.name ?? `Ficha ${relatedId}`
+                      const label = item
+                        ? `${item.name}${item.published ? '' : ' · borrador'}`
+                        : `Ficha ${relatedId}`
                       return (
                         <li key={relatedId}>
                           <span>{label}</span>
