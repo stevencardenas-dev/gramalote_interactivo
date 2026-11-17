@@ -85,8 +85,6 @@ export default function AdminNav() {
           ) : null}
         </nav>
 
-        <ThemeToggle />
-
         <div className="admin-nav__end">
           <Link
             className="admin-nav__site"
@@ -103,6 +101,7 @@ export default function AdminNav() {
           <button type="button" className="admin-nav__out" onClick={handleLogout} title="Cerrar sesión">
             {user?.name ? `${user.name.split(' ')[0]} · ` : ''}Salir
           </button>
+          <ThemeToggle />
         </div>
       </div>
     </header>
