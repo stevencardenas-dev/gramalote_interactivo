@@ -1,3 +1,4 @@
+import EditedDate from '../components/admin/EditedDate.jsx'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AdminToast from '../components/admin/AdminToast.jsx'
@@ -39,13 +40,6 @@ const EMPTY = {
   summary: '',
   description: '',
   published: false,
-}
-
-function formatDate(value) {
-  if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function normalize(value) {
@@ -350,7 +344,7 @@ export default function AdminPatrimonio() {
                     {item.zone ? ` · ${item.zone}` : ''}
                   </small>
                 </div>
-                <span className="admin-row-item__date">{formatDate(item.updatedAt)}</span>
+                <EditedDate value={item.updatedAt} />
                 <button
                   type="button"
                   className={`admin-badge ${item.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}

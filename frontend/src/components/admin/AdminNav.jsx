@@ -45,6 +45,9 @@ export default function AdminNav() {
         <Logo variant="cube" className="admin-nav__logo" alt="Turismo Gramalote" />
       </Link>
 
+      {/* En móvil el cambio de modo sale del menú y queda junto al botón que lo abre. */}
+      <ThemeToggle className="theme-toggle--bar" />
+
       <button
         type="button"
         className="admin-nav__toggle"

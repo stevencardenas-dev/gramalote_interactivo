@@ -1,3 +1,4 @@
+import EditedDate from '../components/admin/EditedDate.jsx'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
@@ -39,13 +40,6 @@ function normalize(text) {
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-}
-
-function formatDate(value) {
-  if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function formatStamp(value) {
@@ -340,7 +334,7 @@ export function AdminExperiencias() {
                   {item.onMap ? ' · En el mapa' : ' · Sin coordenadas'}
                 </small>
               </div>
-              <span className="admin-row-item__date">{formatDate(item.updatedAt)}</span>
+              <EditedDate value={item.updatedAt} />
               <span
                 className={`admin-badge ${item.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}
               >
