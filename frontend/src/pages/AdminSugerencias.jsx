@@ -18,8 +18,10 @@ const STATUS = {
 const FILTERS = [['', 'Todas'], ...Object.entries(STATUS).map(([key, value]) => [key, value.label])]
 
 // «Sin confirmar» no es un estado: mientras el correo no esté verificado el
-// equipo no recibió el aviso. Se marca con opacidad, sin texto ni pestaña.
+// equipo no recibió el aviso. Esas sugerencias se atenúan, llevan el aviso en
+// la tarjeta y se ordenan al final de la lista.
 const isPending = (item) => Boolean(item.suggesterEmail) && !item.emailVerified
+const STATUS_ORDER = { nueva: 0, agregada: 1, descartada: 2 }
 
 // Conmutadores: todas y los tres estados de la sugerencia.
 
@@ -49,7 +51,18 @@ export default function AdminSugerencias() {
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState(null)
   const { confirm } = useDialog()
-  const filtered = (items ?? []).filter((entry) => !filter || entry.status === filter)
+  // Primero las confirmadas, dentro de cada grupo por estado y de la más nueva
+  // a la más vieja; el orden se mantiene al cambiar un estado sin recargar.
+  const ordered = (items ?? [])
+    .map((entry, index) => ({ entry, index }))
+    .sort(
+      (a, b) =>
+        Number(isPending(a.entry)) - Number(isPending(b.entry)) ||
+        (STATUS_ORDER[a.entry.status] ?? 9) - (STATUS_ORDER[b.entry.status] ?? 9) ||
+        a.index - b.index,
+    )
+    .map(({ entry }) => entry)
+  const filtered = ordered.filter((entry) => !filter || entry.status === filter)
   const paged = usePaged(filtered)
 
   const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message })
@@ -197,6 +210,9 @@ export default function AdminSugerencias() {
                     <small>
                       {item.businessType ?? 'Sin tipo'} · {formatStamp(item.submittedAt)}
                     </small>
+                    {isPending(item) ? (
+                      <span className="admin-suggest__pending">Correo sin confirmar</span>
+                    ) : null}
                   </div>
                   <span className={`admin-badge ${STATUS[item.status]?.badge ?? ''}`}>
                     {STATUS[item.status]?.label ?? item.status}

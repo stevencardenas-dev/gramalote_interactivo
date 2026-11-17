@@ -262,9 +262,12 @@ router.get(
   asyncHandler(async (req, res) => {
     const status = STATUSES.includes(req.query.status) ? req.query.status : null
     const rows = await query(
+      // Las que no confirmaron el correo van al final: mientras no verifiquen,
+      // el equipo todavía no recibió el aviso.
       `SELECT * FROM establishment_suggestions
        ${status ? 'WHERE status = ?' : ''}
-       ORDER BY FIELD(status, 'nueva', 'agregada', 'descartada'), created_at DESC
+       ORDER BY (suggester_email IS NOT NULL AND email_verified_at IS NULL) ASC,
+                FIELD(status, 'nueva', 'agregada', 'descartada'), created_at DESC
        LIMIT 300`,
       status ? [status] : [],
     )
