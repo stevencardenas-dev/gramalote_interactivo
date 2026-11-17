@@ -424,12 +424,12 @@
 
 /* Información práctica */
 .practical {
-  padding-block: 56px 86px;
+  padding-block: 40px 52px;
   background: var(--c-peach);
 }
 
 .practical .section-head {
-  gap: 46px;
+  gap: 26px;
 }
 
 .practical .section-head h2 {
@@ -441,7 +441,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
-  margin-top: 36px;
+  margin-top: 24px;
   text-align: center;
 }
 
@@ -455,9 +455,9 @@
 .feature-card__icon {
   display: grid;
   place-items: center;
-  width: 159px;
-  height: 159px;
-  margin-bottom: 28px;
+  width: 128px;
+  height: 128px;
+  margin-bottom: 16px;
   border-radius: 50%;
   background: #e3e7f0;
   color: var(--c-navy);
@@ -465,22 +465,22 @@
 
 .feature-card__icon img,
 .feature-card__icon svg {
-  width: 58px;
-  height: 58px;
+  width: 48px;
+  height: 48px;
 }
 
 .feature-card h3 {
   font-family: var(--font-serif);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
 .feature-card p {
   max-width: 26ch;
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--c-ink);
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 0.95rem;
+  line-height: 1.55;
 }
 
 /* ============ Responsive ============ */
@@ -767,15 +767,15 @@
 /* Ilustraciones de información práctica */
 .feature-card__art {
   width: 100%;
-  max-width: 190px;
-  height: 170px;
-  margin-bottom: 20px;
+  max-width: 156px;
+  height: 132px;
+  margin-bottom: 12px;
   object-fit: contain;
 }
 
 .feature-card__title {
   display: inline-block;
-  padding: 6px 22px;
+  padding: 4px 18px;
   border-radius: 999px;
   background: var(--c-coral-text);
   color: #fff;
