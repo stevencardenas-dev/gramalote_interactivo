@@ -64,6 +64,12 @@ function Breadcrumb({ items = [] }) {
 // Segundos que tarda una foto en recorrer todo el ancho (deslizamiento continuo).
 const SLIDE_SECONDS = 12
 
+// Antes de tocar el reloj de la animación, lee `docs/INCIDENCIAS.md` § 7 (y
+// AGENTS.md § «Componentes delicados»). Dos reglas: (1) no arrancar hasta que la primera foto esté
+// decodificada y pintada; (2) avanzar con recorrido acumulado y tope de 250 ms
+// por fotograma. Romper cualquiera de las dos devuelve el carrusel trabado
+// (arranque a tirones y saltos de foto al volver de otra pestaña).
+
 function paint(track, value, total) {
   if (!track) return
   track.style.transform = `translate3d(-${(value * 100) / (total + 1)}%, 0, 0)`

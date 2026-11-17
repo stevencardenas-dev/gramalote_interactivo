@@ -1,6 +1,6 @@
 # Incidencias e incongruencias detectadas
 
-Revisión: **2026-10-22** · Actualizado **2026-10-31** · Alcance: frontend
+Revisión: **2026-10-22** · Actualizado **2026-11-17** · Alcance: frontend
 React, documentación, Figma y backend.
 
 Estados: **Corregido**, **Pendiente**, **Observación** (no es un error, pero
@@ -92,3 +92,38 @@ Validado en MySQL 8.4.11 con Docker. Decisión: MySQL 8.0+ e InnoDB.
 3. Conectar la API con el esquema MySQL y migrar el contenido (INC-08, INC-09).
 4. Completar fichas/fotos faltantes y unificar nombres (INC-21 a INC-28).
 5. Ajustes cosméticos de Información práctica cuando lleguen las fotos (INC-05).
+
+## 7. Reglas que no se deben romper
+
+### Carrusel del encabezado de las fichas (`HeroFicha.jsx`)
+
+| ID | Fallo | Causa | Estado |
+| --- | --- | --- | --- |
+| INC-30 | El carrusel de una ficha con varias fotos arrancaba trabado (quieto o a tirones los primeros segundos) y saltaba de foto al volver de otra pestaña. | El reloj de la animación empezaba antes de que la primera foto estuviera decodificada, y el hueco de tiempo se descartaba entero. | **Corregido** (2026-11-16) |
+
+Al tocar `frontend/src/components/ui/HeroFicha.jsx` hay que respetar dos reglas:
+
+1. **No animar hasta que la primera foto esté pintada.** `ready` solo se activa
+   dentro del `load` (o `error`) de la primera `<img>`, con dos
+   `requestAnimationFrame` de margen. Si se quita esa espera, el carrusel vuelve
+   a arrancar trabado.
+2. **Sumar el recorrido con tope por fotograma.** El `tick` acumula
+   `Math.min(now - last, MAX_STEP)` (`MAX_STEP = 250` ms). Sin el tope, un hueco
+   largo (decodificación de la foto, pestaña en segundo plano) hace saltar la
+   foto; descartar el hueco entero congela la animación.
+
+Por qué no se puede pasar a CSS: `global.css` anula las animaciones cuando el
+sistema pide «reducir movimiento», así que el movimiento va con
+`requestAnimationFrame`. La primera foto se duplica al final del `track` para que
+el bucle cierre sin salto.
+
+Comprobación antes de subir, con los datos de producción:
+
+```bash
+cd frontend && VITE_API_TARGET=https://d2nm90ise1l8de.cloudfront.net npx vite --port 5288 --strictPort
+```
+
+Abrir `/establecimiento/hostal-luna-azul`: arranca solo, se mueve fluido, el
+botón de pausa detiene y reanuda, y los puntitos cambian al pasar cada foto. Si
+se traba al entrar, se rompió la regla 1; si salta de foto o se queda quieta
+unos segundos, la regla 2.
