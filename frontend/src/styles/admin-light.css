@@ -104,7 +104,7 @@ html[data-admin-theme='light'] .admin-nav__logo {
 
 /* Inicio del panel, tema claro: azul y accesos en colores sólidos de la marca */
 html[data-admin-theme='light'] .admin-home__hero {
-  background: linear-gradient(120deg, #a5292b 0%, #db5319 55%, #eaa41e 100%);
+  background: linear-gradient(120deg, #8e4540 0%, #b5663c 55%, #cf9a52 100%);
 }
 
 html[data-admin-theme='light'] .admin-search input {
@@ -186,4 +186,16 @@ html[data-admin-theme='light'] .admin-app {
   --sb4a: #b53f0e; --sb4b: #b53f0e;
   --tb1: #00426b; --tb2: #8a5a10; --tb3: #306c46; --tb4: #b53f0e; --tb5: #a5292b; --tb6: #6f7a14;
   --rb1: #db5319; --rb2: #eaa41e; --rb3: #306c46; --rb4: #00426b;
+}
+
+/* Historial en el tema claro: antes/ahora con fondos suaves */
+html[data-admin-theme='light'] .audit {
+  --bad-bg: #fbe4dc;
+  --bad-tx: #9a3510;
+  --good-bg: #e3f1e8;
+  --good-tx: #1f6b43;
+}
+
+html[data-admin-theme='light'] .audit__cell {
+  background: #f4f1eb;
 }

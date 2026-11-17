@@ -1,3 +1,4 @@
+import AuditTimeline from '../components/admin/AuditTimeline.jsx'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import OpeningHoursEditor from '../components/admin/OpeningHoursEditor.jsx'
@@ -18,13 +19,7 @@ const TABS = [
   { key: 'history', label: 'Historial' },
 ]
 
-const AUDIT_PAGE = 8
 
-function formatStamp(value) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value ?? ''
-  return date.toLocaleString('es-CO', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
 
 const PLATFORMS = [
   { key: 'instagram', label: 'Instagram' },
@@ -122,7 +117,6 @@ export default function AdminEstablecimiento() {
   const [tab, setTab] = useState('info')
   const [relatedQuery, setRelatedQuery] = useState('')
   const [signal, setSignal] = useState({ open: false, n: 0 })
-  const [auditPage, setAuditPage] = useState(0)
   const [form, setForm] = useState(null)
   const [meta, setMeta] = useState(null)
   // Evita que un doble aviso del selector de archivos suba la misma foto dos veces.
@@ -167,6 +161,14 @@ export default function AdminEstablecimiento() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
+  const auditLookups = useMemo(() => {
+    const categories = meta?.establishmentCategories ?? []
+    return {
+      category: (id) => categories.find((item) => item.id === Number(id))?.name,
+      type: (id) => categories.flatMap((item) => item.types ?? []).find((item) => item.id === Number(id))?.name,
+      zone: (id) => (meta?.zones ?? []).find((item) => item.id === Number(id))?.name,
+    }
+  }, [meta])
   const category = meta && form
     ? meta.establishmentCategories.find((item) => item.id === Number(form.categoryId))
     : null
@@ -251,6 +253,17 @@ export default function AdminEstablecimiento() {
     }))
   }
 
+  // Trae de nuevo solo el historial (y la fecha de edición) para que el último
+  // guardado aparezca al instante sin pisar lo que se esté editando.
+  async function refreshAudit() {
+    try {
+      const detail = await apiRequest(`/admin/establishments/${id}`)
+      setForm((current) => (current ? { ...current, audit: detail.audit ?? current.audit } : current))
+    } catch {
+      // Si falla, el historial se verá actualizado en la próxima carga.
+    }
+  }
+
   async function handleSave(event) {
     event?.preventDefault()
     setSaving(true)
@@ -263,6 +276,7 @@ export default function AdminEstablecimiento() {
       })
       setForm((current) => ({ ...current, updatedAt: result.updatedAt }))
       setNotice('Cambios guardados.')
+      await refreshAudit()
     } catch (err) {
       setError(err.message)
     } finally {
@@ -285,6 +299,7 @@ export default function AdminEstablecimiento() {
         updatedAt: result.updatedAt,
       }))
       setNotice(published ? 'Ficha publicada.' : 'Ficha despublicada.')
+      await refreshAudit()
     } catch (err) {
       setError(err.message)
     }
@@ -340,7 +355,7 @@ export default function AdminEstablecimiento() {
   // Refresca solo las imágenes para no descartar cambios de texto sin guardar.
   async function reloadImages() {
     const detail = await apiRequest(`/admin/establishments/${id}`)
-    setForm((current) => ({ ...current, images: detail.images, updatedAt: detail.updatedAt }))
+    setForm((current) => ({ ...current, images: detail.images, audit: detail.audit ?? current.audit, updatedAt: detail.updatedAt }))
   }
 
   async function patchImage(image, patch) {
@@ -454,7 +469,7 @@ export default function AdminEstablecimiento() {
               onClick={handleSave}
               disabled={saving}
             >
-              {saving ? 'Guardando…' : 'Guardar'}
+              {saving ? 'Guardando…' : 'Guardar cambios'}
             </button>
           </div>
         </div>
@@ -1166,56 +1181,14 @@ export default function AdminEstablecimiento() {
           {tab === 'history' ? (
             <div className="admin-publish">
               <h2>Historial</h2>
-              <p className="note">Últimos cambios guardados en esta ficha.</p>
+              <p className="note">Quién cambió qué en esta ficha y cuándo. </p>
               {form.audit.length === 0 ? (
                 <p className="note">Sin cambios registrados todavía.</p>
               ) : (
-                <>
-                  <ul className="admin-audit">
-                    {form.audit
-                      .slice(auditPage * AUDIT_PAGE, (auditPage + 1) * AUDIT_PAGE)
-                      .map((entry) => (
-                        <li key={entry.id}>
-                          <span className="admin-audit__action">{entry.action}</span>
-                          <span>{entry.userName ?? 'Sistema'}</span>
-                          <span className="admin-audit__date">{formatStamp(entry.createdAt)}</span>
-                        </li>
-                      ))}
-                  </ul>
-                  {form.audit.length > AUDIT_PAGE ? (
-                    <div className="admin-pager">
-                      <button
-                        type="button"
-                        className="admin-btn"
-                        disabled={auditPage === 0}
-                        onClick={() => setAuditPage((page) => page - 1)}
-                      >
-                        ← Anterior
-                      </button>
-                      <span>
-                        Página {auditPage + 1} de {Math.ceil(form.audit.length / AUDIT_PAGE)}
-                      </span>
-                      <button
-                        type="button"
-                        className="admin-btn"
-                        disabled={(auditPage + 1) * AUDIT_PAGE >= form.audit.length}
-                        onClick={() => setAuditPage((page) => page + 1)}
-                      >
-                        Siguiente →
-                      </button>
-                    </div>
-                  ) : null}
-                </>
+                <AuditTimeline audit={form.audit} lookups={auditLookups} />
               )}
             </div>
           ) : null}
-
-          <div className="admin-panel__footer">
-            <button type="submit" className="admin-btn admin-btn--primary" disabled={saving}>
-              {saving ? 'Guardando…' : 'Guardar cambios'}
-            </button>
-            
-          </div>
         </form>
       </div>
     </section>

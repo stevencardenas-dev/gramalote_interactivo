@@ -3,7 +3,7 @@ import Icon from '../components/ui/Icon.jsx'
 import Button from '../components/ui/Button.jsx'
 import EraCarousel from '../components/historia/EraCarousel.jsx'
 import Reveal from '../components/historia/Reveal.jsx'
-import { heritage, getHeritage } from '../data/historia.js'
+import { findHeritage, useHeritage } from '../lib/heritageData.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
 
 const STATUS_TONE = {
@@ -20,10 +20,21 @@ const ZONE_TONE = {
 
 export default function HistoriaPatrimonioFicha() {
   const { slug } = useParams()
-  const site = getHeritage(slug)
-  const index = heritage.findIndex((item) => item.slug === slug)
+  const { items: heritage, ready } = useHeritage()
+  const site = findHeritage(heritage, slug)
+  const index = site ? heritage.indexOf(site) : -1
 
   usePageTitle(site ? site.name : 'Patrimonio')
+
+  if (!site && !ready) {
+    return (
+      <section className="section section--estado">
+        <div className="container container--narrow">
+          <p className="note">Cargando ficha…</p>
+        </div>
+      </section>
+    )
+  }
 
   if (!site) {
     return (
@@ -64,6 +75,7 @@ export default function HistoriaPatrimonioFicha() {
                 <div className="his-tags">
                   <span className={`his-tag his-tag--${ZONE_TONE[site.zone]}`}>{site.zoneTag ?? site.zoneLabel}</span>
                   <span className="his-tag his-tag--cat">{site.category}</span>
+                  {site.period ? <span className="his-tag his-tag--cat">{site.period}</span> : null}
                 </div>
                 <h1>{site.name}</h1>
                 <p className="his-ficha__intro">{site.intro}</p>
@@ -74,6 +86,7 @@ export default function HistoriaPatrimonioFicha() {
                 {site.body.map((paragraph) => (
                   <p key={paragraph.slice(0, 40)}>{paragraph}</p>
                 ))}
+                {site.sources ? <p className="his-ficha__sources">Fuentes consultadas: {site.sources}</p> : null}
               </Reveal>
             </div>
 
@@ -103,6 +116,18 @@ export default function HistoriaPatrimonioFicha() {
                     <dt>Recomendación</dt>
                     <dd>{site.visit.recommendation}</dd>
                   </div>
+                  {site.hoursText ? (
+                    <div>
+                      <dt>Horario</dt>
+                      <dd>{site.hoursText}</dd>
+                    </div>
+                  ) : null}
+                  {site.address ? (
+                    <div>
+                      <dt>Dirección</dt>
+                      <dd>{site.address}</dd>
+                    </div>
+                  ) : null}
                 </dl>
                 <div className="his-ficha__visit-foot">
                   <span className={`his-status his-status--${STATUS_TONE[site.status] ?? 'warn'}`}>{site.status}</span>

@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import Icon from '../components/ui/Icon.jsx'
 import Reveal from '../components/historia/Reveal.jsx'
 import SectionNav from '../components/historia/SectionNav.jsx'
-import { ZONES, heritage, heritageHero } from '../data/historia.js'
+import { ZONES, heritageHero } from '../data/historia.js'
+import { useHeritage } from '../lib/heritageData.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
 
 const HeritageMap = lazy(() => import('../components/historia/HeritageMap.jsx'))
@@ -26,11 +27,12 @@ function Status({ value }) {
 
 export default function HistoriaPatrimonio() {
   usePageTitle('Patrimonio')
+  const { items: heritage } = useHeritage()
   const [zone, setZone] = useState('todas')
   const [query, setQuery] = useState('')
   const [view, setView] = useState('listado')
   const [expanded, setExpanded] = useState(false)
-  const [selected, setSelected] = useState(heritage[0].slug)
+  const [selected, setSelected] = useState(heritage[0]?.slug ?? '')
   const listaRef = useRef(null)
 
   const counts = useMemo(() => {
@@ -39,7 +41,7 @@ export default function HistoriaPatrimonio() {
       map[item.zone] = (map[item.zone] ?? 0) + 1
     })
     return map
-  }, [])
+  }, [heritage])
 
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase()
@@ -48,7 +50,7 @@ export default function HistoriaPatrimonio() {
       const inText = !term || `${item.name} ${item.category} ${item.zoneLabel}`.toLowerCase().includes(term)
       return inZone && inText
     })
-  }, [zone, query])
+  }, [heritage, zone, query])
 
   const current = filtered.find((item) => item.slug === selected) ?? filtered[0] ?? null
 

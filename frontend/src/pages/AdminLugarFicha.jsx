@@ -1,0 +1,651 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import AdminSection from '../components/admin/AdminSection.jsx'
+import AdminToast from '../components/admin/AdminToast.jsx'
+import AuditTimeline from '../components/admin/AuditTimeline.jsx'
+import { MAP_ICONS, mapIconUrl } from '../data/mapIcons.js'
+import { apiRequest, ensureSession } from '../lib/auth.js'
+import { useDialog } from '../lib/dialog.jsx'
+
+// Ficha editable de un Patrimonio o de un Extra (Panel › Lugares), con las mismas
+// pestañas que una ficha de establecimiento: Información, Imágenes, Publicación e
+// Historial. Una sola pantalla para los dos tipos; lo que cambia está en KINDS.
+
+const STATUSES = ['Visitable', 'Con restricciones', 'Solo memoria']
+const ZONES = [
+  { value: 'gramalote-viejo', label: 'Gramalote Viejo' },
+  { value: 'nuevo-gramalote', label: 'Nuevo Gramalote' },
+  { value: 'caldereros', label: 'Caldereros' },
+]
+const HERITAGE_CATEGORIES = ['Histórico', 'Religioso', 'Espacio público', 'Institucional', 'Salud', 'Educativo', 'Monumento']
+
+const ROLE_LABELS = {
+  cover: 'Portada',
+  historic: 'Histórica',
+  current: 'Actual',
+  gallery: 'Galería',
+  detail: 'Detalle',
+}
+const ROLE_HELP = {
+  cover: 'La que se ve en tarjetas, listados y el mapa. Solo una.',
+  historic: 'Foto de otra época; con su época forma el carrusel de la ficha.',
+  current: 'Cómo se ve hoy.',
+  gallery: 'Fotos complementarias.',
+  detail: 'Un elemento o detalle del bien.',
+}
+
+const KINDS = {
+  heritage: {
+    api: '/admin/heritage',
+    listPath: '/admin/lugares/patrimonio',
+    listLabel: 'Patrimonio',
+    noun: 'patrimonio',
+    publicPath: (form) => `/historia/patrimonio/${form.slug}`,
+    sections: [
+      {
+        title: 'Datos principales',
+        hint: 'Nombre, tipo, estado y zona del bien.',
+        fields: [
+          { key: 'name', label: 'Nombre', required: true, max: 180 },
+          { key: 'category', label: 'Subcategoría del mapa', list: HERITAGE_CATEGORIES, required: true, max: 80 },
+          { key: 'fichaCategory', label: 'Categoría en la ficha', placeholder: 'Patrimonio religioso', max: 80 },
+          { key: 'status', label: 'Estado', type: 'select', options: STATUSES.map((value) => ({ value, label: value })) },
+          { key: 'zoneKey', label: 'Zona de la ficha', type: 'select', options: ZONES, empty: 'Sin zona' },
+          { key: 'zone', label: 'Zona (texto del mapa)', max: 120 },
+          { key: 'zoneTag', label: 'Etiqueta de zona', placeholder: 'Gramalote Viejo — emplazamiento histórico', max: 120 },
+          { key: 'historicalPeriod', label: 'Época', placeholder: '1910 – 2010', max: 120 },
+        ],
+      },
+      {
+        title: 'Textos de la ficha',
+        hint: 'Lo que se lee en Historia › Patrimonio.',
+        fields: [
+          { key: 'subtitle', label: 'Subtítulo', max: 200, wide: true },
+          { key: 'intro', label: 'Frase introductoria', type: 'textarea', rows: 2, max: 600, wide: true },
+          { key: 'summary', label: 'Resumen (tarjetas y mapa)', type: 'textarea', rows: 2, max: 320, wide: true },
+          {
+            key: 'description',
+            label: 'Descripción histórica',
+            type: 'textarea',
+            rows: 10,
+            max: 12000,
+            wide: true,
+            help: 'Separa los párrafos con una línea en blanco.',
+          },
+          { key: 'sources', label: 'Fuentes consultadas', type: 'textarea', rows: 3, max: 4000, wide: true },
+        ],
+      },
+      {
+        title: 'Información para visitarlo',
+        hint: 'Ubicación, acceso, recomendación y horario. Si lo dejas vacío, la ficha no muestra este bloque.',
+        fields: [
+          { key: 'visitLocation', label: 'Ubicación', max: 500, wide: true },
+          { key: 'visitAccess', label: 'Acceso', max: 300 },
+          { key: 'hoursText', label: 'Horario de visita', max: 255 },
+          { key: 'address', label: 'Dirección', max: 255 },
+          { key: 'visitRecommendation', label: 'Recomendación', type: 'textarea', rows: 3, max: 1000, wide: true },
+        ],
+      },
+      {
+        title: 'Ubicación en el mapa',
+        hint: 'Coordenadas, enlace y detalles técnicos.',
+        fields: [
+          { key: 'latitude', label: 'Latitud', type: 'number', required: true, step: 'any' },
+          { key: 'longitude', label: 'Longitud', type: 'number', required: true, step: 'any' },
+          { key: 'coordsApprox', label: 'La ubicación es aproximada', type: 'checkbox' },
+          { key: 'mapsUrl', label: 'Enlace de Google Maps', max: 500, wide: true },
+          { key: 'mapIcon', label: 'Icono del mapa', type: 'icon' },
+          { key: 'matrixRef', label: 'Referencia de la matriz', max: 16 },
+          { key: 'slug', label: 'Enlace (slug)', max: 160, help: 'Cambiarlo cambia la dirección pública de la ficha.' },
+          { key: 'sortOrder', label: 'Orden', type: 'number', step: '1' },
+        ],
+      },
+    ],
+    publication: [
+      { key: 'published', label: 'Publicada en Historia › Patrimonio', help: 'Muestra su ficha en el sitio.' },
+      { key: 'showOnMap', label: 'Visible en el mapa', help: 'Muestra su pin en /mapa.' },
+    ],
+  },
+  extras: {
+    api: '/admin/extras',
+    listPath: '/admin/lugares/extras',
+    listLabel: 'Extras',
+    noun: 'extra',
+    publicPath: () => '/mapa',
+    sections: [
+      {
+        title: 'Datos principales',
+        hint: 'Nombre, categoría y descripción del punto.',
+        fields: [
+          { key: 'name', label: 'Nombre', required: true, max: 180 },
+          { key: 'category', label: 'Categoría', required: true, max: 80 },
+          { key: 'zone', label: 'Zona o referencia', max: 120 },
+          { key: 'summary', label: 'Resumen', type: 'textarea', rows: 2, max: 320, wide: true },
+          { key: 'description', label: 'Descripción', type: 'textarea', rows: 6, max: 8000, wide: true, help: 'Separa los párrafos con una línea en blanco.' },
+        ],
+      },
+      {
+        title: 'Contacto y horario',
+        hint: 'Cómo ubicarlo y contactarlo.',
+        fields: [
+          { key: 'locationDetail', label: 'Cómo ubicarlo', max: 180, wide: true },
+          { key: 'address', label: 'Dirección', max: 255 },
+          { key: 'hoursText', label: 'Horario', max: 255 },
+          { key: 'phone', label: 'Teléfono', max: 40 },
+          { key: 'whatsapp', label: 'WhatsApp', max: 40 },
+          { key: 'email', label: 'Correo', type: 'email', max: 190 },
+          { key: 'website', label: 'Sitio web', max: 500 },
+        ],
+      },
+      {
+        title: 'Ubicación en el mapa',
+        hint: 'Coordenadas, enlace y detalles técnicos.',
+        fields: [
+          { key: 'latitude', label: 'Latitud', type: 'number', required: true, step: 'any' },
+          { key: 'longitude', label: 'Longitud', type: 'number', required: true, step: 'any' },
+          { key: 'mapsUrl', label: 'Enlace de Google Maps', max: 500, wide: true },
+          { key: 'mapIcon', label: 'Icono del mapa', type: 'icon' },
+          { key: 'matrixRef', label: 'Referencia de la matriz', max: 16 },
+          { key: 'slug', label: 'Enlace (slug)', max: 160 },
+          { key: 'sortOrder', label: 'Orden', type: 'number', step: '1' },
+        ],
+      },
+    ],
+    publication: [{ key: 'published', label: 'Visible en el mapa', help: 'Muestra su pin en /mapa.' }],
+  },
+}
+
+const TABS = [
+  { key: 'info', label: 'Información' },
+  { key: 'images', label: 'Imágenes' },
+  { key: 'publish', label: 'Publicación' },
+  { key: 'history', label: 'Historial' },
+]
+
+const NO_LOOKUPS = { category: () => null, type: () => null, zone: () => null }
+
+function editableKeys(kind) {
+  return [...kind.sections.flatMap((section) => section.fields.map((field) => field.key)), ...kind.publication.map((field) => field.key)]
+}
+
+function pickFields(kind, data) {
+  const result = {}
+  for (const key of editableKeys(kind)) result[key] = data[key] ?? (typeof data[key] === 'boolean' ? data[key] : '')
+  return result
+}
+
+function Field({ spec, value, onChange }) {
+  const common = { required: spec.required, maxLength: spec.max }
+  const style = spec.wide ? { gridColumn: '1 / -1' } : undefined
+
+  if (spec.type === 'checkbox') {
+    return (
+      <label className="admin-field admin-field--check" style={style}>
+        <input type="checkbox" checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} />
+        <span>{spec.label}</span>
+      </label>
+    )
+  }
+
+  let control
+  if (spec.type === 'textarea') {
+    control = <textarea rows={spec.rows ?? 3} value={value ?? ''} onChange={(event) => onChange(event.target.value)} {...common} />
+  } else if (spec.type === 'select') {
+    control = (
+      <select value={value ?? ''} onChange={(event) => onChange(event.target.value)}>
+        {spec.empty ? <option value="">{spec.empty}</option> : null}
+        {spec.options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    )
+  } else if (spec.type === 'icon') {
+    control = (
+      <span className="place-icon">
+        <img src={mapIconUrl(value || 'monumento')} alt="" width="32" height="32" />
+        <select value={value ?? ''} onChange={(event) => onChange(event.target.value)}>
+          {MAP_ICONS.map((icon) => (
+            <option key={icon.key} value={icon.key}>
+              {icon.label}
+            </option>
+          ))}
+        </select>
+      </span>
+    )
+  } else {
+    const listId = spec.list ? `list-${spec.key}` : undefined
+    control = (
+      <>
+        <input
+          type={spec.type ?? 'text'}
+          step={spec.step}
+          list={listId}
+          placeholder={spec.placeholder}
+          value={value ?? ''}
+          onChange={(event) => onChange(event.target.value)}
+          {...common}
+        />
+        {spec.list ? (
+          <datalist id={listId}>
+            {spec.list.map((item) => (
+              <option key={item} value={item} />
+            ))}
+          </datalist>
+        ) : null}
+      </>
+    )
+  }
+
+  return (
+    <label className="admin-field" style={style}>
+      <span>{spec.label}</span>
+      {control}
+      {spec.help ? <small className="admin-hint">{spec.help}</small> : null}
+    </label>
+  )
+}
+
+function ImageCard({ image, index, total, kindKey, roles, busy, onSave, onRemove, onMove }) {
+  const [draft, setDraft] = useState({ role: image.role, eraLabel: image.eraLabel ?? '', altText: image.altText, caption: image.caption, credit: image.credit })
+  const dirty =
+    draft.role !== image.role ||
+    draft.eraLabel !== (image.eraLabel ?? '') ||
+    draft.altText !== image.altText ||
+    draft.caption !== image.caption ||
+    draft.credit !== image.credit
+  const set = (key) => (event) => setDraft((current) => ({ ...current, [key]: event.target.value }))
+
+  return (
+    <li className="place-img">
+      <div className="place-img__thumb">
+        <img src={image.url} alt="" loading="lazy" />
+        <span className={`place-img__role place-img__role--${image.role}`}>{ROLE_LABELS[image.role]}</span>
+      </div>
+      <div className="place-img__body">
+        <div className="admin-grid">
+          <label className="admin-field">
+            <span>Uso</span>
+            <select value={draft.role} onChange={set('role')}>
+              {roles.map((role) => (
+                <option key={role} value={role}>
+                  {ROLE_LABELS[role]}
+                </option>
+              ))}
+            </select>
+          </label>
+          {kindKey === 'heritage' ? (
+            <label className="admin-field">
+              <span>Época (fotos históricas)</span>
+              <input value={draft.eraLabel} onChange={set('eraLabel')} maxLength={60} placeholder="1910 – 1953" />
+            </label>
+          ) : null}
+          <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
+            <span>Texto alternativo (describe la foto)</span>
+            <input value={draft.altText} onChange={set('altText')} maxLength={255} />
+          </label>
+          <label className="admin-field">
+            <span>Pie de foto</span>
+            <input value={draft.caption} onChange={set('caption')} maxLength={500} />
+          </label>
+          <label className="admin-field">
+            <span>Crédito o fuente</span>
+            <input value={draft.credit} onChange={set('credit')} maxLength={255} />
+          </label>
+        </div>
+        <div className="place-img__actions">
+          <button type="button" className="admin-btn admin-btn--primary" disabled={!dirty || busy} onClick={() => onSave(image, draft)}>
+            Guardar foto
+          </button>
+          <button type="button" className="admin-btn" disabled={index === 0 || busy} onClick={() => onMove(index, -1)} aria-label="Subir">
+            ↑
+          </button>
+          <button type="button" className="admin-btn" disabled={index === total - 1 || busy} onClick={() => onMove(index, 1)} aria-label="Bajar">
+            ↓
+          </button>
+          <button type="button" className="admin-btn admin-btn--danger-outline" disabled={busy} onClick={() => onRemove(image)}>
+            Quitar
+          </button>
+        </div>
+      </div>
+    </li>
+  )
+}
+
+export default function AdminLugarFicha({ kind: kindKey }) {
+  const kind = KINDS[kindKey]
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const { confirm } = useDialog()
+  const fileInput = useRef(null)
+
+  const [form, setForm] = useState(null)
+  const [baseline, setBaseline] = useState('')
+  const [tab, setTab] = useState('info')
+  const [saving, setSaving] = useState(false)
+  const [busyImage, setBusyImage] = useState(false)
+  const [error, setError] = useState('')
+  const [toast, setToast] = useState(null)
+  const [upload, setUpload] = useState({ role: 'gallery', eraLabel: '', altText: '', caption: '', credit: '' })
+
+  const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message, close: () => setToast(null) })
+
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      const session = await ensureSession()
+      if (!alive || !session) return
+      try {
+        const detail = await apiRequest(`${kind.api}/${id}`)
+        if (!alive) return
+        setForm(detail)
+        setBaseline(JSON.stringify(pickFields(kind, detail)))
+      } catch (err) {
+        if (alive) setError(err.message)
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [id, kind])
+
+  const dirty = useMemo(() => (form ? JSON.stringify(pickFields(kind, form)) !== baseline : false), [form, baseline, kind])
+  const set = (key) => (value) => setForm((current) => ({ ...current, [key]: value }))
+
+  async function save(event) {
+    event?.preventDefault()
+    setSaving(true)
+    setError('')
+    try {
+      const detail = await apiRequest(`${kind.api}/${id}`, { method: 'PATCH', body: pickFields(kind, form) })
+      setForm(detail)
+      setBaseline(JSON.stringify(pickFields(kind, detail)))
+      notify('ok', dirty ? 'Cambios guardados' : 'Sin cambios', dirty ? 'La ficha quedó actualizada.' : 'No había nada nuevo que guardar.')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Las fotos se guardan al instante y no tocan lo que se esté editando en el texto.
+  function applyImages(detail) {
+    setForm((current) => ({ ...current, images: detail.images, audit: detail.audit, updatedAt: detail.updatedAt }))
+  }
+
+  async function uploadImage(event) {
+    event.preventDefault()
+    const file = fileInput.current?.files?.[0]
+    if (!file) {
+      setError('Elige una foto para subir.')
+      return
+    }
+    setBusyImage(true)
+    setError('')
+    try {
+      const data = new FormData()
+      data.append('file', file)
+      data.append('role', upload.role)
+      for (const key of ['eraLabel', 'altText', 'caption', 'credit']) data.append(key, upload[key])
+      const detail = await apiRequest(`${kind.api}/${id}/images`, { method: 'POST', formData: data })
+      applyImages(detail)
+      if (fileInput.current) fileInput.current.value = ''
+      setUpload((current) => ({ ...current, eraLabel: '', altText: '', caption: '', credit: '' }))
+      notify('ok', 'Foto subida', 'Ya forma parte de la ficha.')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusyImage(false)
+    }
+  }
+
+  async function saveImage(image, draft) {
+    setBusyImage(true)
+    setError('')
+    try {
+      applyImages(await apiRequest(`${kind.api}/${id}/images/${image.id}`, { method: 'PATCH', body: draft }))
+      notify('ok', 'Foto actualizada', 'Los cambios de la foto quedaron guardados.')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusyImage(false)
+    }
+  }
+
+  async function moveImage(index, delta) {
+    const order = form.images.map((image) => image.id)
+    const [moved] = order.splice(index, 1)
+    order.splice(index + delta, 0, moved)
+    setBusyImage(true)
+    try {
+      applyImages(await apiRequest(`${kind.api}/${id}/images/order`, { method: 'PUT', body: { ids: order } }))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusyImage(false)
+    }
+  }
+
+  async function removeImage(image) {
+    const ok = await confirm({
+      title: '¿Quitar esta foto de la ficha?',
+      message: 'Dejará de verse en el sitio.',
+      confirmLabel: 'Quitar foto',
+      danger: true,
+    })
+    if (!ok) return
+    setBusyImage(true)
+    try {
+      applyImages(await apiRequest(`${kind.api}/${id}/images/${image.id}`, { method: 'DELETE' }))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusyImage(false)
+    }
+  }
+
+  async function removePlace() {
+    const ok = await confirm({
+      title: `¿Borrar «${form.name}»?`,
+      message: 'Se borra la ficha con sus fotos. No se puede deshacer.',
+      confirmLabel: 'Borrar',
+      danger: true,
+    })
+    if (!ok) return
+    try {
+      await apiRequest(`${kind.api}/${id}`, { method: 'DELETE' })
+      navigate(kind.listPath)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  if (!form) {
+    return (
+      <section className="admin-page">
+        <div className="admin-wrap">
+          {error ? <p className="auth-error" role="alert">{error}</p> : <p className="note">Cargando ficha…</p>}
+          <Link className="admin-btn" to={kind.listPath}>
+            ← {kind.listLabel}
+          </Link>
+        </div>
+      </section>
+    )
+  }
+
+  const roles = form.imageRoles ?? Object.keys(ROLE_LABELS)
+  const cover = form.images.find((image) => image.role === 'cover') ?? form.images[0] ?? null
+
+  return (
+    <section className="admin-page">
+      <div className="admin-wrap">
+        <div className="admin-head2">
+          <Link className="admin-back" to={kind.listPath}>
+            ← {kind.listLabel}
+          </Link>
+          <div className="admin-head2__cover">
+            {cover ? <img src={cover.url} alt="" /> : <span aria-hidden="true" />}
+          </div>
+          <div className="admin-head2__body">
+            <h1>{form.name || 'Sin nombre'}</h1>
+            <p>
+              <span className={`admin-badge ${form.published ? 'admin-badge--ok' : 'admin-badge--draft'}`}>
+                {form.published ? 'Publicado' : 'No publicado'}
+              </span>
+              <small>
+                {form.category}
+                {form.zone ? ` · ${form.zone}` : ''}
+                {form.matrixRef ? ` · ${form.matrixRef}` : ''} · {form.images.length} {form.images.length === 1 ? 'imagen' : 'imágenes'}
+              </small>
+            </p>
+          </div>
+          <div className="admin-head2__actions">
+            <Link className="admin-btn" to={kind.publicPath(form)} target="_blank" rel="noreferrer">
+              Ver ficha ↗
+            </Link>
+            <button type="button" className="admin-btn admin-btn--primary" onClick={save} disabled={saving || !dirty}>
+              {saving ? 'Guardando…' : dirty ? 'Guardar cambios' : 'Sin cambios'}
+            </button>
+          </div>
+        </div>
+
+        {error ? <p className="auth-error" role="alert">{error}</p> : null}
+
+        <nav className="admin-tabs" aria-label="Secciones de la ficha">
+          {TABS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              aria-current={tab === item.key ? 'true' : undefined}
+              className={`admin-tab ${tab === item.key ? 'is-active' : ''}`}
+              onClick={() => setTab(item.key)}
+            >
+              {item.label}
+              {item.key === 'images' ? <span className="admin-tab__count">{form.images.length}</span> : null}
+            </button>
+          ))}
+        </nav>
+
+        <form onSubmit={save} className="admin-panel">
+          {tab === 'info' ? (
+            <>
+              {kind.sections.map((section, index) => (
+                <AdminSection key={section.title} title={section.title} hint={section.hint} defaultOpen={index === 0}>
+                  <div className="admin-grid">
+                    {section.fields.map((spec) => (
+                      <Field key={spec.key} spec={spec} value={form[spec.key]} onChange={set(spec.key)} />
+                    ))}
+                  </div>
+                </AdminSection>
+              ))}
+            </>
+          ) : null}
+
+          {tab === 'images' ? (
+            <div className="place-images">
+              <AdminSection title="Subir una foto" hint="Elige el archivo y dile a la ficha para qué sirve." defaultOpen>
+                <div className="admin-grid">
+                  <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
+                    <span>Archivo (JPG, PNG o WebP, mínimo 200 × 200 px)</span>
+                    <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" />
+                  </label>
+                  <label className="admin-field">
+                    <span>Uso</span>
+                    <select value={upload.role} onChange={(event) => setUpload({ ...upload, role: event.target.value })}>
+                      {roles.map((role) => (
+                        <option key={role} value={role}>
+                          {ROLE_LABELS[role]}
+                        </option>
+                      ))}
+                    </select>
+                    <small className="admin-hint">{ROLE_HELP[upload.role]}</small>
+                  </label>
+                  {kindKey === 'heritage' ? (
+                    <label className="admin-field">
+                      <span>Época (si es histórica)</span>
+                      <input value={upload.eraLabel} onChange={(event) => setUpload({ ...upload, eraLabel: event.target.value })} placeholder="1910 – 1953" maxLength={60} />
+                    </label>
+                  ) : null}
+                  <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
+                    <span>Texto alternativo (describe la foto)</span>
+                    <input value={upload.altText} onChange={(event) => setUpload({ ...upload, altText: event.target.value })} maxLength={255} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Pie de foto</span>
+                    <input value={upload.caption} onChange={(event) => setUpload({ ...upload, caption: event.target.value })} maxLength={500} />
+                  </label>
+                  <label className="admin-field">
+                    <span>Crédito o fuente</span>
+                    <input value={upload.credit} onChange={(event) => setUpload({ ...upload, credit: event.target.value })} maxLength={255} />
+                  </label>
+                </div>
+                <div>
+                  <button type="button" className="admin-btn admin-btn--primary" onClick={uploadImage} disabled={busyImage}>
+                    {busyImage ? 'Subiendo…' : 'Subir foto'}
+                  </button>
+                </div>
+              </AdminSection>
+
+              {form.images.length === 0 ? (
+                <p className="note">Esta ficha todavía no tiene fotos.</p>
+              ) : (
+                <ul className="place-img-list">
+                  {form.images.map((image, index) => (
+                    <ImageCard
+                      key={`${image.id}-${image.role}-${image.eraLabel}-${image.altText}-${image.caption}-${image.credit}`}
+                      image={image}
+                      index={index}
+                      total={form.images.length}
+                      kindKey={kindKey}
+                      roles={roles}
+                      busy={busyImage}
+                      onSave={saveImage}
+                      onRemove={removeImage}
+                      onMove={moveImage}
+                    />
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : null}
+
+          {tab === 'publish' ? (
+            <div className="admin-publish">
+              <h2>Publicación</h2>
+              <p className="note">Qué se ve en el sitio. Se guarda con «Guardar cambios».</p>
+              {kind.publication.map((item) => (
+                <label key={item.key} className="admin-field admin-field--check">
+                  <input type="checkbox" checked={Boolean(form[item.key])} onChange={(event) => set(item.key)(event.target.checked)} />
+                  <span>
+                    {item.label}
+                    <small className="admin-hint">{item.help}</small>
+                  </span>
+                </label>
+              ))}
+              <div className="admin-account__danger">
+                <div>
+                  <strong>Borrar esta ficha</strong>
+                  <p>Se borra con sus fotos y no se puede deshacer.</p>
+                </div>
+                <button type="button" className="admin-btn admin-btn--danger-outline" onClick={removePlace}>
+                  Borrar ficha
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {tab === 'history' ? (
+            <div className="admin-publish">
+              <h2>Historial</h2>
+              <p className="note">Quién cambió qué en esta ficha y cuándo. Solo se registra cuando hay algo nuevo.</p>
+              {form.audit.length === 0 ? <p className="note">Sin cambios registrados todavía.</p> : <AuditTimeline audit={form.audit} lookups={NO_LOOKUPS} />}
+            </div>
+          ) : null}
+        </form>
+      </div>
+
+      {toast ? <AdminToast key={toast.key} tone={toast.tone} title={toast.title} message={toast.message} onClose={toast.close} /> : null}
+    </section>
+  )
+}

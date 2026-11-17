@@ -132,49 +132,7 @@ router.post(
   }),
 )
 
-router.patch(
-  '/admin/extras/:id',
-  requireAuth,
-  asyncHandler(async (req, res) => {
-    const id = Number.parseInt(req.params.id, 10)
-    const current = await findExtra(id)
-    const body = req.body ?? {}
-    const name =
-      body.name !== undefined
-        ? text(body.name, 'Nombre', { max: 180, required: true })
-        : current.name
-    const category =
-      body.category !== undefined
-        ? text(body.category, 'Categoría', { max: 80, required: true })
-        : current.category
-    const zone = body.zone !== undefined ? text(body.zone, 'Zona', { max: 120 }) : current.zone
-    const latitude =
-      body.latitude !== undefined ? coordinate(body.latitude, 'Latitud', 90) : Number(current.latitude)
-    const longitude =
-      body.longitude !== undefined
-        ? coordinate(body.longitude, 'Longitud', 180)
-        : Number(current.longitude)
-    const link = body.mapsUrl !== undefined ? mapsUrl(body.mapsUrl) : current.maps_url
-    const icon = body.mapIcon !== undefined ? mapIcon(body.mapIcon) : current.map_icon
-
-    let published = Boolean(current.is_published)
-    if (body.published !== undefined) {
-      const next = bool(body.published)
-      if (next === null) throw new ApiError(400, 'VALIDATION', 'Indica si se publica o no')
-      published = next
-    }
-
-    await query(
-      `UPDATE map_extras
-       SET name = ?, category = ?, zone = ?, latitude = ?, longitude = ?,
-           maps_url = ?, map_icon = ?, is_published = ?
-       WHERE id = ?`,
-      [name, category, zone, latitude, longitude, link, icon, published ? 1 : 0, id],
-    )
-
-    res.json({ data: serialize(await findExtra(id)) })
-  }),
-)
+// El guardado de una ficha (PATCH /:id) y sus fotos viven en admin-places.js.
 
 router.delete(
   '/admin/extras/:id',

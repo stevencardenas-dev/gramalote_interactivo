@@ -17,6 +17,28 @@ const ESTABLISHMENT_COVER = `
    WHERE i.establishment_id = e.id AND i.role = 'cover'
    ORDER BY i.sort_order, i.id LIMIT 1) AS cover_alt`
 
+const HERITAGE_COVER = `
+  (SELECT m.id FROM heritage_images i JOIN media m ON m.id = i.media_id
+   WHERE i.heritage_id = h.id AND i.role = 'cover'
+   ORDER BY i.sort_order, i.id LIMIT 1) AS cover_media_id,
+  (SELECT m.public_url FROM heritage_images i JOIN media m ON m.id = i.media_id
+   WHERE i.heritage_id = h.id AND i.role = 'cover'
+   ORDER BY i.sort_order, i.id LIMIT 1) AS cover_url,
+  (SELECT m.alt_text FROM heritage_images i JOIN media m ON m.id = i.media_id
+   WHERE i.heritage_id = h.id AND i.role = 'cover'
+   ORDER BY i.sort_order, i.id LIMIT 1) AS cover_alt`
+
+const EXTRA_COVER = `
+  (SELECT m.id FROM extra_images i JOIN media m ON m.id = i.media_id
+   WHERE i.extra_id = x.id AND i.role = 'cover'
+   ORDER BY i.sort_order, i.id LIMIT 1) AS cover_media_id,
+  (SELECT m.public_url FROM extra_images i JOIN media m ON m.id = i.media_id
+   WHERE i.extra_id = x.id AND i.role = 'cover'
+   ORDER BY i.sort_order, i.id LIMIT 1) AS cover_url,
+  (SELECT m.alt_text FROM extra_images i JOIN media m ON m.id = i.media_id
+   WHERE i.extra_id = x.id AND i.role = 'cover'
+   ORDER BY i.sort_order, i.id LIMIT 1) AS cover_alt`
+
 const EXPERIENCE_COVER = `
   (SELECT m.id FROM experience_images i JOIN media m ON m.id = i.media_id
    WHERE i.experience_id = e.id AND i.role = 'cover'
@@ -125,19 +147,19 @@ router.get(
           ),
       // Extras: puntos complementarios sin ficha; solo se filtran por categoría.
       query(
-        `SELECT id, matrix_ref, slug, name, category, zone, latitude, longitude,
-                maps_url, map_icon, sort_order
-         FROM map_extras
-         WHERE is_published = 1
-         ORDER BY sort_order, name`,
+        `SELECT x.id, x.matrix_ref, x.slug, x.name, x.category, x.zone, x.latitude, x.longitude,
+                x.maps_url, x.map_icon, x.summary, x.sort_order, ${EXTRA_COVER}
+         FROM map_extras x
+         WHERE x.is_published = 1
+         ORDER BY x.sort_order, x.name`,
       ),
       // Patrimonio: fichas en preparación; ya tienen pin y tarjeta de mapa.
       query(
-        `SELECT id, matrix_ref, slug, name, category, zone, latitude, longitude,
-                maps_url, map_icon, summary, sort_order
-         FROM heritage_sites
-         WHERE is_published = 1
-         ORDER BY sort_order, name`,
+        `SELECT h.id, h.matrix_ref, h.slug, h.name, h.category, h.zone, h.latitude, h.longitude,
+                h.maps_url, h.map_icon, h.summary, h.sort_order, ${HERITAGE_COVER}
+         FROM heritage_sites h
+         WHERE h.is_published = 1 AND h.show_on_map = 1
+         ORDER BY h.sort_order, h.name`,
       ),
     ])
 
@@ -174,7 +196,8 @@ router.get(
               latitude: Number(row.latitude),
               longitude: Number(row.longitude),
             },
-            cover: null,
+            summary: row.summary ?? null,
+            cover: coverFromRow(row),
           })),
         heritage: heritageRows
           .filter((row) => Number.isFinite(Number(row.latitude)))
@@ -193,7 +216,7 @@ router.get(
               latitude: Number(row.latitude),
               longitude: Number(row.longitude),
             },
-            cover: null,
+            cover: coverFromRow(row),
           })),
       },
     })
