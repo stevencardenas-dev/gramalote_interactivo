@@ -997,24 +997,25 @@ export const heritage = [
     zoneLabel: 'Gramalote Viejo',
     category: 'Monumento',
     status: 'Solo memoria',
+    zoneTag: 'Gramalote Viejo — emplazamiento histórico',
     summary:
-      'Homenaje al primer párroco de San Rafael de Galindo, colocada el 8 de diciembre de 1962.',
+      'Homenaje al primer párroco de Gramalote, colocado en 1962 en la iglesia parroquial del antiguo pueblo; hoy se conserva en fotografías.',
     intro:
-      'Un homenaje al sacerdote que acompañó los primeros procesos de organización y traslado del poblado.',
-    subtitle: 'El recuerdo de un personaje fundamental',
+      'Un homenaje al primer párroco de Gramalote, cuya labor hizo parte de la historia religiosa del municipio.',
+    subtitle: 'El legado del padre Secundino Jácome',
     body: [
-      'Secundino Jácome fue el primer párroco de San Rafael de Galindo y una figura importante en la formación de Gramalote. Su trabajo religioso y comunitario estuvo relacionado con el crecimiento del poblado y con las iniciativas de traslado hacia un nuevo asentamiento.',
-      'La estatua en su honor fue colocada el 8 de diciembre de 1962. Formó parte del patrimonio escultórico del antiguo municipio. Según la ficha, actualmente no se encuentra en su emplazamiento original; por ello, no debe presentarse Gramalote Viejo como su ubicación actual.',
+      'Secundino Jácome fue el primer párroco de Gramalote y una figura vinculada a la vida religiosa de sus habitantes. Su labor pastoral acompañó los primeros años de organización de la comunidad y el desarrollo del municipio.',
+      'En su honor se levantó una estatua, colocada el 8 de diciembre de 1962. De acuerdo con los registros históricos de la Universidad de Pamplona, la escultura fue instalada en la iglesia parroquial del antiguo Gramalote, mientras que la estatua de Laureano Gómez ocupó el parque principal.',
+      'La escultura ya no se conserva como monumento físico. Su recuerdo permanece en los registros fotográficos que permiten conocer cómo era y el lugar que ocupó en el antiguo municipio.',
     ],
-    visit: {
-      location: 'Emplazamiento histórico en Gramalote Viejo. Ubicación actual de la escultura: pendiente de confirmar.',
-      access: 'Solo memoria en su emplazamiento original; ubicación actual por confirmar.',
-      recommendation:
-        'Consultar fotografías y registros históricos. Antes de ofrecer una visita física, confirmar con la Alcaldía dónde se encuentra actualmente la escultura.',
-    },
+    // Solo memoria: no hay visita física, así que la ficha no lleva bloque «para visitarlo».
+    visit: null,
+    imageAlt: 'Estatua del padre Secundino Jácome en el antiguo Gramalote',
+    imageCaption: 'Fotografía histórica: estatua del padre Secundino Jácome en el antiguo Gramalote.',
     mapsUrl: 'https://maps.app.goo.gl/itwtwRQNMGM4MbuDA',
-    coords: [-72.7861, 7.9159], // [longitud, latitud] de la matriz de patrimonio (migración 027)
-    mapZone: 'nuevo-gramalote', // el pin cae en Nuevo Gramalote; la ficha conserva su zona
+    // Estuvo en la iglesia parroquial del antiguo Gramalote: se ubica junto al Templo de San Rafael antiguo (aproximado).
+    coords: [-72.7976, 7.8890],
+    coordsApprox: true,
     image: '/img/historia/pat-10.jpg',
     gallery: [],
   },
@@ -1026,22 +1027,24 @@ export const heritage = [
     zoneLabel: 'Nuevo Gramalote',
     category: 'Monumento',
     status: 'Visitable',
+    zoneTag: 'Nuevo Gramalote (según el inventario)',
     summary:
-      'Dedicada al expresidente colombiano, su construcción fue promovida desde 1950 y se instaló en la plaza principal en 1973.',
+      'Escultura del expresidente Laureano Gómez: trasladada a la Gobernación en 2010 y devuelta restaurada al Nuevo Gramalote en 2016.',
     intro:
-      'Una escultura dedicada al expresidente colombiano que hizo parte del paisaje monumental del antiguo Gramalote.',
-    subtitle: 'Un monumento en la memoria del pueblo',
+      'Una escultura dedicada al expresidente Laureano Gómez, recuperada e instalada nuevamente en el municipio después de la tragedia de 2010.',
+    subtitle: 'Laureano Gómez: del antiguo al nuevo Gramalote',
     body: [
-      'La estatua fue dedicada al expresidente colombiano Laureano Gómez. Su construcción fue promovida desde el momento de su elección presidencial en 1950 y posteriormente se proyectó su instalación en la plaza principal.',
-      'Aunque inicialmente existieron dificultades para ubicarla, finalmente fue instalada en 1973. La escultura hizo parte del patrimonio monumental del municipio. El inventario la registra en Nuevo Gramalote, pero su ubicación actual debe confirmarse antes de ofrecerla como punto de visita.',
+      'La estatua de Laureano Gómez fue realizada en homenaje al expresidente colombiano y estuvo ubicada durante décadas en el parque principal del antiguo Gramalote. Su instalación fue promovida desde 1950 y finalmente llegó a la plaza en 1973.',
+      'En diciembre de 2010, ante el deterioro del terreno y la evacuación del municipio, la escultura fue trasladada a la Gobernación de Norte de Santander para protegerla de los daños ocasionados por la falla geológica.',
+      'El 16 de diciembre de 2016, después de su restauración, fue devuelta al Nuevo Gramalote. Desde entonces forma parte del patrimonio monumental del municipio y puede apreciarse nuevamente en su espacio público.',
     ],
     visit: {
-      location: 'Nuevo Gramalote, según el inventario; ubicación exacta pendiente de confirmar.',
-      access: 'Por confirmar en su ubicación actual.',
+      location: 'Plaza principal (Plaza de la Restauración).',
+      access: 'Visitable. Se encuentra en un espacio público.',
       recommendation:
-        'Verificar con la Alcaldía la ubicación actual y las condiciones de acceso antes de realizar el recorrido.',
+        'Aprovechar la visita para recorrer la plaza principal y conocer otros espacios representativos del nuevo municipio.',
     },
-    mapsUrl: 'https://maps.app.goo.gl/ZSTwUqccSi1KSTAF9',
+    mapsUrl: 'https://maps.app.goo.gl/Eej6XoywhVfRkx8v7',
     coords: [-72.786362, 7.915631], // [longitud, latitud] de la matriz de patrimonio (migración 027)
     image: '/img/historia/pat-11.jpg',
     gallery: [],

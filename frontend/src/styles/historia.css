@@ -3099,3 +3099,10 @@ kbd {
 .hmap__map .maplibregl-ctrl-attrib {
   font-size: 0.7rem;
 }
+
+.his-ficha__caption {
+  margin: 10px 4px 0;
+  color: var(--c-ink-soft);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
