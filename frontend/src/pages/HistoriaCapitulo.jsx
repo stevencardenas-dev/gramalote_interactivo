@@ -268,6 +268,64 @@ export default function HistoriaCapitulo() {
     }
   }, [slug, chapter])
 
+  // Transición entre fragmentos en móvil: mientras se desliza, el bloque que sale
+  // se atenúa y se encoge un poco y el que entra sube y se aclara (--vis, de 0 a 1,
+  // lo leen las reglas de historia.css). El anillo de abajo se llena a medida que
+  // se avanza hacia el siguiente fragmento, para que se note que al seguir
+  // deslizando se cambia de uno a otro.
+  const siguienteRef = useRef(null)
+  useEffect(() => {
+    const story = storyRef.current
+    if (!chapter || !story) return undefined
+    const movil = window.matchMedia('(max-width: 980px)')
+    const cierre = document.querySelector('.his-closing')
+    const bloques = [...story.querySelectorAll('.his-event'), ...(cierre ? [cierre] : [])]
+    let marco = 0
+
+    const pintar = () => {
+      marco = 0
+      const ring = siguienteRef.current
+      if (!movil.matches || esReducido()) {
+        bloques.forEach((bloque) => bloque.style.removeProperty('--vis'))
+        ring?.style.setProperty('--p', '0')
+        return
+      }
+      const alto = window.innerHeight
+      const centro = alto / 2
+      const medios = bloques.map((bloque) => {
+        const caja = bloque.getBoundingClientRect()
+        const medio = (caja.top + caja.bottom) / 2
+        const vis = Math.max(0, Math.min(1, 1 - Math.abs(medio - centro) / (alto * 0.75)))
+        bloque.style.setProperty('--vis', vis.toFixed(3))
+        return medio
+      })
+      // Último bloque cuyo centro ya pasó por el centro de la pantalla.
+      let actual = -1
+      medios.forEach((medio, i) => {
+        if (medio <= centro) actual = i
+      })
+      const siguiente = actual >= 0 ? medios[actual + 1] : medios[0]
+      const desde = actual >= 0 ? medios[actual] : centro + alto * 0.5
+      const avance = siguiente === undefined ? 0 : Math.max(0, Math.min(1, (centro - desde) / (siguiente - desde)))
+      ring?.style.setProperty('--p', avance.toFixed(3))
+      ring?.classList.toggle('is-end', siguiente === undefined)
+    }
+
+    const programar = () => {
+      if (!marco) marco = window.requestAnimationFrame(pintar)
+    }
+
+    pintar()
+    window.addEventListener('scroll', programar, { passive: true })
+    window.addEventListener('resize', programar)
+    return () => {
+      window.removeEventListener('scroll', programar)
+      window.removeEventListener('resize', programar)
+      if (marco) window.cancelAnimationFrame(marco)
+      bloques.forEach((bloque) => bloque.style.removeProperty('--vis'))
+    }
+  }, [slug, chapter])
+
   if (!chapter) {
     return (
       <section className="section section--estado">
@@ -332,6 +390,13 @@ export default function HistoriaCapitulo() {
 
       <SectionNav />
 
+      <div className="his-next" ref={siguienteRef} aria-hidden="true">
+        <svg viewBox="0 0 44 44">
+          <circle className="his-next__track" cx="22" cy="22" r="19" />
+          <circle className="his-next__fill" cx="22" cy="22" r="19" pathLength="100" />
+        </svg>
+        <span className="his-next__arrow">↓</span>
+      </div>
       <p className={`his-step-counter${totalEvents > 1 ? ' is-visible' : ''}`} aria-hidden="true">
         {String(paso + 1).padStart(2, '0')}
         <span>/ {String(totalEvents).padStart(2, '0')}</span>
@@ -370,6 +435,15 @@ export default function HistoriaCapitulo() {
                       inicioEtapa[stageIndex] + eventIndex === activo ? ' is-active' : ''
                     }`}
                   >
+                    {eventIndex === 0 ? (
+                      <div className="his-event__stage">
+                        <span className="his-stage__count">
+                          Etapa {String(stageIndex + 1).padStart(2, '0')} / {String(chapter.stages.length).padStart(2, '0')}
+                        </span>
+                        <h2>{stage.title}</h2>
+                        <p>{stage.kicker.split('·')[1]?.trim() || stage.kicker}</p>
+                      </div>
+                    ) : null}
                     <span className="his-event__dot" aria-hidden="true" />
                     <figure className="his-event__media">
                       <img src={event.image} alt="" loading="lazy" />
