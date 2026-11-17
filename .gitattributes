@@ -1,0 +1,6 @@
+# Scripts y SQL se ejecutan en Linux: siempre LF, aunque el repo se clone o se
+# edite en Windows. Un CRLF rompe `set -o pipefail` en los .sh y cambia el
+# sha256 de las migraciones (el runner las rechaza como «cambió después de
+# aplicarse»).
+*.sh text eol=lf
+*.sql text eol=lf

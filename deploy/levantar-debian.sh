@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 # Levanta el sitio completo de Gramalote (nginx + API + MySQL) en esta máquina
-# Debian/Ubuntu con los datos reales de la EC2: base de datos, usuarios del
-# panel, fotos y mapa. Pensado para verse desde otra máquina de la red, sin SSH
-# ni AWS, sin CDN y sin certificado (HTTP plano).
+# con los datos reales de la EC2: base de datos, usuarios del panel, fotos y
+# mapa. Pensado para verse desde otra máquina de la red, sin SSH ni AWS, sin CDN
+# y sin certificado (HTTP plano).
 #
 # El stack es el mismo docker-compose.yml de producción, con
 # docker-compose.debian.yml encima para compilar las imágenes en vez de
 # descargarlas de ECR.
+#
+# Funciona en Debian y Ubuntu, y en general en cualquier Linux con Docker y
+# systemd: detecta apt/dnf/zypper/pacman para instalar Docker, abre el puerto en
+# ufw o firewalld, y añade ':z' a los montajes si SELinux está en enforcing.
 #
 # Uso:
 #   sudo bash deploy/levantar-debian.sh
@@ -37,7 +41,7 @@ for arg in "$@"; do
     --sin-fotos) SIN_FOTOS=1 ;;
     --rotar-admin) ROTAR_ADMIN=1 ;;
     --ayuda|-h|--help)
-      sed -n '2,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     *) die "opción desconocida: $arg (usa --ayuda)" ;;
@@ -48,16 +52,94 @@ if [ "$(id -u)" -ne 0 ]; then
   die "Ejecútalo como root:  sudo bash deploy/levantar-debian.sh"
 fi
 
+# --- Distribución ----------------------------------------------------------
+# El stack es idéntico en todas; cambian el gestor de paquetes, el cortafuegos
+# y, en RHEL/Fedora, SELinux.
+DISTRO=""
+DISTRO_LIKE=""
+if [ -r /etc/os-release ]; then
+  # shellcheck disable=SC1091
+  . /etc/os-release
+  DISTRO="${ID:-}"
+  DISTRO_LIKE="${ID_LIKE:-}"
+fi
+
+# apt · dnf · zypper · pacman · desconocida
+# Se mira cada palabra de ID/ID_LIKE por separado: así 'ID=ol' (Oracle Linux) o
+# 'ID_LIKE="rhel fedora"' se clasifican sin patrones con espacios.
+FAMILIA=desconocida
+for _id in ${DISTRO:-} ${DISTRO_LIKE:-}; do
+  case "$_id" in
+    debian|ubuntu|raspbian|linuxmint|pop|elementary|zorin|neon|kali|mx) FAMILIA=apt ;;
+    fedora|rhel|centos|rocky|alma|almalinux|ol|oracle) FAMILIA=dnf ;;
+    suse|sles|sled|opensuse*) FAMILIA=zypper ;;
+    arch|manjaro|endeavouros|garuda|cachyos) FAMILIA=pacman ;;
+  esac
+  [ "$FAMILIA" = desconocida ] || break
+done
+
+if [ "$DISTRO" = alpine ]; then
+  die "Alpine no sirve para este stack: no tiene bash, systemd ni glibc.
+  Usa Debian, Ubuntu, RHEL/Fedora/Rocky, Arch o openSUSE (o su contenedor)."
+fi
+
+paquetes_base() {
+  case "$FAMILIA" in
+    apt)    apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl git ;;
+    dnf)    dnf install -y ca-certificates curl git ;;
+    zypper) zypper --non-interactive install ca-certificates curl git ;;
+    pacman) pacman -Sy --needed --noconfirm ca-certificates curl git ;;
+    *)      return 1 ;;
+  esac
+}
+
+instalar_docker() {
+  log "Instalando Docker en ${DISTRO:-desconocida} (familia ${FAMILIA})"
+  case "$FAMILIA" in
+    apt|dnf)
+      # get.docker.com cubre Debian, Ubuntu, Fedora, RHEL, CentOS y derivados.
+      paquetes_base || die "no se pudieron instalar los paquetes base"
+      curl -fsSL https://get.docker.com | sh
+      ;;
+    zypper)
+      zypper --non-interactive install ca-certificates curl git docker docker-compose \
+        || die "no se pudo instalar Docker con zypper"
+      ;;
+    pacman)
+      pacman -Sy --needed --noconfirm ca-certificates curl git docker docker-compose \
+        || die "no se pudo instalar Docker con pacman"
+      ;;
+    *)
+      die "No reconozco la distribución (${DISTRO:-sin /etc/os-release}).
+  Instala Docker a mano (https://docs.docker.com/engine/install/) y vuelve a
+  ejecutar este script: solo necesita 'docker' y el plugin 'docker compose' v2."
+      ;;
+  esac
+}
+
 # --- Docker ----------------------------------------------------------------
 if ! command -v docker >/dev/null 2>&1; then
-  log "Instalando Docker (get.docker.com)"
-  apt-get update
-  apt-get install -y ca-certificates curl git
-  curl -fsSL https://get.docker.com | sh
+  instalar_docker
 fi
+
 if ! docker compose version >/dev/null 2>&1; then
-  die "Falta el plugin 'docker compose' (v2). Instálalo con: apt install docker-compose-plugin"
+  case "$FAMILIA" in
+    apt)    pista="apt install docker-compose-plugin" ;;
+    dnf)    pista="dnf install docker-compose-plugin" ;;
+    zypper) pista="zypper install docker-compose" ;;
+    pacman) pista="pacman -S docker-compose" ;;
+    *)      pista="instala el plugin cli 'docker-compose' v2" ;;
+  esac
+  die "Falta el plugin 'docker compose' (v2). Instálalo con: $pista"
 fi
+
+# El overlay usa la etiqueta YAML '!override', que existe desde Compose 2.24.
+COMPOSE_VER="$(docker compose version --short 2>/dev/null | tr -d 'v' | cut -d- -f1)"
+if [ -n "$COMPOSE_VER" ] && [ "$(printf '%s\n2.24.0\n' "$COMPOSE_VER" | sort -V | head -n1)" != "2.24.0" ]; then
+  warn "docker compose $COMPOSE_VER es anterior a 2.24 y el overlay usa '!override':
+  el arranque puede fallar con «unexpected tag». Actualiza el plugin antes de seguir."
+fi
+
 systemctl enable --now docker >/dev/null 2>&1 || true
 
 # --- Snapshot de la EC2 ----------------------------------------------------
@@ -92,7 +174,13 @@ TILES_DIR="${TILES_DIR:-/srv/gramalote/tiles}"
 ESTADO_DIR="${ESTADO_DIR:-/srv/gramalote}"
 export MEDIA_DIR TILES_DIR
 
+# Primera IP de la máquina: 'hostname -I' es lo normal, pero en algunos
+# contenedores/minimal devuelve vacío y ahí se pregunta a la tabla de rutas.
 IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+if [ -z "$IP" ]; then
+  IP="$(ip -4 route get 1.1.1.1 2>/dev/null \
+    | awk '{for (i = 1; i <= NF; i++) if ($i == "src") { print $(i + 1); exit }}')"
+fi
 BASE_URL="http://${IP:-localhost}:${PORT}"
 
 if [ ! -f .env ]; then
@@ -151,6 +239,49 @@ mysql_root() {
 # --- Fotos y mapa ----------------------------------------------------------
 install -d -m 755 "$MEDIA_DIR" "$TILES_DIR" "$ESTADO_DIR"
 mkdir -p "$ESTADO_DIR/respaldos"
+
+# --- SELinux ---------------------------------------------------------------
+# RHEL/Fedora/Rocky/Alma no dejan leer un directorio del host desde el
+# contenedor si su contexto no es container_file_t: nginx devolvería 403 en
+# /media y /tiles y la API fallaría al subir fotos. Con ':z' Docker reetiqueta
+# el directorio al montarlo, que es más limpio que un chcon global a mano.
+selinux_activo() {
+  if command -v getenforce >/dev/null 2>&1; then
+    [ "$(getenforce 2>/dev/null)" = Enforcing ]
+  elif [ -r /sys/fs/selinux/enforce ]; then
+    [ "$(cat /sys/fs/selinux/enforce 2>/dev/null)" = 1 ]
+  else
+    return 1
+  fi
+}
+
+if selinux_activo; then
+  log "SELinux en enforcing: los montajes host llevarán ':z'"
+  OVERRIDE_SELINUX="$ESTADO_DIR/compose-selinux.yml"
+  # Se regenera en cada ejecución: refleja MEDIA_DIR/TILES_DIR actuales y se
+  # ignora solo si SELinux deja de estar activo (el archivo no entra en COMPOSE).
+  cat > "$OVERRIDE_SELINUX" <<EOF
+# Generado por deploy/levantar-debian.sh: añade ':z' a los montajes para que
+# SELinux (RHEL/Fedora/Rocky/Alma) deje a los contenedores leerlos y escribirlos.
+services:
+  web:
+    volumes: !override
+      - ${MEDIA_DIR}:/srv/media:ro,z
+      - ${TILES_DIR}:/srv/tiles:ro,z
+  api:
+    volumes: !override
+      - ${MEDIA_DIR}:/app/media:z
+  db:
+    volumes: !override
+      - gramalote_db:/var/lib/mysql
+      - ${REPO}/backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro,z
+      - ${REPO}/backend/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro,z
+      - ${REPO}/backend/database/seed-content.sql:/docker-entrypoint-initdb.d/03-seed-content.sql:ro,z
+EOF
+  COMPOSE+=(-f "$OVERRIDE_SELINUX")
+else
+  rm -f "$ESTADO_DIR/compose-selinux.yml" 2>/dev/null || true
+fi
 
 if [ "$SIN_FOTOS" = 1 ]; then
   log "Fotos y mapa: se omiten (--sin-fotos)"
@@ -285,10 +416,58 @@ else
 fi
 
 # --- Firewall y comprobación ----------------------------------------------
-if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q 'Status: active'; then
-  ufw allow "${PORT}/tcp" >/dev/null || true
-  log "ufw: puerto ${PORT} abierto"
-fi
+# Ubuntu/Debian suelen traer ufw; RHEL/Fedora/openSUSE traen firewalld. En el
+# resto solo se avisa: abrir reglas a ciegas en nftables/iptables puede dejar
+# fuera otras cosas que la máquina ya tuviera configuradas.
+abrir_puerto() {
+  if command -v ufw >/dev/null 2>&1; then
+    estado_ufw="$(ufw status 2>/dev/null || true)"
+    case "$estado_ufw" in
+      *"Status: active"*)
+        ufw allow "${PORT}/tcp" >/dev/null || true
+        log "ufw: puerto ${PORT} abierto"
+        return 0
+        ;;
+    esac
+  fi
+
+  if command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1; then
+    firewall-cmd --permanent --add-port="${PORT}/tcp" >/dev/null || true
+    firewall-cmd --reload >/dev/null || true
+    log "firewalld: puerto ${PORT} abierto"
+    return 0
+  fi
+
+  # Sin ufw ni firewalld: se mira si las reglas crudas filtran la entrada.
+  # Se guarda la salida en una variable a propósito: con 'pipefail', un
+  # 'grep -q' que corta la tubería marcaría el pipe como fallido.
+  if command -v nft >/dev/null 2>&1; then
+    reglas="$(nft list ruleset 2>/dev/null || true)"
+    case "$reglas" in
+      *"hook input"*)
+        warn "nftables filtra la entrada y no encuentro ufw ni firewalld.
+  Abre el puerto a mano o el sitio no se verá desde la red:
+    nft add rule inet filter input tcp dport ${PORT} accept"
+        return 0
+        ;;
+    esac
+  fi
+
+  if command -v iptables >/dev/null 2>&1; then
+    reglas="$(iptables -S 2>/dev/null || true)"
+    case "$reglas" in
+      *"-P INPUT DROP"*|*"-A INPUT"*"-j DROP"*|*"-A INPUT"*"-j REJECT"*)
+        warn "iptables filtra la entrada y no hay ufw ni firewalld.
+  Abre el ${PORT}/tcp a mano o el sitio no se verá desde la red."
+        return 0
+        ;;
+    esac
+  fi
+
+  log "Sin cortafuegos local: el puerto ${PORT} queda accesible en la red"
+}
+
+abrir_puerto
 
 log "Esperando /healthz y /api/health"
 ok=0
