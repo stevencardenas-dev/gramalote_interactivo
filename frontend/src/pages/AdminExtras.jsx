@@ -321,7 +321,6 @@ export default function AdminExtras() {
                   <small>
                     {item.category}
                     {item.zone ? ` · ${item.zone}` : ''}
-                    {item.matrixRef ? ` · ${item.matrixRef}` : ''}
                   </small>
                 </div>
                 <EditedDate value={item.updatedAt} />

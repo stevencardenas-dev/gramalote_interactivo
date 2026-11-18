@@ -29,7 +29,6 @@ const CATEGORIES = [
 ]
 
 const EMPTY = {
-  matrixRef: '',
   name: '',
   category: 'Histórico',
   zone: '',
@@ -93,7 +92,7 @@ export default function AdminPatrimonio() {
       if (tab === 'published' ? !item.published : item.published) return false
       if (!needle) return true
       return normalize(
-        `${item.name} ${item.matrixRef ?? ''} ${item.category} ${item.zone ?? ''}`,
+        `${item.name} ${item.category} ${item.zone ?? ''}`,
       ).includes(needle)
     })
   }, [items, tab, query])
@@ -248,15 +247,6 @@ export default function AdminPatrimonio() {
                 </datalist>
               </label>
               <label className="admin-field">
-                <span>Referencia de la matriz</span>
-                <input
-                  value={form.matrixRef}
-                  onChange={set('matrixRef')}
-                  placeholder="GR-001"
-                  maxLength={16}
-                />
-              </label>
-              <label className="admin-field">
                 <span>Zona o referencia</span>
                 <input value={form.zone} onChange={set('zone')} maxLength={120} />
               </label>
@@ -339,7 +329,6 @@ export default function AdminPatrimonio() {
                     {item.name}
                   </button>
                   <small>
-                    {item.matrixRef ? `${item.matrixRef} · ` : ''}
                     {item.category}
                     {item.zone ? ` · ${item.zone}` : ''}
                   </small>

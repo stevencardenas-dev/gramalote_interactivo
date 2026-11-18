@@ -41,16 +41,16 @@ router.get(
         [pattern, pattern],
       ),
       query(
-        `SELECT id, name, slug, category, matrix_ref, is_published FROM heritage_sites
-         WHERE name LIKE ? OR slug LIKE ? OR matrix_ref LIKE ? OR category LIKE ?
+        `SELECT id, name, slug, category, is_published FROM heritage_sites
+         WHERE name LIKE ? OR slug LIKE ? OR category LIKE ?
          ORDER BY is_published DESC, name LIMIT ${LIMIT}`,
-        [pattern, pattern, pattern, pattern],
+        [pattern, pattern, pattern],
       ),
       query(
-        `SELECT id, name, slug, category, matrix_ref, is_published FROM map_extras
-         WHERE name LIKE ? OR slug LIKE ? OR matrix_ref LIKE ? OR category LIKE ?
+        `SELECT id, name, slug, category, is_published FROM map_extras
+         WHERE name LIKE ? OR slug LIKE ? OR category LIKE ?
          ORDER BY is_published DESC, name LIMIT ${LIMIT}`,
-        [pattern, pattern, pattern, pattern],
+        [pattern, pattern, pattern],
       ),
       isAdmin
         ? query(
@@ -92,7 +92,7 @@ router.get(
         items: heritage.map((row) => ({
           id: Number(row.id),
           name: row.name,
-          sub: [row.matrix_ref, row.category].filter(Boolean).join(' · '),
+          sub: row.category,
           published: Boolean(row.is_published),
           to: `/admin/lugares/patrimonio/${row.id}`,
         })),
@@ -103,7 +103,7 @@ router.get(
         items: extras.map((row) => ({
           id: Number(row.id),
           name: row.name,
-          sub: [row.matrix_ref, row.category].filter(Boolean).join(' · '),
+          sub: row.category,
           published: Boolean(row.is_published),
           to: `/admin/lugares/extras/${row.id}`,
         })),

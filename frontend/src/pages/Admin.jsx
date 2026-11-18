@@ -48,6 +48,7 @@ export default function Admin() {
   const [items, setItems] = useState([])
   const [users, setUsers] = useState(null)
   const [media, setMedia] = useState(null)
+  const [others, setOthers] = useState([])
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -58,12 +59,16 @@ export default function Admin() {
       const session = await ensureSession()
       if (!alive || !session) return
       try {
-        const [list, stats, accounts] = await Promise.all([
+        const [list, stats, accounts, exps, heri, extr] = await Promise.all([
           apiRequest('/admin/establishments'),
           apiRequest('/admin/media/stats').catch(() => null),
           isAdmin ? apiRequest('/admin/users').catch(() => null) : null,
+          apiRequest('/admin/experiences').catch(() => []),
+          apiRequest('/admin/heritage').catch(() => []),
+          apiRequest('/admin/extras').catch(() => []),
         ])
         if (!alive) return
+        setOthers([...(exps ?? []), ...(heri ?? []), ...(extr ?? [])])
         setItems(list ?? [])
         setMedia(stats)
         setUsers(accounts)
@@ -79,14 +84,15 @@ export default function Admin() {
   }, [isAdmin])
 
   const summary = useMemo(() => {
-    const published = items.filter((item) => item.published).length
+    const all = [...items, ...others]
+    const published = all.filter((item) => item.published).length
     return {
-      total: items.length,
+      total: all.length,
       published,
-      drafts: items.length - published,
+      drafts: all.length - published,
       featured: items.filter((item) => item.featured).length,
     }
-  }, [items])
+  }, [items, others])
 
   function handleSearch(event) {
     event.preventDefault()
@@ -232,9 +238,9 @@ export default function Admin() {
 
         <div className="admin-tiles">
           <Tile to="/admin/lugares/establecimientos" tone="places" icon="places" title="Lugares">
-            <span className="admin-tile__sub">{dash ?? plural(summary.total, 'ficha', 'fichas')}</span>
-            {!loading && summary.drafts > 0 ? (
-              <em className="admin-tile__badge">{plural(summary.drafts, 'sin publicar', 'sin publicar')}</em>
+            <span className="admin-tile__sub">{dash ?? plural(summary.published, 'lugar publicado', 'lugares publicados')}</span>
+            {!loading ? (
+              <em className="admin-tile__badge">Sin publicar: {summary.drafts}</em>
             ) : null}
           </Tile>
           <Tile to="/admin/usuarios" tone="users" icon="users" title={isAdmin ? 'Usuarios' : 'Mi cuenta'}>

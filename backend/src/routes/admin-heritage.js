@@ -62,7 +62,6 @@ function bool(value) {
 function serialize(row) {
   return {
     id: toNumber(row.id),
-    matrixRef: row.matrix_ref ?? null,
     slug: row.slug,
     name: row.name,
     category: row.category,
@@ -85,14 +84,6 @@ async function findHeritage(id) {
   const row = await queryOne('SELECT * FROM heritage_sites WHERE id = ?', [id])
   if (!row) throw new ApiError(404, 'NOT_FOUND', 'Lugar de patrimonio no encontrado')
   return row
-}
-
-async function assertMatrixRef(value, currentId = null) {
-  if (!value) return
-  const row = currentId
-    ? await queryOne('SELECT id FROM heritage_sites WHERE matrix_ref = ? AND id <> ?', [value, currentId])
-    : await queryOne('SELECT id FROM heritage_sites WHERE matrix_ref = ?', [value])
-  if (row) throw new ApiError(409, 'DUPLICATE', 'Ya existe un lugar con esa referencia de la matriz')
 }
 
 async function uniqueSlug(name, currentId = null) {
@@ -131,17 +122,14 @@ router.post(
     const body = req.body ?? {}
     const name = text(body.name, 'Nombre', { max: 180, required: true })
     const category = text(body.category, 'Subcategoría', { max: 80, required: true })
-    const matrixRef = text(body.matrixRef, 'Referencia de la matriz', { max: 16 })
-    await assertMatrixRef(matrixRef)
     const slug = await uniqueSlug(name)
 
-    const [result] = await query(
+    const result = await query(
       `INSERT INTO heritage_sites
-         (matrix_ref, slug, name, category, zone, latitude, longitude, maps_url,
+         (slug, name, category, zone, latitude, longitude, maps_url,
           map_icon, summary, description, sort_order, is_published)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        matrixRef,
         slug,
         name,
         category,
