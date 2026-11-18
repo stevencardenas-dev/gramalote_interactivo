@@ -809,6 +809,16 @@ button.social-dot {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
+}
+
+/* Sin «Horario» (va en su propio panel) quedan 3 datos. */
+@media (min-width: 1025px) {
+  .info-bar:has(> :nth-child(3):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.info-bar {
   padding: 36px 40px;
   background: var(--c-cream);
   border-radius: var(--radius-lg);
@@ -1062,9 +1072,18 @@ button.social-dot {
 
 .offer-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 30px;
   margin-top: 49px;
+}
+
+.offer-grid > .offer-card {
+  grid-column: span var(--offer-span, 2);
+}
+
+.offer-grid--single {
+  max-width: 760px;
+  margin-inline: auto;
 }
 
 .offer-card .photo {
@@ -1284,6 +1303,10 @@ button.social-dot {
     grid-template-columns: 1fr;
     gap: 34px;
     margin-top: 36px;
+  }
+
+  .offer-grid > .offer-card {
+    grid-column: auto;
   }
 
   .offer-card .photo {

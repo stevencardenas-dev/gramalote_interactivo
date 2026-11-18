@@ -533,7 +533,6 @@ export default function AdminLugarFicha({ kind: kindKey }) {
               <small>
                 {form.category}
                 {form.zone ? ` · ${form.zone}` : ''}
-                {' · '}{form.images.length} {form.images.length === 1 ? 'imagen' : 'imágenes'}
               </small>
             </p>
           </div>

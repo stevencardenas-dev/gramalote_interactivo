@@ -173,6 +173,8 @@ export default function AdminEstablecimiento() {
     ? meta.establishmentCategories.find((item) => item.id === Number(form.categoryId))
     : null
   const types = useMemo(() => category?.types ?? [], [category])
+  // Servicios y horario de entrada/salida son de alojamiento; los productos, de comer y comprar.
+  const isDormir = category?.slug === 'dormir'
   // Icono que tendría la ficha en "Automático", según su categoría y tipo.
   const automaticIcon = resolveMapIcon({
     type: types.find((type) => type.id === form?.typeId)?.name,
@@ -380,6 +382,10 @@ export default function AdminEstablecimiento() {
         method: 'PATCH',
         body: { altText },
       })
+      setForm((current) => ({
+        ...current,
+        images: current.images.map((item) => (item.mediaId === image.mediaId ? { ...item, alt: altText } : item)),
+      }))
     } catch (err) {
       setError(err.message)
     }
@@ -449,8 +455,7 @@ export default function AdminEstablecimiento() {
               {form.featured ? <span className="admin-badge">★ Destacada</span> : null}
               <small>
                 {form.categoryName}
-                {form.zoneName ? ` · ${form.zoneName}` : ''} · {form.images.length}{' '}
-                {form.images.length === 1 ? 'imagen' : 'imágenes'}
+                {form.zoneName ? ` · ${form.zoneName}` : ''}
               </small>
             </p>
           </div>
@@ -711,12 +716,14 @@ export default function AdminEstablecimiento() {
                       onChange={(event) => update({ hoursText: event.target.value })}
                     />
                   </Field>
+                  {isDormir ? (
                   <Field label="Horario de entrada y salida" hint="Se muestra bajo «Horario» en la ficha.">
                     <input
                       value={form.checkinText ?? ''}
                       onChange={(event) => update({ checkinText: event.target.value })}
                     />
                   </Field>
+                  ) : null}
                   <Field label="Rango de precios (texto)" hint="Se lee tal cual en la ficha, p. ej. $15.000 – $40.000.">
                     <input
                       value={form.priceText ?? ''}
@@ -842,6 +849,7 @@ export default function AdminEstablecimiento() {
 
           {tab === 'extras' ? (
             <div className="admin-extras">
+              {isDormir ? (
               <Section
                 title="Servicios"
                 hint={`${form.serviceIds.length} de ${meta?.services?.length ?? 0} seleccionados`}
@@ -877,6 +885,7 @@ export default function AdminEstablecimiento() {
                   ))}
                 </div>
               </Section>
+              ) : null}
 
               <Section
                 title="Formas de pago"
@@ -903,6 +912,7 @@ export default function AdminEstablecimiento() {
                 </div>
               </Section>
 
+              {!isDormir ? (
               <Section
                 title="Productos"
                 hint={`${form.products.length} ${form.products.length === 1 ? 'producto' : 'productos'} con precio`}
@@ -981,6 +991,7 @@ export default function AdminEstablecimiento() {
                   ))}
                 </div>
               </Section>
+              ) : null}
 
               <Section
                 title="Redes sociales"
@@ -1146,9 +1157,26 @@ export default function AdminEstablecimiento() {
               {form.published ? (
                 <p className="note">Para borrar la ficha, primero despublica.</p>
               ) : null}
-              <p className="note">
-                Para publicar se exige al menos una portada con texto alternativo.
-              </p>
+              <div className={`note${cover?.alt?.trim() ? '' : ' note--warn'}`} role="status">
+                {!cover ? (
+                  <p>
+                    Para publicar falta la <strong>portada</strong>: sube una imagen y márcala como «Portada» en la
+                    pestaña Imágenes.
+                  </p>
+                ) : !cover.alt?.trim() ? (
+                  <p>
+                    La portada no tiene <strong>texto alternativo</strong>: escríbelo bajo la imagen, en la pestaña
+                    Imágenes, y sal del campo para guardarlo.
+                  </p>
+                ) : (
+                  <p>Portada con texto alternativo: lista para publicar.</p>
+                )}
+                {!cover || !cover.alt?.trim() ? (
+                  <button type="button" className="admin-btn" onClick={() => setTab('images')}>
+                    Ir a Imágenes
+                  </button>
+                ) : null}
+              </div>
 
               <h2>Destacar</h2>
               <label className="admin-check admin-check--card">

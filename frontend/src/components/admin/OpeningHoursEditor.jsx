@@ -86,11 +86,21 @@ export default function OpeningHoursEditor({ hours, exceptions, onChange, onExce
           {exceptions.length === 1 ? 'excepción' : 'excepciones'}
         </span>
         <span className="admin-hours__summary-tools">
-          <button type="button" disabled={!hasMonday} onClick={() => copyMonday([2, 3, 4, 5])}>
-            Copiar lunes a mar–vie
+          <button
+            type="button"
+            disabled={!hasMonday}
+            onClick={() => copyMonday([2, 3, 4, 5])}
+            title="Pone el horario del lunes de martes a viernes"
+          >
+            Igual de lunes a viernes
           </button>
-          <button type="button" disabled={!hasMonday} onClick={() => copyMonday([2, 3, 4, 5, 6, 7])}>
-            Copiar lunes a todos
+          <button
+            type="button"
+            disabled={!hasMonday}
+            onClick={() => copyMonday([2, 3, 4, 5, 6, 7])}
+            title="Pone el horario del lunes en toda la semana"
+          >
+            Igual toda la semana
           </button>
         </span>
       </div>
