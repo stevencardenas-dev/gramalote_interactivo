@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiRequest, ensureSession, getUser, subscribe } from '../lib/auth.js'
 
@@ -98,6 +98,49 @@ export default function Admin() {
     )
   }
 
+  // Buscador con resultados al escribir: agrupados por tipo y con la ruta de su ficha.
+  const [groups, setGroups] = useState([])
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(-1)
+  const requestId = useRef(0)
+  const shownGroups = useMemo(() => (query.trim().length >= 2 ? groups : []), [groups, query])
+  const flat = useMemo(() => shownGroups.flatMap((group) => group.items), [shownGroups])
+
+  useEffect(() => {
+    const term = query.trim()
+    if (term.length < 2) return undefined
+    const current = ++requestId.current
+    const timer = window.setTimeout(async () => {
+      try {
+        const data = await apiRequest(`/admin/search?q=${encodeURIComponent(term)}`)
+        if (current !== requestId.current) return
+        setGroups(data?.groups ?? [])
+        setActive(-1)
+      } catch {
+        if (current === requestId.current) setGroups([])
+      }
+    }, 220)
+    return () => window.clearTimeout(timer)
+  }, [query])
+
+  function onSearchKey(event) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      if (flat.length === 0) return
+      event.preventDefault()
+      setOpen(true)
+      setActive((index) => {
+        const next = event.key === 'ArrowDown' ? index + 1 : index - 1
+        return (next + flat.length) % flat.length
+      })
+    } else if (event.key === 'Escape') {
+      setOpen(false)
+      setActive(-1)
+    } else if (event.key === 'Enter' && open && active >= 0 && flat[active]) {
+      event.preventDefault()
+      navigate(flat[active].to)
+    }
+  }
+
   const quotaPct =
     media?.quotaBytes > 0 ? Math.min(100, Math.round((media.usedBytes / media.quotaBytes) * 100)) : 0
   const dash = loading ? '…' : null
@@ -112,7 +155,7 @@ export default function Admin() {
 
           <form className="admin-search" role="search" onSubmit={handleSearch}>
             <label className="visually-hidden" htmlFor="home-search">
-              Buscar una ficha
+              Buscar en el panel
             </label>
             <svg className="admin-search__icon" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="6.5" />
@@ -121,14 +164,69 @@ export default function Admin() {
             <input
               id="home-search"
               type="search"
-              placeholder="Busca una ficha por nombre, zona o slug…"
+              role="combobox"
+              aria-expanded={open && shownGroups.length > 0}
+              aria-controls="home-search-results"
+              aria-autocomplete="list"
+              aria-activedescendant={active >= 0 ? `home-result-${active}` : undefined}
+              autoComplete="off"
+              placeholder="Busca una ficha, usuario…"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value)
+                setOpen(true)
+                setActive(-1)
+              }}
+              onFocus={() => setOpen(true)}
+              onBlur={() => window.setTimeout(() => setOpen(false), 120)}
+              onKeyDown={onSearchKey}
               autoFocus
             />
             <button type="submit" className="admin-btn admin-btn--primary">
               Buscar
             </button>
+
+            {open && query.trim().length >= 2 ? (
+              <div
+                className="admin-search__results"
+                id="home-search-results"
+                role={shownGroups.length > 0 ? 'listbox' : 'status'}
+                aria-label="Resultados"
+              >
+                {shownGroups.length === 0 ? (
+                  <p className="admin-search__empty">Sin coincidencias para «{query.trim()}».</p>
+                ) : (
+                  shownGroups.map((group) => (
+                    <div key={group.key} className="admin-search__group" role="group" aria-label={group.label}>
+                      <p className="admin-search__label">{group.label}</p>
+                      {group.items.map((item) => {
+                        const index = flat.indexOf(item)
+                        return (
+                          <Link
+                            key={`${group.key}-${item.id}`}
+                            id={`home-result-${index}`}
+                            role="option"
+                            aria-selected={index === active}
+                            className={`admin-search__item${index === active ? ' is-active' : ''}`}
+                            to={item.to}
+                            onMouseDown={(event) => event.preventDefault()}
+                          >
+                            <span className="admin-search__name">{item.name}</span>
+                            <small>{item.sub}</small>
+                            {item.published === false ? <em className="admin-search__draft">Sin publicar</em> : null}
+                          </Link>
+                        )
+                      })}
+                      {group.more ? (
+                        <Link className="admin-search__more" to={group.more} onMouseDown={(event) => event.preventDefault()}>
+                          Ver todos los resultados de {group.label.toLowerCase()} →
+                        </Link>
+                      ) : null}
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : null}
           </form>
         </div>
 
