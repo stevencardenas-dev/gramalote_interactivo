@@ -9,6 +9,7 @@ import adminMailRouter from './routes/admin-mail.js'
 import adminExperiencesRouter from './routes/admin-experiences.js'
 import adminExtrasRouter from './routes/admin-extras.js'
 import adminPlacesRouter from './routes/admin-places.js'
+import adminSearchRouter from './routes/admin-search.js'
 import heritageRouter from './routes/heritage.js'
 import adminHeritageRouter from './routes/admin-heritage.js'
 import adminRatingsRouter from './routes/admin-ratings.js'
@@ -138,6 +139,7 @@ app.use(
   adminRouter,
   adminExperiencesRouter,
   adminPlacesRouter,
+  adminSearchRouter,
   adminExtrasRouter,
   adminHeritageRouter,
   adminRatingsRouter,

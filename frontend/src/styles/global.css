@@ -8,17 +8,6 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Escritorio: el sitio se dibuja a la escala del diseño (--ui-scale), como si
-   el navegador estuviera al 70 %, pero sin depender del zoom de cada persona.
-   No se aplica en móvil: ahí el diseño ya es el compacto y las letras
-   quedarían diminutas. Los navegadores sin soporte para `zoom` siguen
-   mostrando la escala normal. */
-@media (min-width: 901px) {
-  html {
-    zoom: var(--ui-scale);
-  }
-}
-
 body {
   margin: 0;
   min-width: 320px;
