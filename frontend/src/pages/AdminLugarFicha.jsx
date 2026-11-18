@@ -273,8 +273,8 @@ function ImageCard({ image, index, total, kindKey, roles, busy, onSave, onRemove
             <input value={draft.altText} onChange={set('altText')} maxLength={255} />
           </label>
           <label className="admin-field">
-            <span>Pie de foto</span>
-            <input value={draft.caption} onChange={set('caption')} maxLength={500} />
+            <span>Pie de foto (se ve sobre la foto)</span>
+            <input value={draft.caption} onChange={set('caption')} maxLength={120} placeholder="Templo en 1950" />
           </label>
           <label className="admin-field">
             <span>Crédito o fuente</span>
@@ -604,8 +604,8 @@ export default function AdminLugarFicha({ kind: kindKey }) {
                       <input value={upload.altText} onChange={(event) => setUpload({ ...upload, altText: event.target.value })} maxLength={255} />
                     </label>
                     <label className="admin-field">
-                      <span>Pie de foto</span>
-                      <input value={upload.caption} onChange={(event) => setUpload({ ...upload, caption: event.target.value })} maxLength={500} />
+                      <span>Pie de foto (se ve sobre la foto)</span>
+                      <input value={upload.caption} onChange={(event) => setUpload({ ...upload, caption: event.target.value })} maxLength={120} placeholder="Templo en 1950" />
                     </label>
                     <label className="admin-field">
                       <span>Crédito o fuente</span>

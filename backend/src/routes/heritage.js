@@ -49,9 +49,9 @@ async function loadImages(ids) {
 function serialize(row, images = []) {
   const cover = images.find((image) => image.role === 'cover') ?? null
   const hasVisit = row.visit_location || row.visit_access || row.visit_recommendation
-  // Carrusel: fotos con uso «Carrusel» (role «historic») y, por las filas
-  // viejas, las de galería con época. El resto va a la cuadrícula de fotos.
-  const isEra = (image) => image.role === 'historic' || (Boolean(image.eraLabel) && image.role === 'gallery')
+  // Carrusel: solo las fotos con uso «Carrusel» (role «historic»). Las de
+  // «Galería» van siempre a la cuadrícula, aunque conserven una época vieja.
+  const isEra = (image) => image.role === 'historic'
   const slides = images
     .filter(isEra)
     .map((image) => ({ src: image.url, label: image.eraLabel, alt: image.alt, caption: image.caption, credit: image.credit }))

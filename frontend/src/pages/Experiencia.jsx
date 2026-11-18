@@ -90,7 +90,10 @@ export default function Experiencia() {
 
         <section className="tips" aria-labelledby="tips-title">
           <h2 id="tips-title">Ten en cuenta</h2>
-          <div className="tips__grid">
+          <div
+            className="tips__grid"
+            style={{ '--tips-max': Math.ceil(tips.length / Math.ceil(tips.length / 4)) || 4 }}
+          >
             {tips.map((tip) => (
               <article key={tip.title} className="tip">
                 <IconMask icon={`icono-${tip.icon}`} size={64} className="tip__icon" />

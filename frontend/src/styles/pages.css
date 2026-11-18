@@ -600,9 +600,11 @@ button.social-dot {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: var(--border);
+  /* Mismo contorno y sombra que las tarjetas de «Qué hacer». */
+  border: 1px solid #d9d9d9;
   border-radius: var(--radius-md);
   background: var(--c-white);
+  box-shadow: 0 6px 14px rgba(20, 20, 20, 0.14);
 }
 
 .listing-card-v .placeholder,

@@ -1884,6 +1884,40 @@
   color: var(--c-muted);
 }
 
+/* Pie de foto como etiqueta sobre la imagen (máximo dos líneas). */
+.his-photo-frame {
+  position: relative;
+}
+
+.his-photo-badge {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 1;
+  display: -webkit-box;
+  max-width: calc(100% - 28px);
+  padding: 6px 14px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--c-navy);
+  color: var(--c-white);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.his-ficha__gallery .his-photo-badge {
+  left: 10px;
+  bottom: 10px;
+  max-width: calc(100% - 20px);
+  padding: 4px 10px;
+  font-size: 0.75rem;
+}
+
 .his-ficha__gallery img {
   width: 100%;
   aspect-ratio: 4 / 3;

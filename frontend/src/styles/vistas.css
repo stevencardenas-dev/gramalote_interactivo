@@ -216,7 +216,8 @@
 }
 
 .tips__grid {
-  --tips-cols: 4;
+  /* --tips-max lo calcula la ficha: filas de máximo 4, lo más parejas posible. */
+  --tips-cols: var(--tips-max, 4);
   --tips-gap: clamp(20px, 3vw, 44px);
   display: flex;
   flex-wrap: wrap;
