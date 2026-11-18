@@ -37,7 +37,14 @@ function formatDate(value) {
   if (!value) return 'Nunca'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+  // Con la hora: «16 de nov de 2026, 3:41 p. m.»
+  return date.toLocaleString('es-CO', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
 }
 
 // Flecha de los desplegables de la cuenta: SVG y no un carácter, que se veía
