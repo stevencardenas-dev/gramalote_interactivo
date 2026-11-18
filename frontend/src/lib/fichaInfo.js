@@ -15,8 +15,8 @@ function lines(...values) {
 
 // Barra de datos común a las fichas de establecimiento (Dónde comer, Dónde
 // dormir y Dónde comprar): mismas etiquetas en todas. «Horario» reúne el
-// horario y, en alojamientos, la entrada y la salida; «Pagos» reúne los
-// métodos de pago y el rango de precios.
+// horario y, en alojamientos, la entrada y la salida; los métodos de pago y
+// el rango de precios van por separado.
 export function fichaInfoItems(item) {
   // Con horario por día, el panel «Horario» (FichaHorario) ya lo muestra
   // completo; repetirlo aquí como resumen sobra y puede contradecirlo.
@@ -26,7 +26,8 @@ export function fichaInfoItems(item) {
       ? null
       : { icon: 'horario', label: 'Horario', value: lines(item.hours || hoursToText(item.openingHours), item.checkin) },
     { icon: 'ubicacion', label: 'Ubicación', value: clean(item.address) },
-    { icon: 'billetera', label: 'Pagos', value: lines(item.payment, item.priceRange) },
+    { icon: 'billetera', label: 'Métodos de pago', value: clean(item.payment) },
+    { icon: 'bolso', label: 'Rango de precios', value: clean(item.priceRange) },
     { icon: 'telefono', label: 'Contacto', value: contactLines(item) },
   ].filter(Boolean)
 }

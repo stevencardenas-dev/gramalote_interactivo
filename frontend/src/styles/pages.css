@@ -811,10 +811,10 @@ button.social-dot {
   gap: 18px;
 }
 
-/* Sin «Horario» (va en su propio panel) quedan 3 datos. */
+/* Con «Horario» en la franja (ficha sin horario por día) son 5 datos. */
 @media (min-width: 1025px) {
-  .info-bar:has(> :nth-child(3):last-child) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .info-bar:has(> :nth-child(5):last-child) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
