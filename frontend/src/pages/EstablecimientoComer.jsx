@@ -16,6 +16,16 @@ const money = new Intl.NumberFormat('es-CO', {
   maximumFractionDigits: 0,
 })
 
+// Rejilla de 6 pistas: filas de 3 (span 2) y, si sobran, filas de 2 (span 3).
+// Así 2 → 2, 4 → 2+2, 5 → 3+2, 7 → 3+2+2, sin huecos al final.
+function offerSpan(index, total) {
+  if (total === 1) return 6
+  const rest = total % 3
+  if (rest === 1 && index >= total - 4) return 3
+  if (rest === 2 && index >= total - 2) return 3
+  return 2
+}
+
 // La oferta sale de «Productos» del panel; si la ficha aún no tiene, de las
 // tarjetas destacadas y, por último, de tres tarjetas genéricas.
 export default function EstablecimientoComer({ item }) {
@@ -72,9 +82,13 @@ export default function EstablecimientoComer({ item }) {
             <p>{item.description}</p>
           </div>
 
-          <div className="offer-grid">
-            {features.map((feature) => (
-              <article key={feature.title} className="offer-card">
+          <div className={`offer-grid${features.length === 1 ? ' offer-grid--single' : ''}`}>
+            {features.map((feature, index) => (
+              <article
+                key={feature.title}
+                className="offer-card"
+                style={{ '--offer-span': offerSpan(index, features.length) }}
+              >
                 <Photo src={feature.photo ?? item.photo} alt={feature.title} />
                 <h3>{feature.title}</h3>
                 {feature.text ? <p>{feature.text}</p> : null}

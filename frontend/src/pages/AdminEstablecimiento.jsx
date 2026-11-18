@@ -173,6 +173,8 @@ export default function AdminEstablecimiento() {
     ? meta.establishmentCategories.find((item) => item.id === Number(form.categoryId))
     : null
   const types = useMemo(() => category?.types ?? [], [category])
+  // Servicios y horario de entrada/salida son de alojamiento; los productos, de comer y comprar.
+  const isDormir = category?.slug === 'dormir'
   // Icono que tendría la ficha en "Automático", según su categoría y tipo.
   const automaticIcon = resolveMapIcon({
     type: types.find((type) => type.id === form?.typeId)?.name,
@@ -714,12 +716,14 @@ export default function AdminEstablecimiento() {
                       onChange={(event) => update({ hoursText: event.target.value })}
                     />
                   </Field>
+                  {isDormir ? (
                   <Field label="Horario de entrada y salida" hint="Se muestra bajo «Horario» en la ficha.">
                     <input
                       value={form.checkinText ?? ''}
                       onChange={(event) => update({ checkinText: event.target.value })}
                     />
                   </Field>
+                  ) : null}
                   <Field label="Rango de precios (texto)" hint="Se lee tal cual en la ficha, p. ej. $15.000 – $40.000.">
                     <input
                       value={form.priceText ?? ''}
@@ -845,6 +849,7 @@ export default function AdminEstablecimiento() {
 
           {tab === 'extras' ? (
             <div className="admin-extras">
+              {isDormir ? (
               <Section
                 title="Servicios"
                 hint={`${form.serviceIds.length} de ${meta?.services?.length ?? 0} seleccionados`}
@@ -880,6 +885,7 @@ export default function AdminEstablecimiento() {
                   ))}
                 </div>
               </Section>
+              ) : null}
 
               <Section
                 title="Formas de pago"
@@ -906,6 +912,7 @@ export default function AdminEstablecimiento() {
                 </div>
               </Section>
 
+              {!isDormir ? (
               <Section
                 title="Productos"
                 hint={`${form.products.length} ${form.products.length === 1 ? 'producto' : 'productos'} con precio`}
@@ -984,6 +991,7 @@ export default function AdminEstablecimiento() {
                   ))}
                 </div>
               </Section>
+              ) : null}
 
               <Section
                 title="Redes sociales"
