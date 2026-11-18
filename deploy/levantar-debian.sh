@@ -506,10 +506,16 @@ cat <<EOF
 
 Listo. Sitio reconstruido con el snapshot del $(basename "$SNAP").
 
-  Sitio:  ${BASE_URL}/
-  Panel:  ${BASE_URL}/acceder
-  API:    ${BASE_URL}/api/health
+Reemplazar 127.0.1.1 por la IP actual de la VM (o por el puerto redireccionado):
+
+  Sitio:  http://127.0.1.1:${PORT}/
+  Panel:  http://127.0.1.1:${PORT}/acceder
+  API:    http://127.0.1.1:${PORT}/api/health
   Datos:  ${admin_count:-0} usuario(s) del panel, $(find "$MEDIA_DIR" -type f 2>/dev/null | wc -l) foto(s)
+
+La IP que detecté en esta máquina es ${IP:-desconocida}. Si abres el panel por
+otra dirección, CORS_ORIGIN y PUBLIC_SITE_URL del .env tienen que coincidir con
+ella (mira el aviso de arriba si no lo hacen).
 
 Las contraseñas del panel son las de la EC2 (el .env solo manda si la tabla
 estaba vacía o si usas --rotar-admin).

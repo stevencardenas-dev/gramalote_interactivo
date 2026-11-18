@@ -346,12 +346,14 @@ powershell -File deploy/migracion-exportar.ps1
 Y luego se vuelve a ejecutar `levantar-debian.sh`: al cambiar el sha256 del
 volcado, restaura la base nueva conservando los usuarios y las contraseñas.
 
-Al terminar imprime la URL del sitio y del panel. Desde Windows (o cualquier
-máquina de la red) se abre esa misma URL; el panel queda en `/acceder` y la API
-en `/api/health`. El script abre el puerto él mismo si encuentra `ufw` o
-`firewalld` activos; si no, avisa con el comando que hay que lanzar. Si la Debian
-es una VM en Windows con red **NAT**, cambia el adaptador a puente o reenvía el
-puerto.
+Al terminar imprime las URLs con `127.0.1.1` como marcador: hay que reemplazarlo
+por la IP actual de la VM (o por la IP y el puerto del reenvío). Junto a las URLs
+recuerda la IP que detectó, que es la que debe estar en `CORS_ORIGIN` y
+`PUBLIC_SITE_URL`. Desde Windows (o cualquier máquina de la red) se abre esa
+dirección; el panel queda en `/acceder` y la API en `/api/health`. El script abre
+el puerto él mismo si encuentra `ufw` o `firewalld` activos; si no, avisa con el
+comando que hay que lanzar. Si la Debian es una VM en Windows con red **NAT**,
+cambia el adaptador a puente o reenvía el puerto.
 
 ### 6.7 Lo mismo paso a paso
 
