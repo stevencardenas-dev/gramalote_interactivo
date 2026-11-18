@@ -2985,6 +2985,12 @@ a.admin-tile:hover .admin-tile__chev {
   color: var(--a-ac-text);
 }
 
+.admin-mail__mark {
+  color: #3b82f6;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .admin-mail__steps .admin-btn {
   min-height: 30px;
   padding-inline: 12px;

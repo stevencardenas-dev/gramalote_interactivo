@@ -147,7 +147,7 @@ router.get(
           ),
       // Extras: puntos complementarios sin ficha; solo se filtran por categoría.
       query(
-        `SELECT x.id, x.matrix_ref, x.slug, x.name, x.category, x.zone, x.latitude, x.longitude,
+        `SELECT x.id, x.slug, x.name, x.category, x.zone, x.latitude, x.longitude,
                 x.maps_url, x.map_icon, x.summary, x.sort_order, ${EXTRA_COVER}
          FROM map_extras x
          WHERE x.is_published = 1
@@ -155,7 +155,7 @@ router.get(
       ),
       // Patrimonio: fichas en preparación; ya tienen pin y tarjeta de mapa.
       query(
-        `SELECT h.id, h.matrix_ref, h.slug, h.name, h.category, h.zone, h.latitude, h.longitude,
+        `SELECT h.id, h.slug, h.name, h.category, h.zone, h.latitude, h.longitude,
                 h.maps_url, h.map_icon, h.summary, h.sort_order, ${HERITAGE_COVER}
          FROM heritage_sites h
          WHERE h.is_published = 1 AND h.show_on_map = 1

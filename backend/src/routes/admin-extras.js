@@ -64,7 +64,6 @@ function bool(value) {
 function serialize(row) {
   return {
     id: toNumber(row.id),
-    matrixRef: row.matrix_ref ?? null,
     slug: row.slug,
     name: row.name,
     category: row.category,
@@ -109,7 +108,7 @@ router.post(
     const [existing] = await query('SELECT slug FROM map_extras WHERE slug = ?', [slugify(name)])
     const slug = existing.length > 0 ? `${slugify(name)}-${Date.now().toString(36)}` : slugify(name)
 
-    const [result] = await query(
+    const result = await query(
       `INSERT INTO map_extras
          (slug, name, category, zone, latitude, longitude, maps_url, map_icon,
           sort_order, is_published)

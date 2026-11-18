@@ -92,7 +92,6 @@ const KINDS = {
           { key: 'longitude', label: 'Longitud', type: 'number', required: true, step: 'any' },
           { key: 'mapsUrl', label: 'Enlace de Google Maps', max: 500, wide: true },
           { key: 'mapIcon', label: 'Icono del mapa', type: 'icon' },
-          { key: 'matrixRef', label: 'Referencia de la matriz', max: 16 },
           { key: 'slug', label: 'Enlace (slug)', max: 160, help: 'Cambiarlo cambia la dirección pública de la ficha.' },
           { key: 'sortOrder', label: 'Orden', type: 'number', step: '1' },
         ],
@@ -534,7 +533,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
               <small>
                 {form.category}
                 {form.zone ? ` · ${form.zone}` : ''}
-                {form.matrixRef ? ` · ${form.matrixRef}` : ''} · {form.images.length} {form.images.length === 1 ? 'imagen' : 'imágenes'}
+                {' · '}{form.images.length} {form.images.length === 1 ? 'imagen' : 'imágenes'}
               </small>
             </p>
           </div>

@@ -209,17 +209,12 @@ export default function AdminCorreo() {
                   <ol>
                     <li>
                       Entra con la cuenta remitente a{' '}
-                      <a href="https://myaccount.google.com/signinoptions/two-step-verification" target="_blank" rel="noreferrer">
-                        Verificación en dos pasos
-                      <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>{' '}
+                      <span className="admin-mail__mark">Verificación en dos pasos</span>{' '}
                       y actívala (Google lo exige).
                     </li>
                     <li>
                       Abre{' '}
-                      <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer">
-                        Contraseñas de aplicaciones
-                      <span className="visually-hidden"> (se abre en una pestaña nueva)</span></a>
-                      , escribe «Gramalote» y pulsa Crear.
+                      <span className="admin-mail__mark">Contraseñas de aplicaciones</span>, escribe «Gramalote» y pulsa Crear.
                     </li>
                     <li>Copia las 16 letras aquí (con o sin espacios), guarda y envía una prueba.</li>
                   </ol>
