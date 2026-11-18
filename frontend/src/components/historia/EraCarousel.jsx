@@ -8,7 +8,8 @@ export default function EraCarousel({ photos, name }) {
   const [index, setIndex] = useState(0)
   const count = photos.length
   const photo = photos[index]
-  const badge = photo.caption || photo.label
+  // Solo el pie de foto escrito en el panel; la época vieja ya no se muestra.
+  const badge = photo.caption
 
   return (
     <div className="era-carousel" role="group" aria-roledescription="carrusel" aria-label={`Fotos de ${name}`}>
