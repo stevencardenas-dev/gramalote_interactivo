@@ -40,6 +40,7 @@ function fromRemote(remote, base, index) {
     image: remote.image ?? base?.image ?? null,
     imageAlt: hasImages ? (remote.imageAlt ?? undefined) : base?.imageAlt,
     imageCaption: hasImages ? (remote.imageCaption ?? undefined) : base?.imageCaption,
+    imageCredit: hasImages ? (remote.imageCredit ?? undefined) : base?.imageCredit,
     eras: hasImages ? remote.eras : (base?.eras ?? []),
     gallery: hasImages ? remote.gallery : (base?.gallery ?? []),
   }

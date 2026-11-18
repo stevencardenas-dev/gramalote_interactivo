@@ -80,9 +80,9 @@ const KINDS = {
     entity: 'heritage',
     notFound: 'Lugar de patrimonio no encontrado',
     fields: HERITAGE_FIELDS,
-    // La ficha solo distingue portada y galería: las fotos de galería con época
-    // forman el carrusel de la ficha y el resto, la cuadrícula de fotos.
-    roles: ['cover', 'gallery'],
+    // Portada, galería (cuadrícula de fotos) y carrusel. El carrusel reutiliza
+    // el valor «historic» del ENUM, que la migración 033 dejó sin filas.
+    roles: ['cover', 'gallery', 'historic'],
   },
   extras: {
     path: '/admin/extras',
@@ -99,7 +99,7 @@ const KINDS = {
 
 const ROLE_LABELS = {
   cover: 'portada',
-  historic: 'histórica',
+  historic: 'carrusel',
   current: 'actual',
   gallery: 'galería',
   detail: 'detalle',

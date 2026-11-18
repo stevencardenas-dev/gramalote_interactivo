@@ -22,14 +22,15 @@ const HERITAGE_CATEGORIES = ['Histórico', 'Religioso', 'Espacio público', 'Ins
 const ROLE_LABELS = {
   cover: 'Portada',
   gallery: 'Galería',
+  historic: 'Carrusel',
   // Usos anteriores a la migración 033: se muestran como galería.
-  historic: 'Galería',
   current: 'Galería',
   detail: 'Galería',
 }
 const ROLE_HELP = {
   cover: 'La que se ve en tarjetas, listados y el mapa. Solo una.',
-  gallery: 'Fotos complementarias. Si le pones época, entran al carrusel de la ficha.',
+  gallery: 'Fotos complementarias. Se muestran en la cuadrícula de la ficha con su pie de foto y crédito.',
+  historic: 'Se muestra en el carrusel de la ficha, junto a la portada, con su pie de foto y crédito.',
 }
 
 const KINDS = {
@@ -265,12 +266,6 @@ function ImageCard({ image, index, total, kindKey, roles, busy, onSave, onRemove
                   </option>
                 ))}
               </select>
-            </label>
-          ) : null}
-          {kindKey === 'heritage' && draft.role !== 'cover' ? (
-            <label className="admin-field">
-              <span>Época (si es de otra época)</span>
-              <input value={draft.eraLabel} onChange={set('eraLabel')} maxLength={60} placeholder="1910 – 1953" />
             </label>
           ) : null}
           <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
@@ -602,12 +597,6 @@ export default function AdminLugarFicha({ kind: kindKey }) {
                           ))}
                         </select>
                         <small className="admin-hint">{ROLE_HELP[upload.role]}</small>
-                      </label>
-                    ) : null}
-                    {kindKey === 'heritage' && upload.role !== 'cover' ? (
-                      <label className="admin-field">
-                        <span>Época (si es de otra época)</span>
-                        <input value={upload.eraLabel} onChange={(event) => setUpload({ ...upload, eraLabel: event.target.value })} placeholder="1910 – 1953" maxLength={60} />
                       </label>
                     ) : null}
                     <label className="admin-field" style={{ gridColumn: '1 / -1' }}>

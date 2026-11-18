@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CarouselArrows, CarouselDots } from '../ui/Carousel.jsx'
+import PhotoNote from './PhotoNote.jsx'
 
 // Carrusel de fotos por época de un patrimonio. Cada foto lleva su rango de
 // años como etiqueta; las flechas y los puntos son botones (teclado y lectores).
@@ -9,10 +10,10 @@ export default function EraCarousel({ photos, name }) {
   const photo = photos[index]
 
   return (
-    <div className="era-carousel" role="group" aria-roledescription="carrusel" aria-label={`Fotos de ${name} por época`}>
+    <div className="era-carousel" role="group" aria-roledescription="carrusel" aria-label={`Fotos de ${name}`}>
       <div className="era-carousel__stage">
         <img key={photo.src} src={photo.src} alt={photo.alt} />
-        <span className="era-carousel__badge">{photo.label}</span>
+        {photo.label ? <span className="era-carousel__badge">{photo.label}</span> : null}
         <CarouselArrows
           count={count}
           onPrev={() => setIndex((index - 1 + count) % count)}
@@ -20,8 +21,9 @@ export default function EraCarousel({ photos, name }) {
         />
       </div>
       <p className="visually-hidden" aria-live="polite">
-        Foto {index + 1} de {count}: {photo.label}
+        Foto {index + 1} de {count}{photo.label || photo.caption ? `: ${photo.label || photo.caption}` : ''}
       </p>
+      <PhotoNote caption={photo.caption} credit={photo.credit} />
       <CarouselDots count={count} index={index} onGo={setIndex} />
     </div>
   )

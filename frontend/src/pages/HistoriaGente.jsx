@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '../components/ui/Icon.jsx'
 import Reveal from '../components/historia/Reveal.jsx'
@@ -53,10 +53,65 @@ function Story({ story, index }) {
             ))}
             <p className="his-source">{story.source}</p>
           </div>
-          <img src={story.image} alt="" loading="lazy" />
         </div>
       </div>
     </Reveal>
+  )
+}
+
+// Fondos del carrusel: las fotos que antes acompañaban a las leyendas.
+const quoteImages = [...new Set(stories.map((story) => story.image).filter(Boolean))]
+
+function QuoteCarousel() {
+  const [active, setActive] = useState(0)
+  const go = (step) => setActive((value) => (value + step + quotes.length) % quotes.length)
+
+  // Avanza solo cada 6 s; tocar una flecha o un punto reinicia la cuenta.
+  useEffect(() => {
+    if (quotes.length < 2) return undefined
+    const timer = window.setTimeout(() => setActive((value) => (value + 1) % quotes.length), 6000)
+    return () => window.clearTimeout(timer)
+  }, [active])
+
+  return (
+    <div className="his-quote-slider" role="region" aria-roledescription="carrusel" aria-label="Frases">
+      {quotes.map((quote, index) => (
+        <figure
+          key={quote.text}
+          className={`his-quote-slide${index === active ? ' is-active' : ''}`}
+          aria-hidden={index !== active}
+        >
+          <img
+            src={quoteImages[index % quoteImages.length]}
+            alt=""
+            loading="lazy"
+            style={index === 0 ? { objectPosition: 'center 15%' } : undefined}
+          />
+          <blockquote>
+            <p>“{quote.text.replace(/\.$/, '')}”</p>
+            <footer>{quote.author}</footer>
+          </blockquote>
+        </figure>
+      ))}
+      <button type="button" className="his-quote-slider__arrow is-prev" aria-label="Frase anterior" onClick={() => go(-1)}>
+        <Icon name="arrow" size={18} />
+      </button>
+      <button type="button" className="his-quote-slider__arrow is-next" aria-label="Frase siguiente" onClick={() => go(1)}>
+        <Icon name="arrow" size={18} />
+      </button>
+      <div className="his-quote-slider__dots">
+        {quotes.map((quote, index) => (
+          <button
+            key={quote.text}
+            type="button"
+            className={index === active ? 'is-active' : ''}
+            aria-label={`Frase ${index + 1} de ${quotes.length}`}
+            aria-current={index === active}
+            onClick={() => setActive(index)}
+          />
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -102,16 +157,9 @@ export default function HistoriaGente() {
         </div>
       </section>
 
-      <section className="his-quotes">
+      <section className="his-quotes his-quotes--slider">
         <div className="container">
-          <div className="his-quotes__grid">
-            {quotes.map((quote, index) => (
-              <Reveal as="blockquote" key={quote.text} className="his-quote" delay={index * 110}>
-                <p>«{quote.text}»</p>
-                <footer>{quote.author}</footer>
-              </Reveal>
-            ))}
-          </div>
+          <QuoteCarousel />
         </div>
       </section>
 

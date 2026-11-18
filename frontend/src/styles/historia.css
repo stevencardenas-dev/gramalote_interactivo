@@ -1876,6 +1876,14 @@
   margin-top: clamp(26px, 3vw, 40px);
 }
 
+.his-ficha__photo {
+  margin: 0;
+}
+
+.his-ficha__credit {
+  color: var(--c-muted);
+}
+
 .his-ficha__gallery img {
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -2139,7 +2147,7 @@
 
 .his-story-card__cols {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
   margin-top: 14px;
 }
@@ -2193,6 +2201,154 @@
   color: rgba(255, 242, 227, 0.7);
   font-size: 0.8rem;
   line-height: 1.4;
+}
+
+/* Frases en carrusel con foto de fondo */
+.his-quotes--slider {
+  background: transparent;
+}
+
+.his-quote-slider {
+  position: relative;
+  display: grid;
+  min-height: clamp(150px, 18vw, 230px);
+  border-radius: 18px;
+  overflow: hidden;
+  background: #2b1a0b;
+}
+
+.his-quote-slide {
+  grid-area: 1 / 1;
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 24px 68px 40px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.7s ease, visibility 0.7s;
+}
+
+.his-quote-slide.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.his-quote-slide img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.his-quote-slide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.his-quote-slide blockquote {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0;
+  text-align: center;
+  color: #fff;
+}
+
+.his-quote-slide p {
+  color: #fff;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(1.3rem, 2.6vw, 2.1rem);
+  line-height: 1.2;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  text-wrap: balance;
+}
+
+.his-quote-slider__arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background 0.2s ease;
+}
+
+.his-quote-slider__arrow:hover {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.his-quote-slider__arrow:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.his-quote-slider__arrow.is-prev {
+  left: 14px;
+}
+
+.his-quote-slider__arrow.is-prev svg {
+  transform: scaleX(-1);
+}
+
+.his-quote-slider__arrow.is-next {
+  right: 14px;
+}
+
+.his-quote-slide footer {
+  margin-top: 8px;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+.his-quote-slider__dots {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  transform: translateX(-50%);
+}
+
+.his-quote-slider__dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+}
+
+.his-quote-slider__dots button.is-active {
+  background: #fff;
+}
+
+.his-quote-slider__dots button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .his-quote-slide {
+    transition: none;
+  }
 }
 
 .his-nextup {
