@@ -49,10 +49,16 @@ async function loadImages(ids) {
 function serialize(row, images = []) {
   const cover = images.find((image) => image.role === 'cover') ?? null
   const hasVisit = row.visit_location || row.visit_access || row.visit_recommendation
-  // En el panel todas las fotos que no son portada son «galería»: las que llevan
-  // época forman el carrusel de la ficha y el resto, la cuadrícula de fotos.
-  // «historic», «current» y «detail» se aceptan todavía por las filas viejas.
-  const isEra = (image) => Boolean(image.eraLabel) && ['gallery', 'historic'].includes(image.role)
+  // Carrusel: fotos con uso «Carrusel» (role «historic») y, por las filas
+  // viejas, las de galería con época. El resto va a la cuadrícula de fotos.
+  const isEra = (image) => image.role === 'historic' || (Boolean(image.eraLabel) && image.role === 'gallery')
+  const slides = images
+    .filter(isEra)
+    .map((image) => ({ src: image.url, label: image.eraLabel, alt: image.alt, caption: image.caption, credit: image.credit }))
+  // El carrusel arranca con la portada, así una sola foto de carrusel ya da dos.
+  if (slides.length > 0 && cover && !slides.some((slide) => slide.label)) {
+    slides.unshift({ src: cover.url, label: null, alt: cover.alt, caption: cover.caption, credit: cover.credit })
+  }
   return {
     slug: row.slug,
     name: row.name,
@@ -84,10 +90,11 @@ function serialize(row, images = []) {
     image: cover?.url ?? null,
     imageAlt: cover?.alt ?? null,
     imageCaption: cover?.caption ?? null,
-    eras: images
-      .filter(isEra)
-      .map((image) => ({ src: image.url, label: image.eraLabel, alt: image.alt })),
-    gallery: images.filter((image) => !isEra(image) && image.role !== 'cover').map((image) => image.url),
+    imageCredit: cover?.credit ?? null,
+    eras: slides,
+    gallery: images
+      .filter((image) => !isEra(image) && image.role !== 'cover')
+      .map((image) => ({ src: image.url, alt: image.alt, caption: image.caption, credit: image.credit })),
     images,
   }
 }

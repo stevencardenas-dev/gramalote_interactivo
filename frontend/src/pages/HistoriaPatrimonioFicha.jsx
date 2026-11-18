@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import Icon from '../components/ui/Icon.jsx'
 import Button from '../components/ui/Button.jsx'
 import EraCarousel from '../components/historia/EraCarousel.jsx'
+import PhotoNote from '../components/historia/PhotoNote.jsx'
 import Reveal from '../components/historia/Reveal.jsx'
 import { findHeritage, useHeritage } from '../lib/heritageData.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
@@ -53,7 +54,12 @@ export default function HistoriaPatrimonioFicha() {
 
   const previous = heritage[index - 1] ?? null
   const next = heritage[index + 1] ?? null
-  const gallery = [site.image, ...site.gallery].filter(Boolean)
+  // La galería puede venir como textos (datos de respaldo) o como objetos con
+  // pie de foto y crédito (API).
+  const gallery = [
+    site.image ? { src: site.image, alt: site.imageAlt, caption: site.imageCaption, credit: site.imageCredit } : null,
+    ...site.gallery.map((photo) => (typeof photo === 'string' ? { src: photo } : photo)),
+  ].filter((photo) => photo?.src)
 
   return (
     <>
@@ -97,7 +103,7 @@ export default function HistoriaPatrimonioFicha() {
                 ) : (
                   <img src={site.image} alt={site.imageAlt ?? site.name} />
                 )}
-                {site.imageCaption ? <p className="his-ficha__caption">{site.imageCaption}</p> : null}
+                {site.eras?.length > 1 ? null : <PhotoNote caption={site.imageCaption} credit={site.imageCredit} />}
               </Reveal>
 
               {site.visit ? (
@@ -144,7 +150,10 @@ export default function HistoriaPatrimonioFicha() {
           {gallery.length > 1 ? (
             <div className="his-ficha__gallery">
               {gallery.map((photo) => (
-                <img key={photo} src={photo} alt="" loading="lazy" />
+                <figure key={photo.src} className="his-ficha__photo">
+                  <img src={photo.src} alt={photo.alt ?? ''} loading="lazy" />
+                  <PhotoNote caption={photo.caption} credit={photo.credit} />
+                </figure>
               ))}
             </div>
           ) : null}
