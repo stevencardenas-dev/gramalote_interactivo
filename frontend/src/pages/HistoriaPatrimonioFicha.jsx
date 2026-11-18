@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import Icon from '../components/ui/Icon.jsx'
 import Button from '../components/ui/Button.jsx'
 import EraCarousel from '../components/historia/EraCarousel.jsx'
-import PhotoNote from '../components/historia/PhotoNote.jsx'
+import PhotoNote, { PhotoBadge } from '../components/historia/PhotoNote.jsx'
 import Reveal from '../components/historia/Reveal.jsx'
 import { findHeritage, useHeritage } from '../lib/heritageData.js'
 import { usePageTitle } from '../lib/usePageTitle.js'
@@ -101,9 +101,12 @@ export default function HistoriaPatrimonioFicha() {
                 {site.eras?.length > 1 ? (
                   <EraCarousel photos={site.eras} name={site.name} />
                 ) : (
-                  <img src={site.image} alt={site.imageAlt ?? site.name} />
+                  <div className="his-photo-frame">
+                    <img src={site.image} alt={site.imageAlt ?? site.name} />
+                    <PhotoBadge text={site.imageCaption} />
+                  </div>
                 )}
-                {site.eras?.length > 1 ? null : <PhotoNote caption={site.imageCaption} credit={site.imageCredit} />}
+                {site.eras?.length > 1 ? null : <PhotoNote credit={site.imageCredit} />}
               </Reveal>
 
               {site.visit ? (
@@ -151,8 +154,11 @@ export default function HistoriaPatrimonioFicha() {
             <div className="his-ficha__gallery">
               {gallery.map((photo) => (
                 <figure key={photo.src} className="his-ficha__photo">
-                  <img src={photo.src} alt={photo.alt ?? ''} loading="lazy" />
-                  <PhotoNote caption={photo.caption} credit={photo.credit} />
+                  <div className="his-photo-frame">
+                    <img src={photo.src} alt={photo.alt ?? ''} loading="lazy" />
+                    <PhotoBadge text={photo.caption} />
+                  </div>
+                  <PhotoNote credit={photo.credit} />
                 </figure>
               ))}
             </div>
