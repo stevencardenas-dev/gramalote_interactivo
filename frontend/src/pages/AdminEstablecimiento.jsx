@@ -449,8 +449,7 @@ export default function AdminEstablecimiento() {
               {form.featured ? <span className="admin-badge">★ Destacada</span> : null}
               <small>
                 {form.categoryName}
-                {form.zoneName ? ` · ${form.zoneName}` : ''} · {form.images.length}{' '}
-                {form.images.length === 1 ? 'imagen' : 'imágenes'}
+                {form.zoneName ? ` · ${form.zoneName}` : ''}
               </small>
             </p>
           </div>

@@ -556,7 +556,7 @@ export function AdminExperiencia() {
               </span>
               {onMap ? <span className="admin-badge">En el mapa</span> : null}
               <small>
-                {categoryName} · {form.images.length} {form.images.length === 1 ? 'imagen' : 'imágenes'}
+                {categoryName}
               </small>
             </p>
           </div>
