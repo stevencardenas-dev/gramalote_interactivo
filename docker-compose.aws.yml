@@ -1,0 +1,30 @@
+# Overlay de producción (AWS). Se aplica ENCIMA de docker-compose.yml:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.aws.yml up -d
+#
+# Lo usa deploy/desplegar-ec2.sh (vía SSM desde GitHub Actions). No se compila
+# nada en la instancia: las imágenes llegan ya hechas desde ECR.
+#
+# Solo cambia lo que depende de la nube:
+#   · web → imagen de ECR y puerto 80 (origen HTTP de CloudFront).
+#   · api → imagen de ECR y 2 saltos de proxy (CloudFront → nginx), para que
+#           req.ip sea la IP real del visitante y funcione el límite de
+#           peticiones.
+#
+# `ports: !override` (Compose ≥ 2.24) sustituye el "8080:80" del compose base en
+# vez de sumarle otro puerto. La instancia tiene Compose 5.x.
+# `build: !reset null` quita el bloque de compilación del servicio: en la
+# instancia no hay código fuente, todo llega compilado desde ECR.
+
+services:
+  web:
+    image: ${IMAGE:-706637772877.dkr.ecr.us-east-2.amazonaws.com/gramalote-frontend:latest}
+    build: !reset null
+    ports: !override
+      - "80:80"
+
+  api:
+    image: ${API_IMAGE:-706637772877.dkr.ecr.us-east-2.amazonaws.com/gramalote-api:latest}
+    build: !reset null
+    environment:
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-2}

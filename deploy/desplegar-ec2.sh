@@ -13,6 +13,11 @@ COMPOSE_URL="${COMPOSE_URL:-}"
 mkdir -p "$APP_DIR"
 cd "$APP_DIR"
 
+# Producción = compose base (común) + overlay de AWS (imágenes de ECR, puerto 80
+# y los 2 saltos de proxy de CloudFront). Se usa SIEMPRE a través de esta matriz
+# para que un `up` suelto no levante la variante local del stack.
+COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.aws.yml)
+
 # Limpieza ANTES de descargar: cada despliegue trae imágenes nuevas y, sin esto,
 # el disco se llena y el pull falla con "no space left on device". Las imágenes
 # en uso no se tocan; las anteriores siguen en ECR para volver atrás.
@@ -38,15 +43,20 @@ if [ -f "$APP_DIR/.env" ]; then
 fi
 
 if [ -n "$COMPOSE_URL" ]; then
-  echo "Actualizando docker-compose.yml desde el repositorio..."
+  echo "Actualizando docker-compose.yml y docker-compose.aws.yml desde el repositorio..."
   curl -fsSL "$COMPOSE_URL" -o docker-compose.yml
+  # Overlay de AWS: sin él, el stack arrancaría la variante local (compilando en
+  # la instancia, que no tiene el código fuente).
+  AWS_COMPOSE_URL="${COMPOSE_AWS_URL:-${COMPOSE_URL%/*}/docker-compose.aws.yml}"
+  curl -fsSL "$AWS_COMPOSE_URL" -o docker-compose.aws.yml
 
   # Los .sql de MySQL solo se leen al crear el volumen; se refrescan igual
-  # para que un volumen nuevo arranque con el esquema del repositorio.
+  # para que un volumen nuevo arranque con el esquema del repositorio. Viven en
+  # backend/database/ porque es la ruta que monta el compose base.
   REPO_RAW="${COMPOSE_URL%/*}"
-  mkdir -p "$APP_DIR/database"
+  mkdir -p "$APP_DIR/backend/database"
   for file in schema.sql seed.sql seed-content.sql; do
-    curl -fsSL "$REPO_RAW/backend/database/$file" -o "$APP_DIR/database/$file" \
+    curl -fsSL "$REPO_RAW/backend/database/$file" -o "$APP_DIR/backend/database/$file" \
       || echo "AVISO: no se pudo descargar $file"
   done
 
@@ -121,22 +131,22 @@ export IMAGE="${REGISTRY}/${ECR_REPO}:${IMAGE_TAG}"
 export API_IMAGE="${REGISTRY}/${ECR_REPO_API}:${IMAGE_TAG}"
 echo "Desplegando $IMAGE y $API_IMAGE"
 
-docker compose pull --quiet
+"${COMPOSE[@]}" pull --quiet
 
 # Respaldo previo: las migraciones de este despliegue pueden cambiar el esquema.
 if [ "$BACKUP_ENABLED" = 1 ] && [ -x "$APP_DIR/backup.sh" ] \
-  && docker compose ps --status running --services 2>/dev/null | grep -qx db; then
+  && "${COMPOSE[@]}" ps --status running --services 2>/dev/null | grep -qx db; then
   echo "Respaldo previo al despliegue..."
   "$APP_DIR/backup.sh" || echo "AVISO: no se pudo hacer el respaldo previo"
 fi
 
-docker compose up -d --remove-orphans
+"${COMPOSE[@]}" up -d --remove-orphans
 
 # Migraciones idempotentes (database/migrations/*.sql). La API puede tardar en
 # arrancar, así que se reintenta antes de seguir con el healthcheck.
 migrated=0
 for _ in 1 2 3 4 5; do
-  if docker compose run --rm --no-deps api node scripts/migrate.js; then
+  if "${COMPOSE[@]}" run --rm --no-deps api node scripts/migrate.js; then
     migrated=1
     break
   fi
@@ -147,13 +157,13 @@ done
 # Fotos de las fichas (database/media-seed): solo se importan las de fichas que
 # aún no tienen ninguna; lo subido desde el panel no se toca.
 if [ "$migrated" = 1 ]; then
-  docker compose run --rm --no-deps api node scripts/media-import.js || echo "AVISO: no se pudieron importar las fotos de las fichas"
+  "${COMPOSE[@]}" run --rm --no-deps api node scripts/media-import.js || echo "AVISO: no se pudieron importar las fotos de las fichas"
 fi
 
 # La cuenta de administración se crea o se rota desde ADMIN_* del .env.
 if [ -n "${ADMIN_EMAIL:-}" ] && [ -n "${ADMIN_PASSWORD:-}" ]; then
   echo "Sembrando cuenta admin ($ADMIN_EMAIL)..."
-  docker compose run --rm --no-deps -e ADMIN_EMAIL -e ADMIN_PASSWORD -e ADMIN_NAME api \
+  "${COMPOSE[@]}" run --rm --no-deps -e ADMIN_EMAIL -e ADMIN_PASSWORD -e ADMIN_NAME api \
     node scripts/seed-admin.js || echo "AVISO: no se pudo sembrar la cuenta admin"
 fi
 
@@ -165,7 +175,7 @@ for _ in $(seq 1 60); do
   if curl -fsS http://127.0.0.1/healthz >/dev/null 2>&1; then
     if curl -fsS http://127.0.0.1/api/health >/dev/null 2>&1; then
       echo "Despliegue OK"
-      docker compose ps
+      "${COMPOSE[@]}" ps
       if [ "$BACKUP_ENABLED" = 1 ]; then
         systemctl list-timers gramalote-backup.timer --no-pager 2>/dev/null | head -n 2 || true
       else
@@ -178,6 +188,6 @@ for _ in $(seq 1 60); do
 done
 
 echo "ERROR: el sitio o la API no respondieron en 120s" >&2
-docker compose ps >&2 || true
-docker compose logs --tail 80 >&2 || true
+"${COMPOSE[@]}" ps >&2 || true
+"${COMPOSE[@]}" logs --tail 80 >&2 || true
 exit 1
