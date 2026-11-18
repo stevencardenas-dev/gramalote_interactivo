@@ -3840,3 +3840,107 @@ kbd {
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Acontecimientos con la misma foto: la foto queda fija y solo se mueven sus
+   textos. Cada grupo cambia de lado (foto a la izquierda, luego a la derecha).
+--------------------------------------------------------------------------- */
+.his-group {
+  --evgap: clamp(28px, 5vw, 72px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--evgap);
+  align-items: start;
+}
+
+.his-group .his-group__media {
+  position: sticky;
+  top: calc(var(--header-h) + 4svh);
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  margin-block: clamp(26px, 3vw, 44px);
+}
+
+.his-group__texts {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.his-group--reverse .his-group__media {
+  grid-column: 2;
+}
+
+.his-group--reverse .his-group__texts {
+  grid-column: 1;
+}
+
+/* Un texto del grupo ocupa su columna y la línea del tiempo pasa por el borde. */
+.his-event--text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 62svh;
+}
+
+.his-event--text .his-event__dot {
+  left: calc(var(--evgap) / -2);
+}
+
+.his-group--reverse .his-event--text .his-event__dot {
+  right: calc(var(--evgap) / -2);
+  left: auto;
+  transform: translate(50%, -50%);
+}
+
+.his-group--reverse .his-event--text.is-active .his-event__dot {
+  transform: translate(50%, -50%) scale(1.16);
+}
+
+@media (max-width: 980px) {
+  /* Móvil: la foto queda fija arriba y los textos se deslizan debajo. */
+  .his-group {
+    display: block;
+  }
+
+  .his-group .his-group__media {
+    top: var(--header-h);
+    z-index: 3;
+    margin: 0;
+    padding-top: 8px;
+    border-radius: 0;
+    background: var(--c-white);
+  }
+
+  .his-group .his-group__media img {
+    aspect-ratio: 16 / 10;
+    max-height: 30svh;
+    border-radius: 14px;
+  }
+
+  .his-deck .his-group .his-event--text {
+    min-height: calc(100svh - var(--header-h) - 34svh);
+    padding-block: 20px 36px;
+    scroll-margin-top: calc(var(--header-h) + 34svh);
+    scroll-snap-align: start;
+  }
+
+  .his-group .his-event--text .his-event__dot {
+    display: none;
+  }
+}
+
+/* Etapa cuyo primer fragmento es un grupo de fotos repetidas: la tarjeta ocupa todo
+   el ancho arriba del grupo (como en el resto de etapas), no la columna de texto. */
+.his-group__stage {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.his-group--stage .his-group__media,
+.his-group--stage .his-group__texts {
+  grid-row: 2;
+}
