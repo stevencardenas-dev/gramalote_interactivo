@@ -684,16 +684,25 @@
 /* Todas las facetas comparten proporción: sin esto, la foto vertical de
    «Naturaleza y vida» estiraba su bloque al doble que las demás. */
 .facet__media {
-  aspect-ratio: 16 / 10;
-  min-height: 0;
+  /* Alto mínimo ≈ 16:10 de su media columna; si el texto es más alto, el
+     recuadro crece y la foto se estira con él (sin ensancharse ni tapar el
+     texto, que es lo que hacía un aspect-ratio estirado). */
+  min-width: 0;
+  min-height: clamp(260px, 31vw, 366px);
+  height: 100%;
   border-radius: 0;
-  /* Con aspect-ratio la foto no se estira sola (align-self: normal actúa como
-     start): si el texto es más alto, quedaba una franja vacía debajo. */
   align-self: stretch;
 }
 
 .facet__card--reverse .facet__media {
   order: -1;
+}
+
+/* La foto no aporta su propio alto (una vertical estiraba el bloque): solo
+   cubre el espacio que le da el recuadro. */
+.facet__media img {
+  position: absolute;
+  inset: 0;
 }
 
 /* ---------------------------------------------------- Detalle de curiosidad */
@@ -1164,6 +1173,8 @@
   }
 
   .facet__media {
+    aspect-ratio: 16 / 10;
+    height: auto;
     min-height: 220px;
   }
 
