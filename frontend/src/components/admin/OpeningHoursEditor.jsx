@@ -4,7 +4,7 @@
 // Cada día es una tarjeta con su estado (abierto / cerrado / sin dato) y sus
 // turnos, igual que el horario de las experiencias. Un día sin filas es "sin
 // dato": la API no sabe si está abierto.
-import { DAYS, dayMode, hhmm, hoursToText } from '../../lib/openingHours.js'
+import { DAYS, dayMode, hhmm } from '../../lib/openingHours.js'
 
 const DEFAULT_SLOT = { opensAt: '08:00', closesAt: '18:00' }
 const MAX_SLOTS = 3
@@ -24,7 +24,7 @@ function normalize(hours) {
     })
 }
 
-export default function OpeningHoursEditor({ hours, exceptions, onChange, onExceptionsChange, onUseText }) {
+export default function OpeningHoursEditor({ hours, exceptions, onChange, onExceptionsChange }) {
   const setHours = (next) => onChange(normalize(next))
 
   function setMode(day, mode) {
@@ -64,7 +64,6 @@ export default function OpeningHoursEditor({ hours, exceptions, onChange, onExce
     onExceptionsChange(exceptions.map((item, position) => (position === index ? { ...item, ...patch } : item)))
   }
 
-  const text = hoursToText(hours)
   const hasMonday = hours.some((slot) => slot.dayOfWeek === 1)
   const openDays = DAYS.filter((_label, index) => dayMode(hours.filter((slot) => slot.dayOfWeek === index + 1)) === 'open')
 
@@ -177,18 +176,6 @@ export default function OpeningHoursEditor({ hours, exceptions, onChange, onExce
           )
         })}
       </div>
-
-      {text ? (
-        <div className="admin-hours__preview">
-          <div>
-            <small>Texto para la ficha</small>
-            <p>{text}</p>
-          </div>
-          <button type="button" onClick={() => onUseText(text)}>
-            Usar en la ficha
-          </button>
-        </div>
-      ) : null}
 
       <div className="admin-hours__exceptions">
         <div className="admin-hours__exceptions-head">

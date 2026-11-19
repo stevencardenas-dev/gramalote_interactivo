@@ -56,7 +56,8 @@ export function adaptEstablishment(item) {
   const uploaded = (item.images ?? [])
     .filter((image) => image.role === 'gallery' && image.url && !itemPhotos.has(image.url))
     .map((image) => image.url)
-  const gallery = uploaded.length > 0 ? uploaded : [...new Set([cover, hero].filter(Boolean))]
+  // Sin fotos de «Galería» la galería queda vacía (antes repetía la portada).
+  const gallery = uploaded
 
   return {
     id: item.id,
@@ -70,6 +71,7 @@ export function adaptEstablishment(item) {
     summary: item.summary ?? '',
     description: item.description ?? '',
     hours: item.hours ?? null,
+    hoursDisplay: item.hoursDisplay === 'table' ? 'table' : 'text',
     checkin: item.checkin ?? null,
     openingHours: (item.openingHours ?? []).map((slot) => ({
       dayOfWeek: Number(slot.dayOfWeek),

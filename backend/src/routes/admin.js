@@ -31,6 +31,30 @@ const IMAGE_ROLES = new Set(['cover', 'hero', 'gallery', 'logo'])
 // El encabezado admite varias: la ficha pública las va rotando.
 const SINGLE_ROLES = new Set(['cover'])
 
+// Dónde dormir muestra la galería en un collage de 5 espacios: más fotos no se
+// verían, así que se pide quitar o cambiar una antes de añadir otra.
+const GALLERY_LIMIT = { dormir: 5 }
+
+async function assertGallerySlot(establishmentId, exceptImageId = 0) {
+  const row = await queryOne(
+    `SELECT c.slug,
+            (SELECT COUNT(*) FROM establishment_images i
+             WHERE i.establishment_id = e.id AND i.role = 'gallery' AND i.id <> ?) AS total
+     FROM establishments e
+     JOIN establishment_categories c ON c.id = e.category_id
+     WHERE e.id = ?`,
+    [exceptImageId, establishmentId],
+  )
+  const limit = GALLERY_LIMIT[row?.slug]
+  if (limit && Number(row.total) >= limit) {
+    throw new ApiError(
+      409,
+      'GALLERY_FULL',
+      `La galería admite ${limit} fotos. Quita una o cambia su uso para añadir otra.`,
+    )
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Utilidades
 // ---------------------------------------------------------------------------
@@ -321,6 +345,7 @@ router.get(
         email: row.email ?? null,
         website: row.website ?? null,
         hoursText: row.hours_text ?? null,
+        hoursDisplay: row.hours_display ?? 'text',
         checkinText: row.checkin_text ?? null,
         priceText: row.price_text ?? null,
         priceMin: toNumber(row.price_min_cop),
@@ -500,6 +525,8 @@ router.patch(
         email: text(body.email, 'Correo', { max: 190 }),
         website: text(body.website, 'Sitio web', { max: 500 }),
         hours_text: text(body.hoursText, 'Horario', { max: 255 }),
+        // Cómo se ve el horario: texto plano en la franja o cuadro por días.
+        hours_display: body.hoursDisplay === 'table' ? 'table' : body.hoursDisplay === 'text' ? 'text' : current.hours_display ?? 'text',
         checkin_text: text(body.checkinText, 'Check-in', { max: 120 }),
         price_text: text(body.priceText, 'Rango de precio', { max: 120 }),
         price_min_cop: priceMin,
@@ -529,7 +556,7 @@ router.patch(
            slug = ?, name = ?, category_id = ?, type_id = ?, zone_id = ?,
            location_detail = ?, summary = ?, description = ?, address = ?,
            latitude = ?, longitude = ?, map_icon = ?, maps_url = ?, phone = ?, phone_secondary = ?,
-           whatsapp = ?, email = ?, website = ?, hours_text = ?, checkin_text = ?,
+           whatsapp = ?, email = ?, website = ?, hours_text = ?, hours_display = ?, checkin_text = ?,
            price_text = ?, price_min_cop = ?, price_max_cop = ?,
            is_featured = ?, sort_order = ?
          WHERE id = ?`,
@@ -537,7 +564,7 @@ router.patch(
           fields.slug, fields.name, fields.category_id, fields.type_id, fields.zone_id,
           fields.location_detail, fields.summary, fields.description, fields.address,
           fields.latitude, fields.longitude, fields.map_icon, fields.maps_url, fields.phone, fields.phone_secondary,
-          fields.whatsapp, fields.email, fields.website, fields.hours_text,
+          fields.whatsapp, fields.email, fields.website, fields.hours_text, fields.hours_display,
           fields.checkin_text, fields.price_text, fields.price_min_cop,
           fields.price_max_cop, fields.is_featured ? 1 : 0, fields.sort_order, id,
         ],
@@ -696,7 +723,9 @@ async function replaceChildren(connection, id, body) {
   if (Array.isArray(body.products)) {
     await connection.query('DELETE FROM establishment_products WHERE establishment_id = ?', [id])
     for (const [index, product] of body.products.entries()) {
-      const name = text(product?.name, 'Nombre del producto', { max: 160, required: true })
+      // Nombre opcional: un producto puede ser solo una foto. La columna es NOT
+      // NULL, así que sin nombre se guarda vacío.
+      const name = text(product?.name, 'Nombre del producto', { max: 160 }) ?? ''
       await connection.query(
         `INSERT INTO establishment_products
            (establishment_id, name, description, price_cop, media_id, sort_order, is_active)
@@ -962,6 +991,7 @@ router.post(
     if (!establishment) throw new ApiError(404, 'NOT_FOUND', 'Establecimiento no encontrado')
 
     const role = IMAGE_ROLES.has(req.body.role) ? req.body.role : 'gallery'
+    if (role === 'gallery') await assertGallerySlot(establishmentId)
     await assertQuota(req.file.size)
     await ensureDir(mediaRoot())
 
@@ -1074,6 +1104,7 @@ router.delete(
       [id],
     )
     if (!media) throw new ApiError(404, 'NOT_FOUND', 'Imagen no encontrada')
+    if (role === 'gallery') await assertGallerySlot(establishmentId)
 
     const usage = await queryOne(
       `SELECT
@@ -1168,6 +1199,7 @@ router.patch(
       if (!current) throw new ApiError(404, 'NOT_FOUND', 'Imagen de la ficha no encontrada')
 
       const role = IMAGE_ROLES.has(req.body?.role) ? req.body.role : current.role
+      if (role === 'gallery' && current.role !== 'gallery') await assertGallerySlot(establishmentId, imageId)
       if (SINGLE_ROLES.has(role) && current.role !== role) {
         await connection.query(
           `UPDATE establishment_images SET role = 'gallery'

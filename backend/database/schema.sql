@@ -186,6 +186,7 @@ CREATE TABLE establishments (
   email           VARCHAR(190) NULL,
   website         VARCHAR(500) NULL,
   hours_text      VARCHAR(255) NULL COMMENT 'Texto editable mostrado en la ficha',
+  hours_display   ENUM('text', 'table') NOT NULL DEFAULT 'text' COMMENT 'Horario como texto o como cuadro por días',
   checkin_text    VARCHAR(120) NULL COMMENT 'Check-in / check-out para alojamientos',
   price_text      VARCHAR(120) NULL COMMENT 'Rango legible para mostrar',
   price_min_cop   DECIMAL(12, 2) NULL,

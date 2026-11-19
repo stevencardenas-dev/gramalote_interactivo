@@ -10,8 +10,13 @@ import { categories } from '../data/establishments.js'
 
 const info = categories.dormir
 
+function GallerySlot({ src, alt }) {
+  if (!src) return <div className="photo ficha-gallery__empty" aria-hidden="true" />
+  return <Photo src={src} alt={alt} />
+}
+
 export default function EstablecimientoDormir({ item }) {
-  const gallery = (item.gallery ?? (item.photo ? [item.photo] : [])).slice(0, 5)
+  const gallery = (item.gallery ?? []).slice(0, 5)
 
   return (
     <>
@@ -47,28 +52,22 @@ export default function EstablecimientoDormir({ item }) {
             <p>{item.description}</p>
           </div>
 
-          {gallery.length >= 5 ? (
+          {/* Collage fijo de 5 espacios: se llena con las fotos de «Galería» en
+              orden y los espacios sin foto quedan en blanco. Sin fotos, nada. */}
+          {gallery.length > 0 ? (
             <div className="ficha-gallery">
               <div className="ficha-gallery__top">
-                {gallery.slice(0, 2).map((photo, index) => (
-                  <Photo key={`top-${index}`} src={photo} alt={`${item.name} ${index + 1}`} />
+                {[0, 1].map((slot) => (
+                  <GallerySlot key={slot} src={gallery[slot]} alt={`${item.name} ${slot + 1}`} />
                 ))}
               </div>
               <div className="ficha-gallery__row">
-                {gallery.slice(2, 5).map((photo, index) => (
-                  <Photo key={`row-${index}`} src={photo} alt={`${item.name} ${index + 3}`} />
+                {[2, 3, 4].map((slot) => (
+                  <GallerySlot key={slot} src={gallery[slot]} alt={`${item.name} ${slot + 1}`} />
                 ))}
               </div>
             </div>
-          ) : (
-            <div className="ficha-gallery__single">
-              <Photo
-                src={gallery[0] ?? item.photo}
-                alt={item.name}
-                ratio="21 / 9"
-              />
-            </div>
-          )}
+          ) : null}
 
           <div className="center-action">
             <Button {...locationButtonProps(item)} icon="arrow">

@@ -7,5 +7,5 @@ export function PhotoBadge({ text }) {
 
 export default function PhotoNote({ credit }) {
   if (!credit) return null
-  return <p className="his-ficha__caption his-ficha__credit">Crédito: {credit}</p>
+  return <p className="his-ficha__caption his-ficha__credit">{credit}</p>
 }

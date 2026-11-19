@@ -1,5 +1,4 @@
 import { contactLines } from './contact.js'
-import { hoursToText, weekRows } from './openingHours.js'
 
 // Texto limpio o null, para no dejar líneas vacías en la barra.
 function clean(value) {
@@ -18,16 +17,22 @@ function lines(...values) {
 // horario y, en alojamientos, la entrada y la salida; los métodos de pago y
 // el rango de precios van por separado.
 export function fichaInfoItems(item) {
-  // Con horario por día, el panel «Horario» (FichaHorario) ya lo muestra
-  // completo; repetirlo aquí como resumen sobra y puede contradecirlo.
-  const hasWeek = weekRows(item.openingHours).some((row) => row.mode !== 'unknown')
+  const location = { icon: 'ubicacion', label: 'Ubicación', value: clean(item.address) }
+  const contact = { icon: 'telefono', label: 'Contacto', value: contactLines(item) }
+  // Siempre cuatro datos. Con el horario como cuadro por días, este va en su
+  // propio panel (FichaHorario) y los pagos se separan en dos.
+  if (item.hoursDisplay === 'table') {
+    return [
+      location,
+      { icon: 'billetera', label: 'Métodos de pago', value: clean(item.payment) },
+      { icon: 'bolso', label: 'Precios', value: clean(item.priceRange) },
+      contact,
+    ]
+  }
   return [
-    hasWeek
-      ? null
-      : { icon: 'horario', label: 'Horario', value: lines(item.hours || hoursToText(item.openingHours), item.checkin) },
-    { icon: 'ubicacion', label: 'Ubicación', value: clean(item.address) },
-    { icon: 'billetera', label: 'Métodos de pago', value: clean(item.payment) },
-    { icon: 'bolso', label: 'Rango de precios', value: clean(item.priceRange) },
-    { icon: 'telefono', label: 'Contacto', value: contactLines(item) },
-  ].filter(Boolean)
+    { icon: 'horario', label: 'Horario', value: lines(item.hours, item.checkin) },
+    location,
+    { icon: 'billetera', label: 'Pagos', value: lines(item.payment, item.priceRange) },
+    contact,
+  ]
 }

@@ -25,6 +25,7 @@ const FIELD_LABELS = {
   email: 'Correo',
   website: 'Sitio web',
   hours_text: 'Horario (texto)',
+  hours_display: 'Vista del horario',
   checkin_text: 'Check-in',
   price_text: 'Rango de precio',
   price_min_cop: 'Precio mínimo',
