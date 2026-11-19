@@ -5,8 +5,7 @@ import { addProtocol, setWorkerUrl } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { Protocol } from 'pmtiles'
 import { layers, namedFlavor } from '@protomaps/basemaps'
-
-const PMTILES_URL = import.meta.env.VITE_MAP_PMTILES_URL || '/tiles/norte-de-santander.pmtiles'
+import { MAP_TILES_PATH } from './mapTiles.js'
 
 const ATTRIBUTION =
   '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a> · ' +
@@ -75,7 +74,7 @@ export function buildMapStyle() {
     sources: {
       protomaps: {
         type: 'vector',
-        url: `pmtiles://${absolute(PMTILES_URL)}`,
+        url: `pmtiles://${absolute(MAP_TILES_PATH)}`,
         attribution: ATTRIBUTION,
       },
     },

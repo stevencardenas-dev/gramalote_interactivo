@@ -3,9 +3,9 @@
 // - La API pública se pide a la red y, si no hay señal, se responde con la
 //   última copia guardada.
 // - Fotos subidas (/media): primero la copia guardada. Fotos del diseño,
-//   iconos y fuentes: la copia guardada, actualizada en segundo plano.
-// - Teselas del mapa: solo las que el visitante ya vio con conexión (la política
-//   de uso de OpenStreetMap no permite descargarlas en bloque).
+//   iconos, fuentes y sprites: la copia guardada, actualizada en segundo plano.
+// - Mapa: el archivo vectorial (.pmtiles) se guarda completo en «Lleva Gramalote
+//   sin conexión» y aquí se responde por trozos (cabecera Range) sin red.
 /* global self, caches, URL, Response */
 
 const VERSION = __VERSION__
@@ -67,6 +67,47 @@ async function cacheFirst(request, cacheName) {
   return response
 }
 
+// El mapa vectorial es un único archivo de ~52 MB. La descarga previa lo guarda
+// entero y MapLibre lo pide por trozos (cabecera Range): sin red se recorta la
+// copia guardada. Se lee una sola vez a un Blob en memoria porque volver a leer
+// el archivo completo en cada trozo haría el mapa inusable.
+let mapBlob = null
+
+async function mapFile(request) {
+  if (!mapBlob) {
+    const cache = await caches.open(TILES)
+    const cached = await cache.match(request.url, { ignoreVary: true })
+    if (!cached) return fetch(request)
+    mapBlob = await cached.blob()
+  }
+
+  const range = /^bytes=(\d+)-(\d*)$/.exec((request.headers.get('range') ?? '').trim())
+  if (!range) {
+    return new Response(mapBlob, {
+      status: 200,
+      headers: { 'Content-Type': 'application/octet-stream', 'Accept-Ranges': 'bytes' },
+    })
+  }
+
+  const size = mapBlob.size
+  const start = Number(range[1])
+  const end = range[2] ? Math.min(Number(range[2]), size - 1) : size - 1
+  if (start >= size || start > end) {
+    return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${size}` } })
+  }
+
+  return new Response(mapBlob.slice(start, end + 1), {
+    status: 206,
+    statusText: 'Partial Content',
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Content-Range': `bytes ${start}-${end}/${size}`,
+      'Content-Length': String(end - start + 1),
+      'Accept-Ranges': 'bytes',
+    },
+  })
+}
+
 // Responde con la copia guardada y la actualiza en segundo plano.
 async function staleWhileRevalidate(request, cacheName, onStore) {
   const cache = await caches.open(cacheName)
@@ -114,6 +155,16 @@ self.addEventListener('fetch', (event) => {
     }
     if (request.mode === 'navigate') {
       event.respondWith(navigation(request))
+      return
+    }
+    if (path.startsWith('/tiles/')) {
+      event.respondWith(mapFile(request))
+      return
+    }
+    // Glifos y sprites del mapa (los guarda la descarga previa y se refrescan
+    // en segundo plano cuando hay señal).
+    if (path.startsWith('/map-assets/')) {
+      event.respondWith(staleWhileRevalidate(request, MEDIA))
       return
     }
     if (path.startsWith('/assets/')) {

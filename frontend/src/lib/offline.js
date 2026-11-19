@@ -3,6 +3,7 @@
 // se descarga de una vez lo demás: datos de la API y todas las fotos, para que
 // el visitante pueda recorrer Gramalote sin señal.
 import { adaptActivity, adaptEstablishment } from './contentApi'
+import { MAP_TILES_PATH } from './mapTiles.js'
 const BASE = import.meta.env.BASE_URL
 const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 const STATE_KEY = 'gramalote-offline'
@@ -142,7 +143,8 @@ export async function downloadForOffline(onProgress = () => {}) {
   ]
   let done = 0
   let failed = 0
-  const total = () => slugs.length + experienceSlugs.length + manifest.shell.length + photos.size
+  // +1: el archivo de teselas del mapa, que va al final.
+  const total = () => slugs.length + experienceSlugs.length + manifest.shell.length + photos.size + 1
   const tick = () => onProgress({ done: ++done, total: total() })
 
   async function run(queue) {
@@ -175,6 +177,18 @@ export async function downloadForOffline(onProgress = () => {}) {
       await store(mediaCache, url)
     }),
   )
+
+  // 4. El mapa completo (unos 52 MB). Va al final para que las fichas y las
+  // fotos queden listas primero; sin él, el mapa muestra los pines sobre un
+  // fondo vacío.
+  const tilesUrl = new URL(MAP_TILES_PATH, window.location.origin + BASE).href
+  const tilesCache = await caches.open(TILES_CACHE)
+  try {
+    if (!(await tilesCache.match(tilesUrl, { ignoreVary: true }))) await store(tilesCache, tilesUrl)
+  } catch {
+    failed += 1
+  }
+  tick()
 
   const state = { savedAt: new Date().toISOString(), version: manifest.version, files: done, failed }
   saveOfflineState(state)
