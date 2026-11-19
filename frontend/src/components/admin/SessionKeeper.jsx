@@ -21,15 +21,16 @@ function countdown(ms) {
 // cierre para no perder lo que se esté editando.
 export default function SessionKeeper() {
   const navigate = useNavigate()
-  const lastActivity = useRef(Date.now())
+  const lastActivity = useRef(0)
   const [warning, setWarning] = useState(null)
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(() => Date.now())
   const endNoticeShown = useRef(false)
 
   useEffect(() => {
     const mark = () => {
       lastActivity.current = Date.now()
     }
+    mark()
     const events = ['pointerdown', 'keydown', 'wheel', 'touchstart']
     events.forEach((name) => window.addEventListener(name, mark, { passive: true }))
     return () => events.forEach((name) => window.removeEventListener(name, mark))
