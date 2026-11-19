@@ -14,7 +14,8 @@
 #   sudo bash desmontar-debian.sh --estado         # solo diagnóstico, no borra
 #   sudo bash desmontar-debian.sh --si             # sin preguntar (contenedores,
 #                                                  #  red, imágenes del proyecto)
-#   sudo bash desmontar-debian.sh --si --borrar-datos   # + /srv/gramalote y volumen
+#   sudo bash desmontar-debian.sh --si --borrar-datos   # + /srv/gramalote, volumen
+#                                                  #  y el .env de cada clon
 #   sudo bash desmontar-debian.sh --si --todo      # + mysql:8.4 y el motor Docker
 #   sudo bash desmontar-debian.sh --instalar       # copia a /usr/local/sbin y /root
 #
@@ -58,7 +59,7 @@ imprimir() {
 }
 
 ayuda() {
-  sed -n '2,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  sed -n '2,29p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 for arg in "$@"; do
@@ -120,7 +121,7 @@ detectar_repos() {
     printf '%s\n' "$REPO"
     return 0
   fi
-  for d in /opt/gramalote /root/gramalote_interactivo /root/gramalote /srv/gramalote-interactivo "$PWD"; do
+  for d in /opt/gramalote /root/gramalote_interactivo /root/gramalote /srv/gramalote-interactivo \n    /home/*/gramalote_interactivo /home/*/gramalote "$PWD"; do
     [ -d "$d/frontend" ] && [ -d "$d/backend" ] && [ -f "$d/docker-compose.yml" ] && printf '%s\n' "$d"
   done | awk '!visto[$0]++'
 }
@@ -333,6 +334,16 @@ if [ "$BORRAR_DATOS" = 1 ]; then
   else
     log "Volúmenes: no hay nada que borrar"
   fi
+
+  # Cada clon guarda en su .env las claves con las que se creó el volumen. Con
+  # el volumen borrado esas claves ya no sirven, y si quedan dos clones con
+  # .env distintos el siguiente arranque mezcla unas con otras. Se borran para
+  # que levantar-debian.sh genere uno nuevo y coherente.
+  for d in $REPOS_ACTUALES; do
+    if [ -f "$d/.env" ]; then
+      rm -f "$d/.env" && ok "$d/.env eliminado" || fallo "no se pudo borrar $d/.env"
+    fi
+  done
 
   if [ -d "$BASE_DIR" ]; then
     log "Borrando $BASE_DIR"

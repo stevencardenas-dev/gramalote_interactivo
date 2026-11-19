@@ -55,7 +55,7 @@ if [ -n "$COMPOSE_URL" ]; then
   # backend/database/ porque es la ruta que monta el compose base.
   REPO_RAW="${COMPOSE_URL%/*}"
   mkdir -p "$APP_DIR/backend/database"
-  for file in schema.sql seed.sql seed-content.sql; do
+  for file in schema.sql seed.sql seed-content.sql db-arranque.sh; do
     curl -fsSL "$REPO_RAW/backend/database/$file" -o "$APP_DIR/backend/database/$file" \
       || echo "AVISO: no se pudo descargar $file"
   done

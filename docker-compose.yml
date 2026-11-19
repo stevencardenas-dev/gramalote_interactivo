@@ -111,6 +111,10 @@ services:
     image: mysql:8.4
     container_name: gramalote-db
     restart: unless-stopped
+    # Antes de arrancar MySQL deja las claves iguales a las del .env: así un
+    # volumen creado con otro .env (otro clon, .env regenerado) no deja la API
+    # en «Access denied». Ver backend/database/db-arranque.sh.
+    entrypoint: ["bash", "/usr/local/bin/db-arranque.sh"]
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Define MYSQL_ROOT_PASSWORD en .env}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-gramalote}
@@ -128,6 +132,7 @@ services:
       - --skip-name-resolve
     volumes:
       - gramalote_db:/var/lib/mysql
+      - ./backend/database/db-arranque.sh:/usr/local/bin/db-arranque.sh:ro
       # Solo se ejecutan la primera vez que se crea el volumen. Los .sql viven en
       # backend/database/ del repo; deploy/desplegar-ec2.sh los deja ahí mismo en
       # la instancia.
