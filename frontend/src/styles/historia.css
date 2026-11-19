@@ -3397,6 +3397,80 @@ html.his-deck {
     scroll-margin-top: calc(var(--header-h) * var(--ui-scale));
   }
 
+  /* La foto se ajusta para que tarjeta, foto y texto quepan en la misma toma. */
+  .his-deck .his-event__media img {
+    max-height: 40svh;
+  }
+
+  .his-deck .his-event:has(.his-event__stage) .his-event__media img {
+    max-height: 34svh;
+  }
+
+  /* La tarjeta se coloca en la columna del texto, encima del título: la foto
+     conserva la misma altura que en el resto de bloques. */
+  .his-deck .his-event:has(.his-event__stage) {
+    row-gap: 10px;
+  }
+
+  .his-deck .his-event > .his-event__stage {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .his-deck .his-event--reverse > .his-event__stage {
+    grid-column: 1;
+  }
+
+  .his-deck .his-event:has(.his-event__stage) .his-event__body {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .his-deck .his-event--reverse:has(.his-event__stage) .his-event__body {
+    grid-column: 1;
+  }
+
+  .his-deck .his-event:has(.his-event__stage) .his-event__media {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: start;
+  }
+
+  .his-deck .his-event--reverse:has(.his-event__stage) .his-event__media {
+    grid-column: 2;
+  }
+
+  /* Grupo que abre etapa: la tarjeta va sobre la columna de texto, no sobre la
+     foto, para que la foto quede a la misma altura que en los demás bloques. */
+  .his-group--stage .his-group__stage {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .his-group--stage .his-group__texts {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .his-deck .his-group--stage .his-group__media {
+    grid-row: 1 / span 2;
+  }
+
+  .his-group--stage.his-group--reverse .his-group__stage,
+  .his-group--stage.his-group--reverse .his-group__texts {
+    grid-column: 1;
+  }
+
+  .his-group--stage.his-group--reverse .his-group__media {
+    grid-column: 2;
+  }
+
+  /* Todos los bloques arrancan a la misma altura (debajo del menú): así la foto
+     no sube ni baja al pasar de una etapa a un grupo con foto compartida. */
+  .his-deck .his-event {
+    align-content: start;
+  }
+
   .his-deck .his-closing {
     display: flex;
     align-items: center;
@@ -3583,10 +3657,14 @@ kbd {
 
   .his-deck .his-event {
     grid-template-columns: minmax(0, 1fr);
-    align-content: center;
-    gap: 18px;
+    /* «safe»: si el texto no cabe, empieza arriba en vez de desbordarse por
+       los dos lados (con centrado se perdía el principio del bloque). */
+    align-content: safe center;
+    gap: 14px;
     min-height: 100svh;
-    padding-block: calc(var(--header-h) + 18px) 44px;
+    /* Abajo quedan la flecha de avance y el contador: el texto debe terminar
+       antes para que no lo tapen. */
+    padding-block: calc(var(--header-h) + 14px) 118px;
     scroll-snap-stop: always;
   }
 
@@ -3599,7 +3677,7 @@ kbd {
 
   .his-deck .his-event__media img {
     aspect-ratio: 16 / 11;
-    max-height: 46svh;
+    max-height: 38svh;
   }
 
   .his-deck .his-event__body,
@@ -3765,24 +3843,29 @@ kbd {
   display: none;
 }
 
+/* Tarjeta de etapa: una sola línea fina. Antes era un bloque de tres filas que
+   empujaba la foto y el texto fuera del encuadre de la pantalla. */
 .his-event__stage {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
   grid-column: 1 / -1;
   grid-row: auto;
   order: -2;
-  margin-bottom: 4px;
-  padding: 14px 16px;
-  border-left: 4px solid var(--c-coral-text);
-  border-radius: 12px;
+  margin-bottom: 0;
+  padding: 7px 14px;
+  border-left: 3px solid var(--c-coral-text);
+  border-radius: 9px;
   background: color-mix(in srgb, var(--c-coral-text) 9%, var(--c-cream));
 }
 
 .his-event__stage .his-stage__count {
   color: var(--c-coral-text);
-  font-size: 0.74rem;
+  font-size: 0.64rem;
   font-weight: 700;
   letter-spacing: 0.1em;
+  white-space: nowrap;
   text-transform: uppercase;
 }
 
@@ -3790,14 +3873,15 @@ kbd {
   margin: 0;
   color: var(--c-brown);
   font-family: var(--font-serif);
-  font-size: clamp(1.25rem, 5.4vw, 1.6rem);
-  line-height: 1.15;
+  font-size: clamp(0.98rem, 1.5vw, 1.15rem);
+  line-height: 1.2;
 }
 
 .his-event__stage p {
   margin: 0;
   color: var(--c-ink-soft);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  line-height: 1.3;
 }
 
 /* Las etapas ya no ocupan una pantalla aparte: viven sobre su primer suceso. */
@@ -3838,43 +3922,47 @@ kbd {
     display: none;
   }
 
+  /* La tarjeta sigue siendo una sola línea; si no cabe, la nota baja debajo. */
   .his-deck .his-event__stage {
-    display: grid;
-    gap: 6px;
-    grid-column: 1;
-    grid-row: auto;
-    order: -2;
-    margin-bottom: 4px;
-    padding: 14px 16px;
-    border-left: 4px solid var(--c-coral-text);
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--c-coral-text) 9%, var(--c-cream));
-  }
-
-  .his-deck .his-event__stage .his-stage__count {
-    color: var(--c-coral-text);
-    font-size: 0.74rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .his-deck .his-event__stage h2 {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: clamp(1.25rem, 5.4vw, 1.6rem);
-    line-height: 1.15;
+    padding: 7px 12px;
   }
 
   .his-deck .his-event__stage p {
-    margin: 0;
-    color: var(--c-ink-soft);
-    font-size: 0.9rem;
+    flex-basis: 100%;
+    margin-left: 0;
+    font-size: 0.76rem;
   }
 
   /* La primera pantalla de una etapa lleva más contenido: la foto cede espacio. */
   .his-deck .his-event:has(.his-event__stage) .his-event__media img {
-    max-height: 36svh;
+    max-height: 28svh;
+  }
+
+  /* En pantallas de 420 px o menos los párrafos ocupan más líneas: la foto se
+     recorta algo más para que el bloque siga cabiendo en una pantalla. */
+  @media (max-width: 420px) {
+    .his-deck .his-event {
+      gap: 12px;
+      padding-block: calc(var(--header-h) + 12px) 104px;
+    }
+
+    .his-deck .his-event__media img,
+    .his-group .his-group__media img {
+      aspect-ratio: 16 / 9;
+    }
+
+    /* La nota de la etapa repite lo que ya dice el título: en pantallas
+       angostas estorba más que ayuda. */
+    .his-deck .his-event__stage p {
+      display: none;
+    }
+
+    /* Párrafos de 15 px: dos líneas menos por bloque, que es justo lo que
+       faltaba para que el texto no quedara bajo los controles. */
+    .his-deck .his-event__body p {
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
   }
 
   /* Transición entre fragmentos: lo que se aleja del centro se atenúa y baja. */
@@ -4020,9 +4108,14 @@ kbd {
     transform: none;
   }
 
-  .his-tl__row > * {
+  /* El punto queda fuera: su translate(-50%, -50%) es lo que lo centra en la
+     línea, y anularlo lo dejaba 7 px a la derecha y 7 px abajo. */
+  .his-tl__row > :not(.his-tl__dot) {
     opacity: 1;
     transform: none;
+  }
+
+  .his-tl__row > * {
     transition: none;
   }
 
@@ -4037,6 +4130,7 @@ kbd {
 --------------------------------------------------------------------------- */
 .his-group {
   --evgap: clamp(28px, 5vw, 72px);
+  scroll-margin-top: var(--header-h);
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--evgap);
@@ -4045,11 +4139,24 @@ kbd {
 
 .his-group .his-group__media {
   position: sticky;
-  top: calc(var(--header-h) + 4svh);
+  top: calc(var(--header-h) + clamp(26px, 3vw, 44px));
   grid-column: 1;
   grid-row: 1;
   align-self: start;
   margin-block: clamp(26px, 3vw, 44px);
+}
+
+/* La foto fija y el texto arrancan a la misma altura: antes la foto se quedaba
+   36 px más abajo y el bloque parecía descuadrado al desplazarse. */
+.his-deck .his-event--text {
+  justify-content: flex-start;
+}
+
+/* Los textos de un grupo no son puntos de encaje: si lo fueran, al llegar al
+   grupo el navegador saltaba al primer texto y dejaba la foto (y la tarjeta de
+   etapa) por encima de la pantalla. */
+.his-deck .his-group .his-event {
+  scroll-snap-align: none;
 }
 
 .his-group__texts {
@@ -4091,31 +4198,30 @@ kbd {
 }
 
 @media (max-width: 980px) {
-  /* Móvil: la foto queda fija arriba y los textos se deslizan debajo. */
+  /* Móvil: la foto va con su grupo y los textos se encadenan debajo. Fijarla
+     encima hacía que el texto pasara por debajo y se viera cortado. */
   .his-group {
     display: block;
   }
 
   .his-group .his-group__media {
-    top: var(--header-h);
-    z-index: 3;
-    margin: 0;
-    padding-top: 8px;
-    border-radius: 0;
-    background: var(--c-white);
+    position: static;
+    z-index: auto;
+    margin: 0 0 6px;
+    padding-top: 0;
+    background: none;
   }
 
   .his-group .his-group__media img {
     aspect-ratio: 16 / 10;
-    max-height: 30svh;
+    max-height: 32svh;
     border-radius: 14px;
   }
 
+  /* En móvil los textos del grupo van seguidos, debajo de su foto. */
   .his-deck .his-group .his-event--text {
-    min-height: calc(100svh - var(--header-h) - 34svh);
-    padding-block: 20px 36px;
-    scroll-margin-top: calc(var(--header-h) + 34svh);
-    scroll-snap-align: start;
+    min-height: 0;
+    padding-block: 14px 26px;
   }
 
   .his-group .his-event--text .his-event__dot {
@@ -4133,4 +4239,27 @@ kbd {
 .his-group--stage .his-group__media,
 .his-group--stage .his-group__texts {
   grid-row: 2;
+}
+
+/* Escritorio: la foto del recorrido conserva su proporción 4:3 y se achica
+   entera (ancho y alto a la vez) según el alto de la pantalla, centrada en su
+   columna. Antes solo se limitaba el alto y el recorte la dejaba apaisada. */
+@media (min-width: 981px) {
+  .his-deck .his-event__media {
+    --foto-h: 40svh;
+    justify-self: center;
+    width: min(100%, calc(var(--foto-h) * 4 / 3));
+  }
+
+  .his-deck .his-event:has(.his-event__stage) .his-event__media,
+  .his-deck .his-group--stage .his-event__media {
+    --foto-h: 34svh;
+  }
+
+  .his-deck .his-event__media img,
+  .his-deck .his-event:has(.his-event__stage) .his-event__media img {
+    width: 100%;
+    max-height: none;
+    aspect-ratio: 4 / 3;
+  }
 }
