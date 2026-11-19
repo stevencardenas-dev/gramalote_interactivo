@@ -7,6 +7,7 @@ import {
   offlineSupported,
   readOfflineState,
 } from '../../lib/offline.js'
+import { MAP_TILES_PATH } from '../../lib/mapTiles.js'
 
 const dateFormat = new Intl.DateTimeFormat('es-CO', {
   day: 'numeric',
@@ -25,12 +26,19 @@ export default function OfflineDownload() {
 
   useEffect(() => {
     if (!supported) return
-    fetch(`${import.meta.env.BASE_URL}offline-manifest.json`)
-      .then((response) => response.json())
-      .then((manifest) => {
+    const base = import.meta.env.BASE_URL
+    // El archivo del mapa no viene en el manifiesto: se pregunta su tamaño.
+    const tilesUrl = new URL(MAP_TILES_PATH, window.location.origin + base).href
+    Promise.all([
+      fetch(`${base}offline-manifest.json`).then((response) => response.json()),
+      fetch(tilesUrl, { method: 'HEAD' })
+        .then((response) => Number(response.headers.get('content-length')) || 0)
+        .catch(() => 0),
+    ])
+      .then(([manifest, tiles]) => {
         const bytes = manifest.files.reduce((sum, file) => sum + file.bytes, 0)
         // Las fotos de las fichas en /media suman unos 5 MB más.
-        setMegabytes(Math.ceil(bytes / 1024 / 1024) + 5)
+        setMegabytes(Math.ceil((bytes + tiles) / 1024 / 1024) + 5)
       })
       .catch(() => {})
   }, [supported])
@@ -70,9 +78,9 @@ export default function OfflineDownload() {
       <div className="offline-card__body">
         <h3 id="sin-conexion-titulo">Lleva Gramalote sin conexión</h3>
         <p>
-          En algunas veredas la señal es intermitente. Descarga las fichas, las fotos y la
-          app{megabytes ? ` (unos ${megabytes} MB)` : ''} antes de salir y consúltalas sin
-          internet. El mapa muestra las zonas que hayas visto con conexión.
+          En algunas veredas la señal es intermitente. Descarga las fichas, las fotos, el mapa y
+          la app{megabytes ? ` (unos ${megabytes} MB)` : ''} antes de salir y consúltalo todo sin
+          internet.
         </p>
 
         {busy ? (

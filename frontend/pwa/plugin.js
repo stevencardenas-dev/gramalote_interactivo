@@ -5,8 +5,10 @@ import { readFileSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
 
 // Carpetas de public/ que entran en "Descargar para usar sin conexión".
-// Las fotos de las fichas viven en /media y se piden a partir de la API.
-const OFFLINE_DIRS = ['img', 'brand', 'icons']
+// Las fotos de las fichas viven en /media y se piden a partir de la API; el
+// archivo de teselas del mapa (52 MB) tampoco está en public y lo descarga
+// src/lib/offline.js por su cuenta.
+const OFFLINE_DIRS = ['img', 'brand', 'icons', 'map-assets']
 
 function walk(root, dir = '') {
   return readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((entry) => {
