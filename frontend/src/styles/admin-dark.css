@@ -2105,6 +2105,62 @@ a.admin-tile:hover .admin-tile__chev {
   align-items: center;
 }
 
+/* Selector de icono de «Ten en cuenta»: icono y nombre. */
+.tip-icon-picker {
+  position: relative;
+}
+
+.tip-icon-picker__button,
+.tip-icon-picker__list button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid var(--a-ln);
+  border-radius: 10px;
+  background: var(--a-sf2);
+  color: var(--a-tx);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tip-icon-picker__list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  display: grid;
+  gap: 2px;
+  min-width: 190px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--a-ln);
+  border-radius: 12px;
+  background: var(--a-sf);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.tip-icon-picker__list button {
+  border-color: transparent;
+  background: transparent;
+}
+
+.tip-icon-picker__list button:hover,
+.tip-icon-picker__list button.is-active {
+  background: var(--a-sf2);
+  color: var(--a-ac-text);
+}
+
+.tip-icon-picker__button:focus-visible,
+.tip-icon-picker__list button:focus-visible {
+  outline: 2px solid var(--a-ac-text);
+  outline-offset: 1px;
+}
+
 /* Publicación de experiencias: casillas apiladas y campo de orden estrecho. */
 .admin-publish__checks {
   display: grid;
