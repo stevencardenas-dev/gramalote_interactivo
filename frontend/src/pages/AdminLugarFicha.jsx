@@ -109,6 +109,8 @@ const KINDS = {
     listLabel: 'Extras',
     noun: 'extra',
     publicPath: () => '/mapa',
+    // Un extra no tiene ficha: se ve como ventana flotante en el mapa.
+    publicLabel: 'Ver en el mapa',
     sections: [
       {
         title: 'Datos principales',
@@ -533,7 +535,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
           </div>
           <div className="admin-head2__actions">
             <Link className="admin-btn" to={kind.publicPath(form)} target="_blank" rel="noreferrer">
-              Ver ficha ↗
+              {kind.publicLabel ?? 'Ver ficha'} ↗
             </Link>
             <button type="button" className="admin-btn admin-btn--primary" onClick={save} disabled={saving || !dirty}>
               {saving ? 'Guardando…' : dirty ? 'Guardar cambios' : 'Sin cambios'}
