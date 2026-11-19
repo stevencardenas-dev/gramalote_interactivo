@@ -87,6 +87,7 @@ export function toEstablishmentSummary(row) {
     email: row.email ?? null,
     website: row.website ?? null,
     hours: row.hours_text ?? null,
+    hoursDisplay: row.hours_display ?? 'text',
     checkin: row.checkin_text ?? null,
     price: {
       text: row.price_text ?? null,

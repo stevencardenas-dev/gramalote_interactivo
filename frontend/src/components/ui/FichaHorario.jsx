@@ -4,6 +4,8 @@ import { exceptionText, todayIndex, upcomingExceptions, weekRows } from '../../l
 // hoy destacado, el estado de ahora mismo y las próximas excepciones. Solo se
 // pinta cuando la ficha tiene horario por día o entrada/salida que mostrar.
 export default function FichaHorario({ item }) {
+  // Solo cuando el horario se eligió como cuadro por días en el panel.
+  if (item.hoursDisplay !== 'table') return null
   const rows = weekRows(item.openingHours)
   const exceptions = upcomingExceptions(item.openingHoursExceptions)
   const checkin = item.checkin?.trim()

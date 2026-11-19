@@ -1,7 +1,7 @@
 import HeroFicha from '../components/ui/HeroFicha.jsx'
 import InfoBar from '../components/ui/InfoBar.jsx'
 import FichaHorario from '../components/ui/FichaHorario.jsx'
-import Photo from '../components/ui/Photo.jsx'
+import OfferGrid from '../components/ui/OfferGrid.jsx'
 import Button from '../components/ui/Button.jsx'
 import { locationButtonProps } from '../lib/maps.js'
 import { fichaInfoItems } from '../lib/fichaInfo.js'
@@ -11,7 +11,8 @@ import { categories } from '../data/establishments.js'
 const info = categories.comprar
 
 export default function EstablecimientoComprar({ item }) {
-  const products = item.products ?? []
+  // Datos viejos traen productos como texto; del panel llegan como objetos.
+  const products = (item.products ?? []).map((product) => (typeof product === 'string' ? { name: product } : product))
 
   return (
     <>
@@ -48,13 +49,7 @@ export default function EstablecimientoComprar({ item }) {
             <p>{item.description}</p>
           </div>
 
-          <div className="product-grid">
-            {products.map((product, index) => {
-              const src = typeof product === 'string' ? item.photo : product.photo
-              const alt = typeof product === 'string' ? product : product.name
-              return <Photo key={`${alt}-${index}`} src={src ?? item.photo} alt={alt} />
-            })}
-          </div>
+          <OfferGrid products={products} fallbackPhoto={item.photo} name={item.name} />
 
           <div className="center-action">
             <Button {...locationButtonProps(item)} icon="arrow">

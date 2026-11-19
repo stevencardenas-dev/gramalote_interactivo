@@ -25,6 +25,13 @@ const TABS = [
 ]
 
 // Iconos de los consejos de la ficha (public/brand/icons/icono-*.svg).
+// Lo que guarda «Guardar cambios»: sin fotos (se guardan al subirlas) ni historial.
+function editableJson(form) {
+  // eslint-disable-next-line no-unused-vars
+  const { images, audit, updatedAt, createdAt, ...rest } = form
+  return JSON.stringify(rest)
+}
+
 const TIP_ICONS = ['huellas', 'camino', 'bolso', 'info', 'alerta', 'horario', 'ubicacion', 'billetera', 'telefono']
 
 const AUDIT_PAGE = 8
@@ -374,6 +381,9 @@ export function AdminExperiencia() {
   const toastSeq = useRef(0)
   const [busy, setBusy] = useState(false)
   const [published, setPublished] = useState(false)
+  // Como en Patrimonio: el botón solo se activa cuando hay algo nuevo que guardar.
+  const [baseline, setBaseline] = useState(null)
+  const dirty = isNew || (form !== null && editableJson(form) !== baseline)
   const [dialog, setDialog] = useState(null)
   const [tab, setTab] = useState('info')
   const [auditPage, setAuditPage] = useState(0)
@@ -395,6 +405,7 @@ export function AdminExperiencia() {
         setMeta(m)
         if (data) {
           setForm(data)
+          setBaseline(editableJson(data))
           setPublished(Boolean(data.published))
         }
       } catch (err) {
@@ -464,9 +475,11 @@ export function AdminExperiencia() {
       } else {
         const saved = await apiRequest(`/admin/experiences/${id}`, { method: 'PUT', body: form })
         setForm(saved)
+        setBaseline(editableJson(saved))
         setPublished(Boolean(saved.published))
       }
-    }, 'Cambios guardados.')
+      notify('ok', 'Cambios guardados', 'La ficha quedó actualizada.')
+    })
   }
 
   const remove = async () => {
@@ -566,8 +579,8 @@ export function AdminExperiencia() {
                 Ver ficha ↗
               </Link>
             ) : null}
-            <button type="button" className="admin-btn admin-btn--primary" onClick={save} disabled={busy}>
-              {busy ? 'Guardando…' : 'Guardar'}
+            <button type="button" className="admin-btn admin-btn--primary" onClick={save} disabled={busy || !dirty}>
+              {busy ? 'Guardando…' : dirty ? 'Guardar cambios' : 'Sin cambios'}
             </button>
           </div>
         </div>
@@ -924,12 +937,6 @@ export function AdminExperiencia() {
               )}
             </div>
           ) : null}
-
-          <div className="admin-panel__footer">
-            <button type="submit" className="admin-btn admin-btn--primary" disabled={busy}>
-              {busy ? 'Guardando…' : 'Guardar cambios'}
-            </button>
-          </div>
         </form>
       </div>
 

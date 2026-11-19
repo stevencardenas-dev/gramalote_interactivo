@@ -813,12 +813,6 @@ button.social-dot {
   gap: 18px;
 }
 
-/* Con «Horario» en la franja (ficha sin horario por día) son 5 datos. */
-@media (min-width: 1025px) {
-  .info-bar:has(> :nth-child(5):last-child) {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
 
 .info-bar {
   padding: 36px 40px;
@@ -1166,6 +1160,11 @@ button.social-dot {
   border-radius: var(--radius-md);
 }
 
+/* Espacio del collage aún sin foto: queda en blanco. */
+.photo.ficha-gallery__empty {
+  background: transparent;
+}
+
 /* Relacionados */
 .related {
   padding-block: 86px 89px;
@@ -1329,6 +1328,11 @@ button.social-dot {
     margin-top: 36px;
   }
 
+  /* En una sola columna los huecos vacíos solo dejarían espacio en blanco. */
+  .photo.ficha-gallery__empty {
+    display: none;
+  }
+
   .ficha-gallery__top,
   .ficha-gallery__row {
     grid-template-columns: 1fr;
@@ -1392,16 +1396,19 @@ button.social-dot {
     line-height: 1.5;
   }
 
-  .ficha-section--comer .offer-grid {
+  .ficha-section--comer .offer-grid,
+  .ficha-section--comprar .offer-grid {
     gap: 26px;
     margin-top: 26px;
   }
 
-  .ficha-section--comer .offer-card h3 {
+  .ficha-section--comer .offer-card h3,
+  .ficha-section--comprar .offer-card h3 {
     margin-top: 14px;
   }
 
-  .ficha-section--comer .offer-card p {
+  .ficha-section--comer .offer-card p,
+  .ficha-section--comprar .offer-card p {
     margin-top: 6px;
     font-size: 0.9375rem;
   }

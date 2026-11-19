@@ -2,7 +2,6 @@ import AuditTimeline from '../components/admin/AuditTimeline.jsx'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import OpeningHoursEditor from '../components/admin/OpeningHoursEditor.jsx'
-import { hoursToText } from '../lib/openingHours.js'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import RatingsPanel from '../components/admin/RatingsPanel.jsx'
@@ -31,6 +30,14 @@ const PLATFORMS = [
   { key: 'website', label: 'Sitio web' },
 ]
 const ROLE_LABELS = { cover: 'Portada', hero: 'Encabezado', gallery: 'Galería', logo: 'Logo' }
+
+// Lo que guarda «Guardar». Quedan fuera las fotos (se guardan al subirlas),
+// el historial y el estado de publicación.
+function editableJson(form) {
+  // eslint-disable-next-line no-unused-vars
+  const { audit, updatedAt, images, published, publishedAt, ...rest } = form
+  return JSON.stringify(rest)
+}
 
 // Elige una de las fotos ya subidas a la ficha para un plato o producto.
 function PhotoSelect({ images, value, onChange }) {
@@ -118,6 +125,9 @@ export default function AdminEstablecimiento() {
   const [relatedQuery, setRelatedQuery] = useState('')
   const [signal, setSignal] = useState({ open: false, n: 0 })
   const [form, setForm] = useState(null)
+  // Copia de lo último guardado, para saber si hay cambios pendientes.
+  const [savedJson, setSavedJson] = useState(null)
+  const dirty = form !== null && savedJson !== null && editableJson(form) !== savedJson
   const [meta, setMeta] = useState(null)
   // Evita que un doble aviso del selector de archivos suba la misma foto dos veces.
   const uploadGuard = useRef(false)
@@ -138,6 +148,7 @@ export default function AdminEstablecimiento() {
         apiRequest('/admin/establishments'),
       ])
       setForm(detail)
+      setSavedJson(editableJson(detail))
       setMeta(metaData)
       setAllEstablishments(list ?? [])
     } catch (err) {
@@ -175,6 +186,10 @@ export default function AdminEstablecimiento() {
   const types = useMemo(() => category?.types ?? [], [category])
   // Servicios y horario de entrada/salida son de alojamiento; los productos, de comer y comprar.
   const isDormir = category?.slug === 'dormir'
+  // Dónde dormir muestra la galería en un collage de 5: no se admiten más.
+  const galleryLimit = isDormir ? 5 : null
+  const galleryCount = (form?.images ?? []).filter((image) => image.role === 'gallery').length
+  const galleryFull = galleryLimit !== null && galleryCount >= galleryLimit
   // Icono que tendría la ficha en "Automático", según su categoría y tipo.
   const automaticIcon = resolveMapIcon({
     type: types.find((type) => type.id === form?.typeId)?.name,
@@ -224,16 +239,6 @@ export default function AdminEstablecimiento() {
     })
   }
 
-  // El texto de la ficha sigue al horario por día mientras el admin no escriba
-  // uno propio: así el resumen y la semana no dicen cosas distintas.
-  function handleHoursChange(openingHours) {
-    const generated = hoursToText(openingHours)
-    const current = (form.hoursText ?? '').trim()
-    const previous = hoursToText(form.openingHours ?? []).trim()
-    const follows = !current || current === previous
-    update({ openingHours, ...(follows && generated ? { hoursText: generated } : {}) })
-  }
-
   function updateList(key, index, patch) {
     setForm((current) => ({
       ...current,
@@ -277,7 +282,8 @@ export default function AdminEstablecimiento() {
         body: { ...form, updatedAt: form.updatedAt },
       })
       setForm((current) => ({ ...current, updatedAt: result.updatedAt }))
-      setNotice('Cambios guardados.')
+      setSavedJson(editableJson(form))
+      setNotice('La ficha quedó actualizada.')
       await refreshAudit()
     } catch (err) {
       setError(err.message)
@@ -290,6 +296,11 @@ export default function AdminEstablecimiento() {
     setError('')
     setNotice('')
     try {
+      // Con cambios sin guardar no se publica: se perderían (pagos, redes…).
+      if (published && dirty) {
+        setError('Guarda los cambios antes de publicar la ficha.')
+        return
+      }
       const result = await apiRequest(`/admin/establishments/${id}/publish`, {
         method: 'POST',
         body: { published },
@@ -336,6 +347,11 @@ export default function AdminEstablecimiento() {
       // La primera foto de una ficha sin imágenes entra como portada; el resto,
       // como galería (si ya hay portada, todas van a la galería).
       const needsCover = !form.images.some((image) => image.role === 'cover')
+      const toGallery = files.length - (needsCover ? 1 : 0)
+      if (galleryLimit && galleryCount + toGallery > galleryLimit) {
+        setError(`La galería admite ${galleryLimit} fotos (hay ${galleryCount}). Quita una o cambia su uso para añadir otra.`)
+        return
+      }
       for (const [index, file] of files.entries()) {
         const data = new FormData()
         data.append('file', file)
@@ -472,9 +488,9 @@ export default function AdminEstablecimiento() {
               type="button"
               className="admin-btn admin-btn--primary"
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || !dirty}
             >
-              {saving ? 'Guardando…' : 'Guardar cambios'}
+              {saving ? 'Guardando…' : dirty ? 'Guardar cambios' : 'Sin cambios'}
             </button>
           </div>
         </div>
@@ -483,7 +499,7 @@ export default function AdminEstablecimiento() {
           <AdminToast
             key={`${error}-${notice}`}
             tone={error ? 'error' : 'ok'}
-            title={error ? 'No se pudo guardar' : 'Guardado'}
+            title={error ? 'No se pudo guardar' : notice === 'La ficha quedó actualizada.' ? 'Cambios guardados' : 'Guardado'}
             message={error || notice}
             onClose={() => {
               setError('')
@@ -694,37 +710,60 @@ export default function AdminEstablecimiento() {
 
               <Section
                 title="Horario y pagos"
-                hint="El horario por día calcula “Abierto hoy” y arma el resumen que se lee en la ficha."
+                hint="Elige cómo se ve el horario en la ficha y el rango de precios."
                 signal={signal}
               >
-                <OpeningHoursEditor
-                  hours={form.openingHours ?? []}
-                  exceptions={form.openingHoursExceptions ?? []}
-                  onChange={handleHoursChange}
-                  onExceptionsChange={(openingHoursExceptions) => update({ openingHoursExceptions })}
-                  onUseText={(hoursText) => update({ hoursText })}
-                />
+                <h3 className="admin-hours__subtitle">Horario</h3>
+                <div className="admin-segment" role="group" aria-label="Cómo se ve el horario">
+                  {[
+                    { key: 'text', label: 'Texto' },
+                    { key: 'table', label: 'Cuadro por días' },
+                  ].map((mode) => (
+                    <button
+                      key={mode.key}
+                      type="button"
+                      aria-pressed={(form.hoursDisplay ?? 'text') === mode.key}
+                      className={`admin-tab${(form.hoursDisplay ?? 'text') === mode.key ? ' is-active' : ''}`}
+                      onClick={() => update({ hoursDisplay: mode.key })}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
 
-                <h3 className="admin-hours__subtitle admin-hours__subtitle--fields">Textos de la ficha</h3>
+                {(form.hoursDisplay ?? 'text') === 'table' ? (
+                  <OpeningHoursEditor
+                    hours={form.openingHours ?? []}
+                    exceptions={form.openingHoursExceptions ?? []}
+                    onChange={(openingHours) => update({ openingHours })}
+                    onExceptionsChange={(openingHoursExceptions) => update({ openingHoursExceptions })}
+                  />
+                ) : (
+                  <div className="admin-grid">
+                    <Field label="Horario" hint="Se lee tal cual en la franja de datos de la ficha.">
+                      <input
+                        value={form.hoursText ?? ''}
+                        onChange={(event) => update({ hoursText: event.target.value })}
+                        placeholder="Lunes a domingo, 8:00 a. m. – 6:00 p. m."
+                      />
+                    </Field>
+                  </div>
+                )}
+
+                {isDormir ? (
+                  <div className="admin-grid">
+                    <Field label="Horario de entrada y salida" hint="Se muestra junto al horario en la ficha.">
+                      <input
+                        value={form.checkinText ?? ''}
+                        onChange={(event) => update({ checkinText: event.target.value })}
+                      />
+                    </Field>
+                  </div>
+                ) : null}
+
+                <h3 className="admin-hours__subtitle admin-hours__subtitle--fields">Precios</h3>
                 <div className="admin-grid">
-                  <Field
-                    label="Horario (texto de la ficha)"
-                    hint="Se actualiza solo con el horario por día mientras no escribas uno propio."
-                  >
-                    <input
-                      value={form.hoursText ?? ''}
-                      onChange={(event) => update({ hoursText: event.target.value })}
-                    />
-                  </Field>
-                  {isDormir ? (
-                  <Field label="Horario de entrada y salida" hint="Se muestra bajo «Horario» en la ficha.">
-                    <input
-                      value={form.checkinText ?? ''}
-                      onChange={(event) => update({ checkinText: event.target.value })}
-                    />
-                  </Field>
-                  ) : null}
-                  <Field label="Rango de precios (texto)" hint="Se lee tal cual en la ficha, p. ej. $15.000 – $40.000.">
+                  <Field label="Precios" hint="Se lee tal cual en la ficha, p. ej. $15.000 – $40.000 o Desde $30.000 por persona.">
                     <input
                       value={form.priceText ?? ''}
                       onChange={(event) => update({ priceText: event.target.value })}
@@ -744,6 +783,12 @@ export default function AdminEstablecimiento() {
                     Portada: tarjetas y listados. Encabezado: foto ancha de la ficha (si falta,
                     se usa la portada). Se convierten a WebP al subir.
                   </p>
+                  {galleryLimit ? (
+                    <p className="note">
+                      Galería: {galleryCount} de {galleryLimit} fotos
+                      {galleryFull ? '. Para añadir otra, quita una o cambia su uso.' : '.'}
+                    </p>
+                  ) : null}
                 </div>
                 <div>
                   <input
@@ -808,7 +853,11 @@ export default function AdminEstablecimiento() {
                             onChange={(event) => patchImage(image, { role: event.target.value })}
                           >
                             {roles.map((role) => (
-                              <option key={role} value={role}>
+                              <option
+                                key={role}
+                                value={role}
+                                disabled={role === 'gallery' && image.role !== 'gallery' && galleryFull}
+                              >
                                 {ROLE_LABELS[role]}
                               </option>
                             ))}
@@ -1136,11 +1185,18 @@ export default function AdminEstablecimiento() {
                   ? 'La ficha es visible en el sitio público.'
                   : 'La ficha no está publicada y no aparece en el sitio.'}
               </p>
+              {!form.published && dirty ? (
+                <p id="publish-unsaved" className="auth-error" role="status">
+                  Tienes cambios sin guardar. Pulsa «Guardar» antes de publicar.
+                </p>
+              ) : null}
               <div className="admin-publish__actions">
                 <button
                   type="button"
                   className={`admin-btn ${form.published ? 'admin-btn--danger' : 'admin-btn--primary'}`}
                   onClick={() => handlePublish(!form.published)}
+                  disabled={!form.published && dirty}
+                  aria-describedby={!form.published && dirty ? 'publish-unsaved' : undefined}
                 >
                   {form.published ? 'Despublicar' : 'Publicar ficha'}
                 </button>
