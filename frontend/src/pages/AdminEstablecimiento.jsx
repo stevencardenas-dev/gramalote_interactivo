@@ -213,6 +213,8 @@ export default function AdminEstablecimiento() {
   const relatedCandidates = allEstablishments
     .filter((item) => item.id !== form.id)
     .filter((item) => item.published)
+    // Solo de la misma categoría (Dónde comer, dormir o comprar).
+    .filter((item) => !category || item.category?.slug === category.slug)
     .filter((item) => {
       if (!relatedQueryText) return true
       return (
