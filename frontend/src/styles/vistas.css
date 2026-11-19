@@ -687,6 +687,9 @@
   aspect-ratio: 16 / 10;
   min-height: 0;
   border-radius: 0;
+  /* Con aspect-ratio la foto no se estira sola (align-self: normal actúa como
+     start): si el texto es más alto, quedaba una franja vacía debajo. */
+  align-self: stretch;
 }
 
 .facet__card--reverse .facet__media {

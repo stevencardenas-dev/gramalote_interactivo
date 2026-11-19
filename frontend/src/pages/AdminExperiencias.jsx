@@ -370,8 +370,6 @@ export function AdminExperiencias() {
         />
       ) : null}
 
-      {nearby.element}
-
       {dialog ? <AdminDialog {...dialog} onClose={() => setDialog(null)} /> : null}
     </section>
   )
@@ -919,6 +917,8 @@ export function AdminExperiencia() {
           onClose={() => setToast(null)}
         />
       ) : null}
+
+      {nearby.element}
 
       {dialog ? <AdminDialog {...dialog} onClose={() => setDialog(null)} /> : null}
     </section>
