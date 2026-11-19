@@ -242,7 +242,9 @@ if ([long]$bytesLocal -ne [long]$totales.MEDIA_BYTES) {
 }
 
 # ----------------------------------------------------------------- Manifiesto
-$commit = (& $git -C $repo rev-parse --short HEAD).Trim()
+# Ojo: no se puede llamar $commit — PowerShell no distingue mayúsculas y choca
+# con el parámetro [switch]$Commit (el manifiesto acababa diciendo «False»).
+$commitSha = (& $git -C $repo rev-parse --short HEAD).Trim()
 $ramaLibre = (& $git -C $repo rev-parse --abbrev-ref HEAD).Trim()
 $tilesLinea = if ($SinTiles -or [int]$totales.TILES_FILES -eq 0) {
   'no incluido (el mapa se ve vacío hasta generarlo con deploy/tiles/build-tiles.sh)'
@@ -258,7 +260,7 @@ $manifiesto = @"
 |---|---|
 | Fecha | $Etiqueta |
 | Servidor | $Servidor ($AppDir) |
-| Commit del repositorio al exportar | $commit (rama $ramaLibre) |
+| Commit del repositorio al exportar | $commitSha (rama $ramaLibre) |
 | Servicios | $($totales.SERVICIOS) |
 
 ## Base de datos
