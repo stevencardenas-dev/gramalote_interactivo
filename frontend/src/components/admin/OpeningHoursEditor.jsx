@@ -1,9 +1,9 @@
 // Horario por día y excepciones (festivos, cierres). Es lo que usa la API para
 // calcular "Abierto hoy"; el texto de la ficha se puede generar desde aquí.
 //
-// Cada día es una tarjeta con su estado (abierto / cerrado / sin dato) y sus
-// turnos, igual que el horario de las experiencias. Un día sin filas es "sin
-// dato": la API no sabe si está abierto.
+// Cada día es una tarjeta con su estado (abierto / cerrado) y sus turnos, igual
+// que el horario de las experiencias. Un día sin filas se trata como cerrado,
+// igual que en la ficha.
 import { DAYS, dayMode, hhmm } from '../../lib/openingHours.js'
 
 const DEFAULT_SLOT = { opensAt: '08:00', closesAt: '18:00' }
@@ -11,7 +11,6 @@ const MAX_SLOTS = 3
 const STATES = [
   { key: 'open', label: 'Abierto' },
   { key: 'closed', label: 'Cerrado' },
-  { key: 'unknown', label: 'Sin dato' },
 ]
 
 function normalize(hours) {
@@ -31,7 +30,6 @@ export default function OpeningHoursEditor({ hours, exceptions, onChange, onExce
     const current = dayMode(hours.filter((slot) => slot.dayOfWeek === day))
     if (current === mode) return
     const others = hours.filter((slot) => slot.dayOfWeek !== day)
-    if (mode === 'unknown') setHours(others)
     if (mode === 'closed') setHours([...others, { dayOfWeek: day, closed: true }])
     if (mode === 'open') setHours([...others, { dayOfWeek: day, closed: false, ...DEFAULT_SLOT }])
   }
@@ -70,9 +68,8 @@ export default function OpeningHoursEditor({ hours, exceptions, onChange, onExce
   return (
     <div className="admin-hours">
       <p className="note">
-        Con este horario el sitio calcula “Abierto hoy” (hora de Colombia). Un día «sin dato»
-        no cuenta ni como abierto ni como cerrado. Si cierra después de medianoche, pon la hora
-        de cierre menor que la de apertura.
+        Con este horario el sitio calcula “Abierto hoy” (hora de Colombia). Si cierra después
+        de medianoche, pon la hora de cierre menor que la de apertura.
       </p>
 
       <div className="admin-hours__summary">
@@ -108,7 +105,9 @@ export default function OpeningHoursEditor({ hours, exceptions, onChange, onExce
         {DAYS.map((label, index) => {
           const day = index + 1
           const slots = hours.filter((slot) => slot.dayOfWeek === day)
-          const mode = dayMode(slots)
+          // Un día sin filas (dato viejo) se ve como cerrado, igual que en la ficha.
+          const raw = dayMode(slots)
+          const mode = raw === 'unknown' ? 'closed' : raw
           return (
             <div key={day} className="admin-hours__day" data-mode={mode}>
               <div className="admin-hours__day-head">

@@ -65,8 +65,9 @@ export function calculateOpenNow(hours, exceptions, date = new Date()) {
     return Boolean(matchesSlot(exception, now.minutes))
   }
 
+  // Con horario por días, un día sin dato cuenta como cerrado.
   const today = hours.filter((item) => item.day_of_week === now.dayOfWeek)
-  if (today.length === 0) return null
+  if (today.length === 0) return false
 
   return today.some((slot) => matchesSlot(slot, now.minutes))
 }
