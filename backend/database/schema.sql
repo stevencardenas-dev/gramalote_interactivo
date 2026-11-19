@@ -748,6 +748,7 @@ CREATE TABLE admin_refresh_tokens (
   user_id    BIGINT UNSIGNED NOT NULL,
   token_hash CHAR(64) NOT NULL COMMENT 'SHA-256 del token; no guardar el token original',
   expires_at DATETIME NOT NULL,
+  session_started_at DATETIME NULL COMMENT 'Inicio de la sesión; se conserva al renovar',
   revoked_at DATETIME NULL,
   user_agent VARCHAR(255) NULL,
   ip_address VARCHAR(45) NULL,

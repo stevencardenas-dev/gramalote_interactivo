@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import OpeningHoursEditor from '../components/admin/OpeningHoursEditor.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import { focusLatitude, useNearbyCheck } from '../components/admin/NearbyCheck.jsx'
 import RatingsPanel from '../components/admin/RatingsPanel.jsx'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 import { useDialog } from '../lib/dialog.jsx'
@@ -122,6 +123,12 @@ export default function AdminEstablecimiento() {
   const fileInput = useRef(null)
 
   const [tab, setTab] = useState('info')
+  const nearby = useNearbyCheck({
+    onReview: () => {
+      setTab('info')
+      focusLatitude()
+    },
+  })
   const [relatedQuery, setRelatedQuery] = useState('')
   const [signal, setSignal] = useState({ open: false, n: 0 })
   const [form, setForm] = useState(null)
@@ -275,6 +282,8 @@ export default function AdminEstablecimiento() {
 
   async function handleSave(event) {
     event?.preventDefault()
+    const proceed = await nearby.check({ lat: form.latitude, lng: form.longitude, type: 'establishment', id: form.id })
+    if (!proceed) return
     setSaving(true)
     setError('')
     setNotice('')
@@ -507,6 +516,8 @@ export default function AdminEstablecimiento() {
           </div>
         </div>
 
+        {nearby.element}
+
         {error || notice ? (
           <AdminToast
             key={`${error}-${notice}`}
@@ -669,6 +680,7 @@ export default function AdminEstablecimiento() {
                 </Field>
                 <Field label="Latitud">
                   <input
+                    data-field="latitude"
                     type="number"
                     step="0.0000001"
                     value={form.latitude ?? ''}

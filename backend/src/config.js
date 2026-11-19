@@ -43,8 +43,11 @@ export const config = {
   ),
   auth: {
     jwtSecret: jwtSecret(env),
-    accessTtl: process.env.AUTH_ACCESS_TTL ?? '30m',
-    refreshTtlDays: integer(process.env.AUTH_REFRESH_TTL_DAYS, 7),
+    accessTtl: process.env.AUTH_ACCESS_TTL ?? '15m',
+    // Sesión del panel: se cierra tras este tiempo sin usarlo (inactividad) y,
+    // aunque se use, al cumplir la duración máxima desde el inicio de sesión.
+    idleMinutes: integer(process.env.AUTH_IDLE_MINUTES, 30),
+    maxHours: integer(process.env.AUTH_MAX_HOURS, 8),
     cookieName: process.env.AUTH_COOKIE_NAME ?? 'gramalote_refresh',
     // Cuántos proxies hay delante de la API. En producción son 2 (CloudFront
     // → nginx): con eso req.ip es la IP real del visitante, base del límite

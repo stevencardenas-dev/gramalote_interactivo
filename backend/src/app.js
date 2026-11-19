@@ -10,6 +10,7 @@ import adminExperiencesRouter from './routes/admin-experiences.js'
 import adminExtrasRouter from './routes/admin-extras.js'
 import adminPlacesRouter from './routes/admin-places.js'
 import adminSearchRouter from './routes/admin-search.js'
+import adminNearbyRouter from './routes/admin-nearby.js'
 import heritageRouter from './routes/heritage.js'
 import adminHeritageRouter from './routes/admin-heritage.js'
 import adminRatingsRouter from './routes/admin-ratings.js'
@@ -140,6 +141,7 @@ app.use(
   adminExperiencesRouter,
   adminPlacesRouter,
   adminSearchRouter,
+  adminNearbyRouter,
   adminExtrasRouter,
   adminHeritageRouter,
   adminRatingsRouter,

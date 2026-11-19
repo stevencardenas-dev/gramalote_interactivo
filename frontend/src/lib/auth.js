@@ -83,9 +83,32 @@ export function takeSessionNotice() {
   return message
 }
 
+// Cuándo vence la sesión (por inactividad) y cuándo termina (duración máxima).
+// Los manda la API al iniciar o renovar; el panel avisa antes del cierre.
+let sessionTiming = null
+
+export function getSessionTiming() {
+  return sessionTiming
+}
+
+// Cierra la sesión local cuando el plazo se cumplió (la API ya no la renovaría).
+export function expireSession(message) {
+  rememberSessionNotice(message)
+  applySession(null)
+}
+
 function applySession(data) {
   accessToken = data?.accessToken ?? null
   currentUser = data?.user ?? null
+  sessionTiming =
+    accessToken && data?.sessionExpiresAt
+      ? {
+          expiresAt: new Date(data.sessionExpiresAt).getTime(),
+          endsAt: new Date(data.sessionEndsAt).getTime(),
+          idleMinutes: Number(data.idleMinutes) || 30,
+          renewedAt: Date.now(),
+        }
+      : null
   if (accessToken) {
     sessionNotice = ''
     try {
