@@ -33,19 +33,6 @@ function escribiendo(elemento) {
   return Boolean(elemento.closest('input, textarea, select, [contenteditable="true"]'))
 }
 
-// Acontecimientos seguidos que usan la misma foto: la foto queda fija y solo se
-// mueven sus textos. Cada grupo alterna de lado (foto a la izquierda, luego a la
-// derecha, y así sucesivamente).
-function agruparPorFoto(events) {
-  const grupos = []
-  events.forEach((event, eventIndex) => {
-    const ultimo = grupos[grupos.length - 1]
-    if (ultimo && ultimo.image === event.image) ultimo.items.push({ event, eventIndex })
-    else grupos.push({ image: event.image, items: [{ event, eventIndex }] })
-  })
-  return grupos
-}
-
 export default function HistoriaCapitulo() {
   const { slug } = useParams()
   const navigate = useNavigate()
@@ -86,37 +73,47 @@ export default function HistoriaCapitulo() {
       const eventos = [...story.querySelectorAll('.his-event')]
       if (eventos.length === 0) return
 
-      // Después del último acontecimiento viene el cierre del capítulo: así la
-      // flecha no se salta ese texto camino al capítulo siguiente.
+      // Antes del primer acontecimiento está el encabezado del capítulo y
+      // después del último, el cierre y el pie de página: las flechas llegan a
+      // ellos igual que pasan de un acontecimiento a otro.
+      const encabezado = document.querySelector('.his-cap-hero')
       const cierre = document.querySelector('.his-closing')
-      const bloques = cierre ? [...eventos, cierre] : eventos
+      const pie = document.querySelector('.site-footer')
+      const bloques = [encabezado, ...eventos, cierre, pie].filter(Boolean)
 
       const alto = window.innerHeight
-      const dentro = story.getBoundingClientRect().top < alto * 0.8
-      let actual = -1
-      if (dentro) {
-        let distancia = Infinity
-        bloques.forEach((bloque, i) => {
-          const caja = bloque.getBoundingClientRect()
-          const d = Math.abs((caja.top + caja.bottom) / 2 - alto / 2)
-          if (d < distancia) {
-            distancia = d
-            actual = i
-          }
-        })
-      }
+      let actual = 0
+      let distancia = Infinity
+      bloques.forEach((bloque, i) => {
+        const caja = bloque.getBoundingClientRect()
+        // Lo que cuenta es la parte del bloque que se ve: el pie es más bajo
+        // que una pantalla y el encabezado empieza encima del menú.
+        const arriba = Math.max(caja.top, 0)
+        const abajo = Math.min(caja.bottom, alto)
+        if (abajo <= arriba) return
+        const d = Math.abs((arriba + abajo) / 2 - alto / 2) - (abajo - arriba) / alto
+        if (d < distancia) {
+          distancia = d
+          actual = i
+        }
+      })
 
       const destino = actual + salto
       // Al llegar al primero o al último no se salta de capítulo: el cierre
       // ofrece los botones y el inicio tiene su propio regreso.
       if (destino < 0 || destino >= bloques.length) return
 
-      bloques[destino].scrollIntoView({
-        behavior: esReducido() ? 'auto' : 'smooth',
+      const comportamiento = esReducido() ? 'auto' : 'smooth'
+      const bloque = bloques[destino]
+      if (bloque === encabezado) {
+        window.scrollTo({ top: 0, behavior: comportamiento })
+      } else if (bloque === pie) {
+        bloque.scrollIntoView({ behavior: comportamiento, block: 'end' })
+      } else {
         // Cada bloque es una pantalla: su borde superior queda bajo el menú
         // (el scroll-margin de historia.css lo alinea con el encabezado).
-        block: 'start',
-      })
+        bloque.scrollIntoView({ behavior: comportamiento, block: 'start' })
+      }
     },
     [],
   )
@@ -441,75 +438,40 @@ export default function HistoriaCapitulo() {
               </Reveal>
 
               <ol className="his-events">
-                {agruparPorFoto(stage.events).map((grupo, g) => {
-                  const invertido = g % 2 === 1
-                  const global = (eventIndex) => inicioEtapa[stageIndex] + eventIndex
-                  const cuerpo = ({ event, eventIndex }, conFoto) => (
-                    <Reveal
-                      as="li"
-                      key={`${stage.kicker}-${event.n}`}
-                      data-step={event.n}
-                      className={`his-event${conFoto ? '' : ' his-event--text'}${
-                        conFoto && invertido ? ' his-event--reverse' : ''
-                      }${global(eventIndex) === activo ? ' is-active' : ''}`}
-                    >
-                      {eventIndex === 0 && conFoto ? (
-                        <div className="his-event__stage">
-                          <span className="his-stage__count">
-                            Etapa {String(stageIndex + 1).padStart(2, '0')} / {String(chapter.stages.length).padStart(2, '0')}
-                          </span>
-                          <h2>{stage.title}</h2>
-                          <p>{stage.kicker.split('·')[1]?.trim() || stage.kicker}</p>
-                        </div>
-                      ) : null}
-                      <span className="his-event__dot" aria-hidden="true" />
-                      {conFoto ? (
-                        <figure className="his-event__media">
-                          <img src={event.image} alt="" loading="lazy" />
-                          <figcaption>
-                            <span className="his-event__num">{String(event.n).padStart(2, '0')}</span>
-                            <span className="his-event__date">{event.date}</span>
-                          </figcaption>
-                        </figure>
-                      ) : null}
-                      <div className="his-event__body">
-                        <h3>{event.title}</h3>
-                        <p>{event.text}</p>
+                {stage.events.map((event, eventIndex) => (
+                  <Reveal
+                    as="li"
+                    key={`${stage.kicker}-${event.n}`}
+                    data-step={event.n}
+                    className={`his-event${eventIndex % 2 === 1 ? ' his-event--reverse' : ''}${
+                      inicioEtapa[stageIndex] + eventIndex === activo ? ' is-active' : ''
+                    }`}
+                  >
+                    {/* Un acontecimiento por pantalla; el primero de la etapa
+                        lleva además el nombre de la etapa. */}
+                    {eventIndex === 0 ? (
+                      <div className="his-event__stage">
+                        <span className="his-stage__count">
+                          Etapa {String(stageIndex + 1).padStart(2, '0')} / {String(chapter.stages.length).padStart(2, '0')}
+                        </span>
+                        <h2>{stage.title}</h2>
+                        <p>{stage.kicker.split('·')[1]?.trim() || stage.kicker}</p>
                       </div>
-                    </Reveal>
-                  )
-
-                  if (grupo.items.length === 1) return cuerpo(grupo.items[0], true)
-
-                  // Varios textos con la misma foto: la foto es una sola y se queda fija.
-                  const visible = grupo.items.find((item) => global(item.eventIndex) === activo) ?? grupo.items[0]
-                  return (
-                    <li
-                      key={`${stage.kicker}-g${g}`}
-                      className={`his-group${invertido ? ' his-group--reverse' : ''}${
-                        grupo.items[0].eventIndex === 0 ? ' his-group--stage' : ''
-                      }`}
-                    >
-                      {grupo.items[0].eventIndex === 0 ? (
-                        <div className="his-event__stage his-group__stage">
-                          <span className="his-stage__count">
-                            Etapa {String(stageIndex + 1).padStart(2, '0')} / {String(chapter.stages.length).padStart(2, '0')}
-                          </span>
-                          <h2>{stage.title}</h2>
-                          <p>{stage.kicker.split('·')[1]?.trim() || stage.kicker}</p>
-                        </div>
-                      ) : null}
-                      <Reveal as="figure" className="his-event__media his-group__media">
-                        <img src={grupo.image} alt="" loading="lazy" />
-                        <figcaption>
-                          <span className="his-event__num">{String(visible.event.n).padStart(2, '0')}</span>
-                          <span className="his-event__date">{visible.event.date}</span>
-                        </figcaption>
-                      </Reveal>
-                      <ol className="his-group__texts">{grupo.items.map((item) => cuerpo(item, false))}</ol>
-                    </li>
-                  )
-                })}
+                    ) : null}
+                    <span className="his-event__dot" aria-hidden="true" />
+                    <figure className="his-event__media">
+                      <img src={event.image} alt="" loading="lazy" />
+                      <figcaption>
+                        <span className="his-event__num">{String(event.n).padStart(2, '0')}</span>
+                        <span className="his-event__date">{event.date}</span>
+                      </figcaption>
+                    </figure>
+                    <div className="his-event__body">
+                      <h3>{event.title}</h3>
+                      <p>{event.text}</p>
+                    </div>
+                  </Reveal>
+                ))}
               </ol>
             </section>
           ))}
