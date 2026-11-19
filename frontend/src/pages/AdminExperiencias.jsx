@@ -6,6 +6,7 @@ import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import AdminDialog from '../components/admin/AdminDialog.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
 import AuditTimeline from '../components/admin/AuditTimeline.jsx'
+import TipIconPicker from '../components/admin/TipIconPicker.jsx'
 import Pagination from '../components/admin/Pagination.jsx'
 import { usePaged } from '../lib/usePaged.js'
 import { useDialog } from '../lib/dialog.jsx'
@@ -31,6 +32,17 @@ function editableJson(form) {
   // eslint-disable-next-line no-unused-vars
   const { images, audit, updatedAt, createdAt, ...rest } = form
   return JSON.stringify(rest)
+}
+
+// «Cómo llegar» y «Dificultad» ya no se editan en «Visita»: si una ficha vieja
+// los tiene, pasan a ser consejos de «Ten en cuenta» (donde se ven en la ficha)
+// y se guardan así la próxima vez.
+function withAccessTips(data) {
+  const tips = [...(data.tips ?? [])]
+  const has = (word) => tips.some((tip) => String(tip.title ?? '').toLowerCase().includes(word))
+  if (data.access && !has('llegar')) tips.push({ icon: 'huellas', title: 'Cómo llegar', text: data.access })
+  if (data.difficulty && !has('dificultad')) tips.push({ icon: 'camino', title: 'Dificultad', text: data.difficulty })
+  return { ...data, tips, access: '', difficulty: '' }
 }
 
 // El historial de experiencias no traduce ids (categoría, zona…) a nombres.
@@ -394,8 +406,9 @@ export function AdminExperiencia() {
         if (!alive) return
         setMeta(m)
         if (data) {
-          setForm(data)
-          setBaseline(editableJson(data))
+          const ready = withAccessTips(data)
+          setForm(ready)
+          setBaseline(editableJson(ready))
           setPublished(Boolean(data.published))
         }
       } catch (err) {
@@ -464,8 +477,9 @@ export function AdminExperiencia() {
         navigate(`/admin/lugares/experiencias/${created.id}`, { replace: true })
       } else {
         const saved = await apiRequest(`/admin/experiences/${id}`, { method: 'PUT', body: form })
-        setForm(saved)
-        setBaseline(editableJson(saved))
+        const ready = withAccessTips(saved)
+        setForm(ready)
+        setBaseline(editableJson(ready))
         setPublished(Boolean(saved.published))
       }
       notify('ok', 'Cambios guardados', 'La ficha quedó actualizada.')
@@ -678,7 +692,7 @@ export function AdminExperiencia() {
 
               <AdminSection
                 title="Visita"
-                hint="Los cuatro datos de la franja; «Cómo llegar» y «Dificultad» salen en «Ten en cuenta»."
+                hint="Los cuatro datos de la franja de la ficha."
                 signal={signal}
               >
                 <div className="admin-grid">
@@ -693,12 +707,6 @@ export function AdminExperiencia() {
                   </Field>
                   <Field label="Teléfono" icon="telefono">
                     <input value={form.phone} onChange={set('phone')} placeholder="310 7881532" />
-                  </Field>
-                  <Field label="Cómo llegar" icon="huellas" hint="Opcional: aparece como tarjeta en «Ten en cuenta».">
-                    <input value={form.access} onChange={set('access')} placeholder="15 min en vehículo" />
-                  </Field>
-                  <Field label="Dificultad" icon="camino" hint="Opcional, en texto libre.">
-                    <input value={form.difficulty} onChange={set('difficulty')} placeholder="Media alta" />
                   </Field>
                 </div>
               </AdminSection>
@@ -793,11 +801,7 @@ export function AdminExperiencia() {
               {form.tips.length === 0 ? <p className="empty">Sin consejos todavía.</p> : null}
               {form.tips.map((tip, index) => (
                 <div key={index} className="admin-row admin-row--tip">
-                  <select value={tip.icon} onChange={(e) => setTip(index, 'icon', e.target.value)} aria-label="Icono">
-                    {TIP_ICONS.map((icon) => (
-                      <option key={icon}>{icon}</option>
-                    ))}
-                  </select>
+                  <TipIconPicker icons={TIP_ICONS} value={tip.icon} onChange={(icon) => setTip(index, 'icon', icon)} />
                   <input
                     value={tip.title}
                     onChange={(e) => setTip(index, 'title', e.target.value)}
