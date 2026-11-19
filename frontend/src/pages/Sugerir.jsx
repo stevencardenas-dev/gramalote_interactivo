@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Button from '../components/ui/Button.jsx'
 import PageHero from '../components/ui/PageHero.jsx'
 import { sendSuggestion } from '../lib/ratingsApi.js'
@@ -36,10 +36,15 @@ export default function Sugerir() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [sent, setSent] = useState(null)
+  // Tiempo desde que se abrió el formulario: es lo que usa el servidor para
+  // descartar envíos de bots. Contarlo desde el primer cambio descartaba en
+  // silencio sugerencias llenadas rápido (pegadas o con autocompletar).
   const startedAt = useRef(0)
+  useEffect(() => {
+    startedAt.current = Date.now()
+  }, [])
 
   const set = (key) => (event) => {
-    if (!startedAt.current) startedAt.current = Date.now()
     setForm((current) => ({ ...current, [key]: event.target.value }))
   }
 
@@ -63,7 +68,7 @@ export default function Sugerir() {
         queued: Boolean(result?.queued),
       })
       setForm(EMPTY)
-      startedAt.current = 0
+      startedAt.current = Date.now()
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (failure) {
       setError(failure.message)
