@@ -31,11 +31,18 @@ fi
 
 cd "$APP_DIR"
 
+# `exec` solo necesita resolver el nombre del servicio; se añade el overlay de
+# AWS cuando existe (en la EC2) para no depender del compose base a medias.
+COMPOSE=(docker compose)
+if [ -f docker-compose.aws.yml ]; then
+  COMPOSE+=(-f docker-compose.aws.yml)
+fi
+
 # Base de datos: transacción consistente, sin bloquear el sitio. La clave de
 # root sale del propio contenedor; nunca se escribe en disco ni en el log.
 db_file="$BACKUP_DIR/gramalote-$stamp.sql.gz"
 dump_ok=1
-docker compose exec -T db sh -c \
+"${COMPOSE[@]}" exec -T db sh -c \
   'exec mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --routines --triggers --no-tablespaces "$MYSQL_DATABASE"' \
   2>/dev/null | gzip -6 > "$db_file.tmp" || dump_ok=0
 # Además del código de salida, el volcado debe terminar con su marca de cierre.

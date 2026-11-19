@@ -209,9 +209,12 @@ curl -fsSL https://get.docker.com | sudo sh          # instala docker + compose 
 sudo usermod -aG docker "$USER"                       # cerrar y abrir sesión después
 ```
 
-Necesita **Docker Compose ≥ 2.24**: el overlay usa la etiqueta YAML `!override`.
-El paquete `docker-compose-v2` de los repos de Ubuntu 22.04 es más viejo, así que
-instala Docker con `get.docker.com` (lo que hace el script), no con `apt`.
+Necesita **Docker Compose ≥ 2.24** solo si la máquina tiene **SELinux en
+enforcing** (RHEL/Fedora/Rocky/Alma): el `compose-selinux.yml` que genera
+`levantar-debian.sh` usa la etiqueta YAML `!override`. En Debian/Ubuntu no hace
+falta. Aun así, el paquete `docker-compose-v2` de los repos de Ubuntu 22.04 es
+más viejo que el resto del stack, así que instala Docker con `get.docker.com`
+(lo que hace el script), no con `apt`.
 
 ### 6.2 Traer el repositorio
 
@@ -267,28 +270,29 @@ chmod 600 .env
 
 ### 6.5 Imágenes: ya no hay ECR
 
-En AWS las imágenes se descargaban de ECR (`docker compose pull`). Sin cuenta AWS
-se compilan desde el repositorio, y para eso está el overlay versionado
-`docker-compose.debian.yml`, que se aplica **encima** del `docker-compose.yml` de
-producción. Lo que cambia:
+En AWS las imágenes se descargan ya hechas de ECR
+(`docker compose -f docker-compose.yml -f docker-compose.aws.yml pull`). Sin
+cuenta AWS se compilan desde el repositorio, y eso es lo que hace el
+`docker-compose.yml` de la raíz, que ya es el archivo **local** por defecto
+(`docker compose up -d --build`). El `docker-compose.aws.yml` es solo el overlay
+de producción. Diferencias entre los dos entornos:
 
 | Ajuste | Por qué |
 |---|---|
-| `build` de `frontend` y `backend` en vez de `pull` | no hay ECR |
-| publica en **8080** en lugar del 80 | no choca con un nginx/apache del sistema |
-| los `.sql` apuntan a `backend/database/` | el compose base los espera en `./database/`, que en la instancia crea `deploy/desplegar-ec2.sh` |
-| `TRUST_PROXY_HOPS=1` | aquí solo hay un nginx delante, no CloudFront |
+| `build` de `frontend` y `backend` en el base; `image` de ECR solo en el overlay | no hay ECR fuera de AWS |
+| publica en **8080** (base) y en el 80 (overlay de AWS) | 8080 no choca con un nginx/apache del sistema; el 80 es el origen de CloudFront |
+| los `.sql` apuntan a `backend/database/` | es la ruta del repo; `deploy/desplegar-ec2.sh` los deja ahí también en la instancia |
+| `TRUST_PROXY_HOPS=1` (base) y `2` (overlay) | aquí solo hay un nginx delante; en AWS, CloudFront y nginx |
 
-Se usa siempre con los dos `-f`, en ese orden:
+Local se usa el archivo corto:
 
 ```bash
-alias gc='docker compose -f docker-compose.yml -f docker-compose.debian.yml'
-gc build          # compila las dos imágenes
-gc up -d          # nginx + API + MySQL
+docker compose build          # compila las dos imágenes
+docker compose up -d         # nginx + API + MySQL en :8080
 ```
 
 Ya no hace falta el `docker-compose.override.yml` manual de versiones anteriores
-de este documento. El puerto se cambia en el overlay (o con `PORT`, ver 6.6).
+de este documento ni el antiguo `docker-compose.debian.yml`.
 
 ### 6.6 Un solo comando: `deploy/levantar-debian.sh`
 
@@ -299,7 +303,8 @@ y vuelve a levantar el stack.
 
 1. Detecta la distribución e instala Docker si falta (`get.docker.com` en
    Debian/Ubuntu/Fedora/RHEL; `zypper`/`pacman` en openSUSE/Arch), y comprueba
-   que el plugin `docker compose` sea ≥ 2.24.
+   que el plugin `docker compose` sea ≥ 2.24 (solo hace falta para el
+   `compose-selinux.yml`, ver 6.1).
 2. Sincroniza `media/` y los `.pmtiles` del snapshot a `/srv/gramalote/media` y `/srv/gramalote/tiles`, y
    ajusta permisos (UID 1000 para la API, lectura para nginx). Si **SELinux** está
    en enforcing (RHEL/Fedora/Rocky/Alma) genera
@@ -341,12 +346,14 @@ powershell -File deploy/migracion-exportar.ps1
 Y luego se vuelve a ejecutar `levantar-debian.sh`: al cambiar el sha256 del
 volcado, restaura la base nueva conservando los usuarios y las contraseñas.
 
-Al terminar imprime la URL del sitio y del panel. Desde Windows (o cualquier
-máquina de la red) se abre esa misma URL; el panel queda en `/acceder` y la API
-en `/api/health`. El script abre el puerto él mismo si encuentra `ufw` o
-`firewalld` activos; si no, avisa con el comando que hay que lanzar. Si la Debian
-es una VM en Windows con red **NAT**, cambia el adaptador a puente o reenvía el
-puerto.
+Al terminar imprime las URLs con `127.0.1.1` como marcador: hay que reemplazarlo
+por la IP actual de la VM (o por la IP y el puerto del reenvío). Junto a las URLs
+recuerda la IP que detectó, que es la que debe estar en `CORS_ORIGIN` y
+`PUBLIC_SITE_URL`. Desde Windows (o cualquier máquina de la red) se abre esa
+dirección; el panel queda en `/acceder` y la API en `/api/health`. El script abre
+el puerto él mismo si encuentra `ufw` o `firewalld` activos; si no, avisa con el
+comando que hay que lanzar. Si la Debian es una VM en Windows con red **NAT**,
+cambia el adaptador a puente o reenvía el puerto.
 
 ### 6.7 Lo mismo paso a paso
 
@@ -355,7 +362,7 @@ Si prefieres controlar cada paso —o el script falla a mitad—, se descompone 
 ```bash
 cd /opt/gramalote
 set -a; . ./.env; set +a                 # MYSQL_*, ADMIN_*, MEDIA_DIR, TILES_DIR
-C="docker compose -f docker-compose.yml -f docker-compose.debian.yml"
+C="docker compose"                       # el compose base ya es el local
 
 D=$(ls -d migracion/*/ | tail -1)        # snapshot más reciente
 $C up -d db
@@ -521,5 +528,5 @@ sudo bash deploy/desmontar-debian.sh --instalar      # copia fija fuera del repo
 | Login falla con 401 y la web responde bien | La base se importó pero `users` está vacía: ejecuta `npm run seed:admin`. |
 | En RHEL/Fedora/Rocky el sitio carga pero `/media` da **403** y el panel no deja subir fotos | SELinux en enforcing con el contexto del host. El script genera `/srv/gramalote/compose-selinux.yml` con `:z`; si lo lanzaste a mano, añade `:z` a los montajes o ejecuta `sudo chcon -Rt container_file_t /srv/gramalote`. |
 | Desde otra máquina no se ve el sitio, pero `curl localhost:8080` sí funciona | Cortafuegos del host: `sudo firewall-cmd --permanent --add-port=8080/tcp && sudo firewall-cmd --reload` (firewalld) o `sudo ufw allow 8080/tcp` (ufw). El script lo hace solo si detecta alguno activo. |
-| `unexpected tag !override` al arrancar | `docker compose` < 2.24. Instala Docker con `get.docker.com` en vez del paquete `docker-compose-v2` de la distro. |
+| `unexpected tag !override` al arrancar | `docker compose` < 2.24 y SELinux en enforcing (el `compose-selinux.yml` generado usa esa etiqueta). Instala Docker con `get.docker.com` en vez del paquete `docker-compose-v2` de la distro. |
 | `git clone` va a ~100 KB/s y tarda horas (con la red de la máquina a 10 MB/s) | La VM resuelve GitHub por IPv6 y esa ruta no funciona: `curl -6` da 0 B/s e `curl -4` va a 10 MB/s. Prefiere IPv4 con `echo 'precedence ::ffff:0:0/96  100' >> /etc/gai.conf` (o desactiva IPv6 en el adaptador de la VM) y repite el clon. |

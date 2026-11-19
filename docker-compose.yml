@@ -1,16 +1,36 @@
 name: gramalote
 
-# Stack de producción: nginx (SPA) + API Express + MySQL.
-# Las variables sensibles viven en /opt/gramalote/.env de la instancia y nunca
-# se versionan; el compose solo las interpola.
+# Stack completo de Gramalote: nginx (SPA) + API Express + MySQL.
+#
+# Este es el archivo estándar: compila las dos imágenes desde el repositorio y
+# sirve el sitio en http://localhost:8080 (o el puerto del contenedor `web`).
+#
+#   docker compose up -d --build
+#
+# Funciona igual en el PC (Docker Desktop) y en un servidor Linux con Docker:
+# deploy/levantar-debian.sh lo levanta así y solo añade datos y cortafuegos.
+#
+# En AWS no se compila nada: deploy/desplegar-ec2.sh aplica el overlay
+# docker-compose.aws.yml, que cambia las imágenes por las de ECR, publica el 80
+# (origen de CloudFront) y ajusta los saltos de proxy:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.aws.yml up -d
+#
+# Las variables sensibles viven en .env (local) o en /opt/gramalote/.env (EC2) y
+# nunca se versionan; el compose solo las interpola.
 
 services:
   web:
-    image: ${IMAGE:-706637772877.dkr.ecr.us-east-2.amazonaws.com/gramalote-frontend:latest}
+    image: gramalote-web:local
+    build:
+      context: ./frontend
     container_name: gramalote-web
     restart: unless-stopped
     ports:
-      - "80:80"
+      # 8080 para no chocar con un nginx/apache del sistema (PORT lo cambia, y
+      # deploy/levantar-debian.sh lo respeta). El overlay de AWS lo sustituye
+      # por el 80, que es el origen de CloudFront.
+      - "${PORT:-8080}:80"
     volumes:
       # Imágenes subidas desde el panel: nginx las sirve en solo lectura.
       - ${MEDIA_DIR:-/opt/gramalote/media}:/srv/media:ro
@@ -34,7 +54,9 @@ services:
       - gramalote
 
   api:
-    image: ${API_IMAGE:-706637772877.dkr.ecr.us-east-2.amazonaws.com/gramalote-api:latest}
+    image: gramalote-api:local
+    build:
+      context: ./backend
     container_name: gramalote-api
     restart: unless-stopped
     environment:
@@ -46,15 +68,15 @@ services:
       AUTH_IDLE_MINUTES: ${AUTH_IDLE_MINUTES:-30}
       AUTH_MAX_HOURS: ${AUTH_MAX_HOURS:-8}
       TRUST_PROXY: ${TRUST_PROXY:-1}
-      # CloudFront → nginx → API: 2 saltos para que req.ip sea la IP del
-      # visitante (el puerto 80 de la instancia solo acepta a CloudFront).
-      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-2}
+      # Un solo proxy delante (nginx). En AWS son 2 (CloudFront → nginx) y lo
+      # pone docker-compose.aws.yml, para que req.ip sea la IP del visitante.
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}
       CORS_ORIGIN: ${CORS_ORIGIN:-https://d2nm90ise1l8de.cloudfront.net}
       MYSQL_HOST: db
       MYSQL_PORT: "3306"
       MYSQL_DATABASE: ${MYSQL_DATABASE:-gramalote}
       MYSQL_USER: ${MYSQL_USER:-gramalote}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Define MYSQL_PASSWORD en /opt/gramalote/.env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Define MYSQL_PASSWORD en .env}
       DB_POOL_SIZE: ${DB_POOL_SIZE:-5}
       # Correo (Panel › Correo). Opcionales: base de los enlaces de los correos y
       # llave propia para cifrar la contraseña SMTP (si no, se deriva de JWT_SECRET).
@@ -66,7 +88,7 @@ services:
       MEDIA_QUOTA_MB: ${MEDIA_QUOTA_MB:-500}
       MEDIA_VARIANTS: ${MEDIA_VARIANTS:-480,960,1440}
     volumes:
-      # Disco de la instancia, sin S3: se migra con rsync a un servidor físico.
+      # Disco de la máquina, sin S3: se migra con rsync a un servidor físico.
       - ${MEDIA_DIR:-/opt/gramalote/media}:/app/media
     depends_on:
       db:
@@ -90,10 +112,10 @@ services:
     container_name: gramalote-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Define MYSQL_ROOT_PASSWORD en /opt/gramalote/.env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Define MYSQL_ROOT_PASSWORD en .env}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-gramalote}
       MYSQL_USER: ${MYSQL_USER:-gramalote}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Define MYSQL_PASSWORD en /opt/gramalote/.env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Define MYSQL_PASSWORD en .env}
       TZ: America/Bogota
     # Ajustado a los 913 MB de la t3.micro: sin performance_schema y con un
     # buffer pool pequeño, MySQL queda en ~250 MB.
@@ -106,10 +128,12 @@ services:
       - --skip-name-resolve
     volumes:
       - gramalote_db:/var/lib/mysql
-      # Solo se ejecutan la primera vez que se crea el volumen.
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
-      - ./database/seed-content.sql:/docker-entrypoint-initdb.d/03-seed-content.sql:ro
+      # Solo se ejecutan la primera vez que se crea el volumen. Los .sql viven en
+      # backend/database/ del repo; deploy/desplegar-ec2.sh los deja ahí mismo en
+      # la instancia.
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./backend/database/seed-content.sql:/docker-entrypoint-initdb.d/03-seed-content.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 10s

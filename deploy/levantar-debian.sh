@@ -4,9 +4,9 @@
 # mapa. Pensado para verse desde otra máquina de la red, sin SSH ni AWS, sin CDN
 # y sin certificado (HTTP plano).
 #
-# El stack es el mismo docker-compose.yml de producción, con
-# docker-compose.debian.yml encima para compilar las imágenes en vez de
-# descargarlas de ECR.
+# Compila las imágenes del repositorio con el docker-compose.yml estándar (el
+# mismo que se levanta en el PC con 'docker compose up -d --build'); en AWS se
+# le añade docker-compose.aws.yml encima para usar las imágenes de ECR.
 #
 # Funciona en Debian y Ubuntu, y en general en cualquier Linux con Docker y
 # systemd: detecta apt/dnf/zypper/pacman para instalar Docker, abre el puerto en
@@ -133,13 +133,6 @@ if ! docker compose version >/dev/null 2>&1; then
   die "Falta el plugin 'docker compose' (v2). Instálalo con: $pista"
 fi
 
-# El overlay usa la etiqueta YAML '!override', que existe desde Compose 2.24.
-COMPOSE_VER="$(docker compose version --short 2>/dev/null | tr -d 'v' | cut -d- -f1)"
-if [ -n "$COMPOSE_VER" ] && [ "$(printf '%s\n2.24.0\n' "$COMPOSE_VER" | sort -V | head -n1)" != "2.24.0" ]; then
-  warn "docker compose $COMPOSE_VER es anterior a 2.24 y el overlay usa '!override':
-  el arranque puede fallar con «unexpected tag». Actualiza el plugin antes de seguir."
-fi
-
 systemctl enable --now docker >/dev/null 2>&1 || true
 
 # --- Snapshot de la EC2 ----------------------------------------------------
@@ -172,7 +165,7 @@ PORT="${PORT:-8080}"
 MEDIA_DIR="${MEDIA_DIR:-/srv/gramalote/media}"
 TILES_DIR="${TILES_DIR:-/srv/gramalote/tiles}"
 ESTADO_DIR="${ESTADO_DIR:-/srv/gramalote}"
-export MEDIA_DIR TILES_DIR
+export MEDIA_DIR TILES_DIR PORT
 
 # Primera IP de la máquina: 'hostname -I' es lo normal, pero en algunos
 # contenedores/minimal devuelve vacío y ahí se pregunta a la tabla de rutas.
@@ -229,7 +222,7 @@ else
   fi
 fi
 
-COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.debian.yml)
+COMPOSE=(docker compose)
 
 # Consultas dentro del contenedor: la clave de root sale de su entorno y no
 # viaja en la línea de comandos del host.
@@ -258,6 +251,15 @@ selinux_activo() {
 
 if selinux_activo; then
   log "SELinux en enforcing: los montajes host llevarán ':z'"
+
+  # El archivo generado usa la etiqueta YAML '!override', que existe desde
+  # Compose 2.24: por eso el mínimo solo se exige aquí y no para el compose base.
+  COMPOSE_VER="$(docker compose version --short 2>/dev/null | tr -d 'v' | cut -d- -f1)"
+  if [ -n "$COMPOSE_VER" ] && [ "$(printf '%s\n2.24.0\n' "$COMPOSE_VER" | sort -V | head -n1)" != "2.24.0" ]; then
+    warn "docker compose $COMPOSE_VER es anterior a 2.24 y el overlay de SELinux usa '!override':
+  el arranque puede fallar con «unexpected tag». Actualiza el plugin antes de seguir."
+  fi
+
   OVERRIDE_SELINUX="$ESTADO_DIR/compose-selinux.yml"
   # Se regenera en cada ejecución: refleja MEDIA_DIR/TILES_DIR actuales y se
   # ignora solo si SELinux deja de estar activo (el archivo no entra en COMPOSE).
@@ -505,15 +507,21 @@ cat <<EOF
 
 Listo. Sitio reconstruido con el snapshot del $(basename "$SNAP").
 
-  Sitio:  ${BASE_URL}/
-  Panel:  ${BASE_URL}/acceder
-  API:    ${BASE_URL}/api/health
+Reemplazar 127.0.1.1 por la IP actual de la VM (o por el puerto redireccionado):
+
+  Sitio:  http://127.0.1.1:${PORT}/
+  Panel:  http://127.0.1.1:${PORT}/acceder
+  API:    http://127.0.1.1:${PORT}/api/health
   Datos:  ${admin_count:-0} usuario(s) del panel, $(find "$MEDIA_DIR" -type f 2>/dev/null | wc -l) foto(s)
+
+La IP que detecté en esta máquina es ${IP:-desconocida}. Si abres el panel por
+otra dirección, CORS_ORIGIN y PUBLIC_SITE_URL del .env tienen que coincidir con
+ella (mira el aviso de arriba si no lo hacen).
 
 Las contraseñas del panel son las de la EC2 (el .env solo manda si la tabla
 estaba vacía o si usas --rotar-admin).
 
 Para volver a levantarlo tras cambiar código:
-  docker compose -f docker-compose.yml -f docker-compose.debian.yml up -d --build
-Detener:  docker compose -f docker-compose.yml -f docker-compose.debian.yml down
+  docker compose up -d --build
+Detener:  docker compose down
 EOF
