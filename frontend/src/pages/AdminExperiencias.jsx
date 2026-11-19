@@ -5,6 +5,7 @@ import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import AdminDialog from '../components/admin/AdminDialog.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import { focusLatitude, useNearbyCheck } from '../components/admin/NearbyCheck.jsx'
 import AuditTimeline from '../components/admin/AuditTimeline.jsx'
 import TipIconPicker from '../components/admin/TipIconPicker.jsx'
 import Pagination from '../components/admin/Pagination.jsx'
@@ -369,6 +370,8 @@ export function AdminExperiencias() {
         />
       ) : null}
 
+      {nearby.element}
+
       {dialog ? <AdminDialog {...dialog} onClose={() => setDialog(null)} /> : null}
     </section>
   )
@@ -389,6 +392,12 @@ export function AdminExperiencia() {
   const dirty = isNew || (form !== null && editableJson(form) !== baseline)
   const [dialog, setDialog] = useState(null)
   const [tab, setTab] = useState('info')
+  const nearby = useNearbyCheck({
+    onReview: () => {
+      setTab('info')
+      focusLatitude()
+    },
+  })
   const [signal, setSignal] = useState({ open: true, n: 0 })
   // Evita que un doble aviso del selector de archivos suba la misma foto dos veces.
   const uploadGuard = useRef(false)
@@ -459,8 +468,8 @@ export function AdminExperiencia() {
     }
   }
 
-  const save = (event) => {
-    event.preventDefault()
+  const save = async (event) => {
+    event?.preventDefault()
     const publishing = Boolean(form.published) && !published
     const missing = missingFields(form, { publishing })
     if (missing.length) {
@@ -471,6 +480,8 @@ export function AdminExperiencia() {
       })
       return
     }
+    const proceed = await nearby.check({ lat: form.latitude, lng: form.longitude, type: 'experience', id: isNew ? null : form.id })
+    if (!proceed) return
     run(async () => {
       if (isNew) {
         const created = await apiRequest('/admin/experiences', { method: 'POST', body: form })
@@ -677,7 +688,7 @@ export function AdminExperiencia() {
                     <input value={form.mapsUrl} onChange={set('mapsUrl')} placeholder="https://maps.app.goo.gl/…" />
                   </Field>
                   <Field label="Latitud">
-                    <input inputMode="decimal" value={form.latitude ?? ''} onChange={set('latitude')} placeholder="7.9174" />
+                    <input data-field="latitude" inputMode="decimal" value={form.latitude ?? ''} onChange={set('latitude')} placeholder="7.9174" />
                   </Field>
                   <Field label="Longitud">
                     <input inputMode="decimal" value={form.longitude ?? ''} onChange={set('longitude')} placeholder="-72.7879" />

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import { focusLatitude, useNearbyCheck } from '../components/admin/NearbyCheck.jsx'
 import AuditTimeline from '../components/admin/AuditTimeline.jsx'
 import { MAP_ICONS, mapIconUrl } from '../data/mapIcons.js'
 import { apiRequest, ensureSession } from '../lib/auth.js'
@@ -210,6 +211,7 @@ function Field({ spec, value, onChange }) {
     control = (
       <>
         <input
+          data-field={spec.key}
           type={spec.type ?? 'text'}
           step={spec.step}
           list={listId}
@@ -316,6 +318,12 @@ export default function AdminLugarFicha({ kind: kindKey }) {
   const [form, setForm] = useState(null)
   const [baseline, setBaseline] = useState('')
   const [tab, setTab] = useState('info')
+  const nearby = useNearbyCheck({
+    onReview: () => {
+      setTab('info')
+      focusLatitude()
+    },
+  })
   const [saving, setSaving] = useState(false)
   const [busyImage, setBusyImage] = useState(false)
   const [error, setError] = useState('')
@@ -354,6 +362,13 @@ export default function AdminLugarFicha({ kind: kindKey }) {
 
   async function save(event) {
     event?.preventDefault()
+    const proceed = await nearby.check({
+      lat: form.latitude,
+      lng: form.longitude,
+      type: kindKey === 'extras' ? 'extra' : 'heritage',
+      id: form.id,
+    })
+    if (!proceed) return
     setSaving(true)
     setError('')
     try {
@@ -723,6 +738,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
         </form>
       </div>
 
+      {nearby.element}
       {toast ? <AdminToast key={toast.key} tone={toast.tone} title={toast.title} message={toast.message} onClose={toast.close} /> : null}
     </section>
   )
