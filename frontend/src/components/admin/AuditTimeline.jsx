@@ -6,6 +6,14 @@ import { useId, useMemo, useState } from 'react'
 const PAGE = 8
 
 const FIELD_LABELS = {
+  // Experiencias
+  title: 'Título',
+  card_text: 'Texto de la tarjeta',
+  meta_text: 'Dato de la tarjeta',
+  access_text: 'Cómo llegar',
+  difficulty_text: 'Dificultad',
+  schedule_json: 'Horario de apertura',
+  open_daily: 'Abierto todos los días',
   name: 'Nombre',
   slug: 'Enlace (slug)',
   category_id: 'Categoría',
@@ -52,6 +60,7 @@ const FIELD_LABELS = {
 }
 
 const LIST_LABELS = {
+  tips: 'Ten en cuenta',
   features: 'Tarjetas destacadas',
   products: 'Productos',
   services: 'Servicios',
@@ -128,7 +137,7 @@ function Entry({ entry, formatValue, defaultOpen }) {
     total > 0
       ? `${total} ${total === 1 ? 'cambio' : 'cambios'}: ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` y ${names.length - 3} más` : ''}`
       : (entry.detail ??
-        (entry.action === 'update'
+        (entry.action === 'update' && entry.changes
           ? 'Guardó la ficha sin cambios en sus datos principales (por ejemplo, solo orden o fotos).'
           : ''))
   const expandable = total > 0
@@ -280,7 +289,7 @@ export default function AuditTimeline({ audit, lookups }) {
           <h3>{group.label}</h3>
           <ul>
             {group.items.map((entry) => (
-              <Entry key={entry.id} entry={entry} formatValue={formatValue} defaultOpen={page === 0 && entry.id === entries[0]?.id} />
+              <Entry key={entry.id} entry={entry} formatValue={formatValue} defaultOpen={false} />
             ))}
           </ul>
         </section>

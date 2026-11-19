@@ -347,20 +347,30 @@ export default function AdminEstablecimiento() {
       // La primera foto de una ficha sin imágenes entra como portada; el resto,
       // como galería (si ya hay portada, todas van a la galería).
       const needsCover = !form.images.some((image) => image.role === 'cover')
-      const toGallery = files.length - (needsCover ? 1 : 0)
-      if (galleryLimit && galleryCount + toGallery > galleryLimit) {
-        setError(`La galería admite ${galleryLimit} fotos (hay ${galleryCount}). Quita una o cambia su uso para añadir otra.`)
-        return
-      }
+      // Con la galería llena (Dónde dormir), las fotos que sobran entran como
+      // encabezado; el editor decide luego qué hacer con ellas.
+      let galleryRoom = galleryLimit ? Math.max(galleryLimit - galleryCount, 0) : Infinity
+      let toHero = 0
       for (const [index, file] of files.entries()) {
+        let role = 'gallery'
+        if (needsCover && index === 0) role = 'cover'
+        else if (galleryRoom > 0) galleryRoom -= 1
+        else {
+          role = 'hero'
+          toHero += 1
+        }
         const data = new FormData()
         data.append('file', file)
         data.append('establishmentId', id)
-        data.append('role', needsCover && index === 0 ? 'cover' : 'gallery')
+        data.append('role', role)
         await apiRequest('/admin/media', { method: 'POST', formData: data })
       }
       await reloadImages()
-      setNotice('Imágenes subidas.')
+      setNotice(
+        toHero > 0
+          ? `Imágenes subidas. La galería ya tenía ${galleryLimit} fotos: ${toHero === 1 ? 'la nueva quedó' : `${toHero} quedaron`} como encabezado.`
+          : 'Imágenes subidas.',
+      )
     } catch (err) {
       setError(err.message)
     } finally {
@@ -786,7 +796,7 @@ export default function AdminEstablecimiento() {
                   {galleryLimit ? (
                     <p className="note">
                       Galería: {galleryCount} de {galleryLimit} fotos
-                      {galleryFull ? '. Para añadir otra, quita una o cambia su uso.' : '.'}
+                      {galleryFull ? '. Las fotos nuevas entran como encabezado.' : '.'}
                     </p>
                   ) : null}
                 </div>
@@ -964,7 +974,7 @@ export default function AdminEstablecimiento() {
               {!isDormir ? (
               <Section
                 title="Productos"
-                hint={`${form.products.length} ${form.products.length === 1 ? 'producto' : 'productos'} con precio`}
+                hint={`${form.products.length} ${form.products.length === 1 ? 'producto' : 'productos'}`}
                 signal={signal}
                 actions={
                   <button

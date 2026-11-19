@@ -5,6 +5,7 @@ import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import AdminDialog from '../components/admin/AdminDialog.jsx'
 import AdminToast from '../components/admin/AdminToast.jsx'
+import AuditTimeline from '../components/admin/AuditTimeline.jsx'
 import Pagination from '../components/admin/Pagination.jsx'
 import { usePaged } from '../lib/usePaged.js'
 import { useDialog } from '../lib/dialog.jsx'
@@ -32,9 +33,11 @@ function editableJson(form) {
   return JSON.stringify(rest)
 }
 
+// El historial de experiencias no traduce ids (categoría, zona…) a nombres.
+const NO_LOOKUPS = { category: () => null, type: () => null, zone: () => null }
+
 const TIP_ICONS = ['huellas', 'camino', 'bolso', 'info', 'alerta', 'horario', 'ubicacion', 'billetera', 'telefono']
 
-const AUDIT_PAGE = 8
 
 const STATUS_TABS = [
   { key: 'published', label: 'Publicadas' },
@@ -47,18 +50,6 @@ function normalize(text) {
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-}
-
-function formatStamp(value) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value ?? ''
-  return date.toLocaleString('es-CO', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 }
 
 // Datos mínimos de una experiencia, los mismos que exige la API: título,
@@ -386,7 +377,6 @@ export function AdminExperiencia() {
   const dirty = isNew || (form !== null && editableJson(form) !== baseline)
   const [dialog, setDialog] = useState(null)
   const [tab, setTab] = useState('info')
-  const [auditPage, setAuditPage] = useState(0)
   const [signal, setSignal] = useState({ open: true, n: 0 })
   // Evita que un doble aviso del selector de archivos suba la misma foto dos veces.
   const uploadGuard = useRef(false)
@@ -894,46 +884,11 @@ export function AdminExperiencia() {
           {tab === 'history' ? (
             <div className="admin-publish">
               <h2>Historial</h2>
-              <p className="note">Últimos cambios guardados en esta experiencia.</p>
+              <p className="note">Quién cambió qué en esta ficha y cuándo.</p>
               {(form.audit ?? []).length === 0 ? (
                 <p className="note">Sin cambios registrados todavía.</p>
               ) : (
-                <>
-                  <ul className="admin-audit">
-                    {(form.audit ?? [])
-                      .slice(auditPage * AUDIT_PAGE, (auditPage + 1) * AUDIT_PAGE)
-                      .map((entry) => (
-                        <li key={entry.id}>
-                          <span className="admin-audit__action">{entry.action}</span>
-                          <span>{entry.userName ?? 'Sistema'}</span>
-                          <span className="admin-audit__date">{formatStamp(entry.createdAt)}</span>
-                        </li>
-                      ))}
-                  </ul>
-                  {(form.audit ?? []).length > AUDIT_PAGE ? (
-                    <div className="admin-pager">
-                      <button
-                        type="button"
-                        className="admin-btn"
-                        disabled={auditPage === 0}
-                        onClick={() => setAuditPage((page) => page - 1)}
-                      >
-                        ← Anterior
-                      </button>
-                      <span>
-                        Página {auditPage + 1} de {Math.ceil((form.audit ?? []).length / AUDIT_PAGE)}
-                      </span>
-                      <button
-                        type="button"
-                        className="admin-btn"
-                        disabled={(auditPage + 1) * AUDIT_PAGE >= (form.audit ?? []).length}
-                        onClick={() => setAuditPage((page) => page + 1)}
-                      >
-                        Siguiente →
-                      </button>
-                    </div>
-                  ) : null}
-                </>
+                <AuditTimeline audit={form.audit} lookups={NO_LOOKUPS} />
               )}
             </div>
           ) : null}

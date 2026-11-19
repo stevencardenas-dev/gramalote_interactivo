@@ -37,14 +37,15 @@ export default function FichaHorario({ item }) {
                 <li
                   key={row.day}
                   className={`ficha-hours__day${row.day === today ? ' is-today' : ''}`}
-                  data-mode={row.mode}
+                  data-mode={row.mode === 'unknown' ? 'closed' : row.mode}
                 >
                   <span className="ficha-hours__day-name">
                     {row.label}
                     {row.day === today ? <em>Hoy</em> : null}
                   </span>
                   <span className="ficha-hours__day-value">
-                    {row.text ?? 'Sin dato'}
+                    {/* Un día sin dato en el panel se lee como cerrado. */}
+                    {row.text ?? 'Cerrado'}
                   </span>
                 </li>
               ))}

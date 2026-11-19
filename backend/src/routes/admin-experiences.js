@@ -128,7 +128,7 @@ async function loadExperience(experienceId) {
     ),
     // Historial de la ficha (pestaña propia en el panel).
     query(
-      `SELECT a.id, a.action, a.created_at, u.name AS user_name
+      `SELECT a.id, a.action, a.changes, a.created_at, u.name AS user_name
        FROM audit_log a LEFT JOIN admin_users u ON u.id = a.admin_user_id
        WHERE a.entity_type = 'experience' AND a.entity_id = ?
        ORDER BY a.id DESC LIMIT 50`,
@@ -174,6 +174,7 @@ async function loadExperience(experienceId) {
     audit: auditEntries.map((entry) => ({
       id: toNumber(entry.id),
       action: entry.action,
+      changes: parseChanges(entry.changes),
       userName: entry.user_name ?? null,
       createdAt: entry.created_at,
     })),
@@ -281,6 +282,58 @@ function fieldsFrom(body) {
   }
 }
 
+function parseChanges(value) {
+  if (!value) return null
+  if (typeof value === 'object') return value
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
+}
+
+async function tipTitles(connection, experienceId) {
+  const [rows] = await connection.query(
+    'SELECT title FROM experience_tips WHERE experience_id = ? ORDER BY sort_order, id',
+    [experienceId],
+  )
+  return rows.map((row) => row.title)
+}
+
+// Comparable en texto: fechas en ISO, JSON como cadena, booleanos como 0/1.
+function comparable(value) {
+  if (value === null || value === undefined) return ''
+  if (value instanceof Date) return value.toISOString()
+  if (typeof value === 'boolean') return value ? '1' : '0'
+  if (typeof value === 'object') return JSON.stringify(value)
+  return String(value)
+}
+
+function diffFields(before, fields) {
+  const changes = {}
+  for (const [column, value] of Object.entries(fields)) {
+    let previous = before[column]
+    let next = value
+    // El horario se guarda como JSON en texto; se compara ya interpretado.
+    if (column === 'schedule_json') {
+      const parse = (raw) => {
+        try {
+          return typeof raw === 'string' ? JSON.parse(raw) : raw
+        } catch {
+          return raw
+        }
+      }
+      if (comparable(parse(previous)) === comparable(parse(next))) continue
+      changes[column] = { from: 'Horario anterior', to: 'Horario nuevo' }
+      continue
+    }
+    if (comparable(previous) === comparable(next)) continue
+    if (previous instanceof Date) previous = previous.toISOString()
+    changes[column] = { from: previous ?? null, to: next ?? null }
+  }
+  return changes
+}
+
 async function saveTips(connection, experienceId, tips) {
   if (!Array.isArray(tips)) return
   await connection.query('DELETE FROM experience_tips WHERE experience_id = ?', [experienceId])
@@ -340,7 +393,7 @@ router.post(
         )
         .catch(duplicateSlug)
       await saveTips(connection, result.insertId, req.body.tips)
-      await audit(connection, req, 'create', result.insertId, { title: fields.title })
+      await audit(connection, req, 'create', result.insertId, { name: fields.title })
       return result.insertId
     })
     res.status(201).json({ data: await loadExperience(newId) })
@@ -361,6 +414,8 @@ router.put(
     }
     await withTransaction(async (connection) => {
       fields.category_id = await categoryId(connection, req.body.category)
+      const [beforeRows] = await connection.query('SELECT * FROM experiences WHERE id = ? FOR UPDATE', [experienceId])
+      const tipsBefore = await tipTitles(connection, experienceId)
       await connection
         .query(
           `UPDATE experiences SET ${Object.keys(fields).map((key) => `${key} = ?`).join(', ')} WHERE id = ?`,
@@ -368,7 +423,17 @@ router.put(
         )
         .catch(duplicateSlug)
       await saveTips(connection, experienceId, req.body.tips)
-      await audit(connection, req, 'update', experienceId, { title: fields.title })
+
+      // Historial campo por campo, como en los establecimientos: solo se anota
+      // cuando de verdad cambió algo.
+      const changes = diffFields(beforeRows[0] ?? {}, fields)
+      const tipsAfter = await tipTitles(connection, experienceId)
+      const added = tipsAfter.filter((title) => !tipsBefore.includes(title))
+      const removed = tipsBefore.filter((title) => !tipsAfter.includes(title))
+      if (added.length || removed.length) changes['list:tips'] = { added, removed }
+      if (Object.keys(changes).length > 0) {
+        await audit(connection, req, 'update', experienceId, changes)
+      }
     })
     res.json({ data: await loadExperience(experienceId) })
   }),
