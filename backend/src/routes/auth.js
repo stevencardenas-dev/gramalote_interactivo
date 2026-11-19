@@ -35,23 +35,36 @@ function toPublicUser(row) {
   }
 }
 
-async function issueSession(req, res, user) {
+// La sesión vence a los N minutos sin usarse (cada renovación corre el plazo)
+// y nunca pasa de la duración máxima contada desde el inicio de sesión.
+function sessionLimits(startedAt) {
+  const now = Date.now()
+  const endsAt = new Date(startedAt).getTime() + config.auth.maxHours * 60 * 60 * 1000
+  const expiresAt = Math.min(now + config.auth.idleMinutes * 60 * 1000, endsAt)
+  return { now, endsAt, expiresAt }
+}
+
+async function issueSession(req, res, user, startedAt = new Date()) {
   const token = newRefreshToken()
-  const expiresAt = new Date(Date.now() + config.auth.refreshTtlDays * 24 * 60 * 60 * 1000)
+  const { now, endsAt, expiresAt } = sessionLimits(startedAt)
   const userAgent = (req.get('user-agent') ?? '').slice(0, 255) || null
   const ip = (req.ip ?? '').slice(0, 45) || null
 
   await query(
-    `INSERT INTO admin_refresh_tokens (user_id, token_hash, expires_at, user_agent, ip_address)
-     VALUES (?, ?, ?, ?, ?)`,
-    [user.id, refreshTokenHash(token), expiresAt, userAgent, ip],
+    `INSERT INTO admin_refresh_tokens (user_id, token_hash, expires_at, session_started_at, user_agent, ip_address)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [user.id, refreshTokenHash(token), new Date(expiresAt), new Date(startedAt), userAgent, ip],
   )
-  setRefreshCookie(res, token)
+  setRefreshCookie(res, token, expiresAt - now)
 
   return {
     user: toPublicUser(user),
     accessToken: signAccessToken(user),
     tokenType: 'Bearer',
+    // El panel los usa para avisar antes de que la sesión se cierre.
+    sessionExpiresAt: new Date(expiresAt).toISOString(),
+    sessionEndsAt: new Date(endsAt).toISOString(),
+    idleMinutes: config.auth.idleMinutes,
   }
 }
 
@@ -125,7 +138,8 @@ router.post(
     }
 
     const row = await queryOne(
-      `SELECT t.id, t.user_id, t.expires_at, t.revoked_at,
+      `SELECT t.id, t.user_id, t.expires_at, t.revoked_at, t.created_at,
+              COALESCE(t.session_started_at, t.created_at) AS session_started_at,
               u.name, u.email, u.role, u.is_active, u.last_login_at, u.session_version
        FROM admin_refresh_tokens t
        JOIN admin_users u ON u.id = t.user_id
@@ -162,6 +176,13 @@ router.post(
       )
     }
 
+    // Duración máxima cumplida: hay que volver a iniciar sesión aunque se use.
+    if (sessionLimits(row.session_started_at).endsAt <= Date.now()) {
+      clearRefreshCookie(res)
+      await query('UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE id = ?', [row.id])
+      throw new ApiError(401, 'INVALID_SESSION', 'La sesión llegó a su duración máxima; vuelve a iniciar sesión')
+    }
+
     await query('UPDATE admin_refresh_tokens SET revoked_at = NOW() WHERE id = ?', [row.id])
     const user = {
       id: Number(row.user_id),
@@ -171,7 +192,7 @@ router.post(
       last_login_at: row.last_login_at,
       session_version: row.session_version,
     }
-    res.json({ data: await issueSession(req, res, user) })
+    res.json({ data: await issueSession(req, res, user, row.session_started_at) })
   }),
 )
 

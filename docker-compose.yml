@@ -42,8 +42,9 @@ services:
       API_HOST: 0.0.0.0
       API_PORT: "4000"
       JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en /opt/gramalote/.env}
-      AUTH_ACCESS_TTL: ${AUTH_ACCESS_TTL:-30m}
-      AUTH_REFRESH_TTL_DAYS: ${AUTH_REFRESH_TTL_DAYS:-7}
+      AUTH_ACCESS_TTL: ${AUTH_ACCESS_TTL:-15m}
+      AUTH_IDLE_MINUTES: ${AUTH_IDLE_MINUTES:-30}
+      AUTH_MAX_HOURS: ${AUTH_MAX_HOURS:-8}
       TRUST_PROXY: ${TRUST_PROXY:-1}
       # CloudFront → nginx → API: 2 saltos para que req.ip sea la IP del
       # visitante (el puerto 80 de la instancia solo acepta a CloudFront).

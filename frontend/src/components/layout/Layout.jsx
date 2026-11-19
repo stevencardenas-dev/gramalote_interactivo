@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Navbar from './Navbar.jsx'
 import Footer from './Footer.jsx'
 import AdminNav from '../admin/AdminNav.jsx'
+import SessionKeeper from '../admin/SessionKeeper.jsx'
 import WhatsAppHelp from '../ui/WhatsAppHelp.jsx'
 import OutboxNotice from '../ui/OutboxNotice.jsx'
 import ScrollTopButton from '../ui/ScrollTopButton.jsx'
@@ -90,6 +91,7 @@ export default function Layout() {
         <main id="contenido" className="admin-main">
           <Outlet />
         </main>
+        <SessionKeeper />
       </div>
     )
   }

@@ -121,8 +121,9 @@ CORS_ORIGIN=http://localhost:5173,http://localhost:4173
 DB_POOL_SIZE=10
 
 JWT_SECRET=              # openssl rand -hex 32; obligatorio en producción
-AUTH_ACCESS_TTL=30m
-AUTH_REFRESH_TTL_DAYS=7
+AUTH_ACCESS_TTL=15m
+AUTH_IDLE_MINUTES=30
+AUTH_MAX_HOURS=8
 TRUST_PROXY=0            # 1 detrás de nginx/CloudFront
 
 ADMIN_EMAIL=admin@gramalote.example

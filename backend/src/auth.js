@@ -114,13 +114,13 @@ export function readRefreshCookie(req) {
   return null
 }
 
-export function setRefreshCookie(res, token) {
+export function setRefreshCookie(res, token, maxAgeMs) {
   res.cookie(config.auth.cookieName, token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: res.req.secure,
     path: REFRESH_PATH,
-    maxAge: config.auth.refreshTtlDays * 24 * 60 * 60 * 1000,
+    maxAge: Math.max(maxAgeMs, 0),
   })
 }
 
