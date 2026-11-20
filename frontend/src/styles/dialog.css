@@ -32,6 +32,13 @@
   color: var(--c-ink-soft);
 }
 
+.app-dialog__list {
+  list-style: disc;
+  margin: 10px 0 0;
+  padding-left: 20px;
+  font-size: var(--fs-sm);
+}
+
 .app-dialog__hint {
   margin-top: 8px;
   color: var(--c-muted);

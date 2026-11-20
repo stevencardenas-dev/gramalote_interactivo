@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Dialog from '../components/ui/Dialog.jsx'
 
 // Un único popup para todo el sitio y el panel. Cualquier componente puede
@@ -47,7 +48,10 @@ export function DialogProvider({ children }) {
   return (
     <DialogContext.Provider value={value}>
       {children}
-      {request ? <Dialog {...request} onClose={close} /> : null}
+      {request ? (
+        // En el panel se pinta dentro de .admin-app: así toma sus colores y el tema claro u oscuro.
+        createPortal(<Dialog {...request} onClose={close} />, document.querySelector('.admin-app') ?? document.body)
+      ) : null}
     </DialogContext.Provider>
   )
 }

@@ -1,4 +1,5 @@
 import { useModalFocus } from '../../lib/useModalFocus.js'
+import { IMAGE_ACCEPT, IMAGE_RULES, checkImageFiles } from '../../lib/imageUpload.js'
 import { useId, useMemo, useRef, useState } from 'react'
 
 // Popup para elegir una foto de las galerías de las fichas (Páginas). Muestra
@@ -37,6 +38,11 @@ export default function ImagePicker({
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file || !onUpload) return
+    const problem = checkImageFiles([file])
+    if (problem) {
+      setError(problem)
+      return
+    }
     setUploading(true)
     setError('')
     try {
@@ -93,7 +99,7 @@ export default function ImagePicker({
               <input
                 ref={fileInput}
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept={IMAGE_ACCEPT}
                 hidden
                 onChange={handleUpload}
               />
@@ -108,6 +114,7 @@ export default function ImagePicker({
             </>
           ) : null}
         </div>
+        {onUpload ? <p className="admin-hint">{IMAGE_RULES}</p> : null}
         {error ? <p className="auth-error" role="alert">{error}</p> : null}
 
         <div className="admin-picker__body">

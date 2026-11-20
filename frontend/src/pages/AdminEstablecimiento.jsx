@@ -13,6 +13,7 @@ import { useUnsavedChanges } from '../lib/useUnsavedChanges.js'
 import AdminImageCard from '../components/admin/AdminImageCard.jsx'
 import ImageFraming from '../components/admin/ImageFraming.jsx'
 import { framesForEstablishmentImage } from '../lib/photoFrames.js'
+import { IMAGE_ACCEPT, IMAGE_RULES_SHORT, checkImageFiles } from '../lib/imageUpload.js'
 import { useImageDrafts } from '../lib/useImageDrafts.js'
 import { resolveMapIcon } from '../data/mapIcons.js'
 
@@ -367,6 +368,12 @@ export default function AdminEstablecimiento() {
   async function handleUpload(event) {
     const files = [...(event.target.files ?? [])]
     if (files.length === 0 || uploadGuard.current) return
+    const problem = checkImageFiles(files)
+    if (problem) {
+      notify('error', 'No se pudo subir', problem)
+      event.target.value = ''
+      return
+    }
     uploadGuard.current = true
 
     setUploading(true)
@@ -413,7 +420,7 @@ export default function AdminEstablecimiento() {
   // Refresca solo las imágenes para no descartar cambios de texto sin guardar.
   async function reloadImages() {
     const detail = await apiRequest(`/admin/establishments/${id}`)
-    setForm((current) => ({ ...current, images: detail.images, audit: detail.audit ?? current.audit, updatedAt: detail.updatedAt }))
+    setForm((current) => ({ ...current, images: detail.images, audit: detail.audit ?? current.audit }))
   }
 
   async function patchImage(image, patch) {
@@ -479,6 +486,11 @@ export default function AdminEstablecimiento() {
 
   // Cambia el archivo de una foto y conserva su uso, orden y texto alternativo.
   async function replaceImage(image, file) {
+    const problem = checkImageFiles([file])
+    if (problem) {
+      notify('error', 'No se pudo cambiar la foto', problem)
+      return
+    }
     setBusyImage(true)
     close()
     try {
@@ -829,7 +841,7 @@ export default function AdminEstablecimiento() {
                   <h2>Imágenes de la ficha</h2>
                   <p className="note">
                     Portada: tarjetas y listados. Encabezado: foto ancha de la ficha (si falta,
-                    se usa la portada). Se convierten a WebP al subir.
+                    se usa la portada).
                   </p>
                   {galleryLimit ? (
                     <p className="note">
@@ -843,7 +855,7 @@ export default function AdminEstablecimiento() {
                     ref={fileInput}
                     id="admin-upload"
                     type="file"
-                    accept="image/jpeg,image/png,image/webp"
+                    accept={IMAGE_ACCEPT}
                     multiple
                     hidden
                     onChange={handleUpload}
@@ -856,6 +868,7 @@ export default function AdminEstablecimiento() {
                   >
                     {uploading ? 'Subiendo…' : '+ Subir imágenes'}
                   </button>
+                  <p className="admin-hint admin-media__rules">{IMAGE_RULES_SHORT}</p>
                 </div>
               </div>
 

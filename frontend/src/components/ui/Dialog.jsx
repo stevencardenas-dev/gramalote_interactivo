@@ -9,6 +9,7 @@ export default function Dialog({
   title,
   message,
   hint,
+  items = [],
   confirmLabel,
   cancelLabel = 'Cancelar',
   danger = false,
@@ -57,6 +58,13 @@ export default function Dialog({
           <p id={`${titleId}-text`} className="app-dialog__text">
             {message}
           </p>
+        ) : null}
+        {items.length > 0 ? (
+          <ul className="app-dialog__list">
+            {items.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         ) : null}
         {hint ? <p className="app-dialog__hint">{hint}</p> : null}
         <div className="app-dialog__actions">

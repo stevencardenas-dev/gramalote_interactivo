@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
-import AdminDialog from '../components/admin/AdminDialog.jsx'
 import { useAdminToast } from '../lib/useAdminToast.jsx'
 import CoordinateInput from '../components/admin/CoordinateInput.jsx'
 import { focusLatitude, useNearbyCheck } from '../components/admin/NearbyCheck.jsx'
@@ -22,6 +21,7 @@ import IconMask from '../components/ui/IconMask.jsx'
 import { resolveMapIcon } from '../data/mapIcons.js'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 import { framesForExperienceImage } from '../lib/photoFrames.js'
+import { IMAGE_ACCEPT, IMAGE_RULES_SHORT, checkImageFiles } from '../lib/imageUpload.js'
 
 const TABS = [
   { key: 'info', label: 'Información' },
@@ -143,7 +143,7 @@ export function AdminExperiencias() {
   const [draftTitle, setDraftTitle] = useState('')
   const [draftCategory, setDraftCategory] = useState('')
   const [draftSummary, setDraftSummary] = useState('')
-  const [dialog, setDialog] = useState(null)
+  const { alert } = useDialog()
   const { notify, toast } = useAdminToast()
   const [error, setError] = useState('')
 
@@ -199,7 +199,7 @@ export function AdminExperiencias() {
       summary: draftSummary,
     })
     if (missing.length) {
-      setDialog({
+      alert({
         title: 'Faltan datos para crear la experiencia',
         message: 'Completa estos datos mínimos y vuelve a intentarlo.',
         items: missing,
@@ -360,7 +360,6 @@ export function AdminExperiencias() {
 
       {toast}
 
-      {dialog ? <AdminDialog {...dialog} onClose={() => setDialog(null)} /> : null}
     </section>
   )
 }
@@ -381,7 +380,7 @@ export function AdminExperiencia() {
   const hasChanges = form !== null && editableJson(form) !== (isNew ? editableJson(EMPTY) : baseline)
   const imageDrafts = useImageDrafts()
   const { allowLeave } = useUnsavedChanges(hasChanges || imageDrafts.anyDirty)
-  const [dialog, setDialog] = useState(null)
+  const { alert, confirm } = useDialog()
   const [tab, setTab] = useState('info')
   const nearby = useNearbyCheck({
     onReview: () => {
@@ -393,7 +392,6 @@ export function AdminExperiencia() {
   // Evita que un doble aviso del selector de archivos suba la misma foto dos veces.
   const uploadGuard = useRef(false)
   const fileInput = useRef(null)
-  const { confirm } = useDialog()
 
   useEffect(() => {
     let alive = true
@@ -462,7 +460,7 @@ export function AdminExperiencia() {
     const publishing = Boolean(form.published) && !published
     const missing = missingFields(form, { publishing })
     if (missing.length) {
-      setDialog({
+      alert({
         title: 'Faltan datos mínimos',
         message: 'Completa estos datos antes de guardar la experiencia.',
         items: missing,
@@ -506,6 +504,11 @@ export function AdminExperiencia() {
     const files = [...(event.target.files ?? [])]
     event.target.value = ''
     if (!files.length || uploadGuard.current) return
+    const problem = checkImageFiles(files)
+    if (problem) {
+      notify('error', 'No se pudo subir', problem)
+      return
+    }
     uploadGuard.current = true
     run(async () => {
       let count = form.images.length
@@ -529,12 +532,18 @@ export function AdminExperiencia() {
       setForm(await apiRequest(`/admin/experiences/${id}/images/${image.imageId}`, { method, body }))
     }, ok)
 
-  const replaceImage = (image, file) =>
-    run(async () => {
+  const replaceImage = (image, file) => {
+    const problem = checkImageFiles([file])
+    if (problem) {
+      notify('error', 'No se pudo cambiar la foto', problem)
+      return
+    }
+    return run(async () => {
       const data = new FormData()
       data.append('file', file)
       setForm(await apiRequest(`/admin/experiences/${id}/images/${image.imageId}/file`, { method: 'PUT', formData: data }))
     }, 'Foto cambiada.')
+  }
 
   const moveImage = (index, delta) => {
     const ids = form.images.map((image) => image.imageId)
@@ -550,7 +559,7 @@ export function AdminExperiencia() {
     if (next) {
       const missing = missingFields(form, { publishing: true })
       if (missing.length) {
-        setDialog({
+        alert({
           title: 'No se puede publicar todavía',
           message: 'Para publicar la experiencia faltan estos datos.',
           items: missing,
@@ -753,11 +762,11 @@ export function AdminExperiencia() {
                   <div>
                     <h2>Imágenes de la experiencia</h2>
                     <p className="note">
-                      La primera portada se usa en las tarjetas y el mapa; todas las portadas se deslizan en el encabezado de la ficha. Se convierten a WebP al subir.
+                      La primera portada se usa en las tarjetas y el mapa; todas las portadas se deslizan en el encabezado de la ficha.
                     </p>
                   </div>
                   <div>
-                    <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={uploadImage} />
+                    <input ref={fileInput} type="file" accept={IMAGE_ACCEPT} multiple hidden onChange={uploadImage} />
                     <button
                       type="button"
                       className="admin-btn admin-btn--accent"
@@ -766,6 +775,7 @@ export function AdminExperiencia() {
                     >
                       {busy ? 'Subiendo…' : '+ Subir imágenes'}
                     </button>
+                    <p className="admin-hint admin-media__rules">{IMAGE_RULES_SHORT}</p>
                   </div>
                 </div>
 
@@ -914,7 +924,6 @@ export function AdminExperiencia() {
 
       {nearby.element}
 
-      {dialog ? <AdminDialog {...dialog} onClose={() => setDialog(null)} /> : null}
     </section>
   )
 }

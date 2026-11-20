@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDialog } from '../../lib/dialog.jsx'
 import ImageFraming from './ImageFraming.jsx'
+import { IMAGE_ACCEPT } from '../../lib/imageUpload.js'
 
 // Tarjeta de imagen de las fichas del panel (Establecimientos, Experiencias y Extras).
 // El texto alternativo se edita en un borrador y se guarda con «Guardar foto»; el uso,
@@ -131,7 +132,7 @@ export default function AdminImageCard({
             <input
               ref={fileInput}
               type="file"
-              accept="image/jpeg,image/png,image/webp"
+              accept={IMAGE_ACCEPT}
               hidden
               onChange={(event) => {
                 const file = event.target.files?.[0]

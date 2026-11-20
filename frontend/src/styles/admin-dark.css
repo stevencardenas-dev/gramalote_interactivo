@@ -1232,7 +1232,13 @@ a.admin-tile:hover .admin-tile__chev {
 
 /* Galería de imágenes */
 .admin-app .admin-media__head {
-  align-items: center;
+  align-items: flex-start;
+}
+
+/* Reglas de la foto, bajo el botón de subir. */
+.admin-app .admin-media__rules {
+  margin: 6px 0 0;
+  text-align: right;
 }
 
 .admin-app .admin-media__grid {
@@ -1956,6 +1962,97 @@ a.admin-tile:hover .admin-tile__chev {
   display: flex;
   justify-content: flex-end;
   margin-top: 6px;
+}
+
+/* Diálogo común (avisos y confirmaciones) con la identidad del panel: usa las variables
+   --a-* y por eso sigue el tema claro u oscuro. Fuera del panel conserva su estilo. */
+.admin-app .app-dialog {
+  background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.admin-app .app-dialog__panel {
+  width: min(440px, 100%);
+  padding: 20px 22px 18px;
+  border: 1px solid var(--a-ln);
+  border-radius: 14px;
+  background: var(--a-sf);
+  color: var(--a-tx);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.admin-app .app-dialog__title {
+  margin: 0 0 6px;
+  color: var(--a-tx);
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.admin-app .app-dialog__text {
+  margin: 0 0 10px;
+  color: var(--a-mu);
+  font-size: 0.86rem;
+}
+
+.admin-app .app-dialog__list {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: var(--a-tx);
+  font-size: 0.86rem;
+}
+
+.admin-app .app-dialog__hint {
+  margin-top: 8px;
+  color: var(--a-mu);
+  font-size: 0.78rem;
+}
+
+.admin-app .app-dialog__actions {
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.admin-app .app-dialog__btn {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--a-ln);
+  border-radius: 8px;
+  background: var(--a-sf);
+  color: var(--a-tx);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.admin-app .app-dialog__btn:hover {
+  border-color: var(--a-ac);
+  background: var(--a-sf);
+}
+
+.admin-app .app-dialog__btn--primary {
+  border-color: var(--a-ac);
+  background: var(--a-ac);
+  color: var(--a-onac);
+  font-weight: 600;
+}
+
+.admin-app .app-dialog__btn--primary:hover {
+  border-color: #4a85f0;
+  background: #4a85f0;
+}
+
+.admin-app .app-dialog__btn--primary.is-danger {
+  border-color: #d62d1c;
+  background: #d62d1c;
+  color: #fff;
+}
+
+.admin-app .app-dialog__btn--primary.is-danger:hover {
+  border-color: #ec4130;
+  background: #ec4130;
 }
 
 /* Ventana de encuadre de una foto (ImageFraming) */

@@ -1457,7 +1457,7 @@ export default function AdminPaginas() {
     }
     setBusy(true)
     try {
-      const saved = await apiRequest(`/admin/pages/${pageKey}`, { method: 'PUT', body: { value: drafts[pageKey] } })
+      const saved = await apiRequest(`/admin/pages/${pageKey}`, { method: 'PUT', body: { value: drafts[pageKey], updatedAt: stored?.updatedAt ?? null } })
       setData((current) => ({ ...current, pages: { ...current.pages, [pageKey]: saved } }))
       setDirty((current) => ({ ...current, [pageKey]: false }))
       notify('ok', `${PAGE_INFO[pageKey].label}: cambios guardados.`)

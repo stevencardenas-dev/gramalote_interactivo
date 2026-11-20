@@ -12,6 +12,7 @@ import { useUnsavedChanges } from '../lib/useUnsavedChanges.js'
 import AdminImageCard from '../components/admin/AdminImageCard.jsx'
 import ImageFraming from '../components/admin/ImageFraming.jsx'
 import { framesForExtraImage, framesForHeritageImage } from '../lib/photoFrames.js'
+import { IMAGE_ACCEPT, IMAGE_RULES, checkImageFiles } from '../lib/imageUpload.js'
 import { useImageDrafts } from '../lib/useImageDrafts.js'
 
 // Ficha editable de un Patrimonio o de un Extra (Panel › Lugares), con las mismas
@@ -337,7 +338,7 @@ function PlaceImageCard({ image, index, total, roles, busy, frames = [], onSave,
           <input
             ref={fileInput}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept={IMAGE_ACCEPT}
             hidden
             onChange={(event) => {
               const file = event.target.files?.[0]
@@ -425,7 +426,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
     setSaving(true)
     setError('')
     try {
-      const detail = await apiRequest(`${kind.api}/${id}`, { method: 'PATCH', body: pickFields(kind, form) })
+      const detail = await apiRequest(`${kind.api}/${id}`, { method: 'PATCH', body: { ...pickFields(kind, form), updatedAt: form.updatedAt } })
       setForm(detail)
       setBaseline(JSON.stringify(pickFields(kind, detail)))
       notify('ok', dirty ? 'Cambios guardados' : 'Sin cambios', dirty ? 'La ficha quedó actualizada.' : 'No había nada nuevo que guardar.')
@@ -438,7 +439,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
 
   // Las fotos se guardan al instante y no tocan lo que se esté editando en el texto.
   function applyImages(detail) {
-    setForm((current) => ({ ...current, images: detail.images, audit: detail.audit, updatedAt: detail.updatedAt }))
+    setForm((current) => ({ ...current, images: detail.images, audit: detail.audit }))
   }
 
   async function uploadImage(event) {
@@ -446,6 +447,11 @@ export default function AdminLugarFicha({ kind: kindKey }) {
     const file = fileInput.current?.files?.[0]
     if (!file) {
       setError('Elige una foto para subir.')
+      return
+    }
+    const problem = checkImageFiles([file])
+    if (problem) {
+      setError(problem)
       return
     }
     setBusyImage(true)
@@ -484,6 +490,11 @@ export default function AdminLugarFicha({ kind: kindKey }) {
 
   // Cambia el archivo de una foto y conserva su uso, orden y textos.
   async function replaceImage(image, file) {
+    const problem = checkImageFiles([file])
+    if (problem) {
+      setError(problem)
+      return
+    }
     setBusyImage(true)
     setError('')
     try {
@@ -556,7 +567,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
   async function updatePublication(patch, title, message) {
     setError('')
     try {
-      const detail = await apiRequest(`${kind.api}/${id}`, { method: 'PATCH', body: patch })
+      const detail = await apiRequest(`${kind.api}/${id}`, { method: 'PATCH', body: { ...patch, updatedAt: form.updatedAt } })
       // No se pisa el formulario: puede haber texto sin guardar. Solo cambian los
       // interruptores de publicación, también en la base del cálculo de cambios.
       setForm((current) => ({
@@ -681,8 +692,8 @@ export default function AdminLugarFicha({ kind: kindKey }) {
                 <AdminSection title="Subir una foto" hint={kindKey === 'extras' ? 'Elige el archivo: será la foto de su tarjeta en el mapa.' : 'Elige el archivo y dile a la ficha para qué sirve.'} defaultOpen>
                   <div className="admin-grid">
                     <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
-                      <span>Archivo (JPG, PNG o WebP, mínimo 200 × 200 px)</span>
-                      <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" />
+                      <span>Archivo ({IMAGE_RULES.replace(/.$/, '')})</span>
+                      <input ref={fileInput} type="file" accept={IMAGE_ACCEPT} />
                     </label>
                     {kindKey === 'heritage' ? (
                       <label className="admin-field">

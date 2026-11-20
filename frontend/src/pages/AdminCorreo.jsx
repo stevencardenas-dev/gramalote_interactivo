@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import AdminSection from '../components/admin/AdminSection.jsx'
 import { useAdminToast } from '../lib/useAdminToast.jsx'
+import { useUnsavedChanges } from '../lib/useUnsavedChanges.js'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 
 // Panel › Correo (solo administradores): la cuenta de Gmail que envía los
@@ -66,7 +67,10 @@ export default function AdminCorreo() {
   const [busy, setBusy] = useState(false)
   const [testTo, setTestTo] = useState('')
   const { notify, toast } = useAdminToast()
-
+  // Hay cambios si el formulario difiere de lo guardado (la contraseña nunca se lee del
+  // servidor, así que escribirla ya cuenta como cambio).
+  const dirty = saved !== null && JSON.stringify(form) !== JSON.stringify(formFrom(saved))
+  useUnsavedChanges(dirty)
 
   const load = useCallback(async () => {
     const [settings, entries] = await Promise.all([
@@ -267,8 +271,8 @@ export default function AdminCorreo() {
             </AdminSection>
 
             <div className="admin-mail__actions">
-              <button type="submit" className="admin-btn admin-btn--primary" disabled={busy}>
-                Guardar cambios
+              <button type="submit" className="admin-btn admin-btn--primary" disabled={busy || !dirty}>
+                {busy ? 'Guardando…' : dirty ? 'Guardar cambios' : 'Sin cambios'}
               </button>
               <span className="admin-mail__test">
                 <input
