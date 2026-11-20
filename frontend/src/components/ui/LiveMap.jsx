@@ -471,7 +471,9 @@ export default function LiveMap({
             ×
           </button>
           {place.photo ? (
-            <img className="mapa-ficha__foto" src={place.photo} alt="" />
+            <span className="mapa-ficha__foto">
+              <img src={place.photo} alt="" />
+            </span>
           ) : (
             <span className="mapa-ficha__icono-caja">
               <img src={mapIconUrl(place.icon)} alt="" width="40" height="40" />
@@ -512,7 +514,9 @@ export default function LiveMap({
           ×
         </button>
         {place.photo ? (
-          <img className="mapa-ficha__foto" src={place.photo} alt="" />
+          <span className="mapa-ficha__foto">
+              <img src={place.photo} alt="" />
+            </span>
         ) : (
           <span className="mapa-ficha__foto mapa-ficha__foto--vacia" aria-hidden="true" />
         )}
@@ -616,7 +620,9 @@ export default function LiveMap({
                     onClick={() => focusPlace(place)}
                   >
                     {place.photo ? (
-                      <img className="mapa-lugar__foto" src={place.photo} alt="" loading="lazy" />
+                      <span className="mapa-lugar__foto">
+                        <img src={place.photo} alt="" loading="lazy" />
+                      </span>
                     ) : (
                       <span className="mapa-lugar__foto mapa-lugar__foto--vacia" aria-hidden="true" />
                     )}

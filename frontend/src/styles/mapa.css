@@ -226,10 +226,20 @@
 
 .mapa-lugar__foto {
   flex: none;
+  display: block;
   width: 56px;
   height: 56px;
-  object-fit: cover;
   border-radius: 10px;
+  overflow: hidden;
+}
+
+/* La foto va dentro de un marco para poder encuadrarla desde el panel. */
+.mapa-lugar__foto > img,
+.mapa-ficha__foto > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .mapa-lugar__texto {
@@ -347,10 +357,11 @@
 
 .mapa-ficha__foto {
   flex: none;
+  display: block;
   width: 92px;
   height: 92px;
-  object-fit: cover;
   border-radius: 12px;
+  overflow: hidden;
 }
 
 .mapa-ficha__texto {
