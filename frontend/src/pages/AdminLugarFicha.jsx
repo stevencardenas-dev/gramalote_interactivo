@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
-import AdminToast from '../components/admin/AdminToast.jsx'
+import { useAdminToast } from '../lib/useAdminToast.jsx'
+import CoordinateInput from '../components/admin/CoordinateInput.jsx'
 import { focusLatitude, useNearbyCheck } from '../components/admin/NearbyCheck.jsx'
 import AuditTimeline from '../components/admin/AuditTimeline.jsx'
 import { MAP_ICONS, mapIconUrl } from '../data/mapIcons.js'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 import { useDialog } from '../lib/dialog.jsx'
+import { useUnsavedChanges } from '../lib/useUnsavedChanges.js'
+import AdminImageCard from '../components/admin/AdminImageCard.jsx'
+import { useImageDrafts } from '../lib/useImageDrafts.js'
 
 // Ficha editable de un Patrimonio o de un Extra (Panel › Lugares), con las mismas
 // pestañas que una ficha de establecimiento: Información, Imágenes, Publicación e
@@ -121,8 +125,8 @@ const KINDS = {
         title: 'Ubicación en el mapa',
         hint: 'Coordenadas, enlace y detalles técnicos.',
         fields: [
-          { key: 'latitude', label: 'Latitud', type: 'number', required: true, step: 'any' },
-          { key: 'longitude', label: 'Longitud', type: 'number', required: true, step: 'any' },
+          { key: 'latitude', label: 'Latitud', type: 'coordinate', coordinate: 'lat', required: true },
+          { key: 'longitude', label: 'Longitud', type: 'coordinate', coordinate: 'lng', required: true },
           { key: 'mapsUrl', label: 'Enlace de Google Maps', max: 500, wide: true },
           { key: 'mapIcon', label: 'Icono del mapa', type: 'icon' },
           { key: 'slug', label: 'Enlace (slug)', max: 160, help: 'Cambiarlo cambia la dirección pública de la ficha.' },
@@ -166,8 +170,8 @@ const KINDS = {
         title: 'Ubicación en el mapa',
         hint: 'Coordenadas, enlace y detalles técnicos.',
         fields: [
-          { key: 'latitude', label: 'Latitud', type: 'number', required: true, step: 'any' },
-          { key: 'longitude', label: 'Longitud', type: 'number', required: true, step: 'any' },
+          { key: 'latitude', label: 'Latitud', type: 'coordinate', coordinate: 'lat', required: true },
+          { key: 'longitude', label: 'Longitud', type: 'coordinate', coordinate: 'lng', required: true },
           { key: 'mapsUrl', label: 'Enlace de Google Maps', max: 500, wide: true },
           { key: 'mapIcon', label: 'Icono del mapa', type: 'icon' },
           { key: 'sortOrder', label: 'Orden', type: 'number', step: '1' },
@@ -197,7 +201,7 @@ function pickFields(kind, data) {
   return result
 }
 
-function Field({ spec, value, onChange }) {
+function Field({ spec, value, onChange, onPair }) {
   const common = { required: spec.required, maxLength: spec.max }
   const style = spec.wide ? { gridColumn: '1 / -1' } : undefined
 
@@ -226,6 +230,8 @@ function Field({ spec, value, onChange }) {
         ))}
       </select>
     )
+  } else if (spec.type === 'coordinate') {
+    control = <CoordinateInput data-field={spec.key} kind={spec.coordinate} onPair={onPair} value={value} onChange={onChange} required={spec.required} />
   } else if (spec.type === 'icon') {
     control = (
       <span className="place-icon">
@@ -262,10 +268,10 @@ function Field({ spec, value, onChange }) {
   )
 }
 
-function ImageCard({ image, index, total, kindKey, roles, busy, onSave, onRemove, onMove }) {
+// Tarjeta de foto de Patrimonio: miniatura a un lado y campos con etiqueta.
+function PlaceImageCard({ image, index, total, roles, busy, onSave, onRemove, onMove, onReplace, onDraftChange }) {
+  const fileInput = useRef(null)
   const [draft, setDraft] = useState({ role: image.role, eraLabel: image.eraLabel ?? '', altText: image.altText, caption: image.caption, credit: image.credit })
-  // Un extra no tiene ficha: su única foto es la portada, sin uso que elegir.
-  const single = kindKey === 'extras'
   const dirty =
     draft.role !== image.role ||
     draft.eraLabel !== (image.eraLabel ?? '') ||
@@ -273,6 +279,11 @@ function ImageCard({ image, index, total, kindKey, roles, busy, onSave, onRemove
     draft.caption !== image.caption ||
     draft.credit !== image.credit
   const set = (key) => (event) => setDraft((current) => ({ ...current, [key]: event.target.value }))
+
+  useEffect(() => {
+    onDraftChange(image.id, dirty)
+  }, [dirty, image.id, onDraftChange])
+  useEffect(() => () => onDraftChange(image.id, false), [image.id, onDraftChange])
 
   return (
     <li className="place-img">
@@ -282,53 +293,53 @@ function ImageCard({ image, index, total, kindKey, roles, busy, onSave, onRemove
       </div>
       <div className="place-img__body">
         <div className="admin-grid">
-          {!single ? (
-            <label className="admin-field">
-              <span>Uso</span>
-              <select value={draft.role} onChange={set('role')}>
-                {roles.map((role) => (
-                  <option key={role} value={role}>
-                    {ROLE_LABELS[role]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-          {/* Un extra solo muestra la foto en su tarjeta del mapa: no usa texto
-              alternativo, pie ni crédito, así que no se piden. */}
-          {!single ? (
-            <>
-              <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
-                <span>Texto alternativo (describe la foto)</span>
-                <input value={draft.altText} onChange={set('altText')} maxLength={255} />
-              </label>
-              <label className="admin-field">
-                <span>Pie de foto (se ve sobre la foto)</span>
-                <input value={draft.caption} onChange={set('caption')} maxLength={120} placeholder="Templo en 1950" />
-              </label>
-              <label className="admin-field">
-                <span>Crédito o fuente</span>
-                <input value={draft.credit} onChange={set('credit')} maxLength={255} />
-              </label>
-            </>
-          ) : null}
+          <label className="admin-field">
+            <span>Uso</span>
+            <select value={draft.role} onChange={set('role')}>
+              {roles.map((role) => (
+                <option key={role} value={role}>
+                  {ROLE_LABELS[role]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
+            <span>Texto alternativo (describe la foto)</span>
+            <input value={draft.altText} onChange={set('altText')} maxLength={255} />
+          </label>
+          <label className="admin-field">
+            <span>Pie de foto (se ve sobre la foto)</span>
+            <input value={draft.caption} onChange={set('caption')} maxLength={120} placeholder="Templo en 1950" />
+          </label>
+          <label className="admin-field">
+            <span>Crédito o fuente</span>
+            <input value={draft.credit} onChange={set('credit')} maxLength={255} />
+          </label>
         </div>
         <div className="place-img__actions">
-          {!single ? (
-            <button type="button" className="admin-btn admin-btn--primary" disabled={!dirty || busy} onClick={() => onSave(image, draft)}>
-              Guardar foto
-            </button>
-          ) : null}
-          {!single ? (
-            <>
-              <button type="button" className="admin-btn" disabled={index === 0 || busy} onClick={() => onMove(index, -1)} aria-label="Subir">
-                ↑
-              </button>
-              <button type="button" className="admin-btn" disabled={index === total - 1 || busy} onClick={() => onMove(index, 1)} aria-label="Bajar">
-                ↓
-              </button>
-            </>
-          ) : null}
+          <button type="button" className="admin-btn admin-btn--primary" disabled={!dirty || busy} onClick={() => onSave(image, draft)}>
+            Guardar foto
+          </button>
+          <button type="button" className="admin-btn" disabled={index === 0 || busy} onClick={() => onMove(index, -1)} aria-label="Subir">
+            ↑
+          </button>
+          <button type="button" className="admin-btn" disabled={index === total - 1 || busy} onClick={() => onMove(index, 1)} aria-label="Bajar">
+            ↓
+          </button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) onReplace(image, file)
+            }}
+          />
+          <button type="button" className="admin-btn" disabled={busy} onClick={() => fileInput.current?.click()}>
+            Cambiar foto
+          </button>
           <button type="button" className="admin-btn admin-btn--danger-outline" disabled={busy} onClick={() => onRemove(image)}>
             Quitar
           </button>
@@ -357,7 +368,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
   const [saving, setSaving] = useState(false)
   const [busyImage, setBusyImage] = useState(false)
   const [error, setError] = useState('')
-  const [toast, setToast] = useState(null)
+  const { notify, toast } = useAdminToast()
   const [upload, setUpload] = useState(() => ({
     // Vacío = automático: la primera foto de un patrimonio es la portada (sin ella
     // no aparece en tarjetas ni en el mapa); las siguientes, galería.
@@ -368,7 +379,6 @@ export default function AdminLugarFicha({ kind: kindKey }) {
     credit: '',
   }))
 
-  const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message, close: () => setToast(null) })
 
   useEffect(() => {
     let alive = true
@@ -390,6 +400,8 @@ export default function AdminLugarFicha({ kind: kindKey }) {
   }, [id, kind])
 
   const dirty = useMemo(() => (form ? JSON.stringify(pickFields(kind, form)) !== baseline : false), [form, baseline, kind])
+  const imageDrafts = useImageDrafts()
+  const { allowLeave } = useUnsavedChanges(dirty || imageDrafts.anyDirty)
   const set = (key) => (value) => setForm((current) => ({ ...current, [key]: value }))
 
   async function save(event) {
@@ -461,6 +473,22 @@ export default function AdminLugarFicha({ kind: kindKey }) {
     }
   }
 
+  // Cambia el archivo de una foto y conserva su uso, orden y textos.
+  async function replaceImage(image, file) {
+    setBusyImage(true)
+    setError('')
+    try {
+      const data = new FormData()
+      data.append('file', file)
+      applyImages(await apiRequest(`${kind.api}/${id}/images/${image.id}/file`, { method: 'PUT', formData: data }))
+      notify('ok', 'Foto cambiada', 'Se mantuvieron su uso, su orden y sus textos.')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusyImage(false)
+    }
+  }
+
   async function moveImage(index, delta) {
     const order = form.images.map((image) => image.id)
     const [moved] = order.splice(index, 1)
@@ -475,14 +503,18 @@ export default function AdminLugarFicha({ kind: kindKey }) {
     }
   }
 
-  async function removeImage(image) {
+  // En Extras la confirmación la pide la tarjeta (AdminImageCard); en Patrimonio, esta función.
+  async function confirmRemoveImage(image) {
     const ok = await confirm({
       title: '¿Quitar esta foto de la ficha?',
       message: 'Dejará de verse en el sitio.',
       confirmLabel: 'Quitar foto',
       danger: true,
     })
-    if (!ok) return
+    if (ok) await removeImage(image)
+  }
+
+  async function removeImage(image) {
     setBusyImage(true)
     try {
       applyImages(await apiRequest(`${kind.api}/${id}/images/${image.id}`, { method: 'DELETE' }))
@@ -503,6 +535,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
     if (!ok) return
     try {
       await apiRequest(`${kind.api}/${id}`, { method: 'DELETE' })
+      allowLeave()
       navigate(kind.listPath)
     } catch (err) {
       setError(err.message)
@@ -615,7 +648,13 @@ export default function AdminLugarFicha({ kind: kindKey }) {
                 <AdminSection key={section.title} title={section.title} hint={section.hint} defaultOpen={index === 0}>
                   <div className="admin-grid">
                     {section.fields.map((spec) => (
-                      <Field key={spec.key} spec={spec} value={form[spec.key]} onChange={set(spec.key)} />
+                      <Field
+                        key={spec.key}
+                        spec={spec}
+                        value={form[spec.key]}
+                        onChange={set(spec.key)}
+                        onPair={(latitude, longitude) => setForm((current) => ({ ...current, latitude, longitude }))}
+                      />
                     ))}
                   </div>
                 </AdminSection>
@@ -627,7 +666,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
             <div className="place-images">
               {kindKey === 'extras' && form.images.length > 0 ? (
                 <p className="note">
-                  Los extras llevan una sola foto: la portada. Para cambiarla, quita la actual y sube otra.
+                  Los extras llevan una sola foto: la portada. Usa «Cambiar foto» para sustituirla.
                 </p>
               ) : (
                 <AdminSection title="Subir una foto" hint={kindKey === 'extras' ? 'Elige el archivo: será la foto de su tarjeta en el mapa.' : 'Elige el archivo y dile a la ficha para qué sirve.'} defaultOpen>
@@ -678,21 +717,35 @@ export default function AdminLugarFicha({ kind: kindKey }) {
               {form.images.length === 0 ? (
                 <p className="note">Esta ficha todavía no tiene fotos.</p>
               ) : (
-                <ul className="place-img-list">
-                  {form.images.map((image, index) => (
-                    <ImageCard
-                      key={`${image.id}-${image.role}-${image.eraLabel}-${image.altText}-${image.caption}-${image.credit}`}
-                      image={image}
-                      index={index}
-                      total={form.images.length}
-                      kindKey={kindKey}
-                      roles={roles}
-                      busy={busyImage}
-                      onSave={saveImage}
-                      onRemove={removeImage}
-                      onMove={moveImage}
-                    />
-                  ))}
+                <ul className={kindKey === 'extras' ? 'admin-media__grid' : 'place-img-list'}>
+                  {form.images.map((image, index) =>
+                    kindKey === 'extras' ? (
+                      <AdminImageCard
+                        key={image.id}
+                        image={image}
+                        index={index}
+                        total={form.images.length}
+                        single
+                        busy={busyImage}
+                        onReplace={replaceImage}
+                        onRemove={removeImage}
+                      />
+                    ) : (
+                      <PlaceImageCard
+                        key={`${image.id}-${image.role}-${image.eraLabel}-${image.altText}-${image.caption}-${image.credit}`}
+                        image={image}
+                        index={index}
+                        total={form.images.length}
+                        roles={roles}
+                        busy={busyImage}
+                        onSave={saveImage}
+                        onReplace={replaceImage}
+                        onRemove={confirmRemoveImage}
+                        onMove={moveImage}
+                        onDraftChange={imageDrafts.report}
+                      />
+                    ),
+                  )}
                 </ul>
               )}
             </div>
@@ -777,7 +830,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
       </div>
 
       {nearby.element}
-      {toast ? <AdminToast key={toast.key} tone={toast.tone} title={toast.title} message={toast.message} onClose={toast.close} /> : null}
+      {toast}
     </section>
   )
 }

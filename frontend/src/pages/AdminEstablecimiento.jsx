@@ -3,11 +3,15 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import OpeningHoursEditor from '../components/admin/OpeningHoursEditor.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
-import AdminToast from '../components/admin/AdminToast.jsx'
+import { useAdminToast } from '../lib/useAdminToast.jsx'
+import CoordinateInput from '../components/admin/CoordinateInput.jsx'
 import { focusLatitude, useNearbyCheck } from '../components/admin/NearbyCheck.jsx'
 import RatingsPanel from '../components/admin/RatingsPanel.jsx'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 import { useDialog } from '../lib/dialog.jsx'
+import { useUnsavedChanges } from '../lib/useUnsavedChanges.js'
+import AdminImageCard from '../components/admin/AdminImageCard.jsx'
+import { useImageDrafts } from '../lib/useImageDrafts.js'
 import { resolveMapIcon } from '../data/mapIcons.js'
 
 const TABS = [
@@ -135,19 +139,21 @@ export default function AdminEstablecimiento() {
   // Copia de lo último guardado, para saber si hay cambios pendientes.
   const [savedJson, setSavedJson] = useState(null)
   const dirty = form !== null && savedJson !== null && editableJson(form) !== savedJson
+  const imageDrafts = useImageDrafts()
+  const { allowLeave } = useUnsavedChanges(dirty || imageDrafts.anyDirty)
   const [meta, setMeta] = useState(null)
   // Evita que un doble aviso del selector de archivos suba la misma foto dos veces.
   const uploadGuard = useRef(false)
   const [allEstablishments, setAllEstablishments] = useState([])
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const { notify, toast, close } = useAdminToast()
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [busyImage, setBusyImage] = useState(false)
   const { confirm } = useDialog()
 
   async function load() {
-    setError('')
+    setLoadError('')
     try {
       const [detail, metaData, list] = await Promise.all([
         apiRequest(`/admin/establishments/${id}`),
@@ -159,7 +165,7 @@ export default function AdminEstablecimiento() {
       setMeta(metaData)
       setAllEstablishments(list ?? [])
     } catch (err) {
-      setError(err.message)
+      setLoadError(err.message)
     }
   }
 
@@ -207,7 +213,7 @@ export default function AdminEstablecimiento() {
     return (
       <section className="admin-page">
         <div className="container">
-          {error ? <p className="auth-error" role="alert">{error}</p> : <p className="note">Cargando ficha…</p>}
+          {loadError ? <p className="auth-error" role="alert">{loadError}</p> : <p className="note">Cargando ficha…</p>}
         </div>
       </section>
     )
@@ -232,13 +238,13 @@ export default function AdminEstablecimiento() {
 
   function update(patch) {
     setForm((current) => ({ ...current, ...patch }))
-    setNotice('')
+    close()
   }
 
   // La ficha del sitio tiene sitio para tres tarjetas: no se pueden sugerir más.
   function toggleRelated(target) {
     if (!form.relatedIds.includes(target) && form.relatedIds.length >= RELATED_LIMIT) {
-      setNotice(`Ya hay ${RELATED_LIMIT} sugerencias. Quita una para añadir otra.`)
+      notify('warn', 'Límite alcanzado', `Ya hay ${RELATED_LIMIT} sugerencias. Quita una para añadir otra.`)
       return
     }
     update({
@@ -255,7 +261,7 @@ export default function AdminEstablecimiento() {
         position === index ? { ...item, ...patch } : item,
       ),
     }))
-    setNotice('')
+    close()
   }
 
   function addToList(key, item) {
@@ -285,8 +291,8 @@ export default function AdminEstablecimiento() {
     const proceed = await nearby.check({ lat: form.latitude, lng: form.longitude, type: 'establishment', id: form.id })
     if (!proceed) return
     setSaving(true)
-    setError('')
-    setNotice('')
+    close()
+    close()
     try {
       const result = await apiRequest(`/admin/establishments/${id}`, {
         method: 'PATCH',
@@ -294,22 +300,22 @@ export default function AdminEstablecimiento() {
       })
       setForm((current) => ({ ...current, updatedAt: result.updatedAt }))
       setSavedJson(editableJson(form))
-      setNotice('La ficha quedó actualizada.')
+      notify('ok', 'Cambios guardados', 'La ficha quedó actualizada.')
       await refreshAudit()
     } catch (err) {
-      setError(err.message)
+      notify('error', 'No se pudo guardar', err.message)
     } finally {
       setSaving(false)
     }
   }
 
   async function handlePublish(published) {
-    setError('')
-    setNotice('')
+    close()
+    close()
     try {
       // Con cambios sin guardar no se publica: se perderían (pagos, redes…).
       if (published && dirty) {
-        setError('Guarda los cambios antes de publicar la ficha.')
+        notify('error', 'No se pudo publicar', 'Guarda los cambios antes de publicar la ficha.')
         return
       }
       const result = await apiRequest(`/admin/establishments/${id}/publish`, {
@@ -322,10 +328,10 @@ export default function AdminEstablecimiento() {
         publishedAt: current.publishedAt ?? result.updatedAt,
         updatedAt: result.updatedAt,
       }))
-      setNotice(published ? 'Ficha publicada.' : 'Ficha despublicada.')
+      notify('ok', 'Guardado', published ? 'Ficha publicada.' : 'Ficha despublicada.')
       await refreshAudit()
     } catch (err) {
-      setError(err.message)
+      notify('error', 'No se pudo guardar', err.message)
     }
   }
 
@@ -337,13 +343,14 @@ export default function AdminEstablecimiento() {
       danger: true,
     })
     if (!ok) return
-    setError('')
-    setNotice('')
+    close()
+    close()
     try {
       await apiRequest(`/admin/establishments/${id}`, { method: 'DELETE' })
+      allowLeave()
       navigate('/admin/lugares/establecimientos', { replace: true })
     } catch (err) {
-      setError(err.message)
+      notify('error', 'No se pudo guardar', err.message)
     }
   }
 
@@ -353,7 +360,7 @@ export default function AdminEstablecimiento() {
     uploadGuard.current = true
 
     setUploading(true)
-    setError('')
+    close()
     try {
       // La primera foto de una ficha sin imágenes entra como portada; el resto,
       // como galería (si ya hay portada, todas van a la galería).
@@ -377,13 +384,15 @@ export default function AdminEstablecimiento() {
         await apiRequest('/admin/media', { method: 'POST', formData: data })
       }
       await reloadImages()
-      setNotice(
+      notify(
+        'ok',
+        'Guardado',
         toHero > 0
           ? `Imágenes subidas. La galería ya tenía ${galleryLimit} fotos: ${toHero === 1 ? 'la nueva quedó' : `${toHero} quedaron`} como encabezado.`
           : 'Imágenes subidas.',
       )
     } catch (err) {
-      setError(err.message)
+      notify('error', 'No se pudo guardar', err.message)
     } finally {
       uploadGuard.current = false
       setUploading(false)
@@ -399,7 +408,7 @@ export default function AdminEstablecimiento() {
 
   async function patchImage(image, patch) {
     setBusyImage(true)
-    setError('')
+    close()
     try {
       await apiRequest(`/admin/establishments/${id}/images/${image.imageId}`, {
         method: 'PATCH',
@@ -407,7 +416,7 @@ export default function AdminEstablecimiento() {
       })
       await reloadImages()
     } catch (err) {
-      setError(err.message)
+      notify('error', 'No se pudo guardar', err.message)
     } finally {
       setBusyImage(false)
     }
@@ -423,8 +432,11 @@ export default function AdminEstablecimiento() {
         ...current,
         images: current.images.map((item) => (item.mediaId === image.mediaId ? { ...item, alt: altText } : item)),
       }))
+      notify('ok', 'Guardado', 'Foto actualizada.')
+      return true
     } catch (err) {
-      setError(err.message)
+      notify('error', 'No se pudo guardar', err.message)
+      return false
     }
   }
 
@@ -436,7 +448,7 @@ export default function AdminEstablecimiento() {
     reordered.splice(target, 0, item)
 
     setBusyImage(true)
-    setError('')
+    close()
     try {
       await apiRequest(`/admin/establishments/${id}/images/order`, {
         method: 'PUT',
@@ -449,7 +461,24 @@ export default function AdminEstablecimiento() {
       })
       await reloadImages()
     } catch (err) {
-      setError(err.message)
+      notify('error', 'No se pudo guardar', err.message)
+    } finally {
+      setBusyImage(false)
+    }
+  }
+
+  // Cambia el archivo de una foto y conserva su uso, orden y texto alternativo.
+  async function replaceImage(image, file) {
+    setBusyImage(true)
+    close()
+    try {
+      const data = new FormData()
+      data.append('file', file)
+      await apiRequest(`/admin/establishments/${id}/images/${image.imageId}/file`, { method: 'PUT', formData: data })
+      await reloadImages()
+      notify('ok', 'Guardado', 'Foto cambiada.')
+    } catch (err) {
+      notify('error', 'No se pudo guardar', err.message)
     } finally {
       setBusyImage(false)
     }
@@ -457,15 +486,15 @@ export default function AdminEstablecimiento() {
 
   async function unlinkImage(image) {
     setBusyImage(true)
-    setError('')
+    close()
     try {
       await apiRequest(`/admin/establishments/${id}/images/${image.imageId}`, {
         method: 'DELETE',
       })
       await reloadImages()
-      setNotice('Imagen quitada de la ficha. Sigue en la biblioteca de medios.')
+      notify('ok', 'Guardado', 'Imagen quitada de la ficha. Sigue en la biblioteca de medios.')
     } catch (err) {
-      setError(err.message)
+      notify('error', 'No se pudo guardar', err.message)
     } finally {
       setBusyImage(false)
     }
@@ -518,18 +547,7 @@ export default function AdminEstablecimiento() {
 
         {nearby.element}
 
-        {error || notice ? (
-          <AdminToast
-            key={`${error}-${notice}`}
-            tone={error ? 'error' : 'ok'}
-            title={error ? 'No se pudo guardar' : notice === 'La ficha quedó actualizada.' ? 'Cambios guardados' : 'Guardado'}
-            message={error || notice}
-            onClose={() => {
-              setError('')
-              setNotice('')
-            }}
-          />
-        ) : null}
+        {toast}
 
         <nav className="admin-tabs" aria-label="Secciones de la ficha">
           {TABS.map((item) => (
@@ -679,24 +697,20 @@ export default function AdminEstablecimiento() {
                   />
                 </Field>
                 <Field label="Latitud">
-                  <input
+                  <CoordinateInput
                     data-field="latitude"
-                    type="number"
-                    step="0.0000001"
-                    value={form.latitude ?? ''}
-                    onChange={(event) =>
-                      update({ latitude: event.target.value === '' ? null : event.target.value })
-                    }
+                    kind="lat"
+                    onPair={(latitude, longitude) => update({ latitude, longitude })}
+                    value={form.latitude}
+                    onChange={(value) => update({ latitude: value === '' ? null : value })}
                   />
                 </Field>
                 <Field label="Longitud">
-                  <input
-                    type="number"
-                    step="0.0000001"
-                    value={form.longitude ?? ''}
-                    onChange={(event) =>
-                      update({ longitude: event.target.value === '' ? null : event.target.value })
-                    }
+                  <CoordinateInput
+                    kind="lng"
+                    onPair={(latitude, longitude) => update({ latitude, longitude })}
+                    value={form.longitude}
+                    onChange={(value) => update({ longitude: value === '' ? null : value })}
                   />
                 </Field>
               </div>
@@ -839,82 +853,28 @@ export default function AdminEstablecimiento() {
                 <p className="empty">Todavía no hay imágenes. Sube la primera como portada.</p>
               ) : (
                 <ul className="admin-media__grid">
-                  {form.images.map((image, index) => {
-                    const roles = Object.keys(ROLE_LABELS).filter(
-                      (role) => role === image.role || (role !== 'logo' && !(image.role === 'cover' && role === 'gallery')),
-                    )
-                    return (
-                      <li key={image.imageId} className="admin-media__item">
-                        <div className="admin-media__shot">
-                          <img src={image.url} alt={image.alt} loading="lazy" />
-                          <span
-                            className={`admin-badge ${
-                              image.role === 'cover' || image.role === 'hero' ? 'admin-badge--ok' : ''
-                            }`}
-                          >
-                            {ROLE_LABELS[image.role] ?? image.role}
-                          </span>
-                          <span className="admin-media__dims">
-                            {image.width}×{image.height}
-                          </span>
-                        </div>
-                        <input
-                          className="admin-media__alt"
-                          aria-label="Texto alternativo"
-                          defaultValue={image.alt}
-                          placeholder="Texto alternativo (accesibilidad)"
-                          onBlur={(event) => {
-                            if (event.target.value !== image.alt) {
-                              updateMediaAlt(image, event.target.value)
-                            }
-                          }}
-                        />
-                        <div className="admin-media__actions">
-                          <select
-                            aria-label="Uso de la imagen"
-                            value={image.role}
-                            disabled={busyImage}
-                            onChange={(event) => patchImage(image, { role: event.target.value })}
-                          >
-                            {roles.map((role) => (
-                              <option
-                                key={role}
-                                value={role}
-                                disabled={role === 'gallery' && image.role !== 'gallery' && galleryFull}
-                              >
-                                {ROLE_LABELS[role]}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            type="button"
-                            aria-label="Mover antes"
-                            disabled={busyImage || index === 0}
-                            onClick={() => moveImage(index, -1)}
-                          >
-                            ←
-                          </button>
-                          <button
-                            type="button"
-                            aria-label="Mover después"
-                            disabled={busyImage || index === form.images.length - 1}
-                            onClick={() => moveImage(index, 1)}
-                          >
-                            →
-                          </button>
-                          <button
-                            type="button"
-                            className="is-danger"
-                            aria-label="Quitar de la ficha"
-                            disabled={busyImage}
-                            onClick={() => unlinkImage(image)}
-                          >
-                            Quitar
-                          </button>
-                        </div>
-                      </li>
-                    )
-                  })}
+                  {form.images.map((image, index) => (
+                    <AdminImageCard
+                      key={image.imageId}
+                      image={image}
+                      index={index}
+                      total={form.images.length}
+                      roles={Object.keys(ROLE_LABELS).filter(
+                        (role) => role === image.role || (role !== 'logo' && !(image.role === 'cover' && role === 'gallery')),
+                      )}
+                      roleLabels={ROLE_LABELS}
+                      isRoleDisabled={(role, img) => role === 'gallery' && img.role !== 'gallery' && galleryFull}
+                      badgeOk={image.role === 'cover' || image.role === 'hero'}
+                      busy={busyImage}
+                      draftKey={image.imageId}
+                      onDraftChange={imageDrafts.report}
+                      onSave={(img, draft) => updateMediaAlt(img, draft.alt)}
+                      onRole={(img, role) => patchImage(img, { role })}
+                      onMove={moveImage}
+                      onReplace={replaceImage}
+                      onRemove={unlinkImage}
+                    />
+                  ))}
                 </ul>
               )}
             </div>
@@ -1279,10 +1239,7 @@ export default function AdminEstablecimiento() {
               kind="establishments"
               id={id}
               name={form.name}
-              onNotify={(tone, title, message) => {
-                setError(tone === 'error' ? message || title : '')
-                setNotice(tone === 'error' ? '' : title)
-              }}
+              onNotify={(tone, title, message) => notify(tone, title, message)}
             />
           ) : null}
 

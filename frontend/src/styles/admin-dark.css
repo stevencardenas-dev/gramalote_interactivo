@@ -265,6 +265,10 @@ body:has(.admin-app) {
   font-size: 0.78rem;
 }
 
+.admin-app .admin-hint--error {
+  color: var(--a-danger);
+}
+
 /* Botones y campos */
 .admin-btn {
   display: inline-flex;
@@ -1315,6 +1319,27 @@ a.admin-tile:hover .admin-tile__chev {
   min-height: 34px;
   padding: 0 10px;
   font-size: 0.8rem;
+}
+
+/* Tarjeta de imagen compartida (AdminImageCard): campos de texto y «Guardar foto». */
+.admin-app .admin-media__fields {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-app .admin-media__actions--wrap {
+  flex-wrap: wrap;
+}
+
+.admin-app .admin-media__actions .is-primary {
+  border-color: var(--a-ac);
+  background: var(--a-ac);
+  color: var(--a-onac);
+  font-weight: 600;
+}
+
+.admin-app .admin-media__actions .is-primary:disabled {
+  opacity: 0.5;
 }
 
 /* Historial paginado */

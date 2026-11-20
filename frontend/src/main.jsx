@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from './App.jsx'
 import { DialogProvider } from './lib/dialog.jsx'
 import { registerServiceWorker } from './lib/offline.js'
@@ -25,13 +25,25 @@ import './styles/admin-light.css'
 initAdminTheme()
 initImageOrientation()
 
+// Data router: hace falta para useBlocker (aviso de cambios sin guardar). Una sola
+// ruta comodín envuelve a App, que sigue declarando sus <Routes> como antes.
+const router = createBrowserRouter(
+  [
+    {
+      path: '*',
+      element: (
+        <DialogProvider>
+          <App />
+        </DialogProvider>
+      ),
+    },
+  ],
+  { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' },
+)
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
-      <DialogProvider>
-        <App />
-      </DialogProvider>
-    </BrowserRouter>
+    <RouterProvider router={router} />
   </StrictMode>,
 )
 

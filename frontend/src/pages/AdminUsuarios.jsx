@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AdminToast from '../components/admin/AdminToast.jsx'
+import { useAdminToast } from '../lib/useAdminToast.jsx'
 import Pagination from '../components/admin/Pagination.jsx'
 import { usePaged } from '../lib/usePaged.js'
 import PasswordInput from '../components/ui/PasswordInput.jsx'
@@ -70,8 +70,7 @@ export default function AdminUsuarios() {
   const isAdmin = me?.role === 'admin'
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(isAdmin)
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
+  const { notify, toast, close } = useAdminToast()
   const [form, setForm] = useState({ name: '', email: '', role: 'editor' })
   const [busy, setBusy] = useState(false)
   const [showNew, setShowNew] = useState(false)
@@ -82,8 +81,6 @@ export default function AdminUsuarios() {
   const [myName, setMyName] = useState(me?.name ?? '')
   const [myEmail, setMyEmail] = useState({ email: '', password: '' })
   const [passwords, setPasswords] = useState({ current: '', next: '' })
-  const [accountMsg, setAccountMsg] = useState('')
-  const [accountErr, setAccountErr] = useState('')
   // Confirmaciones dentro del panel (borrar cuenta, borrar usuario).
   const { confirm } = useDialog()
   const paged = usePaged(users)
@@ -91,13 +88,12 @@ export default function AdminUsuarios() {
   const load = useCallback(async () => {
     try {
       setUsers((await apiRequest('/admin/users')) ?? [])
-      setError('')
     } catch (err) {
-      setError(err.message)
+      notify('error', 'No se pudo cargar', err.message)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [notify])
 
   useEffect(() => {
     if (!isAdmin) return
@@ -108,13 +104,12 @@ export default function AdminUsuarios() {
 
   async function run(action) {
     setBusy(true)
-    setError('')
-    setNotice('')
+    close()
     try {
       await action()
       await load()
     } catch (err) {
-      setError(err.message)
+      notify('error', 'No se pudo guardar', err.message)
     } finally {
       setBusy(false)
     }
@@ -124,7 +119,9 @@ export default function AdminUsuarios() {
     event.preventDefault()
     run(async () => {
       const data = await apiRequest('/admin/users', { method: 'POST', body: form })
-      setNotice(
+      notify(
+        'ok',
+        'Guardado',
         data.mailed
           ? `Invitación enviada a ${data.user.email}.`
           : `Cuenta creada, pero el correo no salió (${data.mailError}). La persona puede usar «¿Olvidaste tu contraseña?» cuando el correo esté configurado.`,
@@ -145,7 +142,7 @@ export default function AdminUsuarios() {
         method: 'PATCH',
         body: { email: emailEdit.value },
       })
-      setNotice(`Correo de ${user.name} actualizado. Sus sesiones se cerraron.`)
+      notify('ok', 'Guardado', `Correo de ${user.name} actualizado. Sus sesiones se cerraron.`)
       setEmailEdit(null)
     })
   }
@@ -160,59 +157,55 @@ export default function AdminUsuarios() {
     if (!ok) return
     run(async () => {
       await apiRequest(`/admin/users/${user.id}`, { method: 'DELETE' })
-      setNotice(`Cuenta de ${user.name} eliminada.`)
+      notify('ok', 'Guardado', `Cuenta de ${user.name} eliminada.`)
     })
   }
 
   async function submitPassword(event) {
     event.preventDefault()
-    setAccountMsg('')
-    setAccountErr('')
+    close()
     try {
       await changePassword(passwords.current, passwords.next)
       setPasswords({ current: '', next: '' })
-      setAccountMsg('Contraseña actualizada.')
+      notify('ok', 'Guardado', 'Contraseña actualizada.')
     } catch (err) {
-      setAccountErr(err.message)
+      notify('error', 'No se pudo guardar', err.message)
     }
   }
 
   async function submitMyName(event) {
     event.preventDefault()
-    setAccountMsg('')
-    setAccountErr('')
+    close()
     try {
       const user = await changeOwnName(myName)
       setMyName(user.name)
-      setAccountMsg('Nombre actualizado.')
+      notify('ok', 'Guardado', 'Nombre actualizado.')
       if (isAdmin) load()
     } catch (err) {
-      setAccountErr(err.message)
+      notify('error', 'No se pudo guardar', err.message)
     }
   }
 
   async function submitMyEmail(event) {
     event.preventDefault()
-    setAccountMsg('')
-    setAccountErr('')
+    close()
     try {
       await changeOwnEmail(myEmail.email, myEmail.password)
       setMyEmail({ email: '', password: '' })
-      setAccountMsg('Correo actualizado. Desde ahora entras con el correo nuevo.')
+      notify('ok', 'Guardado', 'Correo actualizado. Desde ahora entras con el correo nuevo.')
       if (isAdmin) load()
     } catch (err) {
-      setAccountErr(err.message)
+      notify('error', 'No se pudo guardar', err.message)
     }
   }
 
   async function removeMyself() {
-    setAccountMsg('')
-    setAccountErr('')
+    close()
     try {
       await deleteOwnAccount()
       navigate('/acceder', { replace: true })
     } catch (err) {
-      setAccountErr(err.message)
+      notify('error', 'No se pudo guardar', err.message)
     }
   }
 
@@ -226,28 +219,6 @@ export default function AdminUsuarios() {
     })
     if (ok) removeMyself()
   }
-
-  // Un aviso a la vez, abajo: primero el error y, si no hay, el mensaje de éxito.
-  const toast =
-    error || accountErr
-      ? {
-          tone: 'error',
-          message: error || accountErr,
-          close: () => {
-            setError('')
-            setAccountErr('')
-          },
-        }
-      : notice || accountMsg
-        ? {
-            tone: 'ok',
-            message: notice || accountMsg,
-            close: () => {
-              setNotice('')
-              setAccountMsg('')
-            },
-          }
-        : null
 
   return (
     <section className="admin-page">
@@ -539,7 +510,7 @@ export default function AdminUsuarios() {
           ) : null}
         </section>
       </div>
-      {toast ? <AdminToast tone={toast.tone} message={toast.message} onClose={toast.close} /> : null}
+      {toast}
     </section>
   )
 }

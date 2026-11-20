@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
-import AdminToast from '../components/admin/AdminToast.jsx'
+import { useAdminToast } from '../lib/useAdminToast.jsx'
 import AdminNavSelect from '../components/admin/AdminNavSelect.jsx'
 import ImagePicker from '../components/admin/ImagePicker.jsx'
 import {
@@ -20,6 +20,7 @@ import { intervalSeconds, timingSeconds, todayKey, visibleSlides } from '../lib/
 import SocialIcon from '../components/ui/SocialIcon.jsx'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 import { useDialog } from '../lib/dialog.jsx'
+import { useUnsavedChanges } from '../lib/useUnsavedChanges.js'
 import { orderBySlugs } from '../lib/contentApi.js'
 import { mergeContent } from '../lib/pageContent.js'
 
@@ -1357,15 +1358,9 @@ export default function AdminPaginas() {
   const [picker, setPicker] = useState(null)
   // Expandir / Contraer todo: cada sección escucha el contador `n`.
   const [signal, setSignal] = useState({ open: false, n: 0 })
-  const [toast, setToast] = useState(null)
-  const toastSeq = useRef(0)
+  const { notify, toast } = useAdminToast()
   const [error, setError] = useState('')
   const { confirm } = useDialog()
-
-  const notify = (tone, title, message) => {
-    toastSeq.current += 1
-    setToast({ tone, title, message, key: toastSeq.current })
-  }
 
   useEffect(() => {
     let alive = true
@@ -1394,16 +1389,7 @@ export default function AdminPaginas() {
 
   // Avisa al salir con cambios sin guardar.
   const hasDirty = Object.values(dirty).some(Boolean)
-  useEffect(() => {
-    if (!hasDirty) return undefined
-    const onBeforeUnload = (event) => {
-      event.preventDefault()
-      event.returnValue = ''
-    }
-    window.addEventListener('beforeunload', onBeforeUnload)
-    return () => window.removeEventListener('beforeunload', onBeforeUnload)
-  }, [hasDirty])
-
+  useUnsavedChanges(hasDirty)
   const groups = useGroups(data?.sources)
 
   function select(key) {
@@ -1609,6 +1595,14 @@ export default function AdminPaginas() {
                     Restablecer diseño
                   </button>
                 ) : null}
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--primary"
+                  onClick={save}
+                  disabled={busy || !dirty[pageKey]}
+                >
+                  {busy ? 'Guardando…' : dirty[pageKey] ? 'Guardar cambios' : 'Sin cambios'}
+                </button>
               </div>
             </div>
 
@@ -1633,17 +1627,6 @@ export default function AdminPaginas() {
             {pageKey === 'buscador' ? <BuscadorEditor {...editorProps} /> : null}
             {pageKey === 'carrusel' ? <CarruselEditor {...editorProps} /> : null}
             {pageKey.startsWith('donde-') ? <CategoryEditor key={pageKey} pageKey={pageKey} {...editorProps} /> : null}
-
-            <div className="admin-panel__footer">
-              <button
-                type="button"
-                className="admin-btn admin-btn--primary"
-                onClick={save}
-                disabled={busy || !dirty[pageKey]}
-              >
-                {busy ? 'Guardando…' : `Guardar ${PAGE_INFO[pageKey].label}`}
-              </button>
-            </div>
           </div>
         ) : null}
       </div>
@@ -1656,15 +1639,7 @@ export default function AdminPaginas() {
         />
       ) : null}
 
-      {toast ? (
-        <AdminToast
-          key={toast.key}
-          tone={toast.tone}
-          title={toast.title}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      ) : null}
+      {toast}
     </section>
   )
 }

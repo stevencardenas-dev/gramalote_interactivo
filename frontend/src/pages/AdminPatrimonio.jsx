@@ -1,13 +1,13 @@
 import EditedDate from '../components/admin/EditedDate.jsx'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AdminToast from '../components/admin/AdminToast.jsx'
+import { useAdminToast } from '../lib/useAdminToast.jsx'
+import CoordinateInput from '../components/admin/CoordinateInput.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import Pagination from '../components/admin/Pagination.jsx'
 import { usePaged } from '../lib/usePaged.js'
 import { MAP_ICONS, mapIconUrl } from '../data/mapIcons.js'
 import { apiRequest, ensureSession } from '../lib/auth.js'
-import { useDialog } from '../lib/dialog.jsx'
 
 // Panel › Lugares › Patrimonio: bienes que tendrán ficha pública. Mientras la
 // ficha se completa, estos datos ya alimentan el pin y la tarjeta del mapa.
@@ -63,10 +63,8 @@ export default function AdminPatrimonio() {
   const [form, setForm] = useState(EMPTY)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [toast, setToast] = useState(null)
-  const { confirm } = useDialog()
+  const { notify, toast } = useAdminToast()
 
-  const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message })
 
   useEffect(() => {
     let alive = true
@@ -126,18 +124,11 @@ export default function AdminPatrimonio() {
     setBusy(true)
     setError('')
     try {
-      if (editing === 'new') {
-        const created = await apiRequest('/admin/heritage', { method: 'POST', body: form })
-        setItems((current) => [...(current ?? []), created])
-        setEditing(null)
-        navigate(`/admin/lugares/patrimonio/${created.id}`)
-        notify('ok', 'Patrimonio creado', `${created.name} ya aparece en el panel.`)
-      } else {
-        const updated = await apiRequest(`/admin/heritage/${editing}`, { method: 'PATCH', body: form })
-        setItems((current) => (current ?? []).map((item) => (item.id === updated.id ? updated : item)))
-        setEditing(null)
-        notify('ok', 'Cambios guardados', `${updated.name} quedó actualizado.`)
-      }
+      const created = await apiRequest('/admin/heritage', { method: 'POST', body: form })
+      setItems((current) => [...(current ?? []), created])
+      setEditing(null)
+      navigate(`/admin/lugares/patrimonio/${created.id}`)
+      notify('ok', 'Patrimonio creado', `${created.name} ya aparece en el panel.`)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -152,35 +143,13 @@ export default function AdminPatrimonio() {
         method: 'PATCH',
         body: { published: !item.published },
       })
-      setItems((current) => (current ?? []).map((entry) => (entry.id === updated.id ? updated : entry)))
+      setItems((current) => (current ?? []).map((entry) => (entry.id === updated.id ? { ...updated, coverUrl: entry.coverUrl } : entry)))
     } catch (err) {
       notify('error', 'No se pudo publicar', err.message)
     } finally {
       setBusy(false)
     }
   }
-
-  async function remove(item) {
-    const ok = await confirm({
-      title: `¿Borrar «${item.name}» del patrimonio?`,
-      message: 'No se puede deshacer.',
-      confirmLabel: 'Borrar',
-      danger: true,
-    })
-    if (!ok) return
-    setBusy(true)
-    try {
-      await apiRequest(`/admin/heritage/${item.id}`, { method: 'DELETE' })
-      setItems((current) => (current ?? []).filter((entry) => entry.id !== item.id))
-      if (editing === item.id) setEditing(null)
-    } catch (err) {
-      notify('error', 'No se pudo borrar', err.message)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const editingItem = editing && editing !== 'new' ? (items ?? []).find((item) => item.id === editing) : null
 
   return (
     <section className="admin-page">
@@ -227,7 +196,7 @@ export default function AdminPatrimonio() {
         {editing ? (
           <form className="admin-extras__form" onSubmit={save}>
             <div className="admin-extras__form-head">
-              <strong>{editing === 'new' ? 'Nuevo patrimonio' : editingItem?.name}</strong>
+              <strong>Nuevo patrimonio</strong>
               <button type="button" className="admin-btn" onClick={() => setEditing(null)}>
                 Cerrar
               </button>
@@ -273,11 +242,11 @@ export default function AdminPatrimonio() {
               </label>
               <label className="admin-field">
                 <span>Latitud</span>
-                <input value={form.latitude} onChange={set('latitude')} required inputMode="decimal" />
+                <CoordinateInput kind="lat" onPair={(latitude, longitude) => setForm((current) => ({ ...current, latitude, longitude }))} value={form.latitude} onChange={(value) => setForm((current) => ({ ...current, latitude: value }))} required />
               </label>
               <label className="admin-field">
                 <span>Longitud</span>
-                <input value={form.longitude} onChange={set('longitude')} required inputMode="decimal" />
+                <CoordinateInput kind="lng" onPair={(latitude, longitude) => setForm((current) => ({ ...current, latitude, longitude }))} value={form.longitude} onChange={(value) => setForm((current) => ({ ...current, longitude: value }))} required />
               </label>
               <label className="admin-field admin-extras__wide">
                 <span>Enlace de Google Maps</span>
@@ -301,18 +270,8 @@ export default function AdminPatrimonio() {
             </label>
             <div className="admin-extras__actions">
               <button type="submit" className="admin-btn admin-btn--primary" disabled={busy}>
-                {busy ? 'Guardando…' : 'Guardar'}
+                {busy ? 'Creando…' : 'Crear'}
               </button>
-              {editingItem ? (
-                <button
-                  type="button"
-                  className="admin-btn admin-btn--danger-outline"
-                  onClick={() => remove(editingItem)}
-                  disabled={busy}
-                >
-                  Borrar
-                </button>
-              ) : null}
             </div>
           </form>
         ) : null}
@@ -366,15 +325,7 @@ export default function AdminPatrimonio() {
         )}
         <Pagination {...paged} label="lugares" />
       </div>
-      {toast ? (
-        <AdminToast
-          key={toast.key}
-          tone={toast.tone}
-          title={toast.title}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      ) : null}
+      {toast}
     </section>
   )
 }

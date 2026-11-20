@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import AdminToast from '../components/admin/AdminToast.jsx'
+import { useAdminToast } from '../lib/useAdminToast.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import Pagination from '../components/admin/Pagination.jsx'
 import { usePaged } from '../lib/usePaged.js'
@@ -49,7 +49,7 @@ export default function AdminSugerencias() {
   const [items, setItems] = useState(null)
   const [filter, setFilter] = useState('')
   const [busy, setBusy] = useState(false)
-  const [toast, setToast] = useState(null)
+  const { notify, toast } = useAdminToast()
   const { confirm } = useDialog()
   // Primero las confirmadas, dentro de cada grupo por estado y de la más nueva
   // a la más vieja; el orden se mantiene al cambiar un estado sin recargar.
@@ -65,8 +65,6 @@ export default function AdminSugerencias() {
   const filtered = ordered.filter((entry) => !filter || entry.status === filter)
   const paged = usePaged(filtered)
 
-  const notify = (tone, title, message) => setToast({ key: Date.now(), tone, title, message })
-
   // Se cargan todas para que los conmutadores muestren cuántas hay de cada estado.
   const load = useCallback(async () => {
     setItems(await apiRequest('/admin/suggestions'))
@@ -80,7 +78,7 @@ export default function AdminSugerencias() {
     return () => {
       alive = false
     }
-  }, [load])
+  }, [load, notify])
 
   async function update(item, changes) {
     setBusy(true)
@@ -277,15 +275,7 @@ export default function AdminSugerencias() {
         )}
         <Pagination {...paged} label="sugerencias" />
       </div>
-      {toast ? (
-        <AdminToast
-          key={toast.key}
-          tone={toast.tone}
-          title={toast.title}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      ) : null}
+      {toast}
     </section>
   )
 }

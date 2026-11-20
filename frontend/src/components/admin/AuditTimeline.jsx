@@ -86,6 +86,7 @@ const ACTIONS = {
   update_media: { tone: 'coral', icon: 'image', title: 'Editó una foto' },
   delete_media: { tone: 'brick', icon: 'trash', title: 'Eliminó una imagen' },
   reorder_media: { tone: 'coral', icon: 'image', title: 'Reordenó las fotos' },
+  replace_media: { tone: 'coral', icon: 'image', title: 'Cambió una foto' },
 }
 
 const ICONS = {

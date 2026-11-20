@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import AdminSection from '../components/admin/AdminSection.jsx'
-import AdminToast from '../components/admin/AdminToast.jsx'
+import { useAdminToast } from '../lib/useAdminToast.jsx'
 import { apiRequest, ensureSession, getUser } from '../lib/auth.js'
 
 // Panel › Correo (solo administradores): la cuenta de Gmail que envía los
@@ -65,11 +65,8 @@ export default function AdminCorreo() {
   const [log, setLog] = useState([])
   const [busy, setBusy] = useState(false)
   const [testTo, setTestTo] = useState('')
-  const [toast, setToast] = useState(null)
+  const { notify, toast } = useAdminToast()
 
-  const notify = useCallback((tone, title, message) => {
-    setToast({ key: Date.now(), tone, title, message })
-  }, [])
 
   const load = useCallback(async () => {
     const [settings, entries] = await Promise.all([
@@ -314,15 +311,7 @@ export default function AdminCorreo() {
           </AdminSection>
         ) : null}
       </div>
-      {toast ? (
-        <AdminToast
-          key={toast.key}
-          tone={toast.tone}
-          title={toast.title}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      ) : null}
+      {toast}
     </section>
   )
 }

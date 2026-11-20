@@ -4,13 +4,17 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminSection from '../components/admin/AdminSection.jsx'
 import AdminLugaresTabs from '../components/admin/AdminLugaresTabs.jsx'
 import AdminDialog from '../components/admin/AdminDialog.jsx'
-import AdminToast from '../components/admin/AdminToast.jsx'
+import { useAdminToast } from '../lib/useAdminToast.jsx'
+import CoordinateInput from '../components/admin/CoordinateInput.jsx'
 import { focusLatitude, useNearbyCheck } from '../components/admin/NearbyCheck.jsx'
 import AuditTimeline from '../components/admin/AuditTimeline.jsx'
 import TipIconPicker from '../components/admin/TipIconPicker.jsx'
 import Pagination from '../components/admin/Pagination.jsx'
 import { usePaged } from '../lib/usePaged.js'
 import { useDialog } from '../lib/dialog.jsx'
+import { useUnsavedChanges } from '../lib/useUnsavedChanges.js'
+import AdminImageCard from '../components/admin/AdminImageCard.jsx'
+import { useImageDrafts } from '../lib/useImageDrafts.js'
 import RatingsPanel from '../components/admin/RatingsPanel.jsx'
 import MapIconPicker from '../components/admin/MapIconPicker.jsx'
 import ScheduleEditor from '../components/admin/ScheduleEditor.jsx'
@@ -139,8 +143,7 @@ export function AdminExperiencias() {
   const [draftCategory, setDraftCategory] = useState('')
   const [draftSummary, setDraftSummary] = useState('')
   const [dialog, setDialog] = useState(null)
-  const [toast, setToast] = useState(null)
-  const toastSeq = useRef(0)
+  const { notify, toast } = useAdminToast()
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -216,13 +219,7 @@ export function AdminExperiencias() {
       })
       navigate(`/admin/lugares/experiencias/${created.id}`)
     } catch (err) {
-      toastSeq.current += 1
-      setToast({
-        tone: 'error',
-        title: 'No se pudo crear la experiencia',
-        message: err.message,
-        key: toastSeq.current,
-      })
+      notify('error', 'No se pudo crear la experiencia', err.message)
     } finally {
       setCreating(false)
     }
@@ -360,15 +357,7 @@ export function AdminExperiencias() {
         <Pagination {...paged} label="experiencias" />
       </div>
 
-      {toast ? (
-        <AdminToast
-          key={toast.key}
-          tone={toast.tone}
-          title={toast.title}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      ) : null}
+      {toast}
 
       {dialog ? <AdminDialog {...dialog} onClose={() => setDialog(null)} /> : null}
     </section>
@@ -381,13 +370,16 @@ export function AdminExperiencia() {
   const navigate = useNavigate()
   const [form, setForm] = useState(isNew ? EMPTY : null)
   const [meta, setMeta] = useState({ categories: [], mapIcons: [] })
-  const [toast, setToast] = useState(null)
-  const toastSeq = useRef(0)
+  const { notify, toast } = useAdminToast()
   const [busy, setBusy] = useState(false)
   const [published, setPublished] = useState(false)
   // Como en Patrimonio: el botón solo se activa cuando hay algo nuevo que guardar.
   const [baseline, setBaseline] = useState(null)
   const dirty = isNew || (form !== null && editableJson(form) !== baseline)
+  // Una experiencia nueva solo cuenta como «con cambios» si se escribió algo.
+  const hasChanges = form !== null && editableJson(form) !== (isNew ? editableJson(EMPTY) : baseline)
+  const imageDrafts = useImageDrafts()
+  const { allowLeave } = useUnsavedChanges(hasChanges || imageDrafts.anyDirty)
   const [dialog, setDialog] = useState(null)
   const [tab, setTab] = useState('info')
   const nearby = useNearbyCheck({
@@ -399,6 +391,7 @@ export function AdminExperiencia() {
   const [signal, setSignal] = useState({ open: true, n: 0 })
   // Evita que un doble aviso del selector de archivos suba la misma foto dos veces.
   const uploadGuard = useRef(false)
+  const fileInput = useRef(null)
   const { confirm } = useDialog()
 
   useEffect(() => {
@@ -420,14 +413,14 @@ export function AdminExperiencia() {
         }
       } catch (err) {
         if (alive) {
-          setToast({ tone: 'error', title: 'No se pudo cargar la experiencia', message: err.message })
+          notify('error', 'No se pudo cargar la experiencia', err.message)
         }
       }
     })()
     return () => {
       alive = false
     }
-  }, [id, isNew])
+  }, [id, isNew, notify])
 
   if (!form) {
     return (
@@ -449,18 +442,15 @@ export function AdminExperiencia() {
 
   // Todo aviso del editor pasa por el mismo popup con barra de 8 segundos. El
   // contador hace que cada aviso se monte de nuevo y reinicie su barra.
-  const notify = (tone, title, message) => {
-    toastSeq.current += 1
-    setToast({ tone, title, message, key: toastSeq.current })
-  }
-
   async function run(task, ok) {
     setBusy(true)
     try {
       await task()
       if (ok) notify('ok', ok)
+      return true
     } catch (err) {
       notify('error', 'No se pudo guardar', err.message)
+      return false
     } finally {
       setBusy(false)
     }
@@ -483,6 +473,7 @@ export function AdminExperiencia() {
     run(async () => {
       if (isNew) {
         const created = await apiRequest('/admin/experiences', { method: 'POST', body: form })
+        allowLeave()
         navigate(`/admin/lugares/experiencias/${created.id}`, { replace: true })
       } else {
         const saved = await apiRequest(`/admin/experiences/${id}`, { method: 'PUT', body: form })
@@ -505,6 +496,7 @@ export function AdminExperiencia() {
     if (!ok) return
     run(async () => {
       await apiRequest(`/admin/experiences/${id}`, { method: 'DELETE' })
+      allowLeave()
       navigate('/admin/lugares/experiencias')
     })
   }
@@ -531,10 +523,26 @@ export function AdminExperiencia() {
     })
   }
 
-  const imageAction = (image, method, body) =>
+  const imageAction = (image, method, body, ok) =>
     run(async () => {
       setForm(await apiRequest(`/admin/experiences/${id}/images/${image.imageId}`, { method, body }))
+    }, ok)
+
+  const replaceImage = (image, file) =>
+    run(async () => {
+      const data = new FormData()
+      data.append('file', file)
+      setForm(await apiRequest(`/admin/experiences/${id}/images/${image.imageId}/file`, { method: 'PUT', formData: data }))
+    }, 'Foto cambiada.')
+
+  const moveImage = (index, delta) => {
+    const ids = form.images.map((image) => image.imageId)
+    const [moved] = ids.splice(index, 1)
+    ids.splice(index + delta, 0, moved)
+    return run(async () => {
+      setForm(await apiRequest(`/admin/experiences/${id}/images/order`, { method: 'PUT', body: { ids } }))
     })
+  }
 
   const togglePublish = () => {
     const next = !form.published
@@ -686,10 +694,10 @@ export function AdminExperiencia() {
                     <input value={form.mapsUrl} onChange={set('mapsUrl')} placeholder="https://maps.app.goo.gl/…" />
                   </Field>
                   <Field label="Latitud">
-                    <input data-field="latitude" inputMode="decimal" value={form.latitude ?? ''} onChange={set('latitude')} placeholder="7.9174" />
+                    <CoordinateInput data-field="latitude" kind="lat" onPair={(latitude, longitude) => setForm((current) => ({ ...current, latitude, longitude }))} value={form.latitude} onChange={(value) => setForm((current) => ({ ...current, latitude: value }))} />
                   </Field>
                   <Field label="Longitud">
-                    <input inputMode="decimal" value={form.longitude ?? ''} onChange={set('longitude')} placeholder="-72.7879" />
+                    <CoordinateInput kind="lng" onPair={(latitude, longitude) => setForm((current) => ({ ...current, latitude, longitude }))} value={form.longitude} onChange={(value) => setForm((current) => ({ ...current, longitude: value }))} />
                   </Field>
                 </div>
                 <MapIconPicker
@@ -748,10 +756,15 @@ export function AdminExperiencia() {
                     </p>
                   </div>
                   <div>
-                    <label className="admin-btn admin-btn--accent">
+                    <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={uploadImage} />
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--accent"
+                      disabled={busy}
+                      onClick={() => fileInput.current?.click()}
+                    >
                       {busy ? 'Subiendo…' : '+ Subir imágenes'}
-                      <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={uploadImage} disabled={busy} />
-                    </label>
+                    </button>
                   </div>
                 </div>
 
@@ -759,41 +772,25 @@ export function AdminExperiencia() {
                   <p className="empty">Todavía no hay imágenes. Sube la primera como portada.</p>
                 ) : (
                   <ul className="admin-media__grid">
-                    {form.images.map((image) => (
-                      <li key={image.imageId} className="admin-media__item">
-                        <div className="admin-media__shot">
-                          <img src={image.url} alt={image.alt} loading="lazy" />
-                          <span className={`admin-badge ${image.role === 'cover' ? 'admin-badge--ok' : ''}`}>
-                            {image.role === 'cover' ? 'Portada' : 'Galería'}
-                          </span>
-                          {image.width ? (
-                            <span className="admin-media__dims">
-                              {image.width}×{image.height}
-                            </span>
-                          ) : null}
-                        </div>
-                        <input
-                          className="admin-media__alt"
-                          aria-label="Texto alternativo"
-                          defaultValue={image.alt}
-                          placeholder="Texto alternativo (accesibilidad)"
-                          onBlur={(e) => e.target.value !== image.alt && imageAction(image, 'PATCH', { altText: e.target.value })}
-                        />
-                        <div className="admin-media__actions">
-                          <select
-                            aria-label="Uso de la imagen"
-                            value={image.role === 'cover' ? 'cover' : 'gallery'}
-                            disabled={busy}
-                            onChange={(e) => imageAction(image, 'PATCH', { role: e.target.value })}
-                          >
-                            <option value="cover">Portada</option>
-                            <option value="gallery">Galería</option>
-                          </select>
-                          <button type="button" aria-label="Quitar imagen" disabled={busy} onClick={() => imageAction(image, 'DELETE')}>
-                            ✕
-                          </button>
-                        </div>
-                      </li>
+                    {form.images.map((image, index) => (
+                      <AdminImageCard
+                        key={image.imageId}
+                        image={image}
+                        index={index}
+                        total={form.images.length}
+                        roles={['cover', 'gallery']}
+                        roleLabels={{ cover: 'Portada', gallery: 'Galería' }}
+                        roleValue={image.role === 'cover' ? 'cover' : 'gallery'}
+                        badgeOk={image.role === 'cover'}
+                        busy={busy}
+                        draftKey={image.imageId}
+                        onDraftChange={imageDrafts.report}
+                        onSave={(img, draft) => imageAction(img, 'PATCH', { altText: draft.alt }, 'Foto actualizada.')}
+                        onRole={(img, role) => imageAction(img, 'PATCH', { role })}
+                        onMove={moveImage}
+                        onReplace={replaceImage}
+                        onRemove={(img) => imageAction(img, 'DELETE')}
+                      />
                     ))}
                   </ul>
                 )}
@@ -908,15 +905,7 @@ export function AdminExperiencia() {
         </form>
       </div>
 
-      {toast ? (
-        <AdminToast
-          key={toast.key}
-          tone={toast.tone}
-          title={toast.title}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      ) : null}
+      {toast}
 
       {nearby.element}
 

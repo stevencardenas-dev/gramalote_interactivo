@@ -1,5 +1,5 @@
 import { useModalFocus } from '../../lib/useModalFocus.js'
-import { useId, useMemo, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 
 // Popup para elegir una foto de las galerías de las fichas (Páginas). Muestra
 // las fotos agrupadas por ficha, con la elegida marcada; opcionalmente permite
@@ -21,6 +21,7 @@ export default function ImagePicker({
   const titleId = useId()
   const [filter, setFilter] = useState('')
   const [uploading, setUploading] = useState(false)
+  const fileInput = useRef(null)
   const [error, setError] = useState('')
 
   const panelRef = useModalFocus(onClose)
@@ -88,16 +89,23 @@ export default function ImagePicker({
             </button>
           ) : null}
           {onUpload ? (
-            <label className="admin-btn admin-btn--accent">
-              {uploading ? 'Subiendo…' : '+ Subir imagen'}
+            <>
               <input
+                ref={fileInput}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 hidden
                 onChange={handleUpload}
-                disabled={uploading}
               />
-            </label>
+              <button
+                type="button"
+                className="admin-btn admin-btn--accent"
+                disabled={uploading}
+                onClick={() => fileInput.current?.click()}
+              >
+                {uploading ? 'Subiendo…' : '+ Subir imagen'}
+              </button>
+            </>
           ) : null}
         </div>
         {error ? <p className="auth-error" role="alert">{error}</p> : null}
