@@ -1,4 +1,25 @@
-/* Panel de administración: listado y editor de establecimientos. */
+/* ==========================================================================
+   Estilos del panel de administración (/admin). Se cargan en este orden, desde main.jsx:
+
+   1. admin.css        Estilos de partida del panel: estructura de las páginas, listados,
+                       formularios y editores. Usa los tokens globales (tokens.css).
+   2. admin-panel.css  La hoja principal del panel: define las variables --a-* (paleta
+                       del panel, tema oscuro por defecto) y la mayor parte de los
+                       componentes: botones (.admin-btn), campos, tarjetas, diálogos,
+                       avisos, encuadre de fotos… Todo cuelga de .admin-app y por eso
+                       gana en especificidad a admin.css. (Antes se llamaba admin-dark.css,
+                       pero no es solo el tema oscuro.)
+   3. admin-light.css  Tema claro: se activa con <html data-admin-theme='light'> y solo
+                       redefine variables y corrige los pocos colores escritos a mano.
+
+   Al añadir estilos al panel:
+   - Usa las variables --a-* y no colores sueltos: así el tema claro y el oscuro cambian
+     solos y no hace falta un parche en admin-light.css.
+   - Si un selector ya existe en otro de estos archivos, edítalo allí en vez de
+     redefinirlo: el resultado dependería del orden de carga.
+   ========================================================================== */
+
+/* Listado y editor de establecimientos. */
 
 .admin-page {
   padding-block: 40px 72px;
@@ -238,6 +259,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
+}
+
+.admin-field--wide {
+  grid-column: 1 / -1;
 }
 
 .admin-field {

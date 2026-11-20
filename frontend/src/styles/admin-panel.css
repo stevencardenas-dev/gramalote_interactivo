@@ -1,4 +1,5 @@
-/* Panel oscuro con la paleta de Gramalote (azul noche, crema y dorado).
+/* Hoja principal del panel (ver el índice de archivos al inicio de admin.css).
+   Paleta de Gramalote en oscuro (azul noche, crema y dorado) como tema por defecto.
    Todo cuelga de .admin-app, que Layout pone solo en las rutas /admin y que
    se carga después de admin.css para ganar en especificidad. */
 

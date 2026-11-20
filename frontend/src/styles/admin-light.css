@@ -1,5 +1,5 @@
 /* Tema claro del panel de administración.
-   Se carga después de admin-dark.css y solo aplica con
+   Se carga después de admin-panel.css y solo aplica con
    <html data-admin-theme="light">, que pone src/lib/adminTheme.js. El tema
    oscuro (el de siempre) queda intacto; aquí solo se redefinen las variables
    del panel y las pocas reglas que llevan color fijo a mano. El fondo es un

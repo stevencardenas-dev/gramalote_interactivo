@@ -30,7 +30,7 @@ function paint(theme) {
 
 // Al cambiar de tema el nuevo aspecto se abre como un círculo desde el botón
 // (API de transiciones de vista). Si el navegador no la tiene, los colores se
-// funden con una clase temporal en <html> (ver admin-dark.css). Con «reducir
+// funden con una clase temporal en <html> (ver admin-panel.css). Con «reducir
 // movimiento» el cambio es instantáneo.
 const FADE_MS = 500
 let fadeTimer = 0

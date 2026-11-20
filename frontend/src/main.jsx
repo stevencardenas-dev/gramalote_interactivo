@@ -18,7 +18,7 @@ import './styles/historia.css'
 import './styles/mejoras.css'
 import './styles/dialog.css'
 import './styles/admin.css'
-import './styles/admin-dark.css'
+import './styles/admin-panel.css'
 import './styles/admin-light.css'
 
 // Tema guardado del panel, puesto antes del primer pintado.
