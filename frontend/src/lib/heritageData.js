@@ -31,7 +31,6 @@ function fromRemote(remote, base, index) {
     visit: remote.visit ?? null,
     hoursText: remote.hoursText ?? null,
     address: remote.address ?? null,
-    period: remote.period ?? null,
     sources: remote.sources ?? null,
     mapsUrl: remote.mapsUrl ?? base?.mapsUrl ?? null,
     coords: remote.coords ?? base?.coords,

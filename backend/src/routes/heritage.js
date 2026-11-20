@@ -80,7 +80,6 @@ function serialize(row, images = []) {
       : null,
     hoursText: row.hours_text ?? null,
     address: row.address ?? null,
-    period: row.historical_period ?? null,
     sources: row.sources ?? null,
     mapsUrl: row.maps_url ?? null,
     coords: Number.isFinite(Number(row.latitude)) ? [Number(row.longitude), Number(row.latitude)] : null,

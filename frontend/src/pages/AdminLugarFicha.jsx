@@ -240,27 +240,16 @@ function Field({ spec, value, onChange }) {
       </span>
     )
   } else {
-    const listId = spec.list ? `list-${spec.key}` : undefined
     control = (
-      <>
-        <input
-          data-field={spec.key}
-          type={spec.type ?? 'text'}
-          step={spec.step}
-          list={listId}
-          placeholder={spec.placeholder}
-          value={value ?? ''}
-          onChange={(event) => onChange(event.target.value)}
-          {...common}
-        />
-        {spec.list ? (
-          <datalist id={listId}>
-            {spec.list.map((item) => (
-              <option key={item} value={item} />
-            ))}
-          </datalist>
-        ) : null}
-      </>
+      <input
+        data-field={spec.key}
+        type={spec.type ?? 'text'}
+        step={spec.step}
+        placeholder={spec.placeholder}
+        value={value ?? ''}
+        onChange={(event) => onChange(event.target.value)}
+        {...common}
+      />
     )
   }
 

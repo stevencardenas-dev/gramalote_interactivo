@@ -81,7 +81,6 @@ export default function HistoriaPatrimonioFicha() {
                 <div className="his-tags">
                   <span className={`his-tag his-tag--${ZONE_TONE[site.zone]}`}>{site.zoneTag ?? site.zoneLabel}</span>
                   <span className="his-tag his-tag--cat">{site.category}</span>
-                  {site.period ? <span className="his-tag his-tag--cat">{site.period}</span> : null}
                 </div>
                 <h1>{site.name}</h1>
                 <p className="his-ficha__intro">{site.intro}</p>
