@@ -756,3 +756,29 @@ button.stars__button:focus-visible {
   .rating-result__bit { animation: none; }
   .rating-result__bit { opacity: 0; }
 }
+
+/* Fotos de contenido completas, sin recortes (las marca lib/imageOrientation.js
+   con data-blur en su marco). La foto se ajusta entera (contain) y el hueco que
+   deja su proporción se rellena con la misma foto desenfocada, no con una franja
+   lisa. Héroes y fondos a todo ancho no entran: siguen llenando el marco. */
+[data-blur] {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+[data-blur]::before {
+  content: '';
+  position: absolute;
+  inset: -24px;
+  z-index: -1;
+  background: var(--blur-img) center / cover no-repeat;
+  filter: blur(22px) saturate(1.1) brightness(0.92);
+  pointer-events: none;
+}
+
+[data-blur][data-blur] > img[src],
+[data-blur][data-blur] > picture > img {
+  object-fit: contain;
+  background: transparent;
+}

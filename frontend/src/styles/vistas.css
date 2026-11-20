@@ -85,12 +85,12 @@
   grid-column: span 3;
 }
 
-/* Con más o menos experiencias, ninguna tarjeta queda sola en una esquina:
-   la última de una fila incompleta ocupa todo el ancho y, si solo hay dos,
-   se reparten la fila. */
+/* Con más o menos experiencias, la tarjeta que queda sola en su fila no se
+   estira: conserva el ancho normal (2 de 6 columnas) y se centra. Si solo hay
+   dos, se reparten la fila. */
 .activity-card:only-child,
 .activity-card:nth-child(n + 4):nth-child(even):last-child {
-  grid-column: 1 / -1;
+  grid-column: 3 / span 2;
 }
 
 .activity-card:first-child:nth-last-child(2),
@@ -1121,8 +1121,11 @@
     grid-column: span 1;
   }
 
+  /* Sola en su fila: mismo ancho que las demás y centrada, sin estirarse. */
   .activity-card:nth-child(odd):last-child {
     grid-column: 1 / -1;
+    justify-self: center;
+    width: calc((100% - clamp(20px, 3vw, 40px)) / 2);
   }
 
   .tips__grid {
