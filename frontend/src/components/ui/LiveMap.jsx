@@ -624,11 +624,7 @@ export default function LiveMap({
                       <strong>{place.name}</strong>
                       <span className="mapa-lugar__sub">{placeSubtitle(place)}</span>
                       <span className="mapa-lugar__pie">
-                        {place.kind === 'extra' || place.kind === 'heritage' ? (
-                          place.kind === 'heritage' ? null : (
-                            <span className="mapa-lugar__sin-ficha">Sin ficha · solo mapa</span>
-                          )
-                        ) : (
+                        {place.kind === 'extra' || place.kind === 'heritage' ? null : (
                           <>
                             <svg className="mapa-lugar__estrella" viewBox="0 0 24 24" aria-hidden="true">
                               <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z" />

@@ -1197,11 +1197,6 @@
   font-size: 0.8rem;
 }
 
-.mapa-lugar__sin-ficha {
-  color: var(--c-muted);
-  font-size: 0.8rem;
-}
-
 /* Lista: fichas bajas, con el icono del lugar a la derecha en vez de color */
 .mapa-panel__lista {
   gap: 6px;
