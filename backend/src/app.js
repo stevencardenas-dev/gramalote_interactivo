@@ -20,6 +20,7 @@ import establishmentsRouter from './routes/establishments.js'
 import experiencesRouter from './routes/experiences.js'
 import historyRouter from './routes/history.js'
 import mapRouter from './routes/map.js'
+import mediaCropsRouter from './routes/media-crops.js'
 import metaRouter from './routes/meta.js'
 import pagesRouter from './routes/pages.js'
 import practicalRouter from './routes/practical.js'
@@ -158,6 +159,7 @@ app.use(
   practicalRouter,
   ratingsRouter,
   mapRouter,
+  mediaCropsRouter,
   searchRouter,
 )
 
