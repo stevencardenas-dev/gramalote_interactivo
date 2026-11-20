@@ -4740,3 +4740,20 @@ kbd {
     padding-bottom: calc(8px + 6dvh);
   }
 }
+
+/* Móvil, encaje obligatorio:
+   - El encabezado del capítulo empieza bajo el menú fijo (y = 72): sin este
+     margen su punto de encaje era 72 y, al llegar arriba del todo, la página
+     bajaba sola un poco. Con él, el punto de encaje es el borde superior.
+   - La barra de secciones deja de ser punto de encaje: estaba entre el
+     encabezado y el primer acontecimiento y la página se detenía ahí, a
+     medio camino. */
+@media (max-width: 980px) {
+  .his-deck .his-cap-hero {
+    scroll-margin-top: var(--header-h);
+  }
+
+  .his-deck .his-nav {
+    scroll-snap-align: none;
+  }
+}
