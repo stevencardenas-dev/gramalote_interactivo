@@ -361,9 +361,9 @@ export default function HistoriaCapitulo() {
         grupos.forEach((grupo) => grupo.style.removeProperty('--off'))
         return
       }
-      // Alto útil: bajo el menú y hasta el borde inferior (100svh en el CSS).
+      // Alto útil: bajo el menú y hasta el borde inferior (100dvh en el CSS).
       const sonda = document.createElement('div')
-      sonda.style.cssText = 'position:fixed;top:0;height:100svh;visibility:hidden;pointer-events:none'
+      sonda.style.cssText = 'position:fixed;top:0;height:100dvh;visibility:hidden;pointer-events:none'
       document.body.appendChild(sonda)
       const pantalla = sonda.getBoundingClientRect().height
       sonda.remove()
