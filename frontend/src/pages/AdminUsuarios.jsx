@@ -288,7 +288,7 @@ export default function AdminUsuarios() {
             <p className="note">Cargando…</p>
           ) : (
             <>
-            <ul className="admin-rows admin-urows">
+            <ul className="admin-rows">
               {paged.pageItems.map((user) => {
                 const isMe = user.id === me?.id
                 const isNewer = user.id > (me?.id ?? 0)

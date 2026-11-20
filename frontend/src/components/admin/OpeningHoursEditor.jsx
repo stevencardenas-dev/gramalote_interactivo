@@ -247,7 +247,7 @@ export default function OpeningHoursEditor({ hours, exceptions, onChange, onExce
 
         <button
           type="button"
-          className="admin-hours__add admin-hours__add--wide"
+          className="admin-hours__add"
           onClick={() => onExceptionsChange([...exceptions, { date: '', closed: true, note: '' }])}
         >
           + Excepción

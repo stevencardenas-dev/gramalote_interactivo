@@ -18,7 +18,7 @@ export default function AdminLugaresTabs() {
 
   return (
     <>
-      <nav className="admin-tabs admin-tabs--tipos admin-only-wide" aria-label="Tipos de lugar">
+      <nav className="admin-tabs admin-only-wide" aria-label="Tipos de lugar">
         {TIPOS.map((tipo) => (
           <NavLink key={tipo.to} to={tipo.to} className="admin-tab">
             {tipo.label}

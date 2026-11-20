@@ -22,6 +22,7 @@ import { resolveMapIcon } from '../data/mapIcons.js'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 import { framesForExperienceImage } from '../lib/photoFrames.js'
 import { IMAGE_ACCEPT, IMAGE_RULES_SHORT, checkImageFiles } from '../lib/imageUpload.js'
+import { PHOTO_NOTICE } from '../lib/photoMessages.js'
 
 const TABS = [
   { key: 'info', label: 'Información' },
@@ -445,7 +446,7 @@ export function AdminExperiencia() {
     setBusy(true)
     try {
       await task()
-      if (ok) notify('ok', ok)
+      if (ok) notify('ok', ...(Array.isArray(ok) ? ok : [ok]))
       return true
     } catch (err) {
       notify('error', 'No se pudo guardar', err.message)
@@ -522,7 +523,7 @@ export function AdminExperiencia() {
       }
       // La lista se relee del servidor: es la que manda para el contador.
       setForm(await apiRequest(`/admin/experiences/${id}`))
-    }, files.length === 1 ? 'Imagen subida.' : `${files.length} imágenes subidas.`).finally(() => {
+    }, PHOTO_NOTICE.uploaded(files.length)).finally(() => {
       uploadGuard.current = false
     })
   }
@@ -542,7 +543,7 @@ export function AdminExperiencia() {
       const data = new FormData()
       data.append('file', file)
       setForm(await apiRequest(`/admin/experiences/${id}/images/${image.imageId}/file`, { method: 'PUT', formData: data }))
-    }, 'Foto cambiada.')
+    }, PHOTO_NOTICE.replaced)
   }
 
   const moveImage = (index, delta) => {
@@ -773,14 +774,14 @@ export function AdminExperiencia() {
                       disabled={busy}
                       onClick={() => fileInput.current?.click()}
                     >
-                      {busy ? 'Subiendo…' : '+ Subir imágenes'}
+                      {busy ? 'Subiendo…' : '+ Subir fotos'}
                     </button>
                     <p className="admin-hint admin-media__rules">{IMAGE_RULES_SHORT}</p>
                   </div>
                 </div>
 
                 {form.images.length === 0 ? (
-                  <p className="empty">Todavía no hay imágenes. Sube la primera como portada.</p>
+                  <p className="empty">Todavía no hay fotos. Sube la primera como portada.</p>
                 ) : (
                   <ul className="admin-media__grid">
                     {form.images.map((image, index) => (
@@ -796,7 +797,7 @@ export function AdminExperiencia() {
                         busy={busy}
                         draftKey={image.imageId}
                         onDraftChange={imageDrafts.report}
-                        onSave={(img, draft) => imageAction(img, 'PATCH', { altText: draft.alt }, 'Foto actualizada.')}
+                        onSave={(img, draft) => imageAction(img, 'PATCH', { altText: draft.alt }, PHOTO_NOTICE.updated)}
                         onRole={(img, role) => imageAction(img, 'PATCH', { role })}
                         frames={framesForExperienceImage({
                           role: image.role,
@@ -804,7 +805,7 @@ export function AdminExperiencia() {
                         })}
                         onMove={moveImage}
                         onReplace={replaceImage}
-                        onRemove={(img) => imageAction(img, 'DELETE')}
+                        onRemove={(img) => imageAction(img, 'DELETE', undefined, PHOTO_NOTICE.removed)}
                       />
                     ))}
                   </ul>

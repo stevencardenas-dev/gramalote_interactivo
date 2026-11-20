@@ -9,7 +9,7 @@ import { useId, useMemo, useRef, useState } from 'react'
 // groups: [{ key, label, note?, images: [{ url, alt }] }]
 // onPick({ url, alt, from }) — `from` es el nombre del grupo (la ficha).
 export default function ImagePicker({
-  title = 'Elegir imagen',
+  title = 'Elegir foto',
   hint,
   groups,
   current,
@@ -109,7 +109,7 @@ export default function ImagePicker({
                 disabled={uploading}
                 onClick={() => fileInput.current?.click()}
               >
-                {uploading ? 'Subiendo…' : '+ Subir imagen'}
+                {uploading ? 'Subiendo…' : '+ Subir foto'}
               </button>
             </>
           ) : null}

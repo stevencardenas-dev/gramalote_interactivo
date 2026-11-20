@@ -14,6 +14,7 @@ import AdminImageCard from '../components/admin/AdminImageCard.jsx'
 import ImageFraming from '../components/admin/ImageFraming.jsx'
 import { framesForEstablishmentImage } from '../lib/photoFrames.js'
 import { IMAGE_ACCEPT, IMAGE_RULES_SHORT, checkImageFiles } from '../lib/imageUpload.js'
+import { PHOTO_NOTICE } from '../lib/photoMessages.js'
 import { useImageDrafts } from '../lib/useImageDrafts.js'
 import { resolveMapIcon } from '../data/mapIcons.js'
 
@@ -401,12 +402,13 @@ export default function AdminEstablecimiento() {
         await apiRequest('/admin/media', { method: 'POST', formData: data })
       }
       await reloadImages()
+      const [title, message] = PHOTO_NOTICE.uploaded(files.length)
       notify(
         'ok',
-        'Guardado',
+        title,
         toHero > 0
-          ? `Imágenes subidas. La galería ya tenía ${galleryLimit} fotos: ${toHero === 1 ? 'la nueva quedó' : `${toHero} quedaron`} como encabezado.`
-          : 'Imágenes subidas.',
+          ? `${message} La galería ya tenía ${galleryLimit} fotos: ${toHero === 1 ? 'la nueva quedó' : `${toHero} quedaron`} como encabezado.`
+          : message,
       )
     } catch (err) {
       notify('error', 'No se pudo guardar', err.message)
@@ -449,7 +451,7 @@ export default function AdminEstablecimiento() {
         ...current,
         images: current.images.map((item) => (item.mediaId === image.mediaId ? { ...item, alt: altText } : item)),
       }))
-      notify('ok', 'Guardado', 'Foto actualizada.')
+      notify('ok', ...PHOTO_NOTICE.updated)
       return true
     } catch (err) {
       notify('error', 'No se pudo guardar', err.message)
@@ -498,7 +500,7 @@ export default function AdminEstablecimiento() {
       data.append('file', file)
       await apiRequest(`/admin/establishments/${id}/images/${image.imageId}/file`, { method: 'PUT', formData: data })
       await reloadImages()
-      notify('ok', 'Guardado', 'Foto cambiada.')
+      notify('ok', ...PHOTO_NOTICE.replaced)
     } catch (err) {
       notify('error', 'No se pudo guardar', err.message)
     } finally {
@@ -514,7 +516,7 @@ export default function AdminEstablecimiento() {
         method: 'DELETE',
       })
       await reloadImages()
-      notify('ok', 'Guardado', 'Imagen quitada de la ficha. Sigue en la biblioteca de medios.')
+      notify('ok', ...PHOTO_NOTICE.removed)
     } catch (err) {
       notify('error', 'No se pudo guardar', err.message)
     } finally {
@@ -866,14 +868,14 @@ export default function AdminEstablecimiento() {
                     disabled={uploading}
                     onClick={() => fileInput.current?.click()}
                   >
-                    {uploading ? 'Subiendo…' : '+ Subir imágenes'}
+                    {uploading ? 'Subiendo…' : '+ Subir fotos'}
                   </button>
                   <p className="admin-hint admin-media__rules">{IMAGE_RULES_SHORT}</p>
                 </div>
               </div>
 
               {form.images.length === 0 ? (
-                <p className="empty">Todavía no hay imágenes. Sube la primera como portada.</p>
+                <p className="empty">Todavía no hay fotos. Sube la primera como portada.</p>
               ) : (
                 <ul className="admin-media__grid">
                   {form.images.map((image, index) => (

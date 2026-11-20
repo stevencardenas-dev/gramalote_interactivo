@@ -1251,7 +1251,7 @@ function CarruselEditor({ draft, update, sources, groups, openPicker, signal, up
                     onClick={async () => {
                       const ok = await confirm({
                         title: `¿Quitar «${name}» del carrusel?`,
-                        message: 'La imagen deja de aparecer en el inicio.',
+                        message: 'La foto deja de aparecer en el inicio.',
                         confirmLabel: 'Quitar',
                         danger: true,
                       })

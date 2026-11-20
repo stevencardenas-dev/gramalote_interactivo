@@ -203,7 +203,7 @@ export default function Admin() {
                   <p className="admin-search__empty">Sin coincidencias para «{query.trim()}».</p>
                 ) : (
                   shownGroups.map((group) => (
-                    <div key={group.key} className="admin-search__group" role="group" aria-label={group.label}>
+                    <div key={group.key} role="group" aria-label={group.label}>
                       <p className="admin-search__label">{group.label}</p>
                       {group.items.map((item) => {
                         const index = flat.indexOf(item)

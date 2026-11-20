@@ -13,6 +13,7 @@ import AdminImageCard from '../components/admin/AdminImageCard.jsx'
 import ImageFraming from '../components/admin/ImageFraming.jsx'
 import { framesForExtraImage, framesForHeritageImage } from '../lib/photoFrames.js'
 import { IMAGE_ACCEPT, IMAGE_RULES, checkImageFiles } from '../lib/imageUpload.js'
+import { PHOTO_NOTICE } from '../lib/photoMessages.js'
 import { useImageDrafts } from '../lib/useImageDrafts.js'
 
 // Ficha editable de un Patrimonio o de un Extra (Panel › Lugares), con las mismas
@@ -204,11 +205,10 @@ function pickFields(kind, data) {
 
 function Field({ spec, value, onChange, onPair }) {
   const common = { required: spec.required, maxLength: spec.max }
-  const style = spec.wide ? { gridColumn: '1 / -1' } : undefined
 
   if (spec.type === 'checkbox') {
     return (
-      <label className="admin-field admin-field--check" style={style}>
+      <label className={`admin-field admin-field--check${spec.wide ? ' admin-field--wide' : ''}`}>
         <input type="checkbox" checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} />
         <span>{spec.label}</span>
       </label>
@@ -261,7 +261,7 @@ function Field({ spec, value, onChange, onPair }) {
   }
 
   return (
-    <label className="admin-field" style={style}>
+    <label className={`admin-field${spec.wide ? ' admin-field--wide' : ''}`}>
       <span>{spec.label}</span>
       {control}
       {spec.help ? <small className="admin-hint">{spec.help}</small> : null}
@@ -312,7 +312,7 @@ function PlaceImageCard({ image, index, total, roles, busy, frames = [], onSave,
               ))}
             </select>
           </label>
-          <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
+          <label className="admin-field admin-field--wide">
             <span>Texto alternativo (describe la foto)</span>
             <input value={draft.altText} onChange={set('altText')} maxLength={255} />
           </label>
@@ -467,7 +467,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
       applyImages(detail)
       if (fileInput.current) fileInput.current.value = ''
       setUpload((current) => ({ ...current, eraLabel: '', altText: '', caption: '', credit: '' }))
-      notify('ok', 'Foto subida', 'Ya forma parte de la ficha.')
+      notify('ok', ...PHOTO_NOTICE.uploaded())
     } catch (err) {
       setError(err.message)
     } finally {
@@ -480,7 +480,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
     setError('')
     try {
       applyImages(await apiRequest(`${kind.api}/${id}/images/${image.id}`, { method: 'PATCH', body: draft }))
-      notify('ok', 'Foto actualizada', 'Los cambios de la foto quedaron guardados.')
+      notify('ok', ...PHOTO_NOTICE.updated)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -501,7 +501,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
       const data = new FormData()
       data.append('file', file)
       applyImages(await apiRequest(`${kind.api}/${id}/images/${image.id}/file`, { method: 'PUT', formData: data }))
-      notify('ok', 'Foto cambiada', 'Se mantuvieron su uso, su orden y sus textos.')
+      notify('ok', ...PHOTO_NOTICE.replaced)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -538,6 +538,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
     setBusyImage(true)
     try {
       applyImages(await apiRequest(`${kind.api}/${id}/images/${image.id}`, { method: 'DELETE' }))
+      notify('ok', ...PHOTO_NOTICE.removed)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -691,7 +692,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
               ) : (
                 <AdminSection title="Subir una foto" hint={kindKey === 'extras' ? 'Elige el archivo: será la foto de su tarjeta en el mapa.' : 'Elige el archivo y dile a la ficha para qué sirve.'} defaultOpen>
                   <div className="admin-grid">
-                    <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
+                    <label className="admin-field admin-field--wide">
                       <span>Archivo ({IMAGE_RULES.replace(/.$/, '')})</span>
                       <input ref={fileInput} type="file" accept={IMAGE_ACCEPT} />
                     </label>
@@ -711,7 +712,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
                     {/* Un extra solo necesita la foto: sin texto alternativo, pie ni crédito. */}
                     {kindKey === 'heritage' ? (
                       <>
-                        <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
+                        <label className="admin-field admin-field--wide">
                           <span>Texto alternativo (describe la foto)</span>
                           <input value={upload.altText} onChange={(event) => setUpload({ ...upload, altText: event.target.value })} maxLength={255} />
                         </label>
