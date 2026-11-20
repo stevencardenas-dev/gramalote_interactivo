@@ -339,7 +339,7 @@ export default function AdminEstablecimiento() {
     const ok = await confirm({
       title: `¿Borrar «${form.name}»?`,
       message: 'Deja de verse en el sitio y en el mapa.',
-      confirmLabel: 'Borrar ficha',
+      confirmLabel: 'Borrar',
       danger: true,
     })
     if (!ok) return
@@ -1171,7 +1171,7 @@ export default function AdminEstablecimiento() {
               </p>
               {!form.published && dirty ? (
                 <p id="publish-unsaved" className="auth-error" role="status">
-                  Tienes cambios sin guardar. Pulsa «Guardar» antes de publicar.
+                  Tienes cambios sin guardar. Pulsa «Guardar cambios» antes de publicar.
                 </p>
               ) : null}
               <div className="admin-publish__actions">

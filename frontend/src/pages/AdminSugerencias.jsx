@@ -96,7 +96,7 @@ export default function AdminSugerencias() {
     const ok = await confirm({
       title: `¿Borrar la sugerencia «${item.businessName}»?`,
       message: 'No se puede deshacer.',
-      confirmLabel: 'Borrar sugerencia',
+      confirmLabel: 'Borrar',
       danger: true,
     })
     if (!ok) return

@@ -268,7 +268,7 @@ export default function AdminCorreo() {
 
             <div className="admin-mail__actions">
               <button type="submit" className="admin-btn admin-btn--primary" disabled={busy}>
-                Guardar
+                Guardar cambios
               </button>
               <span className="admin-mail__test">
                 <input

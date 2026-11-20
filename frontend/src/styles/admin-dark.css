@@ -1392,9 +1392,14 @@ a.admin-tile:hover .admin-tile__chev {
     justify-content: flex-start;
   }
 
-  .admin-row-item {
+  .admin-row-item,
+  .admin-row-item--orderable {
     grid-template-columns: 44px minmax(0, 1fr) auto;
     gap: 10px;
+  }
+
+  .admin-row-item--orderable {
+    grid-template-columns: 44px minmax(0, 1fr) auto auto;
   }
 
   .admin-row-item__date,
@@ -1500,6 +1505,21 @@ a.admin-tile:hover .admin-tile__chev {
   padding-block: 10px;
   cursor: pointer;
   transition: background-color 0.15s;
+}
+
+/* Listado con flechas para subir y bajar (Patrimonio): una columna más. */
+.admin-row-item--orderable {
+  grid-template-columns: 52px minmax(0, 1fr) 84px 160px 104px 18px;
+}
+
+.admin-row-item__order {
+  display: flex;
+  gap: 4px;
+}
+
+.admin-row-item__order .admin-btn {
+  min-width: 36px;
+  padding-inline: 0;
 }
 
 .admin-row-item__main a::after {

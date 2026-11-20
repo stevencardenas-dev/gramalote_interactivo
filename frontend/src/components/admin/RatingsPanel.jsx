@@ -65,7 +65,7 @@ export default function RatingsPanel({ kind, id, name, onNotify }) {
     const ok = await confirm({
       title: `¿Borrar la calificación de ${rating.name}?`,
       message: `${rating.stars} de 5 estrellas. No se puede deshacer.`,
-      confirmLabel: 'Borrar calificación',
+      confirmLabel: 'Borrar',
       danger: true,
     })
     if (!ok) return

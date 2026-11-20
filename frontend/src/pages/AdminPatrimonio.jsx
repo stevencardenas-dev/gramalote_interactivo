@@ -102,6 +102,32 @@ export default function AdminPatrimonio() {
   }, [items, tab, query])
 
   const paged = usePaged(visible)
+  // Las flechas solo aparecen en la lista completa de publicados (sin búsqueda).
+  const canOrder = tab === 'published' && query.trim() === ''
+
+  // Flechas ↑ ↓: solo entre los publicados (son los que se ven en Historia › Patrimonio).
+  // Los no publicados quedan detrás, en su orden actual.
+  async function moveItem(item, delta) {
+    const list = items ?? []
+    const published = list.filter((entry) => entry.published)
+    const drafts = list.filter((entry) => !entry.published)
+    const from = published.findIndex((entry) => entry.id === item.id)
+    const to = from + delta
+    if (from < 0 || to < 0 || to >= published.length) return
+    const next = [...published]
+    const [moved] = next.splice(from, 1)
+    next.splice(to, 0, moved)
+    const ordered = [...next, ...drafts]
+    setBusy(true)
+    try {
+      await apiRequest('/admin/heritage/order', { method: 'PUT', body: { ids: ordered.map((entry) => entry.id) } })
+      setItems(ordered)
+    } catch (err) {
+      notify('error', 'No se pudo guardar', err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   function startNew() {
     setEditing('new')
@@ -276,14 +302,20 @@ export default function AdminPatrimonio() {
           </form>
         ) : null}
 
+        {canOrder && items !== null ? (
+          <p className="note">El orden de esta lista es el que se ve en Historia › Patrimonio. Usa las flechas para subir o bajar un lugar.</p>
+        ) : null}
+
         {items === null ? (
           <p className="note">Cargando patrimonio…</p>
         ) : visible.length === 0 ? (
           <p className="empty">No hay lugares que coincidan con el filtro.</p>
         ) : (
           <ul className="admin-rows">
-            {paged.pageItems.map((item) => (
-              <li key={item.id} className="admin-row-item" onClick={() => startEdit(item)}>
+            {paged.pageItems.map((item) => {
+              const position = visible.indexOf(item)
+              return (
+              <li key={item.id} className={`admin-row-item${canOrder ? ' admin-row-item--orderable' : ''}`} onClick={() => startEdit(item)}>
                 <span className="admin-row-item__thumb">
                   <img src={item.coverUrl ?? mapIconUrl(item.mapIcon)} alt="" loading="lazy" />
                 </span>
@@ -303,6 +335,34 @@ export default function AdminPatrimonio() {
                     {item.zone ? ` · ${item.zone}` : ''}
                   </small>
                 </div>
+                {canOrder ? (
+                  <span className="admin-row-item__order">
+                    <button
+                      type="button"
+                      className="admin-btn"
+                      aria-label={`Subir ${item.name}`}
+                      disabled={busy || position === 0}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        moveItem(item, -1)
+                      }}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn"
+                      aria-label={`Bajar ${item.name}`}
+                      disabled={busy || position === visible.length - 1}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        moveItem(item, 1)
+                      }}
+                    >
+                      ↓
+                    </button>
+                  </span>
+                ) : null}
                 <EditedDate value={item.updatedAt} />
                 <button
                   type="button"
@@ -320,7 +380,8 @@ export default function AdminPatrimonio() {
                   ›
                 </span>
               </li>
-            ))}
+              )
+            })}
           </ul>
         )}
         <Pagination {...paged} label="lugares" />

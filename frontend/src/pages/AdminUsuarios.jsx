@@ -149,15 +149,15 @@ export default function AdminUsuarios() {
 
   async function removeUser(user) {
     const ok = await confirm({
-      title: `¿Eliminar la cuenta de ${user.name}?`,
+      title: `¿Borrar la cuenta de ${user.name}?`,
       message: 'La persona sale del panel y no se puede deshacer.',
-      confirmLabel: 'Eliminar cuenta',
+      confirmLabel: 'Borrar',
       danger: true,
     })
     if (!ok) return
     run(async () => {
       await apiRequest(`/admin/users/${user.id}`, { method: 'DELETE' })
-      notify('ok', 'Guardado', `Cuenta de ${user.name} eliminada.`)
+      notify('ok', 'Guardado', `Cuenta de ${user.name} borrada.`)
     })
   }
 
@@ -211,10 +211,10 @@ export default function AdminUsuarios() {
 
   async function askRemoveMyself() {
     const ok = await confirm({
-      title: '¿Eliminar tu cuenta?',
+      title: '¿Borrar tu cuenta?',
       message: 'Sales del panel y no se puede deshacer.',
       hint: 'Otro administrador tendrá que crearte de nuevo.',
-      confirmLabel: 'Sí, eliminar mi cuenta',
+      confirmLabel: 'Sí, borrar mi cuenta',
       danger: true,
     })
     if (ok) removeMyself()
@@ -352,7 +352,7 @@ export default function AdminUsuarios() {
                           disabled={busy}
                           onClick={() => removeUser(user)}
                         >
-                          Eliminar
+                          Borrar
                         </button>
                       ) : null}
                     </div>
@@ -495,7 +495,7 @@ export default function AdminUsuarios() {
           {isAdmin ? (
             <div className="admin-account__danger">
               <div>
-                <strong>Eliminar mi cuenta</strong>
+                <strong>Borrar mi cuenta</strong>
                 <p>Sales del panel y no se puede deshacer.</p>
               </div>
               <button
@@ -504,7 +504,7 @@ export default function AdminUsuarios() {
                 onClick={askRemoveMyself}
               >
                 <TrashIcon />
-                Eliminar mi cuenta
+                Borrar mi cuenta
               </button>
             </div>
           ) : null}
