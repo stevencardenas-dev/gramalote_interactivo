@@ -344,6 +344,65 @@ export default function HistoriaCapitulo() {
     }
   }, [slug, chapter])
 
+  // Móvil, foto compartida: la foto queda fija (sticky) y los textos pasan
+  // debajo. Para que foto + texto queden centrados en la pantalla, la foto se
+  // fija a la altura que centra el conjunto con el texto más largo del grupo
+  // (--off). Es la misma para todos sus textos, así la foto no se mueve.
+  useEffect(() => {
+    const story = storyRef.current
+    if (!chapter || !story) return undefined
+    const movil = window.matchMedia('(max-width: 980px)')
+    let marco = 0
+
+    const ajustar = () => {
+      marco = 0
+      const grupos = [...story.querySelectorAll('.his-shared')]
+      if (!movil.matches) {
+        grupos.forEach((grupo) => grupo.style.removeProperty('--off'))
+        return
+      }
+      // Alto útil: bajo el menú y hasta el borde inferior (100svh en el CSS).
+      const sonda = document.createElement('div')
+      sonda.style.cssText = 'position:fixed;top:0;height:100svh;visibility:hidden;pointer-events:none'
+      document.body.appendChild(sonda)
+      const pantalla = sonda.getBoundingClientRect().height
+      sonda.remove()
+      const menu = document.querySelector('.site-header')?.getBoundingClientRect().height ?? 0
+
+      grupos.forEach((grupo) => {
+        const foto = grupo.querySelector('.his-shared__media')?.getBoundingClientRect().height ?? 0
+        const altos = []
+        grupo.querySelectorAll('.his-event--shared').forEach((item) => {
+          const partes = [...item.children].filter((hijo) => hijo.offsetParent !== null && !hijo.matches('.his-event__dot'))
+          if (partes.length === 0) return
+          altos.push(partes.at(-1).getBoundingClientRect().bottom - partes[0].getBoundingClientRect().top)
+        })
+        if (altos.length === 0) return
+        // Se centra con el promedio del texto más corto y el más largo: el
+        // desvío se reparte (unos quedan un poco arriba, otros un poco abajo)
+        // sin que el más largo pase del borde inferior. 12 px separan foto y
+        // texto (padding-top del texto).
+        const base = pantalla - menu - foto - 12
+        const medio = (Math.min(...altos) + Math.max(...altos)) / 2
+        const off = Math.min((base - medio) / 2, base - Math.max(...altos))
+        grupo.style.setProperty('--off', `${Math.max(12, Math.round(off))}px`)
+      })
+    }
+
+    const programar = () => {
+      if (!marco) marco = window.setTimeout(ajustar, 60)
+    }
+
+    ajustar()
+    // Las fuentes web cambian el alto del texto al terminar de cargar.
+    document.fonts?.ready.then(programar)
+    window.addEventListener('resize', programar)
+    return () => {
+      window.removeEventListener('resize', programar)
+      if (marco) window.clearTimeout(marco)
+    }
+  }, [slug, chapter])
+
   if (!chapter) {
     return (
       <section className="section section--estado">

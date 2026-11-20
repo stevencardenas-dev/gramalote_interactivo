@@ -4509,15 +4509,16 @@ kbd {
     position: relative;
   }
 
-  /* Se fija exactamente donde empieza (12 px bajo el menú), para que no dé
-     un salto al pasar de un texto al siguiente. La sombra blanca tapa esa
-     franja de 12 px para que el texto no asome por encima de la foto. */
+  /* La foto se fija a --off bajo el menú (lo calcula HistoriaCapitulo.jsx
+     para que foto + texto queden centrados). Es también donde empieza el
+     grupo, así no salta al pasar de un texto al siguiente. La sombra blanca
+     tapa la franja de arriba para que el texto no asome sobre la foto. */
   .his-deck .his-shared__media {
     position: sticky;
-    top: calc(var(--header-h) + 12px);
+    top: calc(var(--header-h) + var(--off, 12px));
     z-index: 2;
     background: var(--c-white);
-    box-shadow: 0 -12px 0 var(--c-white);
+    box-shadow: 0 calc(-1 * var(--off, 12px)) 0 var(--c-white);
   }
 
   .his-deck .his-shared__media .his-event__media {
@@ -4532,19 +4533,19 @@ kbd {
     aspect-ratio: auto;
   }
 
-  /* Cada texto ocupa lo que queda de pantalla bajo la foto fija y se centra
-     en ese espacio. */
+  /* Cada texto ocupa lo que queda de pantalla bajo la foto fija y empieza
+     justo debajo de ella (12 px). */
   .his-deck .his-shared .his-event--shared {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     box-sizing: border-box;
-    height: calc(100svh - var(--header-h) - 12px - var(--foto));
+    height: calc(100svh - var(--header-h) - var(--off, 12px) - var(--foto));
     min-height: 0;
     margin: 0;
-    padding: 12px 0;
+    padding: 12px 0 0;
     scroll-snap-align: start;
-    scroll-margin-top: calc(var(--header-h) + 12px + var(--foto));
+    scroll-margin-top: calc(var(--header-h) + var(--off, 12px) + var(--foto));
   }
 
   .his-deck .his-shared .his-event--shared > .his-event__stage {
@@ -4566,4 +4567,16 @@ kbd {
     font-size: 0.9rem;
     line-height: 1.45;
   }
+}
+
+/* La tarjeta de etapa va alineada a la izquierda, como el título y el texto,
+   y ocupa todo el ancho de su columna (antes, en algunos bloques quedaba
+   encogida y centrada). */
+.his-deck .his-events .his-event > .his-event__stage {
+  align-self: stretch;
+  justify-self: stretch;
+  justify-content: flex-start;
+  width: auto;
+  margin-inline: 0;
+  text-align: left;
 }
