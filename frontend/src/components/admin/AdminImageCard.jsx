@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDialog } from '../../lib/dialog.jsx'
+import ImageFraming from './ImageFraming.jsx'
 
 // Tarjeta de imagen de las fichas del panel (Establecimientos, Experiencias y Extras).
 // El texto alternativo se edita en un borrador y se guarda con «Guardar foto»; el uso,
@@ -7,6 +8,8 @@ import { useDialog } from '../../lib/dialog.jsx'
 // (PlaceImageCard, en AdminLugarFicha.jsx) porque pide más campos.
 //
 // image: { url, alt, role, width?, height? }
+// frames: espacios del sitio donde se puede encuadrar esta foto (ver lib/photoFrames.js);
+//   sin ellos, la miniatura no abre la ventana de encuadre.
 // single: ficha con una sola foto (Extras): solo miniatura y «Quitar».
 
 export default function AdminImageCard({
@@ -22,6 +25,8 @@ export default function AdminImageCard({
   canMove = true,
   busy = false,
   badgeOk = false,
+  frames = [],
+  frameSlot,
   draftKey,
   onDraftChange,
   onSave,
@@ -33,6 +38,7 @@ export default function AdminImageCard({
   const { confirm } = useDialog()
   const fileInput = useRef(null)
   const [edits, setEdits] = useState({})
+  const [framing, setFraming] = useState(false)
   const changed = edits.alt !== undefined && edits.alt !== (image.alt ?? '')
 
   useEffect(() => {
@@ -63,7 +69,14 @@ export default function AdminImageCard({
   return (
     <li className="admin-media__item">
       <div className="admin-media__shot">
-        <img src={image.url} alt={image.alt ?? ''} loading="lazy" />
+        {frames.length > 0 ? (
+          <button type="button" className="admin-frame-btn" aria-label="Ajustar el encuadre de la foto" onClick={() => setFraming(true)}>
+            <img src={image.url} alt={image.alt ?? ''} loading="lazy" data-no-crop="" />
+            <span className="admin-frame-btn__hint">Encuadre</span>
+          </button>
+        ) : (
+          <img src={image.url} alt={image.alt ?? ''} loading="lazy" />
+        )}
         {single ? null : <span className={`admin-badge ${badgeOk ? 'admin-badge--ok' : ''}`}>{roleName}</span>}
         {showDims && image.width ? (
           <span className="admin-media__dims">
@@ -135,6 +148,7 @@ export default function AdminImageCard({
           Quitar
         </button>
       </div>
+      {framing ? <ImageFraming image={image} frames={frames} slot={frameSlot} onClose={() => setFraming(false)} /> : null}
     </li>
   )
 }

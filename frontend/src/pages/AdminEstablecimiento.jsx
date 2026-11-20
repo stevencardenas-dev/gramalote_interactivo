@@ -11,6 +11,8 @@ import { apiRequest, ensureSession } from '../lib/auth.js'
 import { useDialog } from '../lib/dialog.jsx'
 import { useUnsavedChanges } from '../lib/useUnsavedChanges.js'
 import AdminImageCard from '../components/admin/AdminImageCard.jsx'
+import ImageFraming from '../components/admin/ImageFraming.jsx'
+import { framesForEstablishmentImage } from '../lib/photoFrames.js'
 import { useImageDrafts } from '../lib/useImageDrafts.js'
 import { resolveMapIcon } from '../data/mapIcons.js'
 
@@ -45,11 +47,13 @@ function editableJson(form) {
 }
 
 // Elige una de las fotos ya subidas a la ficha para un plato o producto.
-function PhotoSelect({ images, value, onChange }) {
+// Con `frames`, junto a la foto elegida aparece «Encuadrar» (ventana de encuadre).
+function PhotoSelect({ images, value, onChange, frames = [] }) {
   const selected = images.find((image) => image.mediaId === value)
+  const [framing, setFraming] = useState(false)
   return (
     <div className="admin-photo-select">
-      {selected ? <img src={selected.url} alt="" /> : <span aria-hidden="true" />}
+      {selected ? <img src={selected.url} alt="" data-no-crop="" /> : <span aria-hidden="true" />}
       <select
         aria-label="Foto"
         value={value ?? ''}
@@ -62,6 +66,12 @@ function PhotoSelect({ images, value, onChange }) {
           </option>
         ))}
       </select>
+      {selected && frames.length > 0 ? (
+        <button type="button" className="admin-btn" onClick={() => setFraming(true)}>
+          Encuadrar
+        </button>
+      ) : null}
+      {framing && selected ? <ImageFraming image={{ url: selected.url, alt: selected.alt }} frames={frames} onClose={() => setFraming(false)} /> : null}
     </div>
   )
 }
@@ -871,6 +881,12 @@ export default function AdminEstablecimiento() {
                       onSave={(img, draft) => updateMediaAlt(img, draft.alt)}
                       onRole={(img, role) => patchImage(img, { role })}
                       onMove={moveImage}
+                      frames={framesForEstablishmentImage({
+                        categorySlug: category?.slug,
+                        role: image.role,
+                        galleryIndex: form.images.filter((entry) => entry.role === 'gallery').indexOf(image),
+                      })}
+                      frameSlot={form.images.filter((entry) => entry.role === 'gallery').indexOf(image)}
                       onReplace={replaceImage}
                       onRemove={unlinkImage}
                     />
@@ -1016,6 +1032,7 @@ export default function AdminEstablecimiento() {
                       <Field label="Foto">
                         <PhotoSelect
                           images={form.images}
+                          frames={category?.slug === 'comer' || category?.slug === 'comprar' ? ['oferta-producto'] : []}
                           value={product.mediaId}
                           onChange={(mediaId) => updateList('products', index, { mediaId })}
                         />

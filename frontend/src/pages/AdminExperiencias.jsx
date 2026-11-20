@@ -21,6 +21,7 @@ import ScheduleEditor from '../components/admin/ScheduleEditor.jsx'
 import IconMask from '../components/ui/IconMask.jsx'
 import { resolveMapIcon } from '../data/mapIcons.js'
 import { apiRequest, ensureSession } from '../lib/auth.js'
+import { framesForExperienceImage } from '../lib/photoFrames.js'
 
 const TABS = [
   { key: 'info', label: 'Información' },
@@ -787,6 +788,10 @@ export function AdminExperiencia() {
                         onDraftChange={imageDrafts.report}
                         onSave={(img, draft) => imageAction(img, 'PATCH', { altText: draft.alt }, 'Foto actualizada.')}
                         onRole={(img, role) => imageAction(img, 'PATCH', { role })}
+                        frames={framesForExperienceImage({
+                          role: image.role,
+                          galleryIndex: form.images.filter((entry) => entry.role === 'gallery').indexOf(image),
+                        })}
                         onMove={moveImage}
                         onReplace={replaceImage}
                         onRemove={(img) => imageAction(img, 'DELETE')}

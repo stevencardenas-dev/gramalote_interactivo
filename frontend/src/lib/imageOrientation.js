@@ -1,11 +1,55 @@
+import { getCrop, loadCrops, onCropsChange } from './mediaCrops.js'
+import { frameOfElement } from './photoFrames.js'
+
 // Marca cada <img> con data-orient="portrait" (vertical) o "landscape" cuando
 // carga, para que el CSS trate distinto las fotos verticales (que se muestran
 // completas sobre fondo crema) y las horizontales (que llenan su marco).
 function tag(img) {
+  // Las vistas previas del panel dibujan su propio encuadre.
+  if (img.hasAttribute('data-no-crop')) return
   if (img.naturalWidth && img.naturalHeight) {
     img.dataset.orient = img.naturalHeight > img.naturalWidth ? 'portrait' : 'landscape'
   }
-  frame(img)
+  const frameKey = frameOfElement(img)
+  const crop = frameKey ? getCrop(img.currentSrc || img.src, frameKey) : null
+  if (crop) applyCrop(img, crop)
+  else if (img.dataset.crop) clearCrop(img)
+  if (!crop) frame(img)
+}
+
+function holderOf(img) {
+  const parent = img.parentElement
+  if (!parent) return null
+  return parent.tagName === 'PICTURE' ? parent.parentElement : parent
+}
+
+// Encuadre definido en el panel para el espacio de esta foto: la foto se coloca con
+// su ancho y posición (en % del marco) y lo que no cubre se rellena con ella misma
+// desenfocada (el marco ya lleva data-blur, ver mejoras.css).
+function applyCrop(img, crop) {
+  const holder = holderOf(img)
+  const src = img.currentSrc || img.src
+  img.dataset.crop = ''
+  if (holder && src) {
+    holder.setAttribute('data-blur', '')
+    holder.style.setProperty('--blur-img', `url("${src}")`)
+    holder.style.overflow = 'hidden'
+  }
+  const set = (property, value) => img.style.setProperty(property, value, 'important')
+  set('position', 'absolute')
+  set('width', `${crop.w}%`)
+  set('height', 'auto')
+  set('left', `${crop.l}%`)
+  set('top', `${crop.t}%`)
+  set('max-width', 'none')
+  set('object-fit', 'fill')
+}
+
+function clearCrop(img) {
+  delete img.dataset.crop
+  for (const property of ['position', 'width', 'height', 'left', 'top', 'max-width', 'object-fit']) {
+    img.style.removeProperty(property)
+  }
 }
 
 // Marcos de contenido donde la foto se ve completa (contain) y el hueco que deja
@@ -65,4 +109,7 @@ export function initImageOrientation() {
     )
   }).observe(document.body, { childList: true, subtree: true })
   document.querySelectorAll('img').forEach(tag)
+  // Los encuadres llegan después: se vuelven a aplicar a lo ya pintado.
+  onCropsChange(() => document.querySelectorAll('img').forEach(tag))
+  loadCrops()
 }

@@ -1958,6 +1958,193 @@ a.admin-tile:hover .admin-tile__chev {
   margin-top: 6px;
 }
 
+/* Ventana de encuadre de una foto (ImageFraming) */
+.admin-dialog__panel.admin-framing {
+  width: min(440px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  /* Sin esto, al aparecer o quitarse la barra de desplazamiento cambia el ancho del
+     marco, con él su alto y la barra vuelve a cambiar: la foto parecía temblar. */
+  scrollbar-gutter: stable;
+}
+
+.admin-framing__head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.admin-framing__head .admin-dialog__title {
+  margin-bottom: 0;
+}
+
+/* Miniatura del collage con el espacio de la foto resaltado. */
+.admin-collage {
+  display: grid;
+  flex: none;
+  gap: 3px;
+  width: 92px;
+}
+
+.admin-collage__row {
+  display: flex;
+  gap: 3px;
+}
+
+.admin-collage__cell {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--a-ln);
+  border-radius: 3px;
+  background: var(--a-sf2);
+}
+
+.admin-collage__cell.is-current {
+  border-color: var(--a-ac);
+  background: var(--a-ac);
+}
+
+.admin-framing__editor {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  margin-top: 8px;
+}
+
+.admin-framing__stage-wrap {
+  position: relative;
+  padding: 16px;
+  border-radius: 12px;
+  background: #111;
+  overflow: hidden;
+}
+
+/* Marco fijo con las proporciones reales del espacio: la foto se mueve debajo y su
+   copia tenue deja ver lo que queda fuera. */
+.admin-framing__stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.admin-framing__stage:active {
+  cursor: grabbing;
+}
+
+
+.admin-framing__stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid #fff;
+  pointer-events: none;
+}
+
+.admin-framing__stage img {
+  display: block;
+  pointer-events: none;
+}
+
+/* La ventana se pinta dentro de la tarjeta de la foto (li.admin-media__item), cuyas
+   reglas de imagen (aspect-ratio 4/3, object-fit: cover, bordes redondeados) llegarían
+   aquí y deformarían la foto. */
+.admin-dialog__panel.admin-framing .admin-framing__stage img,
+.admin-dialog__panel.admin-framing .admin-framing__ghost {
+  aspect-ratio: auto;
+  border-radius: 0;
+  background: transparent;
+}
+
+.admin-framing__ghost {
+  position: absolute;
+  max-width: none;
+  height: auto;
+  opacity: 0.3;
+  pointer-events: none;
+  user-select: none;
+}
+
+.admin-framing__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-framing__presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+
+.admin-framing__zoom-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-framing__zoom-row input {
+  flex: 1;
+}
+
+
+.admin-framing__zoom {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.85rem;
+}
+
+.admin-framing__zoom {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-framing__zoom input {
+  width: 100%;
+}
+
+
+
+
+
+
+
+.admin-framing__actions {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+
+/* Miniatura de una foto que abre la ventana de encuadre. */
+.admin-frame-btn {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.admin-frame-btn__hint {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
 /* Aviso de lugares cercanos al guardar coordenadas (NearbyCheck). */
 .admin-dialog__panel.nearby {
   width: min(460px, 100%);

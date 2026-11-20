@@ -10,6 +10,8 @@ import { apiRequest, ensureSession } from '../lib/auth.js'
 import { useDialog } from '../lib/dialog.jsx'
 import { useUnsavedChanges } from '../lib/useUnsavedChanges.js'
 import AdminImageCard from '../components/admin/AdminImageCard.jsx'
+import ImageFraming from '../components/admin/ImageFraming.jsx'
+import { framesForExtraImage, framesForHeritageImage } from '../lib/photoFrames.js'
 import { useImageDrafts } from '../lib/useImageDrafts.js'
 
 // Ficha editable de un Patrimonio o de un Extra (Panel › Lugares), con las mismas
@@ -267,8 +269,9 @@ function Field({ spec, value, onChange, onPair }) {
 }
 
 // Tarjeta de foto de Patrimonio: miniatura a un lado y campos con etiqueta.
-function PlaceImageCard({ image, index, total, roles, busy, onSave, onRemove, onMove, onReplace, onDraftChange }) {
+function PlaceImageCard({ image, index, total, roles, busy, frames = [], onSave, onRemove, onMove, onReplace, onDraftChange }) {
   const fileInput = useRef(null)
+  const [framing, setFraming] = useState(false)
   const [draft, setDraft] = useState({ role: image.role, eraLabel: image.eraLabel ?? '', altText: image.altText, caption: image.caption, credit: image.credit })
   const dirty =
     draft.role !== image.role ||
@@ -286,7 +289,14 @@ function PlaceImageCard({ image, index, total, roles, busy, onSave, onRemove, on
   return (
     <li className="place-img">
       <div className="place-img__thumb">
-        <img src={image.url} alt="" loading="lazy" />
+        {frames.length > 0 ? (
+          <button type="button" className="admin-frame-btn" aria-label="Ajustar el encuadre de la foto" onClick={() => setFraming(true)}>
+            <img src={image.url} alt="" loading="lazy" data-no-crop="" />
+            <span className="admin-frame-btn__hint">Encuadre</span>
+          </button>
+        ) : (
+          <img src={image.url} alt="" loading="lazy" />
+        )}
         <span className={`place-img__role place-img__role--${image.role}`}>{ROLE_LABELS[image.role] ?? 'Portada'}</span>
       </div>
       <div className="place-img__body">
@@ -343,6 +353,7 @@ function PlaceImageCard({ image, index, total, roles, busy, onSave, onRemove, on
           </button>
         </div>
       </div>
+      {framing ? <ImageFraming image={{ url: image.url, alt: image.altText }} frames={frames} onClose={() => setFraming(false)} /> : null}
     </li>
   )
 }
@@ -724,6 +735,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
                         index={index}
                         total={form.images.length}
                         single
+                        frames={framesForExtraImage()}
                         busy={busyImage}
                         onReplace={replaceImage}
                         onRemove={removeImage}
@@ -735,6 +747,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
                         index={index}
                         total={form.images.length}
                         roles={roles}
+                        frames={framesForHeritageImage({ role: image.role })}
                         busy={busyImage}
                         onSave={saveImage}
                         onReplace={replaceImage}
