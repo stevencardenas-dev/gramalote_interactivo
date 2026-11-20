@@ -33,6 +33,19 @@ function escribiendo(elemento) {
   return Boolean(elemento.closest('input, textarea, select, [contenteditable="true"]'))
 }
 
+// Acontecimientos seguidos que usan la misma foto forman un grupo: la foto es
+// una sola, se queda fija en su lado y solo cambian los textos (uno por
+// pantalla). El lado alterna por grupo, no por acontecimiento.
+function agruparPorFoto(events) {
+  const grupos = []
+  events.forEach((event, eventIndex) => {
+    const ultimo = grupos[grupos.length - 1]
+    if (ultimo && ultimo.image === event.image) ultimo.items.push({ event, eventIndex })
+    else grupos.push({ image: event.image, items: [{ event, eventIndex }] })
+  })
+  return grupos
+}
+
 export default function HistoriaCapitulo() {
   const { slug } = useParams()
   const navigate = useNavigate()
@@ -438,18 +451,12 @@ export default function HistoriaCapitulo() {
               </Reveal>
 
               <ol className="his-events">
-                {stage.events.map((event, eventIndex) => (
-                  <Reveal
-                    as="li"
-                    key={`${stage.kicker}-${event.n}`}
-                    data-step={event.n}
-                    className={`his-event${eventIndex % 2 === 1 ? ' his-event--reverse' : ''}${
-                      inicioEtapa[stageIndex] + eventIndex === activo ? ' is-active' : ''
-                    }`}
-                  >
-                    {/* Un acontecimiento por pantalla; el primero de la etapa
-                        lleva además el nombre de la etapa. */}
-                    {eventIndex === 0 ? (
+                {agruparPorFoto(stage.events).map((grupo, g) => {
+                  const invertido = g % 2 === 1
+                  const global = (eventIndex) => inicioEtapa[stageIndex] + eventIndex
+                  // El primero de la etapa lleva además el nombre de la etapa.
+                  const tarjetaEtapa = (eventIndex) =>
+                    eventIndex === 0 ? (
                       <div className="his-event__stage">
                         <span className="his-stage__count">
                           Etapa {String(stageIndex + 1).padStart(2, '0')} / {String(chapter.stages.length).padStart(2, '0')}
@@ -457,21 +464,74 @@ export default function HistoriaCapitulo() {
                         <h2>{stage.title}</h2>
                         <p>{stage.kicker.split('·')[1]?.trim() || stage.kicker}</p>
                       </div>
-                    ) : null}
-                    <span className="his-event__dot" aria-hidden="true" />
-                    <figure className="his-event__media">
-                      <img src={event.image} alt="" loading="lazy" />
-                      <figcaption>
-                        <span className="his-event__num">{String(event.n).padStart(2, '0')}</span>
-                        <span className="his-event__date">{event.date}</span>
-                      </figcaption>
-                    </figure>
+                    ) : null
+                  const pie = (event) => (
+                    <figcaption>
+                      <span className="his-event__num">{String(event.n).padStart(2, '0')}</span>
+                      <span className="his-event__date">{event.date}</span>
+                    </figcaption>
+                  )
+                  const cuerpo = (event) => (
                     <div className="his-event__body">
                       <h3>{event.title}</h3>
                       <p>{event.text}</p>
                     </div>
-                  </Reveal>
-                ))}
+                  )
+
+                  if (grupo.items.length === 1) {
+                    const { event, eventIndex } = grupo.items[0]
+                    return (
+                      <Reveal
+                        as="li"
+                        key={`${stage.kicker}-${event.n}`}
+                        data-step={event.n}
+                        className={`his-event${invertido ? ' his-event--reverse' : ''}${
+                          global(eventIndex) === activo ? ' is-active' : ''
+                        }`}
+                      >
+                        {tarjetaEtapa(eventIndex)}
+                        <span className="his-event__dot" aria-hidden="true" />
+                        <figure className="his-event__media">
+                          <img src={event.image} alt="" loading="lazy" />
+                          {pie(event)}
+                        </figure>
+                        {cuerpo(event)}
+                      </Reveal>
+                    )
+                  }
+
+                  // Foto compartida: queda fija (sticky) mientras pasan sus textos.
+                  const visible =
+                    grupo.items.find((item) => global(item.eventIndex) === activo) ?? grupo.items[0]
+                  return (
+                    <li
+                      key={`${stage.kicker}-g${g}`}
+                      className={`his-shared${invertido ? ' his-shared--reverse' : ''}`}
+                    >
+                      <div className="his-shared__media">
+                        <figure className="his-event__media">
+                          <img src={grupo.image} alt="" loading="lazy" />
+                          {pie(visible.event)}
+                        </figure>
+                      </div>
+                      <ol className="his-shared__texts">
+                        {grupo.items.map(({ event, eventIndex }) => (
+                          <li
+                            key={`${stage.kicker}-${event.n}`}
+                            data-step={event.n}
+                            className={`his-event his-event--shared${
+                              global(eventIndex) === activo ? ' is-active' : ''
+                            }`}
+                          >
+                            {tarjetaEtapa(eventIndex)}
+                            <span className="his-event__dot" aria-hidden="true" />
+                            {cuerpo(event)}
+                          </li>
+                        ))}
+                      </ol>
+                    </li>
+                  )
+                })}
               </ol>
             </section>
           ))}
