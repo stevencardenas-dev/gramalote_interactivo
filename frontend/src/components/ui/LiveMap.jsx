@@ -484,9 +484,6 @@ export default function LiveMap({
               {place.zoneName ? ` · ${place.zoneName}` : ''}
             </span>
             {place.summary ? <span className="mapa-ficha__nota">{place.summary}</span> : null}
-            {place.kind === 'heritage' ? null : (
-              <span className="mapa-ficha__nota">Punto complementario · sin ficha</span>
-            )}
             <div className="mapa-ficha__acciones">
               {place.fichaUrl ? (
                 <Link className="btn btn--primary btn--sm" to={place.fichaUrl}>
