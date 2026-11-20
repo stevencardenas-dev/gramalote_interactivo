@@ -470,9 +470,13 @@ export default function LiveMap({
           <button type="button" className="mapa-ficha__cerrar" aria-label="Cerrar" onClick={() => setSelectedId('')}>
             ×
           </button>
-          <span className="mapa-ficha__icono-caja">
-            <img src={mapIconUrl(place.icon)} alt="" width="40" height="40" />
-          </span>
+          {place.photo ? (
+            <img className="mapa-ficha__foto" src={place.photo} alt="" />
+          ) : (
+            <span className="mapa-ficha__icono-caja">
+              <img src={mapIconUrl(place.icon)} alt="" width="40" height="40" />
+            </span>
+          )}
           <div className="mapa-ficha__texto">
             <h3>{place.name}</h3>
             <span className="mapa-ficha__sub">

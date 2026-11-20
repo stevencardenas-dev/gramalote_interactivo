@@ -28,10 +28,16 @@ const CATEGORIES = [
   'Monumento',
 ]
 
+const ZONES = [
+  { value: 'gramalote-viejo', label: 'Gramalote Viejo' },
+  { value: 'nuevo-gramalote', label: 'Nuevo Gramalote' },
+  { value: 'caldereros', label: 'Caldereros' },
+]
+
 const EMPTY = {
   name: '',
   category: 'Histórico',
-  zone: '',
+  zoneKey: '',
   latitude: '',
   longitude: '',
   mapsUrl: '',
@@ -233,22 +239,27 @@ export default function AdminPatrimonio() {
               </label>
               <label className="admin-field">
                 <span>Subcategoría</span>
-                <input
-                  value={form.category}
-                  onChange={set('category')}
-                  list="patrimonio-categorias"
-                  required
-                  maxLength={80}
-                />
-                <datalist id="patrimonio-categorias">
+                <select value={form.category} onChange={set('category')} required>
+                  {form.category && !CATEGORIES.includes(form.category) ? (
+                    <option value={form.category}>{form.category}</option>
+                  ) : null}
                   {CATEGORIES.map((category) => (
-                    <option key={category} value={category} />
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
                   ))}
-                </datalist>
+                </select>
               </label>
               <label className="admin-field">
-                <span>Zona o referencia</span>
-                <input value={form.zone} onChange={set('zone')} maxLength={120} />
+                <span>Zona</span>
+                <select value={form.zoneKey} onChange={set('zoneKey')}>
+                  <option value="">Sin zona</option>
+                  {ZONES.map((zone) => (
+                    <option key={zone.value} value={zone.value}>
+                      {zone.label}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="admin-field">
                 <span>Icono del mapa</span>

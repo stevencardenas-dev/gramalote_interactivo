@@ -3,6 +3,7 @@ import { query } from '../db.js'
 import { asyncHandler, stringParam } from '../http.js'
 import { coverFromRow, toNumber } from '../serializers.js'
 import { listExtras } from './establishments.js'
+import { ZONE_LABELS } from './heritage.js'
 
 const router = Router()
 
@@ -58,6 +59,13 @@ function slugifyCategory(value) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
+}
+
+// Zona de un patrimonio: sale de la lista de la ficha (zone_key), así el mapa y la
+// ficha no se contradicen. El texto suelto de la base solo es respaldo.
+function heritageZone(row) {
+  const name = ZONE_LABELS[row.zone_key] ?? row.zone
+  return name ? { slug: slugifyCategory(name), name } : null
 }
 
 function buildWhere(queryParams, titleField = 'name') {
@@ -155,7 +163,7 @@ router.get(
       ),
       // Patrimonio: fichas en preparación; ya tienen pin y tarjeta de mapa.
       query(
-        `SELECT h.id, h.slug, h.name, h.category, h.zone, h.latitude, h.longitude,
+        `SELECT h.id, h.slug, h.name, h.category, h.zone, h.zone_key, h.latitude, h.longitude,
                 h.maps_url, h.map_icon, h.summary, h.sort_order, ${HERITAGE_COVER}
          FROM heritage_sites h
          WHERE h.is_published = 1 AND h.show_on_map = 1
@@ -208,7 +216,8 @@ router.get(
             name: row.name,
             group: 'Patrimonio',
             category: { slug: slugifyCategory(row.category), name: row.category },
-            zone: row.zone ? { slug: slugifyCategory(row.zone), name: row.zone } : null,
+            // La zona sale de la lista de la ficha (zone_key); el texto suelto solo es respaldo.
+            zone: heritageZone(row),
             mapIcon: row.map_icon ?? null,
             mapsUrl: row.maps_url ?? null,
             summary: row.summary ?? null,

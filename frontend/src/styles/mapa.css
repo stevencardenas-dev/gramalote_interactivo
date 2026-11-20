@@ -1181,7 +1181,7 @@
   text-transform: uppercase;
 }
 
-/* Extras: tarjeta sin foto ni calificación, con el icono del punto */
+/* Extras y Patrimonio: sin calificación; icono del punto si no tienen foto */
 .mapa-ficha__icono-caja {
   flex: none;
   display: grid;

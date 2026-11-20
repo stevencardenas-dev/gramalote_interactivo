@@ -7,6 +7,7 @@ import { ApiError, asyncHandler, booleanParam } from '../http.js'
 import { MAP_ICONS } from '../map-icons.js'
 import { assertQuota, ensureDir, mediaRoot, removeImageFiles, storeImage } from '../media.js'
 import { toNumber } from '../serializers.js'
+import { ZONE_LABELS } from './heritage.js'
 
 // Panel › Lugares › Patrimonio y Extras: ficha editable de cada bien (datos,
 // textos, visita, ubicación, fotos con su uso y su época) con historial de
@@ -24,10 +25,8 @@ const HERITAGE_FIELDS = [
   { key: 'category', col: 'category', label: 'Subcategoría del mapa', type: 'text', max: 80, required: true },
   { key: 'fichaCategory', col: 'ficha_category', label: 'Categoría en la ficha', type: 'text', max: 80 },
   { key: 'status', col: 'status', label: 'Estado', type: 'enum', options: STATUSES, required: true },
-  { key: 'zone', col: 'zone', label: 'Zona (texto del mapa)', type: 'text', max: 120 },
   { key: 'zoneKey', col: 'zone_key', label: 'Zona de la ficha', type: 'enum', options: ZONE_KEYS },
   { key: 'zoneTag', col: 'zone_tag', label: 'Etiqueta de zona', type: 'text', max: 120 },
-  { key: 'historicalPeriod', col: 'historical_period', label: 'Época', type: 'text', max: 120 },
   { key: 'subtitle', col: 'subtitle', label: 'Subtítulo', type: 'text', max: 200 },
   { key: 'intro', col: 'intro', label: 'Frase introductoria', type: 'text', max: 600 },
   { key: 'summary', col: 'summary', label: 'Resumen', type: 'text', max: 320 },
@@ -191,6 +190,8 @@ function fromRow(spec, row) {
 function serialize(kind, row) {
   const data = { id: toNumber(row.id), updatedAt: row.updated_at }
   for (const spec of kind.fields) data[spec.key] = fromRow(spec, row)
+  // Patrimonio: la zona ya no se teclea; se muestra la de la lista (solo lectura).
+  if (kind.entity === 'heritage') data.zone = ZONE_LABELS[row.zone_key] ?? row.zone ?? null
   return data
 }
 

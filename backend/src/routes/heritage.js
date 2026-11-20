@@ -8,7 +8,7 @@ import { toNumber } from '../serializers.js'
 
 const router = Router()
 
-const ZONE_LABELS = {
+export const ZONE_LABELS = {
   caldereros: 'Caldereros',
   'gramalote-viejo': 'Gramalote Viejo',
   'nuevo-gramalote': 'Nuevo Gramalote',

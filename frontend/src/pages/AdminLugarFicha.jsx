@@ -19,6 +19,20 @@ const ZONES = [
   { value: 'caldereros', label: 'Caldereros' },
 ]
 const HERITAGE_CATEGORIES = ['Histórico', 'Religioso', 'Espacio público', 'Institucional', 'Salud', 'Educativo', 'Monumento']
+const FICHA_CATEGORIES = ['Patrimonio religioso', 'Edificio histórico', 'Espacio público', 'Monumento']
+const EXTRA_CATEGORIES = [
+  'Espacio público',
+  'Espacio público / religioso',
+  'Deportivo',
+  'Religioso',
+  'Religioso / cultural',
+  'Cultural / institucional',
+  'Institucional',
+  'Salud / servicios',
+  'Seguridad / servicios',
+  'Servicios financieros',
+]
+const asOptions = (items) => items.map((value) => ({ value, label: value }))
 
 const ROLE_LABELS = {
   cover: 'Portada',
@@ -47,13 +61,30 @@ const KINDS = {
         hint: 'Nombre, tipo, estado y zona del bien.',
         fields: [
           { key: 'name', label: 'Nombre', required: true, max: 180 },
-          { key: 'category', label: 'Subcategoría del mapa', list: HERITAGE_CATEGORIES, required: true, max: 80 },
-          { key: 'fichaCategory', label: 'Categoría en la ficha', placeholder: 'Patrimonio religioso', max: 80 },
+          { key: 'category', label: 'Subcategoría del mapa', type: 'select', options: asOptions(HERITAGE_CATEGORIES), empty: 'Elige una…', required: true },
+          {
+            key: 'fichaCategory',
+            label: 'Categoría en la ficha',
+            type: 'select',
+            options: asOptions(FICHA_CATEGORIES),
+            empty: 'La misma que la subcategoría',
+          },
           { key: 'status', label: 'Estado', type: 'select', options: STATUSES.map((value) => ({ value, label: value })) },
-          { key: 'zoneKey', label: 'Zona de la ficha', type: 'select', options: ZONES, empty: 'Sin zona' },
-          { key: 'zone', label: 'Zona (texto del mapa)', max: 120 },
-          { key: 'zoneTag', label: 'Etiqueta de zona', placeholder: 'Gramalote Viejo — emplazamiento histórico', max: 120 },
-          { key: 'historicalPeriod', label: 'Época', placeholder: '1910 – 2010', max: 120 },
+          {
+            key: 'zoneKey',
+            label: 'Zona',
+            type: 'select',
+            options: ZONES,
+            empty: 'Sin zona',
+            help: 'La misma zona se usa en la ficha, el filtro y el mapa.',
+          },
+          {
+            key: 'zoneTag',
+            label: 'Etiqueta de zona (opcional)',
+            placeholder: 'Gramalote Viejo — emplazamiento histórico',
+            max: 120,
+            help: 'Solo si la ficha necesita una frase distinta al nombre de la zona.',
+          },
         ],
       },
       {
@@ -118,7 +149,7 @@ const KINDS = {
         hint: 'Nombre, categoría y la frase que se lee al abrir su punto en el mapa.',
         fields: [
           { key: 'name', label: 'Nombre', required: true, max: 180 },
-          { key: 'category', label: 'Categoría', required: true, max: 80 },
+          { key: 'category', label: 'Categoría', type: 'select', options: asOptions(EXTRA_CATEGORIES), empty: 'Elige una…', required: true },
           { key: 'zone', label: 'Zona o referencia', max: 120 },
           {
             key: 'summary',
@@ -184,8 +215,10 @@ function Field({ spec, value, onChange }) {
     control = <textarea rows={spec.rows ?? 3} value={value ?? ''} onChange={(event) => onChange(event.target.value)} {...common} />
   } else if (spec.type === 'select') {
     control = (
-      <select value={value ?? ''} onChange={(event) => onChange(event.target.value)}>
+      <select value={value ?? ''} onChange={(event) => onChange(event.target.value)} required={spec.required}>
         {spec.empty ? <option value="">{spec.empty}</option> : null}
+        {/* Un valor guardado que no está en la lista (datos antiguos) se conserva. */}
+        {value && !spec.options.some((option) => option.value === value) ? <option value={value}>{value}</option> : null}
         {spec.options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
@@ -272,23 +305,31 @@ function ImageCard({ image, index, total, kindKey, roles, busy, onSave, onRemove
               </select>
             </label>
           ) : null}
-          <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
-            <span>Texto alternativo (describe la foto)</span>
-            <input value={draft.altText} onChange={set('altText')} maxLength={255} />
-          </label>
-          <label className="admin-field">
-            <span>Pie de foto (se ve sobre la foto)</span>
-            <input value={draft.caption} onChange={set('caption')} maxLength={120} placeholder="Templo en 1950" />
-          </label>
-          <label className="admin-field">
-            <span>Crédito o fuente</span>
-            <input value={draft.credit} onChange={set('credit')} maxLength={255} />
-          </label>
+          {/* Un extra solo muestra la foto en su tarjeta del mapa: no usa texto
+              alternativo, pie ni crédito, así que no se piden. */}
+          {!single ? (
+            <>
+              <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
+                <span>Texto alternativo (describe la foto)</span>
+                <input value={draft.altText} onChange={set('altText')} maxLength={255} />
+              </label>
+              <label className="admin-field">
+                <span>Pie de foto (se ve sobre la foto)</span>
+                <input value={draft.caption} onChange={set('caption')} maxLength={120} placeholder="Templo en 1950" />
+              </label>
+              <label className="admin-field">
+                <span>Crédito o fuente</span>
+                <input value={draft.credit} onChange={set('credit')} maxLength={255} />
+              </label>
+            </>
+          ) : null}
         </div>
         <div className="place-img__actions">
-          <button type="button" className="admin-btn admin-btn--primary" disabled={!dirty || busy} onClick={() => onSave(image, draft)}>
-            Guardar foto
-          </button>
+          {!single ? (
+            <button type="button" className="admin-btn admin-btn--primary" disabled={!dirty || busy} onClick={() => onSave(image, draft)}>
+              Guardar foto
+            </button>
+          ) : null}
           {!single ? (
             <>
               <button type="button" className="admin-btn" disabled={index === 0 || busy} onClick={() => onMove(index, -1)} aria-label="Subir">
@@ -329,7 +370,9 @@ export default function AdminLugarFicha({ kind: kindKey }) {
   const [error, setError] = useState('')
   const [toast, setToast] = useState(null)
   const [upload, setUpload] = useState(() => ({
-    role: kindKey === 'extras' ? 'cover' : 'gallery',
+    // Vacío = automático: la primera foto de un patrimonio es la portada (sin ella
+    // no aparece en tarjetas ni en el mapa); las siguientes, galería.
+    role: kindKey === 'extras' ? 'cover' : '',
     eraLabel: '',
     altText: '',
     caption: '',
@@ -395,17 +438,15 @@ export default function AdminLugarFicha({ kind: kindKey }) {
       setError('Elige una foto para subir.')
       return
     }
-    if (kindKey === 'extras' && !upload.altText.trim()) {
-      setError('La portada necesita un texto alternativo que describa la foto.')
-      return
-    }
     setBusyImage(true)
     setError('')
     try {
       const data = new FormData()
       data.append('file', file)
-      data.append('role', upload.role)
-      for (const key of ['eraLabel', 'altText', 'caption', 'credit']) data.append(key, upload[key])
+      data.append('role', uploadRole)
+      // Un extra no pide texto alternativo, pie ni crédito: se usa su nombre.
+      const fields = kindKey === 'extras' ? { altText: form.name } : upload
+      for (const key of ['eraLabel', 'altText', 'caption', 'credit']) data.append(key, fields[key] ?? '')
       const detail = await apiRequest(`${kind.api}/${id}/images`, { method: 'POST', formData: data })
       applyImages(detail)
       if (fileInput.current) fileInput.current.value = ''
@@ -524,6 +565,9 @@ export default function AdminLugarFicha({ kind: kindKey }) {
   }
 
   const roles = form.imageRoles ?? (kindKey === 'extras' ? ['cover'] : ['cover', 'gallery'])
+  // Uso de la foto que se sube: el elegido o, si no se eligió, portada cuando aún
+  // no hay una y galería cuando ya existe.
+  const uploadRole = upload.role || (form.images.some((image) => image.role === 'cover') ? 'gallery' : 'cover')
   const cover = form.images.find((image) => image.role === 'cover') ?? form.images[0] ?? null
 
   return (
@@ -597,7 +641,7 @@ export default function AdminLugarFicha({ kind: kindKey }) {
                   Los extras llevan una sola foto: la portada. Para cambiarla, quita la actual y sube otra.
                 </p>
               ) : (
-                <AdminSection title="Subir una foto" hint="Elige el archivo y dile a la ficha para qué sirve." defaultOpen>
+                <AdminSection title="Subir una foto" hint={kindKey === 'extras' ? 'Elige el archivo: será la foto de su tarjeta en el mapa.' : 'Elige el archivo y dile a la ficha para qué sirve.'} defaultOpen>
                   <div className="admin-grid">
                     <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
                       <span>Archivo (JPG, PNG o WebP, mínimo 200 × 200 px)</span>
@@ -606,28 +650,33 @@ export default function AdminLugarFicha({ kind: kindKey }) {
                     {kindKey === 'heritage' ? (
                       <label className="admin-field">
                         <span>Uso</span>
-                        <select value={upload.role} onChange={(event) => setUpload({ ...upload, role: event.target.value })}>
+                        <select value={uploadRole} onChange={(event) => setUpload({ ...upload, role: event.target.value })}>
                           {roles.map((role) => (
                             <option key={role} value={role}>
                               {ROLE_LABELS[role]}
                             </option>
                           ))}
                         </select>
-                        <small className="admin-hint">{ROLE_HELP[upload.role]}</small>
+                        <small className="admin-hint">{ROLE_HELP[uploadRole]}</small>
                       </label>
                     ) : null}
-                    <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
-                      <span>{kindKey === 'extras' ? 'Texto alternativo (obligatorio)' : 'Texto alternativo (describe la foto)'}</span>
-                      <input value={upload.altText} onChange={(event) => setUpload({ ...upload, altText: event.target.value })} maxLength={255} />
-                    </label>
-                    <label className="admin-field">
-                      <span>Pie de foto (se ve sobre la foto)</span>
-                      <input value={upload.caption} onChange={(event) => setUpload({ ...upload, caption: event.target.value })} maxLength={120} placeholder="Templo en 1950" />
-                    </label>
-                    <label className="admin-field">
-                      <span>Crédito o fuente</span>
-                      <input value={upload.credit} onChange={(event) => setUpload({ ...upload, credit: event.target.value })} maxLength={255} />
-                    </label>
+                    {/* Un extra solo necesita la foto: sin texto alternativo, pie ni crédito. */}
+                    {kindKey === 'heritage' ? (
+                      <>
+                        <label className="admin-field" style={{ gridColumn: '1 / -1' }}>
+                          <span>Texto alternativo (describe la foto)</span>
+                          <input value={upload.altText} onChange={(event) => setUpload({ ...upload, altText: event.target.value })} maxLength={255} />
+                        </label>
+                        <label className="admin-field">
+                          <span>Pie de foto (se ve sobre la foto)</span>
+                          <input value={upload.caption} onChange={(event) => setUpload({ ...upload, caption: event.target.value })} maxLength={120} placeholder="Templo en 1950" />
+                        </label>
+                        <label className="admin-field">
+                          <span>Crédito o fuente</span>
+                          <input value={upload.credit} onChange={(event) => setUpload({ ...upload, credit: event.target.value })} maxLength={255} />
+                        </label>
+                      </>
+                    ) : null}
                   </div>
                   <div>
                     <button type="button" className="admin-btn admin-btn--primary" onClick={uploadImage} disabled={busyImage}>
