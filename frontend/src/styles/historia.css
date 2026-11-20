@@ -3794,6 +3794,7 @@ kbd {
    las horizontales siguen llenando su marco como antes. Los héroes a todo ancho
    y las miniaturas pequeñas no cambian. */
 .his-card__media img[data-orient='portrait'],
+.his-tl__media img[data-orient='portrait'],
 .his-cap-hero__media img[data-orient='portrait'],
 .his-event__media img[data-orient='portrait'],
 .his-row__media img[data-orient='portrait'],

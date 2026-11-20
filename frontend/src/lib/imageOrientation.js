@@ -5,38 +5,6 @@ function tag(img) {
   if (img.naturalWidth && img.naturalHeight) {
     img.dataset.orient = img.naturalHeight > img.naturalWidth ? 'portrait' : 'landscape'
   }
-  frame(img)
-}
-
-// Marcos de contenido donde la foto se ve completa (contain) y el hueco que deja
-// su proporción se rellena con la misma foto desenfocada (ver mejoras.css,
-// [data-blur]). Quedan fuera los héroes y fondos a todo ancho, que siguen
-// llenando el marco (cover).
-const FRAMED = [
-  '.his-card__media',
-  '.his-explore__card',
-  '.his-event__media',
-  '.his-row__media',
-  '.his-ficha__media',
-  '.his-story-card__cols',
-  '.his-mapview__card',
-  '.his-tl__media',
-  '.listing-card-v__media',
-  '.explore-block__media',
-  '.story-related__card',
-  '.photo',
-]
-  .map((frame) => `${frame} > img, ${frame} > picture > img`)
-  .join(', ')
-
-function frame(img) {
-  const parent = img.parentElement
-  if (!parent || !img.matches(FRAMED)) return
-  const holder = parent.tagName === 'PICTURE' ? parent.parentElement : parent
-  const src = img.currentSrc || img.src
-  if (!src) return
-  holder.dataset.blur = ''
-  holder.style.setProperty('--blur-img', `url("${src}")`)
 }
 
 export function initImageOrientation() {
