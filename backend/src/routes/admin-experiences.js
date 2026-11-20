@@ -6,6 +6,7 @@ import { config } from '../config.js'
 import { withTransaction, query, queryOne } from '../db.js'
 import { ApiError, asyncHandler } from '../http.js'
 import { parseCoordinate } from '../coordinates.js'
+import { assertFresh } from '../concurrency.js'
 import { MAP_ICONS } from '../map-icons.js'
 import { assertQuota, ensureDir, mediaRoot, removeImageFiles, storeImage } from '../media.js'
 import { toNumber } from '../serializers.js'
@@ -155,6 +156,7 @@ async function loadExperience(experienceId) {
     schedule: parseSchedule(row.schedule_json),
     openDaily: Boolean(row.open_daily),
     published: Boolean(row.is_published),
+    updatedAt: row.updated_at,
     sortOrder: Number(row.sort_order),
     tips: tips.map((tip) => ({
       icon: tip.icon ?? 'info',
@@ -412,6 +414,7 @@ router.put(
     await withTransaction(async (connection) => {
       fields.category_id = await categoryId(connection, req.body.category)
       const [beforeRows] = await connection.query('SELECT * FROM experiences WHERE id = ? FOR UPDATE', [experienceId])
+      assertFresh(req.body?.updatedAt, beforeRows[0]?.updated_at)
       const tipsBefore = await tipTitles(connection, experienceId)
       await connection
         .query(

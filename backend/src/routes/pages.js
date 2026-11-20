@@ -10,6 +10,7 @@ import { Router } from 'express'
 import multer from 'multer'
 import { requireAuth } from '../auth.js'
 import { config } from '../config.js'
+import { assertFresh } from '../concurrency.js'
 import { query, queryOne, withTransaction } from '../db.js'
 import { ApiError, asyncHandler } from '../http.js'
 import { assertQuota, ensureDir, mediaRoot, storeImage } from '../media.js'
@@ -255,6 +256,8 @@ router.put(
     }
 
     await withTransaction(async (connection) => {
+      const [current] = await connection.query('SELECT updated_at FROM site_settings WHERE setting_key = ? FOR UPDATE', [settingKey(page)])
+      assertFresh(req.body?.updatedAt, current[0]?.updated_at)
       await connection.query(
         `INSERT INTO site_settings (setting_key, setting_value, description)
          VALUES (?, CAST(? AS JSON), ?)

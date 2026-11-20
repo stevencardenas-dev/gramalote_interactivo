@@ -5,6 +5,7 @@ import { config } from '../config.js'
 import { withTransaction, query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, booleanParam } from '../http.js'
 import { parseCoordinate } from '../coordinates.js'
+import { assertFresh } from '../concurrency.js'
 import { MAP_ICONS } from '../map-icons.js'
 import { assertQuota, ensureDir, mediaRoot, removeImageFiles, storeImage } from '../media.js'
 import { toNumber } from '../serializers.js'
@@ -338,6 +339,7 @@ for (const kind of Object.values(KINDS)) {
       const id = numId(req.params.id)
       const current = await findRow(kind, id)
       const body = req.body ?? {}
+      assertFresh(body.updatedAt, current.updated_at)
 
       const changes = {}
       const sets = []
