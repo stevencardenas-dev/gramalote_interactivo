@@ -265,9 +265,10 @@
 
 .access-card {
   overflow: hidden;
-  border: 1px solid #9a9a9a;
   border-radius: var(--radius-lg);
   background: var(--c-white);
+  /* Sombra suave en lugar de un marco con contorno. */
+  box-shadow: 0 8px 22px rgba(20, 20, 20, 0.14), 0 1px 3px rgba(20, 20, 20, 0.08);
 }
 
 .access-card .photo {

@@ -30,8 +30,9 @@ const FRAMED = [
   .map((frame) => `${frame} > img, ${frame} > picture > img`)
   .join(', ')
 
-// Collages de las páginas de categoría: las fotos llenan su marco (cover).
-const EXCLUDED = '.photo-collage'
+// Collages de categoría y páginas de Curiosidades (lista .facet y detalle .story):
+// las fotos llenan su marco (cover), sin relleno desenfocado.
+const EXCLUDED = '.photo-collage, .facet, .story'
 
 function frame(img) {
   const parent = img.parentElement
