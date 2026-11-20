@@ -35,24 +35,28 @@ export const timeline = [
     date: '1583',
     title: 'El territorio de Salazar de las Palmas',
     text: 'El territorio que hoy conocemos como Gramalote formaba parte de la jurisdicción de Salazar de las Palmas. Sus montañas estaban habitadas por comunidades indígenas y posteriormente fueron ocupadas por colonos que desarrollaron actividades agrícolas.',
+    image: '/img/historia/tiempo-01.jpg',
   },
   {
     n: '02',
     date: '1780',
     title: 'Una comunidad que defendía su territorio',
     text: 'El 5 de noviembre de 1780, los pobladores lograron expulsar a Alfonso de Arapiles Cornejo y Torres, quien usufructuaba terrenos en Miraflores. Este acontecimiento refleja la organización y defensa de los intereses de los primeros habitantes.',
+    image: '/img/historia/tiempo-02.jpg',
   },
   {
     n: '03',
     date: '1821',
     title: 'Los primeros registros del café',
     text: 'Bartolomé Peñaranda y su esposa Estefanía Molina registraron plantaciones de café en sus tierras de Miraflores-Caldereros. Es el primer registro conocido del cultivo en el territorio, que después se convertiría en una de las principales actividades económicas.',
+    image: '/img/historia/tiempo-03.jpg',
   },
   {
     n: '04',
     date: 'Mediados del siglo XIX',
     title: 'La colonización del Catatumbo',
     text: 'La llegada de nuevos colonos y la apertura de caminos fortalecieron los asentamientos de Caldereros y La Corcovada. El territorio se volvió un punto estratégico para avanzar hacia las tierras del Catatumbo y desarrollar nuevas actividades agrícolas.',
+    image: '/img/historia/tiempo-04.jpg',
   },
   {
     n: '05',
@@ -73,6 +77,7 @@ export const timeline = [
     date: '1865–1866',
     title: 'La parroquia de San Rafael',
     text: 'Se estableció oficialmente la parroquia de San Rafael de Galindo y Secundino Jácome fue nombrado su primer párroco. La parroquia se convirtió en un centro fundamental para la organización religiosa y comunitaria del poblado.',
+    image: '/img/historia/tiempo-07.jpg',
   },
   {
     n: '08',
@@ -93,30 +98,35 @@ export const timeline = [
     date: '1888',
     title: 'El nombre Gramalote',
     text: 'Mediante la Ordenanza número 13 del 28 de julio de 1888 se cambió oficialmente el nombre de Galindo por Gramalote. La población recuperó así la denominación con la que sus habitantes identificaban históricamente el territorio.',
+    image: '/img/historia/tiempo-10.jpg',
   },
   {
     n: '11',
     date: '1900–1902',
     title: 'La Guerra de los Mil Días',
     text: 'Gramalote vivió los efectos de la Guerra de los Mil Días. El 2 de febrero de 1900 se produjo una incursión militar de las fuerzas liberales del general Rafael Uribe Uribe, dejando huellas en la historia política y social del municipio.',
+    image: '/img/historia/tiempo-11.jpg',
   },
   {
     n: '12',
     date: 'Primeras décadas del siglo XX',
     title: 'El esplendor cafetero',
     text: 'El café se consolidó como una de las principales fuentes de riqueza de Gramalote. Las grandes haciendas, sus casonas y extensos cultivos transformaron el paisaje rural y fortalecieron la economía de numerosas familias campesinas.',
+    image: '/img/historia/tiempo-12.jpg',
   },
   {
     n: '13',
     date: '1925–1936',
     title: 'Nuevas fronteras y caminos',
     text: 'La separación de Lourdes modificó la extensión territorial de Gramalote. Después, la construcción de la carretera hacia Ocaña y la inauguración del puente Cuervo en 1932 fortalecieron las comunicaciones y el desarrollo comercial de la región.',
+    image: '/img/historia/tiempo-13.jpg',
   },
   {
     n: '14',
     date: 'Décadas de 1960–1990',
     title: 'Transformaciones del paisaje',
     text: 'Los cambios en los cultivos, la expansión ganadera y la transformación de las coberturas vegetales modificaron progresivamente el paisaje de las montañas. Estas actividades también generaron nuevas preocupaciones sobre la conservación de los recursos naturales.',
+    image: '/img/historia/tiempo-14.jpg',
   },
   {
     n: '15',
@@ -130,12 +140,13 @@ export const timeline = [
     date: '2010 en adelante',
     title: 'La reconstrucción de un pueblo',
     text: 'Después de la tragedia comenzó el proceso de reconstrucción y reasentamiento. Las familias tuvieron que reorganizar sus vidas mientras avanzaban los estudios y las obras del nuevo casco urbano, dando inicio a una tercera ubicación urbana para Gramalote.',
+    image: '/img/historia/tiempo-16.jpg',
   },
 ]
 
-// La línea del tiempo resumida usa los hitos con foto; al desplegarla se ven
-// los 16 acontecimientos en orden.
-export const timelineResumen = ['05', '06', '08', '09', '15']
+// La línea del tiempo resumida muestra los 5 primeros hitos; al desplegarla se ven
+// los 16 acontecimientos en orden. Todos tienen foto (tiempo-NN.jpg).
+export const timelineResumen = ['01', '02', '03', '04', '05']
 
 // ------------------------------------------------------------- Capítulos
 
