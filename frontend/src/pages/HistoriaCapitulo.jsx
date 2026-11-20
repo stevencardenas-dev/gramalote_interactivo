@@ -296,6 +296,7 @@ export default function HistoriaCapitulo() {
     if (!chapter || !story) return undefined
     const cierre = document.querySelector('.his-closing')
     const bloques = [...story.querySelectorAll('.his-event'), ...(cierre ? [cierre] : [])]
+    const paneles = [...story.querySelectorAll('.his-shared__panel')]
     let marco = 0
 
     const pintar = () => {
@@ -303,6 +304,7 @@ export default function HistoriaCapitulo() {
       const ring = siguienteRef.current
       if (esReducido()) {
         bloques.forEach((bloque) => bloque.style.removeProperty('--vis'))
+        paneles.forEach((panel) => panel.style.removeProperty('--vis'))
         ring?.style.setProperty('--p', '0')
         return
       }
@@ -324,6 +326,16 @@ export default function HistoriaCapitulo() {
       const desde = actual >= 0 ? medios[actual] : centro + alto * 0.5
       const avance = siguiente === undefined ? 0 : Math.max(0, Math.min(1, (centro - desde) / (siguiente - desde)))
       ring?.style.setProperty('--p', avance.toFixed(3))
+
+      // Panel de foto compartida (móvil): está fijo mientras dura su grupo, así
+      // que su --vis sale de cuánto del grupo ocupa la pantalla al entrar
+      // (borde superior) y al salir (borde inferior).
+      paneles.forEach((panel) => {
+        const caja = panel.parentElement.getBoundingClientRect()
+        const dentro = Math.min(caja.bottom, alto) - Math.max(caja.top, 0)
+        const vis = Math.max(0, Math.min(1, 0.25 + dentro / alto))
+        panel.style.setProperty('--vis', Math.min(1, vis).toFixed(3))
+      })
       ring?.classList.toggle('is-end', siguiente === undefined)
     }
 
@@ -520,7 +532,11 @@ export default function HistoriaCapitulo() {
                         {tarjetaEtapa(grupo.items[0].eventIndex)}
                         <figure className="his-event__media">
                           <img src={grupo.image} alt="" loading="lazy" />
-                          {pie(visible.event)}
+                          {/* La key reinicia la animación de la fecha al cambiar de texto. */}
+                          <figcaption key={visible.event.n}>
+                            <span className="his-event__num">{String(visible.event.n).padStart(2, '0')}</span>
+                            <span className="his-event__date">{visible.event.date}</span>
+                          </figcaption>
                         </figure>
                         <div className="his-shared__pila">
                           {grupo.items.map(({ event }, i) => (
@@ -536,8 +552,11 @@ export default function HistoriaCapitulo() {
                           ))}
                         </div>
                         <div className="his-shared__puntos">
+                          <span className="his-shared__cuenta">
+                            {actual + 1} de {grupo.items.length}
+                          </span>
                           {grupo.items.map(({ event }, i) => (
-                            <span key={event.n} className={i === actual ? 'is-current' : ''} />
+                            <i key={event.n} className={i === actual ? 'is-current' : ''} />
                           ))}
                         </div>
                       </div>
