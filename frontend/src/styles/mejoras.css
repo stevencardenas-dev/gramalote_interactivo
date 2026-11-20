@@ -782,3 +782,20 @@ button.stars__button:focus-visible {
   object-fit: contain;
   background: transparent;
 }
+
+/* Encuadre desde el panel en marcos que ya van posicionados (p. ej. las tarjetas con texto
+   sobre la foto): igual que [data-blur], pero sin cambiar el position del marco. */
+[data-blur-fill] {
+  isolation: isolate;
+  overflow: hidden;
+}
+
+[data-blur-fill]::before {
+  content: '';
+  position: absolute;
+  inset: -24px;
+  z-index: -1;
+  background: var(--blur-img) center / cover no-repeat;
+  filter: blur(22px) saturate(1.1) brightness(0.92);
+  pointer-events: none;
+}

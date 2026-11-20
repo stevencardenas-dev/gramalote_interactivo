@@ -31,7 +31,13 @@ function applyCrop(img, crop) {
   const src = img.currentSrc || img.src
   img.dataset.crop = ''
   if (holder && src) {
-    holder.setAttribute('data-blur', '')
+    // [data-blur] fuerza position: relative. Un marco que ya va posicionado (p. ej. el de las
+    // tarjetas con texto sobre la foto, absoluto) se quedaría sin alto: usa la variante que no
+    // toca el position (data-blur-fill).
+    const keepPosition =
+      holder.hasAttribute('data-blur-fill') || ['absolute', 'fixed', 'sticky'].includes(getComputedStyle(holder).position)
+    holder.removeAttribute(keepPosition ? 'data-blur' : 'data-blur-fill')
+    holder.setAttribute(keepPosition ? 'data-blur-fill' : 'data-blur', '')
     holder.style.setProperty('--blur-img', `url("${src}")`)
     holder.style.overflow = 'hidden'
   }
@@ -47,6 +53,7 @@ function applyCrop(img, crop) {
 
 function clearCrop(img) {
   delete img.dataset.crop
+  holderOf(img)?.removeAttribute('data-blur-fill')
   for (const property of ['position', 'width', 'height', 'left', 'top', 'max-width', 'object-fit']) {
     img.style.removeProperty(property)
   }

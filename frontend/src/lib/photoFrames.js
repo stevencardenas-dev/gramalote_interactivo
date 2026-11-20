@@ -9,6 +9,19 @@
 // Para añadir un espacio nuevo: una entrada aquí y, en el panel, decidir qué fotos
 // caen en él (ver framesForEstablishmentImage).
 export const PHOTO_FRAMES = {
+  // Tarjetas destacadas con el texto sobre la foto (PlaceCard). Los alojamientos salen en
+  // las de 4 columnas de Dónde ir y Dónde comer (263 × 300); las tiendas, en las anchas de
+  // Dónde ir y Dónde dormir (544–549 × 300). Alto fijo y ancho variable: aproximado.
+  'destacada-vertical': {
+    label: 'Tarjeta destacada',
+    ratio: 263 / 300,
+    selector: '.place-grid--four .place-card',
+  },
+  'destacada-ancha': {
+    label: 'Tarjeta destacada',
+    ratio: 546 / 300,
+    selector: '.shops-block .place-card, .place-grid--two .place-card',
+  },
   // Foto cuadrada del punto en el mapa: en la lista (56–60 px) y en su tarjeta (92 px).
   // La llevan las portadas de establecimientos, experiencias, patrimonio y extras.
   'mapa-cuadrado': {
@@ -45,7 +58,13 @@ export const PHOTO_FRAMES = {
   'patrimonio-ficha': {
     label: 'Ficha de patrimonio',
     ratio: 509 / 388,
-    selector: '.his-photo-frame, .era-carousel__stage',
+    selector: '.his-ficha__aside .his-photo-frame, .era-carousel__stage',
+  },
+  // Galería de la ficha de patrimonio (4/3; la portada también sale como primera foto).
+  'patrimonio-galeria': {
+    label: 'Galería de patrimonio',
+    ratio: 4 / 3,
+    selector: '.his-ficha__gallery .his-photo-frame',
   },
   // Portada en las tarjetas de las listas de Dónde dormir, comer y comprar. El alto es
   // fijo (200 px) y el ancho cambia con las columnas: 352 × 200 en escritorio; en otros
@@ -107,12 +126,17 @@ export function frameOfElement(element) {
 // fotos de «Galería» en orden (2 grandes y 3 pequeños): la 2.ª es la de la derecha de
 // la primera fila (orden confirmado con el collage público).
 export function framesForEstablishmentImage({ categorySlug, role, galleryIndex }) {
+  // Las fotos de galería también pueden elegirse como foto de una tarjeta destacada (Páginas).
   if (categorySlug === 'dormir' && role === 'gallery' && galleryIndex >= 0 && galleryIndex < 5) {
-    return [galleryIndex < 2 ? 'dormir-galeria-grande' : 'dormir-galeria-pequeno']
+    return [galleryIndex < 2 ? 'dormir-galeria-grande' : 'dormir-galeria-pequeno', 'destacada-vertical']
   }
+  if (categorySlug === 'dormir' && role === 'gallery') return ['destacada-vertical']
+  if (categorySlug === 'comprar' && role === 'gallery') return ['destacada-ancha']
   // La portada sale en la tarjeta de la lista de su categoría y, cuadrada, en el mapa.
   if (role === 'cover') {
-    return ['dormir', 'comer', 'comprar'].includes(categorySlug) ? ['tarjeta-lista', 'mapa-cuadrado'] : ['mapa-cuadrado']
+    if (categorySlug === 'dormir') return ['tarjeta-lista', 'destacada-vertical', 'mapa-cuadrado']
+    if (categorySlug === 'comprar') return ['tarjeta-lista', 'destacada-ancha', 'mapa-cuadrado']
+    return categorySlug === 'comer' ? ['tarjeta-lista', 'mapa-cuadrado'] : ['mapa-cuadrado']
   }
   return []
 }
@@ -127,11 +151,12 @@ export function framesForExperienceImage({ role, galleryIndex }) {
   return []
 }
 
-// Patrimonio: la portada sale en la lista, en la ficha y, cuadrada, en el mapa; las fotos
-// del carrusel de épocas, en la ficha.
+// Patrimonio: la portada sale en la lista, en la ficha (y como primera foto de su galería) y,
+// cuadrada, en el mapa; las fotos del carrusel de épocas, en la ficha; las de galería, en la galería.
 export function framesForHeritageImage({ role }) {
-  if (role === 'cover') return ['patrimonio-lista', 'patrimonio-ficha', 'mapa-cuadrado']
+  if (role === 'cover') return ['patrimonio-lista', 'patrimonio-ficha', 'patrimonio-galeria', 'mapa-cuadrado']
   if (role === 'historic') return ['patrimonio-ficha']
+  if (role === 'gallery') return ['patrimonio-galeria']
   return []
 }
 

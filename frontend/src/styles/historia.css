@@ -1918,9 +1918,17 @@
   font-size: 0.75rem;
 }
 
+/* El marco (no la foto) lleva la proporción 4/3: así la foto se puede encuadrar desde el
+   panel colocándola dentro del marco. */
+.his-ficha__gallery .his-photo-frame {
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
 .his-ficha__gallery img {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  height: 100%;
   border-radius: 14px;
   object-fit: cover;
 }
