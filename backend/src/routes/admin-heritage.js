@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { requireAuth } from '../auth.js'
-import { query, queryOne } from '../db.js'
+import { query, queryOne, withTransaction } from '../db.js'
 import { ApiError, asyncHandler, booleanParam } from '../http.js'
 import { parseCoordinate } from '../coordinates.js'
 import { MAP_ICONS } from '../map-icons.js'
@@ -116,6 +116,9 @@ router.post(
     const name = text(body.name, 'Nombre', { max: 180, required: true })
     const category = text(body.category, 'Subcategoría', { max: 80, required: true })
     const slug = await uniqueSlug(name)
+    // Un patrimonio nuevo entra al final de la lista (de 10 en 10, como los demás).
+    const last = await queryOne('SELECT COALESCE(MAX(sort_order), 0) AS last FROM heritage_sites')
+    const sortOrder = Number(last?.last ?? 0) + 10
 
     const result = await query(
       `INSERT INTO heritage_sites
@@ -133,7 +136,7 @@ router.post(
         mapIcon(body.mapIcon),
         text(body.summary, 'Resumen', { max: 320 }),
         text(body.description, 'Descripción', { max: 8000 }),
-        Number.parseInt(body.sortOrder, 10) || 0,
+        sortOrder,
         bool(body.published) === true ? 1 : 0,
       ],
     )
@@ -143,6 +146,25 @@ router.post(
 )
 
 // El guardado de una ficha (PATCH /:id) y sus fotos viven en admin-places.js.
+
+// Orden de la lista (el que se ve en Historia › Patrimonio): `ids` trae los id en el
+// orden deseado y se numeran de 10 en 10 para poder intercalar uno a mano después.
+router.put(
+  '/admin/heritage/order',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const ids = Array.isArray(req.body?.ids) ? req.body.ids.map((value) => Number.parseInt(value, 10)) : null
+    if (!ids || ids.length === 0 || ids.some((value) => !Number.isFinite(value) || value <= 0)) {
+      throw new ApiError(400, 'VALIDATION', 'Falta el orden de los patrimonios')
+    }
+    await withTransaction(async (connection) => {
+      for (const [index, id] of ids.entries()) {
+        await connection.query('UPDATE heritage_sites SET sort_order = ? WHERE id = ?', [(index + 1) * 10, id])
+      }
+    })
+    res.json({ data: { ok: true } })
+  }),
+)
 
 router.delete(
   '/admin/heritage/:id',
