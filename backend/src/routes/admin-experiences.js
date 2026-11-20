@@ -5,6 +5,7 @@ import { requireAuth } from '../auth.js'
 import { config } from '../config.js'
 import { withTransaction, query, queryOne } from '../db.js'
 import { ApiError, asyncHandler } from '../http.js'
+import { parseCoordinate } from '../coordinates.js'
 import { MAP_ICONS } from '../map-icons.js'
 import { assertQuota, ensureDir, mediaRoot, removeImageFiles, storeImage } from '../media.js'
 import { toNumber } from '../serializers.js'
@@ -32,13 +33,9 @@ function text(value, field, { max = 500, required = false } = {}) {
   return trimmed ? trimmed.slice(0, max) : null
 }
 
-function coordinate(value, field, limit) {
+function coordinate(value, field, kind) {
   if (value === null || value === undefined || value === '') return null
-  const parsed = Number(value)
-  if (!Number.isFinite(parsed) || Math.abs(parsed) > limit) {
-    throw new ApiError(400, 'VALIDATION', `${field} no es válida`)
-  }
-  return parsed
+  return parseCoordinate(value, kind, field)
 }
 
 const SCHEDULE_MODES = ['always', 'days', 'days-close', 'multi', 'per-day']
@@ -244,8 +241,8 @@ function fieldsFrom(body) {
   if (mapsUrl && !/^https?:\/\//i.test(mapsUrl)) {
     throw new ApiError(400, 'VALIDATION', 'El enlace de Google Maps debe empezar con http:// o https://')
   }
-  const latitude = coordinate(body.latitude, 'La latitud', 90)
-  const longitude = coordinate(body.longitude, 'La longitud', 180)
+  const latitude = coordinate(body.latitude, 'La latitud', 'lat')
+  const longitude = coordinate(body.longitude, 'La longitud', 'lng')
   if ((latitude === null) !== (longitude === null)) {
     throw new ApiError(400, 'VALIDATION', 'Escribe latitud y longitud, o deja ambas vacías')
   }
@@ -460,13 +457,16 @@ const upload = multer({
   limits: { fileSize: config.media.maxUploadMb * 1024 * 1024, files: 1 },
 })
 
+function receiveImage(req, res, next) {
+  upload.single('file')(req, res, (error) =>
+    next(error ? new ApiError(400, 'UPLOAD_ERROR', 'No se pudo recibir la imagen (¿supera el tamaño máximo?)') : undefined),
+  )
+}
+
 router.post(
   '/admin/experiences/:id/images',
   requireAuth,
-  (req, res, next) =>
-    upload.single('file')(req, res, (error) =>
-      next(error ? new ApiError(400, 'UPLOAD_ERROR', 'No se pudo recibir la imagen (¿supera el tamaño máximo?)') : undefined),
-    ),
+  receiveImage,
   asyncHandler(async (req, res) => {
     const experienceId = id(req.params.id)
     await loadExperience(experienceId)
@@ -533,6 +533,94 @@ router.patch(
           image.media_id,
         ])
       }
+    })
+    res.json({ data: await loadExperience(experienceId) })
+  }),
+)
+
+// Cambiar el archivo de una foto conservando su uso, su orden y su texto alternativo.
+router.put(
+  '/admin/experiences/:id/images/:imageId/file',
+  requireAuth,
+  receiveImage,
+  asyncHandler(async (req, res) => {
+    const experienceId = id(req.params.id)
+    const imageId = id(req.params.imageId)
+    if (!req.file?.buffer) throw new ApiError(400, 'VALIDATION', 'Falta el archivo de la imagen')
+    const image = await queryOne(
+      `SELECT i.media_id, i.role, m.storage_disk, m.storage_path, m.alt_text, m.caption, m.credit
+       FROM experience_images i JOIN media m ON m.id = i.media_id
+       WHERE i.id = ? AND i.experience_id = ?`,
+      [imageId, experienceId],
+    )
+    if (!image) throw new ApiError(404, 'NOT_FOUND', 'Imagen no encontrada')
+
+    await assertQuota(req.file.size)
+    await ensureDir(mediaRoot())
+    const stored = await storeImage(req.file.buffer, {
+      folder: `experiences/${experienceId}`,
+      role: image.role === 'cover' ? 'cover' : 'gallery',
+    })
+
+    const oldPath = await withTransaction(async (connection) => {
+      const [inserted] = await connection.query(
+        `INSERT INTO media
+           (storage_disk, storage_path, public_url, mime_type, width_px, height_px,
+            alt_text, caption, credit, source, checksum_sha256)
+         VALUES ('local', ?, ?, ?, ?, ?, ?, ?, ?, 'upload', ?)`,
+        [
+          stored.storagePath,
+          stored.publicUrl,
+          stored.mimeType,
+          stored.width,
+          stored.height,
+          image.alt_text,
+          image.caption,
+          image.credit,
+          stored.checksum,
+        ],
+      )
+      await connection.query('UPDATE experience_images SET media_id = ? WHERE id = ?', [inserted.insertId, imageId])
+      await audit(connection, req, 'replace_media', experienceId, { mediaId: inserted.insertId })
+
+      const [usageRows] = await connection.query(
+        `SELECT (SELECT COUNT(*) FROM experience_images WHERE media_id = ?) +
+                (SELECT COUNT(*) FROM establishment_images WHERE media_id = ?) AS total`,
+        [image.media_id, image.media_id],
+      )
+      if (Number(usageRows[0]?.total ?? 0) > 0) return null
+      try {
+        await connection.query('DELETE FROM media WHERE id = ?', [image.media_id])
+      } catch (error) {
+        if (error?.code === 'ER_ROW_IS_REFERENCED_2') return null
+        throw error
+      }
+      return image.storage_disk === 'local' ? image.storage_path : null
+    })
+
+    if (oldPath) await removeImageFiles(oldPath)
+    res.json({ data: await loadExperience(experienceId) })
+  }),
+)
+
+// Orden de las fotos: `ids` trae los imageId en el orden deseado. Dentro de cada
+// uso (portada/galería) manda `sort_order`.
+router.put(
+  '/admin/experiences/:id/images/order',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const experienceId = id(req.params.id)
+    const ids = Array.isArray(req.body?.ids) ? req.body.ids.map((value) => id(value)) : null
+    if (!ids) throw new ApiError(400, 'VALIDATION', 'Falta el orden de las imágenes')
+
+    await withTransaction(async (connection) => {
+      for (const [index, imageId] of ids.entries()) {
+        await connection.query(
+          'UPDATE experience_images SET sort_order = ? WHERE id = ? AND experience_id = ?',
+          [(index + 1) * 10, imageId, experienceId],
+        )
+      }
+      await audit(connection, req, 'reorder_media', experienceId, { order: ids })
     })
     res.json({ data: await loadExperience(experienceId) })
   }),

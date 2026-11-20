@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { requireAuth } from '../auth.js'
 import { query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, booleanParam } from '../http.js'
+import { parseCoordinate } from '../coordinates.js'
 import { MAP_ICONS } from '../map-icons.js'
 import { toNumber } from '../serializers.js'
 
@@ -29,14 +30,6 @@ function text(value, field, { max = 500, required = false } = {}) {
   const trimmed = value.trim()
   if (required && !trimmed) throw new ApiError(400, 'VALIDATION', `${field} es obligatorio`)
   return trimmed.slice(0, max)
-}
-
-function coordinate(value, field, max) {
-  const parsed = Number(value)
-  if (value === null || value === undefined || value === '' || !Number.isFinite(parsed) || Math.abs(parsed) > max) {
-    throw new ApiError(400, 'VALIDATION', `${field} no es una coordenada válida`)
-  }
-  return parsed
 }
 
 function mapsUrl(value) {
@@ -134,8 +127,8 @@ router.post(
         name,
         category,
         text(body.zone, 'Zona', { max: 120 }),
-        coordinate(body.latitude, 'Latitud', 90),
-        coordinate(body.longitude, 'Longitud', 180),
+        parseCoordinate(body.latitude, 'lat', 'Latitud'),
+        parseCoordinate(body.longitude, 'lng', 'Longitud'),
         mapsUrl(body.mapsUrl),
         mapIcon(body.mapIcon),
         text(body.summary, 'Resumen', { max: 320 }),

@@ -4,6 +4,7 @@ import { requireAuth } from '../auth.js'
 import { config } from '../config.js'
 import { withTransaction, query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, booleanParam, stringParam } from '../http.js'
+import { parseCoordinate } from '../coordinates.js'
 import {
   assertQuota,
   ensureDir,
@@ -86,11 +87,17 @@ function text(value, field, { max = 500, required = false } = {}) {
 
 function decimal(value, field, { min = 0, max = 99_999_999 } = {}) {
   if (value === null || value === undefined || value === '') return null
-  const parsed = Number(value)
+  // Acepta la coma decimal (7,9) además del punto.
+  const parsed = Number(typeof value === 'string' ? value.trim().replace(',', '.') : value)
   if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
     throw new ApiError(400, 'VALIDATION', `${field} no es un número válido o está fuera del rango permitido`)
   }
   return parsed
+}
+
+function optionalCoordinate(value, kind, label) {
+  if (value === null || value === undefined || value === '') return null
+  return parseCoordinate(value, kind, label)
 }
 
 function integer(value, field) {
@@ -514,8 +521,8 @@ router.patch(
         summary,
         description,
         address: text(body.address, 'Dirección', { max: 255 }),
-        latitude: decimal(body.latitude, 'Latitud (Norte de Santander)', { min: 6.9, max: 9.3 }),
-        longitude: decimal(body.longitude, 'Longitud (Norte de Santander)', { min: -73.7, max: -72.0 }),
+        latitude: optionalCoordinate(body.latitude, 'lat', 'La latitud'),
+        longitude: optionalCoordinate(body.longitude, 'lng', 'La longitud'),
         // Sin la clave (cliente anterior) se conserva el icono actual.
         map_icon: 'mapIcon' in body ? mapIcon(body.mapIcon) : current.map_icon,
         maps_url: mapsUrl(body.mapsUrl),
@@ -1227,6 +1234,80 @@ router.patch(
       })
     })
 
+    res.json({ data: { imageId } })
+  }),
+)
+
+// Cambiar el archivo de una foto conservando su uso, su orden y su texto alternativo.
+router.put(
+  '/admin/establishments/:id/images/:imageId/file',
+  requireAuth,
+  receiveImage,
+  asyncHandler(async (req, res) => {
+    if (!req.file?.buffer) throw new ApiError(400, 'VALIDATION', 'Falta el archivo de la imagen')
+    const establishmentId = integer(req.params.id, 'id')
+    const imageId = integer(req.params.imageId, 'imageId')
+
+    const image = await queryOne(
+      `SELECT i.media_id, i.role, m.alt_text, m.caption, m.credit
+       FROM establishment_images i JOIN media m ON m.id = i.media_id
+       WHERE i.id = ? AND i.establishment_id = ?`,
+      [imageId, establishmentId],
+    )
+    if (!image) throw new ApiError(404, 'NOT_FOUND', 'Imagen de la ficha no encontrada')
+
+    await assertQuota(req.file.size)
+    await ensureDir(mediaRoot())
+    const stored = await storeImage(req.file.buffer, {
+      folder: `establishments/${establishmentId}`,
+      role: image.role,
+    })
+
+    const oldPath = await withTransaction(async (connection) => {
+      const [inserted] = await connection.query(
+        `INSERT INTO media
+           (storage_disk, storage_path, public_url, mime_type, width_px, height_px,
+            alt_text, caption, credit, source, checksum_sha256)
+         VALUES ('local', ?, ?, ?, ?, ?, ?, ?, ?, 'upload', ?)`,
+        [
+          stored.storagePath,
+          stored.publicUrl,
+          stored.mimeType,
+          stored.width,
+          stored.height,
+          image.alt_text,
+          image.caption,
+          image.credit,
+          stored.checksum,
+        ],
+      )
+      await connection.query('UPDATE establishment_images SET media_id = ? WHERE id = ?', [inserted.insertId, imageId])
+      await recordAudit(connection, req, {
+        action: 'replace_media',
+        entityType: 'establishment',
+        entityId: establishmentId,
+        changes: { imageId, mediaId: inserted.insertId },
+      })
+
+      const [usageRows] = await connection.query(
+        `SELECT (SELECT COUNT(*) FROM establishment_images WHERE media_id = ?) +
+                (SELECT COUNT(*) FROM experience_images WHERE media_id = ?) AS total`,
+        [image.media_id, image.media_id],
+      )
+      if (Number(usageRows[0]?.total ?? 0) > 0) return null
+
+      const [oldRows] = await connection.query('SELECT storage_disk, storage_path FROM media WHERE id = ?', [image.media_id])
+      try {
+        await connection.query('DELETE FROM media WHERE id = ?', [image.media_id])
+      } catch (error) {
+        // Otra tabla del sitio todavía la referencia: se conserva el archivo.
+        if (error?.code === 'ER_ROW_IS_REFERENCED_2') return null
+        throw error
+      }
+      return oldRows[0]?.storage_disk === 'local' ? oldRows[0].storage_path : null
+    })
+
+    if (oldPath) await removeImageFiles(oldPath)
     res.json({ data: { imageId } })
   }),
 )

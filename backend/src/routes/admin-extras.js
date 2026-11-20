@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { requireAuth } from '../auth.js'
 import { query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, booleanParam } from '../http.js'
+import { parseCoordinate } from '../coordinates.js'
 import { MAP_ICONS } from '../map-icons.js'
 import { toNumber } from '../serializers.js'
 
@@ -30,14 +31,6 @@ function text(value, field, { max = 500, required = false } = {}) {
   const trimmed = value.trim()
   if (required && !trimmed) throw new ApiError(400, 'VALIDATION', `${field} es obligatorio`)
   return trimmed.slice(0, max)
-}
-
-function coordinate(value, field, max) {
-  const parsed = Number(value)
-  if (value === null || value === undefined || value === '' || !Number.isFinite(parsed) || Math.abs(parsed) > max) {
-    throw new ApiError(400, 'VALIDATION', `${field} no es una coordenada válida`)
-  }
-  return parsed
 }
 
 function mapsUrl(value) {
@@ -72,6 +65,7 @@ function serialize(row) {
     longitude: toNumber(row.longitude),
     mapsUrl: row.maps_url ?? null,
     mapIcon: row.map_icon,
+    coverUrl: row.cover_url ?? null,
     sortOrder: toNumber(row.sort_order) ?? 0,
     published: Boolean(row.is_published),
     updatedAt: row.updated_at,
@@ -90,7 +84,11 @@ router.get(
   requireAuth,
   asyncHandler(async (_req, res) => {
     const rows = await query(
-      `SELECT * FROM map_extras ORDER BY is_published DESC, sort_order, name`,
+      // El listado muestra la foto de cada extra; sin esta consulta caía siempre en el icono.
+      `SELECT x.*,
+              (SELECT m.public_url FROM extra_images i JOIN media m ON m.id = i.media_id
+               WHERE i.extra_id = x.id ORDER BY i.sort_order, i.id LIMIT 1) AS cover_url
+       FROM map_extras x ORDER BY x.is_published DESC, x.sort_order, x.name`,
     )
     res.json({ data: rows.map(serialize), meta: { total: rows.length } })
   }),
@@ -105,8 +103,8 @@ router.post(
     const category = text(body.category, 'Categoría', { max: 80, required: true })
     const published = bool(body.published) === true
 
-    const [existing] = await query('SELECT slug FROM map_extras WHERE slug = ?', [slugify(name)])
-    const slug = existing.length > 0 ? `${slugify(name)}-${Date.now().toString(36)}` : slugify(name)
+    const existing = await queryOne('SELECT slug FROM map_extras WHERE slug = ?', [slugify(name)])
+    const slug = existing ? `${slugify(name)}-${Date.now().toString(36)}` : slugify(name)
 
     const result = await query(
       `INSERT INTO map_extras
@@ -118,8 +116,8 @@ router.post(
         name,
         category,
         text(body.zone, 'Zona', { max: 120 }),
-        coordinate(body.latitude, 'Latitud', 90),
-        coordinate(body.longitude, 'Longitud', 180),
+        parseCoordinate(body.latitude, 'lat', 'Latitud'),
+        parseCoordinate(body.longitude, 'lng', 'Longitud'),
         mapsUrl(body.mapsUrl),
         mapIcon(body.mapIcon),
         Number.parseInt(body.sortOrder, 10) || 0,

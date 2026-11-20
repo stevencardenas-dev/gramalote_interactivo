@@ -4,6 +4,7 @@ import { requireAuth } from '../auth.js'
 import { config } from '../config.js'
 import { withTransaction, query, queryOne } from '../db.js'
 import { ApiError, asyncHandler, booleanParam } from '../http.js'
+import { parseCoordinate } from '../coordinates.js'
 import { MAP_ICONS } from '../map-icons.js'
 import { assertQuota, ensureDir, mediaRoot, removeImageFiles, storeImage } from '../media.js'
 import { toNumber } from '../serializers.js'
@@ -147,12 +148,7 @@ function parseField(spec, value) {
     }
     case 'lat':
     case 'lng': {
-      const max = spec.type === 'lat' ? 90 : 180
-      const parsed = Number(value)
-      if (empty || !Number.isFinite(parsed) || Math.abs(parsed) > max) {
-        throw new ApiError(400, 'VALIDATION', `${spec.label} no es una coordenada válida`)
-      }
-      return parsed
+      return parseCoordinate(empty ? null : value, spec.type, spec.label)
     }
     case 'bool': {
       const parsed = bool(value)
@@ -528,6 +524,80 @@ for (const kind of Object.values(KINDS)) {
         }
         if (ids.join(',') !== before) await audit(connection, req, kind, 'reorder_media', id, { note: 'Reordenó las fotos.' })
       })
+      res.json({ data: await loadDetail(kind, id) })
+    }),
+  )
+
+  // Cambiar el archivo de una foto conservando su uso, su orden, la época, el texto
+  // alternativo, el pie y el crédito.
+  router.put(
+    `${kind.path}/:id/images/:imageId/file`,
+    requireAuth,
+    receiveImage,
+    asyncHandler(async (req, res) => {
+      const id = numId(req.params.id)
+      const imageId = numId(req.params.imageId)
+      if (!req.file?.buffer) throw new ApiError(400, 'VALIDATION', 'Falta el archivo de la imagen')
+      const image = await queryOne(
+        `SELECT i.media_id, i.role, m.storage_disk, m.storage_path, m.alt_text, m.caption, m.credit
+         FROM ${kind.images} i JOIN media m ON m.id = i.media_id
+         WHERE i.id = ? AND i.${kind.fk} = ?`,
+        [imageId, id],
+      )
+      if (!image) throw new ApiError(404, 'NOT_FOUND', 'Imagen no encontrada')
+
+      await assertQuota(req.file.size)
+      await ensureDir(mediaRoot())
+      const stored = await storeImage(req.file.buffer, {
+        folder: `${kind.entity}/${id}`,
+        role: image.role === 'cover' ? 'cover' : 'gallery',
+      })
+
+      const oldPath = await withTransaction(async (connection) => {
+        const [result] = await connection.query(
+          `INSERT INTO media
+             (storage_disk, storage_path, public_url, mime_type, width_px, height_px,
+              alt_text, caption, credit, source, checksum_sha256)
+           VALUES ('local', ?, ?, ?, ?, ?, ?, ?, ?, 'upload', ?)`,
+          [
+            stored.storagePath,
+            stored.publicUrl,
+            stored.mimeType,
+            stored.width,
+            stored.height,
+            image.alt_text,
+            image.caption,
+            image.credit,
+            stored.checksum,
+          ],
+        )
+        await connection.query(`UPDATE ${kind.images} SET media_id = ? WHERE id = ?`, [result.insertId, imageId])
+        await audit(connection, req, kind, 'replace_media', id, {
+          note: `Cambió una foto (${ROLE_LABELS[image.role] ?? image.role}).`,
+          mediaId: result.insertId,
+        })
+
+        const [usage] = await connection.query(
+          `SELECT (SELECT COUNT(*) FROM heritage_images WHERE media_id = ?) +
+                  (SELECT COUNT(*) FROM extra_images WHERE media_id = ?) +
+                  (SELECT COUNT(*) FROM experience_images WHERE media_id = ?) +
+                  (SELECT COUNT(*) FROM establishment_images WHERE media_id = ?) AS total`,
+          [image.media_id, image.media_id, image.media_id, image.media_id],
+        )
+        // Si otra ficha la sigue usando, la foto anterior se conserva.
+        if (Number(usage[0]?.total ?? 0) > 0) return null
+        // Las fotos que viven con el sitio (disco «public») no se borran del inventario.
+        if (image.storage_disk !== 'local') return null
+        try {
+          await connection.query('DELETE FROM media WHERE id = ?', [image.media_id])
+        } catch (error) {
+          if (error?.code === 'ER_ROW_IS_REFERENCED_2') return null
+          throw error
+        }
+        return image.storage_path
+      })
+
+      if (oldPath) await removeImageFiles(oldPath)
       res.json({ data: await loadDetail(kind, id) })
     }),
   )
