@@ -364,6 +364,20 @@ for (const kind of Object.values(KINDS)) {
         values.push(next)
       }
 
+      // Publicar una ficha de patrimonio exige una portada con texto alternativo (WCAG 1.1.1),
+      // igual que en establecimientos y experiencias. Guardar otros campos no lo pide.
+      if (kind.entity === 'heritage' && changes.is_published?.to === true) {
+        const cover = await queryOne(
+          `SELECT i.id FROM ${kind.images} i JOIN media m ON m.id = i.media_id
+           WHERE i.${kind.fk} = ? AND i.role = 'cover' AND NULLIF(TRIM(m.alt_text), '') IS NOT NULL
+           LIMIT 1`,
+          [id],
+        )
+        if (!cover) {
+          throw new ApiError(409, 'MISSING_COVER', 'Para publicar, la ficha necesita una portada con texto alternativo')
+        }
+      }
+
       if (sets.length > 0) {
         await withTransaction(async (connection) => {
           await connection.query(`UPDATE ${kind.table} SET ${sets.join(', ')} WHERE id = ?`, [...values, id])

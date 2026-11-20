@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Navbar from './Navbar.jsx'
 import Footer from './Footer.jsx'
 import AdminNav from '../admin/AdminNav.jsx'
@@ -7,6 +7,7 @@ import SessionKeeper from '../admin/SessionKeeper.jsx'
 import WhatsAppHelp from '../ui/WhatsAppHelp.jsx'
 import OutboxNotice from '../ui/OutboxNotice.jsx'
 import ScrollTopButton from '../ui/ScrollTopButton.jsx'
+import AccessibilityMenu from '../ui/AccessibilityMenu.jsx'
 import { usePageTitle } from '../../lib/usePageTitle.js'
 
 // Títulos de las vistas fijas. Las fichas y detalles ponen el suyo (el efecto
@@ -68,6 +69,24 @@ export default function Layout() {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [pathname, hash])
 
+  // Al cambiar de página el foco pasa al título (o al contenido): quien usa teclado
+  // empieza en la página nueva y el lector de pantalla la anuncia (WCAG 2.4.3 y 4.1.3).
+  // No se hace en la primera carga ni cuando solo cambia el ancla (#).
+  const previousPath = useRef(pathname)
+  useEffect(() => {
+    if (previousPath.current === pathname) return undefined
+    previousPath.current = pathname
+    if (hash) return undefined
+    const frame = requestAnimationFrame(() => {
+      const main = document.getElementById('contenido')
+      const target = main?.querySelector('h1') ?? main
+      if (!target) return
+      if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1')
+      target.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [pathname, hash])
+
   // Aviso cuando se navega sin señal con lo guardado por el service worker.
   const [online, setOnline] = useState(() => navigator.onLine)
   useEffect(() => {
@@ -115,6 +134,7 @@ export default function Layout() {
       </main>
       <Footer />
       <ScrollTopButton />
+      <AccessibilityMenu />
       <WhatsAppHelp />
       <OutboxNotice />
     </>

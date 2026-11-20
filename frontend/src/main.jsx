@@ -6,6 +6,7 @@ import { DialogProvider } from './lib/dialog.jsx'
 import { registerServiceWorker } from './lib/offline.js'
 import { startOutbox } from './lib/outbox.js'
 import { initAdminTheme } from './lib/adminTheme.js'
+import { initAccessibility } from './lib/accessibility.js'
 import { initImageOrientation } from './lib/imageOrientation.js'
 import './styles/tokens.css'
 import './styles/global.css'
@@ -20,9 +21,12 @@ import './styles/dialog.css'
 import './styles/admin.css'
 import './styles/admin-panel.css'
 import './styles/admin-light.css'
+import './styles/accessibility.css'
 
 // Tema guardado del panel, puesto antes del primer pintado.
 initAdminTheme()
+// Preferencias del menú de accesibilidad, puestas antes del primer pintado.
+initAccessibility()
 initImageOrientation()
 
 // Data router: hace falta para useBlocker (aviso de cambios sin guardar). Una sola

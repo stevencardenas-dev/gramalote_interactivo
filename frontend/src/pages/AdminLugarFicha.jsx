@@ -269,6 +269,36 @@ function Field({ spec, value, onChange, onPair }) {
   )
 }
 
+const ALT_SUGGESTED = 125
+
+// Campo de texto alternativo con contador y guía (WCAG 1.1.1). La portada lo necesita
+// para publicar la ficha, por eso se marca como pendiente cuando está vacío.
+function AltTextField({ value, onChange, required = false }) {
+  const text = value ?? ''
+  const missing = required && !text.trim()
+  const prefixed = /^\s*(foto|imagen|fotograf[ií]a)\s+de\b/i.test(text)
+  const long = text.length > ALT_SUGGESTED
+  return (
+    <label className="admin-field admin-field--wide">
+      <span>Texto alternativo (describe la foto)</span>
+      <input
+        value={text}
+        onChange={onChange}
+        maxLength={255}
+        aria-invalid={missing || undefined}
+        placeholder="Torre de la iglesia de Gramalote Viejo al atardecer"
+      />
+      <small className={`admin-hint${missing || prefixed || long ? ' admin-hint--error' : ''}`}>
+        {missing
+          ? 'La portada necesita este texto para publicar la ficha. '
+          : 'Describe lo que se ve, para quien no puede verlo. '}
+        {prefixed ? 'No empieces con «Foto de»: el lector ya anuncia que es una imagen. ' : ''}
+        {text.length} / {ALT_SUGGESTED} recomendados
+      </small>
+    </label>
+  )
+}
+
 // Tarjeta de foto de Patrimonio: miniatura a un lado y campos con etiqueta.
 function PlaceImageCard({ image, index, total, roles, busy, frames = [], onSave, onRemove, onMove, onReplace, onDraftChange }) {
   const fileInput = useRef(null)
@@ -312,10 +342,7 @@ function PlaceImageCard({ image, index, total, roles, busy, frames = [], onSave,
               ))}
             </select>
           </label>
-          <label className="admin-field admin-field--wide">
-            <span>Texto alternativo (describe la foto)</span>
-            <input value={draft.altText} onChange={set('altText')} maxLength={255} />
-          </label>
+          <AltTextField value={draft.altText} onChange={set('altText')} required={draft.role === 'cover'} />
           <label className="admin-field">
             <span>Pie de foto (se ve sobre la foto)</span>
             <input value={draft.caption} onChange={set('caption')} maxLength={120} placeholder="Templo en 1950" />
@@ -712,10 +739,11 @@ export default function AdminLugarFicha({ kind: kindKey }) {
                     {/* Un extra solo necesita la foto: sin texto alternativo, pie ni crédito. */}
                     {kindKey === 'heritage' ? (
                       <>
-                        <label className="admin-field admin-field--wide">
-                          <span>Texto alternativo (describe la foto)</span>
-                          <input value={upload.altText} onChange={(event) => setUpload({ ...upload, altText: event.target.value })} maxLength={255} />
-                        </label>
+                        <AltTextField
+                          value={upload.altText}
+                          onChange={(event) => setUpload({ ...upload, altText: event.target.value })}
+                          required={uploadRole === 'cover'}
+                        />
                         <label className="admin-field">
                           <span>Pie de foto (se ve sobre la foto)</span>
                           <input value={upload.caption} onChange={(event) => setUpload({ ...upload, caption: event.target.value })} maxLength={120} placeholder="Templo en 1950" />

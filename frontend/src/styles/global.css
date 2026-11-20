@@ -67,6 +67,12 @@ ul {
   list-style: none;
 }
 
+/* El foco que pasa al título al cambiar de página (Layout) no es un control: sin recuadro. */
+main[tabindex='-1']:focus,
+main h1[tabindex='-1']:focus {
+  outline: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--c-navy);
   outline-offset: 3px;

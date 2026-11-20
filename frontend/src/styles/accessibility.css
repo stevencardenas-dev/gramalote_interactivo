@@ -1,0 +1,289 @@
+/* ==========================================================================
+   Menú de accesibilidad (componente AccessibilityMenu) y efectos de sus opciones.
+   Las opciones se marcan en <html> como data-a11y-* (lib/accessibility.js).
+   ========================================================================== */
+
+/* ---------- Botón flotante y panel ---------- */
+.a11y-fab {
+  position: fixed;
+  left: 22px;
+  bottom: 22px;
+  z-index: 91;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 3px solid var(--c-white);
+  border-radius: 50%;
+  background: var(--c-navy);
+  color: var(--c-white);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.28);
+  cursor: pointer;
+}
+
+.a11y-fab.is-active::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--c-white);
+  border-radius: 50%;
+  background: var(--c-gold);
+}
+
+.a11y-fab:focus-visible,
+.a11y-panel button:focus-visible {
+  outline: 3px solid var(--c-gold);
+  outline-offset: 3px;
+}
+
+.a11y-panel {
+  position: fixed;
+  left: 22px;
+  bottom: 90px;
+  z-index: 92;
+  width: min(380px, calc(100vw - 32px));
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  border-radius: 16px;
+  background: #f1f3f6;
+  color: #141414;
+  box-shadow: 0 14px 40px rgb(0 0 0 / 0.35);
+  font-family: var(--font-sans);
+}
+
+.a11y-panel__head {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--c-navy);
+  color: var(--c-white);
+}
+
+.a11y-panel__head h2 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.a11y-panel__close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.a11y-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  list-style: none;
+}
+
+.a11y-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 118px;
+  padding: 14px 10px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: #fff;
+  color: #141414;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.a11y-opt:hover {
+  border-color: var(--c-navy);
+}
+
+.a11y-opt.is-on {
+  border-color: var(--c-navy);
+  background: var(--c-navy);
+  color: #fff;
+}
+
+.a11y-opt__label {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.a11y-opt__help {
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  opacity: 0.85;
+}
+
+.a11y-panel__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px 14px;
+}
+
+.a11y-reset {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 2px solid var(--c-navy);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-navy);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.a11y-reset:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.a11y-panel__tip {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #4b3b2f;
+}
+
+@media (max-width: 520px) {
+  .a11y-fab {
+    left: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    width: 52px;
+    height: 52px;
+  }
+
+  .a11y-panel {
+    left: 16px;
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 62px);
+  }
+}
+
+/* ---------- Texto más grande: escala todo lo escrito en rem ---------- */
+html[data-a11y-text='1'] {
+  font-size: 112.5%;
+}
+html[data-a11y-text='2'] {
+  font-size: 125%;
+}
+html[data-a11y-text='3'] {
+  font-size: 150%;
+}
+
+/* ---------- Contraste alto: sube el contraste de los colores de marca ---------- */
+html[data-a11y-contrast] {
+  --c-cream: #ffffff;
+  --c-cream-deep: #f0f0f0;
+  --c-peach: #ffffff;
+  --c-navy: #002b47;
+  --c-navy-dark: #001a2b;
+  --c-brown: #4a2606;
+  --c-brick: #7d1a1c;
+  --c-green: #1f4a30;
+  --c-coral-text: #7a2a00;
+  --c-ink: #000000;
+  --c-ink-soft: #000000;
+  --c-muted: #262626;
+  --c-line: #4d4d4d;
+  --c-field-border: #4d4d4d;
+  --c-surface-2: #ffffff;
+  --c-surface-3: #f0f0f0;
+}
+
+html[data-a11y-contrast] a:not(.btn, .brand, [class*='card']) {
+  text-decoration: underline;
+}
+
+html[data-a11y-contrast] :focus-visible {
+  outline: 3px solid #000 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 6px #fff !important;
+}
+
+/* ---------- Resaltar enlaces ---------- */
+html[data-a11y-links] a {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 3px !important;
+}
+
+html[data-a11y-links] :is(p, li, dd, td, span, small) a:not(.btn) {
+  background: #ffe14d;
+  color: #000 !important;
+  font-weight: 700;
+}
+
+/* ---------- Espaciado de texto (WCAG 1.4.12) ---------- */
+html[data-a11y-spacing] body,
+html[data-a11y-spacing] body :not(svg, svg *, .a11y-panel, .a11y-panel *) {
+  line-height: 1.8 !important;
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+
+html[data-a11y-spacing] p {
+  margin-bottom: 2em !important;
+}
+
+/* ---------- Detener animaciones ---------- */
+html[data-a11y-motion],
+html[data-a11y-motion] *,
+html[data-a11y-motion] *::before,
+html[data-a11y-motion] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0s !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+
+/* ---------- Ocultar imágenes (los logos se quedan) ---------- */
+html[data-a11y-images] img:not(.brand *, .site-footer *, .a11y-panel *),
+html[data-a11y-images] video {
+  visibility: hidden !important;
+}
+
+html[data-a11y-images] [style*='background-image'] {
+  background-image: none !important;
+}
+
+/* ---------- Fuente legible ---------- */
+html[data-a11y-font] {
+  --font-sans: 'Atkinson Hyperlegible', 'Verdana', 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Atkinson Hyperlegible', 'Verdana', 'Segoe UI', system-ui, sans-serif;
+  --font-alt: 'Atkinson Hyperlegible', 'Verdana', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ---------- Cursor grande ---------- */
+html[data-a11y-cursor],
+html[data-a11y-cursor] * {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24'><path d='M4 2l14 9-6 1.6L15.5 20 12.6 21.4 9.2 14 4 18Z' fill='black' stroke='white' stroke-width='1.6' stroke-linejoin='round'/></svg>") 4 2, auto !important;
+}
+
+html[data-a11y-cursor] :is(a, button, summary, label, select, [role='button'], [role='tab'], [role='menuitemradio'], [role='option']),
+html[data-a11y-cursor] :is(a, button, summary, label, select, [role='button']) * {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24'><path d='M4 2l14 9-6 1.6L15.5 20 12.6 21.4 9.2 14 4 18Z' fill='%23eaa41e' stroke='black' stroke-width='1.6' stroke-linejoin='round'/></svg>") 4 2, pointer !important;
+}
