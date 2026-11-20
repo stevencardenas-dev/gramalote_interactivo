@@ -4315,9 +4315,9 @@ kbd {
     height: 100svh;
     min-height: 100svh;
     margin: 0;
-    /* Abajo están la flecha y el contador (.his-floats: 46 px de alto a
-       84 px del borde): el contenido termina por encima de ellos. */
-    padding-block: calc(var(--header-h) + 12px) 142px;
+    /* Centrado en todo el alto bajo el menú. La flecha y el contador flotan
+       encima y pueden tapar la última línea: se prefiere el centrado. */
+    padding-block: calc(var(--header-h) + 12px) 12px;
   }
 
   .his-deck .his-events > .his-event > .his-event__stage,
@@ -4532,8 +4532,8 @@ kbd {
     aspect-ratio: auto;
   }
 
-  /* Cada texto ocupa lo que queda de pantalla bajo la foto fija; abajo se
-     reserva el sitio de la flecha y el contador. */
+  /* Cada texto ocupa lo que queda de pantalla bajo la foto fija y se centra
+     en ese espacio. */
   .his-deck .his-shared .his-event--shared {
     display: flex;
     flex-direction: column;
@@ -4542,7 +4542,7 @@ kbd {
     height: calc(100svh - var(--header-h) - 12px - var(--foto));
     min-height: 0;
     margin: 0;
-    padding: 12px 0 142px;
+    padding: 12px 0;
     scroll-snap-align: start;
     scroll-margin-top: calc(var(--header-h) + 12px + var(--foto));
   }
