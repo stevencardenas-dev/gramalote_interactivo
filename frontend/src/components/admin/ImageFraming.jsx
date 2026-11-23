@@ -4,6 +4,7 @@ import { apiRequest } from '../../lib/auth.js'
 import { getCrop, setCrop } from '../../lib/mediaCrops.js'
 import { PHOTO_FRAMES } from '../../lib/photoFrames.js'
 import { useModalFocus } from '../../lib/useModalFocus.js'
+import { showAdminNotice } from '../../lib/adminNotice.js'
 import CollageMap from './CollageMap.jsx'
 
 // Ventana para encuadrar una foto en un espacio concreto del sitio (por ejemplo, uno
@@ -146,6 +147,7 @@ function FramingDialog({ image, frames, slot, onClose, onSaved }) {
       const response = await apiRequest('/admin/media-crop', { method: 'PUT', body: { url: image.url, frame: active, crop: body } })
       setCrop(image.url, active, response?.frames?.[active] ?? null)
       onSaved?.()
+      showAdminNotice('ok', 'Encuadre guardado', 'El cambio ya se ve en el sitio.')
       onClose()
     } catch (err) {
       setError(err.message)
