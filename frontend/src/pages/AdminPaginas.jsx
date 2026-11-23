@@ -21,6 +21,8 @@ import SocialIcon from '../components/ui/SocialIcon.jsx'
 import { apiRequest, ensureSession } from '../lib/auth.js'
 import { useDialog } from '../lib/dialog.jsx'
 import { useUnsavedChanges } from '../lib/useUnsavedChanges.js'
+import FrameButton from '../components/admin/FrameButton.jsx'
+import { PAGES_FRAMES } from '../lib/photoFrames.js'
 import { orderBySlugs } from '../lib/contentApi.js'
 import { mergeContent } from '../lib/pageContent.js'
 
@@ -118,7 +120,7 @@ function MoveButtons({ index, length, onMove, label }) {
 
 // Miniatura con botón para abrir el selector. Con `onReset` añade el enlace
 // para volver al diseño original (lo usa el buscador).
-function ImageField({ label, photo, caption, onOpen, compact = false, onReset, resetLabel = 'Diseño original' }) {
+function ImageField({ label, photo, caption, onOpen, compact = false, onReset, resetLabel = 'Diseño original', frames }) {
   return (
     <div className={`admin-imgfield${compact ? ' admin-imgfield--compact' : ''}`}>
       <button type="button" className="admin-imgfield__shot" onClick={onOpen} aria-label={`Cambiar imagen: ${label}`}>
@@ -134,6 +136,7 @@ function ImageField({ label, photo, caption, onOpen, compact = false, onReset, r
           {resetLabel}
         </button>
       ) : null}
+      <FrameButton url={photo} alt={label} frames={frames} />
     </div>
   )
 }
@@ -180,7 +183,7 @@ function StatusBadge({ published }) {
 
 // Lista completa de una categoría (o de las experiencias) para ordenar y elegir
 // la foto de la tarjeta.
-function OrderList({ items, order, covers, onOrder, onCover, kind }) {
+function OrderList({ items, order, covers, onOrder, onCover, kind, frames }) {
   const ordered = orderBySlugs(items, order ?? [])
   const slugs = ordered.map((item) => item.slug)
   if (ordered.length === 0) return <p className="empty">No hay fichas en esta categoría.</p>
@@ -212,6 +215,7 @@ function OrderList({ items, order, covers, onOrder, onCover, kind }) {
             </span>
             <StatusBadge published={item.published} />
             <span className="admin-order__actions">
+              <FrameButton url={itemPhoto(item, covers)} alt={name} frames={typeof frames === 'function' ? frames(index) : frames} />
               <button type="button" className="admin-btn" onClick={() => onCover(item)}>
                 Cambiar portada
               </button>
@@ -234,7 +238,7 @@ function OrderList({ items, order, covers, onOrder, onCover, kind }) {
 }
 
 // Bloque de referencias a otra página: N fichas elegidas, con orden y foto.
-function RelatedEditor({ block, onChange, pool, count, onCover }) {
+function RelatedEditor({ block, onChange, pool, count, onCover, frames }) {
   const chosen = (block.items ?? [])
     .map((slug) => pool.find((item) => item.slug === slug))
     .filter(Boolean)
@@ -262,6 +266,7 @@ function RelatedEditor({ block, onChange, pool, count, onCover }) {
             </span>
             <StatusBadge published={item.published} />
             <span className="admin-order__actions">
+              <FrameButton url={itemPhoto(item, block.covers)} alt={item.name} frames={frames} />
               <button type="button" className="admin-btn" onClick={() => onCover(item)}>
                 Cambiar foto
               </button>
@@ -294,7 +299,7 @@ function RelatedEditor({ block, onChange, pool, count, onCover }) {
       ) : null}
       <p className="note">
         Se muestran {count}. Si una de las elegidas se despublica, su lugar lo ocupa otra ficha de la misma
-        categoría.
+        categoría. Con «Encuadre» ajustas cómo se ve la foto en la tarjeta.
       </p>
     </div>
   )
@@ -406,6 +411,7 @@ function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
               label={item.label}
               caption={item.to}
               photo={item.photo}
+              frames={PAGES_FRAMES.inicioAcceso}
               onOpen={() => pickFor('quickAccess', index, `Imagen de «${item.label}»`)}
             />
           ))}
@@ -434,6 +440,7 @@ function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
                 <ImageField
                   label="Imagen"
                   photo={card.photo}
+                  frames={PAGES_FRAMES.inicioExperiencia(index)}
                   onOpen={() => pickFor('experiences', index, `Imagen de «${card.title}»`)}
                 />
                 <div className="admin-grid">
@@ -498,6 +505,7 @@ function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
                   label="Fondo"
                   photo={card.photo}
                   compact
+                  frames={PAGES_FRAMES.inicioEstablecimiento}
                   onOpen={() => pickFor('highlights', index, `Fondo de «${card.title}»`)}
                 />
                 <div className="admin-grid">
@@ -543,10 +551,11 @@ function QueHacerEditor({ draft, update, sources, groups, openPicker, signal }) 
     <AdminSection
       signal={signal}
       title="Experiencias"
-      hint="Orden de las tarjetas en «Qué hacer» y la portada de cada una (de su galería)."
+      hint="Orden de las tarjetas en «Qué hacer» y la portada de cada una (de su galería). Con «Encuadre» ajustas cómo se ve en la tarjeta."
     >
       <OrderList
         kind="experience"
+        frames={PAGES_FRAMES.queHacer}
         items={experiences}
         order={draft.order.length ? draft.order : experiences.map((item) => item.slug)}
         covers={draft.covers}
@@ -664,6 +673,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
                 label={index === 0 ? 'Foto grande' : `Foto ${index + 1}`}
                 caption={image.from ?? image.alt}
                 photo={image.photo}
+                frames={PAGES_FRAMES.collageIr(index)}
                 onOpen={() =>
                   imagePicker((page) => page.comer.images, index, 'comer', 'Foto del collage de Dónde comer', defaults.comer.images[index])
                 }
@@ -676,6 +686,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
           <RelatedEditor
             block={draft.dormir}
             pool={pools.dormir}
+            frames={PAGES_FRAMES.destacadaVertical}
             count={RELATED_COUNT['donde-ir.dormir']}
             onChange={(block) =>
               update((page) => {
@@ -690,6 +701,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
           <RelatedEditor
             block={draft.comprar}
             pool={pools.comprar}
+            frames={PAGES_FRAMES.destacadaAncha}
             count={RELATED_COUNT['donde-ir.comprar']}
             onChange={(block) =>
               update((page) => {
@@ -710,10 +722,11 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
     <AdminSection
       signal={signal}
       title={listLabel}
-      hint={`Orden de las tarjetas en ${PAGE_INFO[pageKey].label} y la foto de cada una (de su galería).`}
+      hint={`Orden de las tarjetas en ${PAGE_INFO[pageKey].label} y la foto de cada una (de su galería). Con «Encuadre» ajustas cómo se ve en la tarjeta.`}
     >
       <OrderList
         kind="establishment"
+        frames={PAGES_FRAMES.listaTarjeta}
         items={pools[category]}
         order={draft.order}
         covers={draft.covers}
@@ -744,6 +757,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
                 label={index === 0 ? 'Foto grande' : `Foto ${index + 1}`}
                 caption={image.from ? `De ${image.from}` : 'Foto del diseño'}
                 photo={image.photo}
+                frames={PAGES_FRAMES.platos(index)}
                 onOpen={() =>
                   imagePicker((page) => page.platos.images, index, 'comer', 'Foto de platos típicos', defaults.platos.images[index])
                 }
@@ -761,6 +775,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
               label="Foto"
               caption={draft.mapa.from ? `De ${draft.mapa.from}` : 'Foto del diseño'}
               photo={draft.mapa.photo}
+              frames={PAGES_FRAMES.encuentraComer}
               onOpen={() =>
                 openPicker({
                   title: 'Foto de «Encuentra dónde comer»',
@@ -783,8 +798,8 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
 
   const related =
     pageKey === 'donde-comer'
-      ? { title: 'Referencia a Dónde dormir', pool: pools.dormir, count: RELATED_COUNT['donde-comer'] }
-      : { title: 'Referencia a Dónde comprar', pool: pools.comprar, count: RELATED_COUNT['donde-dormir'] }
+      ? { title: 'Referencia a Dónde dormir', pool: pools.dormir, count: RELATED_COUNT['donde-comer'], frames: PAGES_FRAMES.destacadaVertical }
+      : { title: 'Referencia a Dónde comprar', pool: pools.comprar, count: RELATED_COUNT['donde-dormir'], frames: PAGES_FRAMES.destacadaAncha }
 
   return (
     <>
@@ -794,6 +809,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
         <RelatedEditor
           block={draft.related}
           pool={related.pool}
+          frames={related.frames}
           count={related.count}
           onChange={(block) =>
             update((page) => {
@@ -832,6 +848,7 @@ function BuscadorEditor({ draft, update, groups, openPicker, signal }) {
             label={item.name}
             caption={item.to}
             photo={images[item.id] ?? item.photo ?? item.illustration ?? null}
+            frames={PAGES_FRAMES.buscador}
             resetLabel="Diseño original"
             onReset={images[item.id] ? () => clear(item.id) : undefined}
             onOpen={() =>
@@ -1460,7 +1477,7 @@ export default function AdminPaginas() {
       const saved = await apiRequest(`/admin/pages/${pageKey}`, { method: 'PUT', body: { value: drafts[pageKey], updatedAt: stored?.updatedAt ?? null } })
       setData((current) => ({ ...current, pages: { ...current.pages, [pageKey]: saved } }))
       setDirty((current) => ({ ...current, [pageKey]: false }))
-      notify('ok', `${PAGE_INFO[pageKey].label}: cambios guardados.`)
+      notify('ok', 'Cambios guardados', `${PAGE_INFO[pageKey].label} quedó actualizada.`)
     } catch (err) {
       notify('error', 'No se pudo guardar', err.message)
     } finally {
@@ -1482,7 +1499,7 @@ export default function AdminPaginas() {
       setData((current) => ({ ...current, pages: { ...current.pages, [pageKey]: null } }))
       setDrafts((current) => ({ ...current, [pageKey]: clone(PAGE_DEFAULTS[pageKey]) }))
       setDirty((current) => ({ ...current, [pageKey]: false }))
-      notify('ok', `${PAGE_INFO[pageKey].label}: diseño original restablecido.`)
+      notify('ok', 'Diseño restablecido', `${PAGE_INFO[pageKey].label} volvió a su diseño original.`)
     } catch (err) {
       notify('error', 'No se pudo restablecer', err.message)
     } finally {

@@ -9,6 +9,43 @@
 // Para añadir un espacio nuevo: una entrada aquí y, en el panel, decidir qué fotos
 // caen en él (ver framesForEstablishmentImage).
 export const PHOTO_FRAMES = {
+  // — Espacios que se encuadran en Páginas (medidos a 1280 px; alto fijo y ancho variable
+  //   en algunos, por eso son aproximados) —
+  // Inicio · «Accede rápido» (5 tarjetas fijas).
+  'inicio-acceso': { label: 'Accede rápido', ratio: 173 / 157, selector: '.quick-grid .quick-card' },
+  // Inicio · «Experiencias que no olvidarás»: la primera tarjeta es ancha y las demás, altas y estrechas.
+  'inicio-experiencia-grande': {
+    label: 'Experiencia destacada',
+    ratio: 504 / 525,
+    selector: '.experiences__grid .experience-card--featured',
+  },
+  'inicio-experiencia': {
+    label: 'Experiencia',
+    ratio: 279 / 525,
+    selector: '.experiences__grid .experience-card:not(.experience-card--featured)',
+  },
+  // Inicio · «Descubre establecimientos».
+  'inicio-establecimiento': { label: 'Establecimiento', ratio: 354 / 248, selector: '.entity-grid .entity-card' },
+  // Dónde ir · collage de Dónde comer: una foto alta y dos bajas.
+  'collage-ir-alto': { label: 'Collage · foto alta', ratio: 278 / 384, selector: '.category-spotlight .photo-collage__tall' },
+  'collage-ir-bajo': {
+    label: 'Collage · foto baja',
+    ratio: 278 / 185,
+    selector: '.category-spotlight .photo-collage > .photo:not(.photo-collage__tall)',
+  },
+  // Dónde comprar · «Platos típicos»: una foto alta y dos bajas.
+  'platos-alto': { label: 'Platos · foto alta', ratio: 258 / 387, selector: '.split-feature .photo-collage__tall' },
+  'platos-bajo': {
+    label: 'Platos · foto baja',
+    ratio: 258 / 186,
+    selector: '.split-feature .photo-collage > .photo:not(.photo-collage__tall)',
+  },
+  // Dónde comprar · bloque «Encuentra dónde comer».
+  'encuentra-comer': { label: 'Encuentra dónde comer', ratio: 529 / 397, selector: '.split-feature__media' },
+  // Buscador · tarjeta de cada sección.
+  'buscador-tarjeta': { label: 'Buscador', ratio: 202 / 152, selector: '.component-results .quick-card' },
+
+  // — Espacios de las fichas y de las listas —
   // Tarjetas destacadas con el texto sobre la foto (PlaceCard). Los alojamientos salen en
   // las de 4 columnas de Dónde ir y Dónde comer (263 × 300); las tiendas, en las anchas de
   // Dónde ir y Dónde dormir (544–549 × 300). Alto fijo y ancho variable: aproximado.
@@ -43,10 +80,17 @@ export const PHOTO_FRAMES = {
   },
   // Portada de una experiencia en la tarjeta de Qué hacer (alto fijo, ancho variable;
   // la primera tarjeta es más ancha): medida a 1280 px, aproximada.
+  // Las 3 primeras tarjetas ocupan 1/3 de la fila (estrecha) y desde la 4.ª, 1/2 (ancha). La
+  // clave «experiencia-tarjeta» es la estrecha: así se conservan los encuadres ya guardados.
   'experiencia-tarjeta': {
-    label: 'Tarjeta de Qué hacer',
+    label: 'Tarjeta de Qué hacer · estrecha',
     ratio: 347 / 200,
-    selector: '.activity-card',
+    selector: '.activity-card:nth-child(-n + 3)',
+  },
+  'experiencia-tarjeta-ancha': {
+    label: 'Tarjeta de Qué hacer · ancha',
+    ratio: 540 / 200,
+    selector: '.activity-card:nth-child(n + 4)',
   },
   // Patrimonio: miniatura de la lista de Historia › Patrimonio (portada) y foto de la
   // ficha (la portada si hay una sola foto, o el carrusel de épocas).
@@ -126,25 +170,20 @@ export function frameOfElement(element) {
 // fotos de «Galería» en orden (2 grandes y 3 pequeños): la 2.ª es la de la derecha de
 // la primera fila (orden confirmado con el collage público).
 export function framesForEstablishmentImage({ categorySlug, role, galleryIndex }) {
-  // Las fotos de galería también pueden elegirse como foto de una tarjeta destacada (Páginas).
   if (categorySlug === 'dormir' && role === 'gallery' && galleryIndex >= 0 && galleryIndex < 5) {
-    return [galleryIndex < 2 ? 'dormir-galeria-grande' : 'dormir-galeria-pequeno', 'destacada-vertical']
+    return [galleryIndex < 2 ? 'dormir-galeria-grande' : 'dormir-galeria-pequeno']
   }
-  if (categorySlug === 'dormir' && role === 'gallery') return ['destacada-vertical']
-  if (categorySlug === 'comprar' && role === 'gallery') return ['destacada-ancha']
-  // La portada sale en la tarjeta de la lista de su categoría y, cuadrada, en el mapa.
-  if (role === 'cover') {
-    if (categorySlug === 'dormir') return ['tarjeta-lista', 'destacada-vertical', 'mapa-cuadrado']
-    if (categorySlug === 'comprar') return ['tarjeta-lista', 'destacada-ancha', 'mapa-cuadrado']
-    return categorySlug === 'comer' ? ['tarjeta-lista', 'mapa-cuadrado'] : ['mapa-cuadrado']
-  }
+  // La portada sale cuadrada en el mapa. Su tarjeta de las listas y las tarjetas destacadas se
+  // encuadran en Páginas, donde se elige la foto de cada una (ver PAGES_FRAMES).
+  if (role === 'cover') return ['mapa-cuadrado']
   return []
 }
 
 // Experiencias: la portada sale en la tarjeta de Qué hacer y, cuadrada, en el mapa; la
 // galería llena sus espacios en orden (las 2 primeras, grandes).
 export function framesForExperienceImage({ role, galleryIndex }) {
-  if (role === 'cover') return ['experiencia-tarjeta', 'mapa-cuadrado']
+  // La tarjeta de Qué hacer se encuadra en Páginas (PAGES_FRAMES.queHacer).
+  if (role === 'cover') return ['mapa-cuadrado']
   if (role === 'gallery' && galleryIndex >= 0) {
     return [galleryIndex < 2 ? 'experiencia-galeria-grande' : 'experiencia-galeria-pequena']
   }
@@ -163,4 +202,22 @@ export function framesForHeritageImage({ role }) {
 // Extras: una sola foto, cuadrada, en la lista y en la tarjeta del mapa.
 export function framesForExtraImage() {
   return ['mapa-cuadrado']
+}
+
+// Espacios que se encuadran en Páginas, junto al selector donde se elige su foto (y no en
+// la ficha): una foto puede sustituirse allí, así que el encuadre va con el selector.
+export const PAGES_FRAMES = {
+  // Qué hacer: las 3 primeras tarjetas son estrechas y desde la 4.ª, anchas; cada fila ofrece
+  // solo el espacio que le toca según su posición.
+  queHacer: (index) => [index < 3 ? 'experiencia-tarjeta' : 'experiencia-tarjeta-ancha'],
+  listaTarjeta: ['tarjeta-lista'],
+  destacadaVertical: ['destacada-vertical'],
+  destacadaAncha: ['destacada-ancha'],
+  inicioAcceso: ['inicio-acceso'],
+  inicioExperiencia: (index) => [index === 0 ? 'inicio-experiencia-grande' : 'inicio-experiencia'],
+  inicioEstablecimiento: ['inicio-establecimiento'],
+  collageIr: (index) => [index === 0 ? 'collage-ir-alto' : 'collage-ir-bajo'],
+  platos: (index) => [index === 0 ? 'platos-alto' : 'platos-bajo'],
+  encuentraComer: ['encuentra-comer'],
+  buscador: ['buscador-tarjeta'],
 }
