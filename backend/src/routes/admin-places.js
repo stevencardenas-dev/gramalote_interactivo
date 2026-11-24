@@ -321,6 +321,21 @@ function pickRole(kind, value) {
   return kind.roles.includes(value) ? value : 'gallery'
 }
 
+// Una ficha de patrimonio publicada no puede quedarse sin portada: publicarla la
+// exige, y sin ella la lista y el mapa salen sin foto. Para cambiarla, se elige
+// otra foto como portada (la anterior pasa sola a galería).
+async function assertKeepsCover(kind, id) {
+  if (kind.entity !== 'heritage') return
+  const row = await queryOne(`SELECT is_published FROM ${kind.table} WHERE id = ?`, [id])
+  if (row?.is_published) {
+    throw new ApiError(
+      409,
+      'COVER_REQUIRED',
+      'La ficha está publicada y necesita una portada. Elige otra foto como portada antes de quitar esta.',
+    )
+  }
+}
+
 for (const kind of Object.values(KINDS)) {
   // Detalle completo: campos, fotos y historial.
   router.get(
@@ -479,6 +494,7 @@ for (const kind of Object.values(KINDS)) {
       )
       if (!image) throw new ApiError(404, 'NOT_FOUND', 'Imagen no encontrada')
       const body = req.body ?? {}
+      if (image.role === 'cover' && 'role' in body && body.role !== 'cover') await assertKeepsCover(kind, id)
 
       const notes = []
       await withTransaction(async (connection) => {
@@ -631,6 +647,7 @@ for (const kind of Object.values(KINDS)) {
         [imageId, id],
       )
       if (!image) throw new ApiError(404, 'NOT_FOUND', 'Imagen no encontrada')
+      if (image.role === 'cover') await assertKeepsCover(kind, id)
 
       const storagePath = await withTransaction(async (connection) => {
         await connection.query(`DELETE FROM ${kind.images} WHERE id = ?`, [imageId])
