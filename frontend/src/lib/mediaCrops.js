@@ -9,7 +9,11 @@ import { getJson } from './api.js'
 // su posición, en % del marco.
 export function cropKey(url) {
   const pathname = String(url ?? '').split(/[?#]/)[0].replace(/^https?:\/\/[^/]+/i, '')
-  return pathname.replace(/\.[a-z0-9]+$/i, '').replace(/-\d+$/, '')
+  const base = pathname.replace(/\.[a-z0-9]+$/i, '')
+  // Solo las fotos subidas (/media/…) tienen variantes por ancho (-480, -960…);
+  // en las fijas del sitio el número es parte del nombre (pat-01, pat-02…) y
+  // quitarlo juntaba todas en un mismo encuadre.
+  return base.startsWith('/media/') ? base.replace(/-\d+$/, '') : base
 }
 
 let crops = {}
