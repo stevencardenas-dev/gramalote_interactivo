@@ -55,10 +55,7 @@ function serialize(row, images = []) {
   const slides = images
     .filter(isEra)
     .map((image) => ({ src: image.url, label: image.eraLabel, alt: image.alt, caption: image.caption, credit: image.credit }))
-  // El carrusel arranca con la portada, así una sola foto de carrusel ya da dos.
-  if (slides.length > 0 && cover && !slides.some((slide) => slide.label)) {
-    slides.unshift({ src: cover.url, label: null, alt: cover.alt, caption: cover.caption, credit: cover.credit })
-  }
+  // El carrusel no incluye la portada: si se quiere en él, se sube también como «Carrusel».
   return {
     slug: row.slug,
     name: row.name,

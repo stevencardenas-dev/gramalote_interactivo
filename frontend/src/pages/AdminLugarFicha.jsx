@@ -51,9 +51,9 @@ const ROLE_LABELS = {
   detail: 'Galería',
 }
 const ROLE_HELP = {
-  cover: 'La que se ve en tarjetas, listados y el mapa. Solo una.',
+  cover: 'Sale en la lista, el mapa y, si no hay carrusel, junto al texto de la ficha. Solo una.',
   gallery: 'Fotos complementarias. Se muestran en la cuadrícula de la ficha con su pie de foto y crédito.',
-  historic: 'Se muestra en el carrusel de la ficha, junto a la portada, con su pie de foto y crédito.',
+  historic: 'Forma el carrusel de la ficha (no incluye la portada; súbela también aquí si la quieres en él).',
 }
 
 const KINDS = {
@@ -787,7 +787,10 @@ export default function AdminLugarFicha({ kind: kindKey }) {
                         index={index}
                         total={form.images.length}
                         roles={roles}
-                        frames={framesForHeritageImage({ role: image.role })}
+                        frames={framesForHeritageImage({
+                          role: image.role,
+                          hasCarousel: form.images.some((entry) => entry.role === 'historic'),
+                        })}
                         busy={busyImage}
                         onSave={saveImage}
                         onReplace={replaceImage}

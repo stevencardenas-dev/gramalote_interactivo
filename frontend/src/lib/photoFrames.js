@@ -27,7 +27,8 @@ export const PHOTO_FRAMES = {
   'mapa-cuadrado': {
     label: 'Mapa',
     ratio: 1,
-    selector: '.mapa-lugar__foto, .mapa-ficha__foto',
+    // Mapa interactivo y tarjeta del mapa de Historia › Patrimonio (ambos cuadrados).
+    selector: '.mapa-lugar__foto, .mapa-ficha__foto, .his-mapview__card-media',
   },
   // Galería de una experiencia: las 2 primeras fotos grandes y el resto más pequeñas.
   // El alto depende del ancho de la pantalla (clamp): medidas a 1280 px, aproximadas.
@@ -153,8 +154,12 @@ export function framesForExperienceImage({ role, galleryIndex }) {
 
 // Patrimonio: la portada sale en la lista, en la ficha (y como primera foto de su galería) y,
 // cuadrada, en el mapa; las fotos del carrusel de épocas, en la ficha; las de galería, en la galería.
-export function framesForHeritageImage({ role }) {
-  if (role === 'cover') return ['patrimonio-lista', 'patrimonio-ficha', 'patrimonio-galeria', 'mapa-cuadrado']
+// La portada sale en la lista, en el mapa y, si la ficha no tiene carrusel, junto al
+// texto de la ficha (con carrusel, ahí va el carrusel, que no incluye la portada).
+export function framesForHeritageImage({ role, hasCarousel = false }) {
+  if (role === 'cover') {
+    return ['patrimonio-lista', ...(hasCarousel ? [] : ['patrimonio-ficha']), 'mapa-cuadrado']
+  }
   if (role === 'historic') return ['patrimonio-ficha']
   if (role === 'gallery') return ['patrimonio-galeria']
   return []

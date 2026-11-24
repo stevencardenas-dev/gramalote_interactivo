@@ -56,10 +56,18 @@ export default function HistoriaPatrimonioFicha() {
   const next = heritage[index + 1] ?? null
   // La galería puede venir como textos (datos de respaldo) o como objetos con
   // pie de foto y crédito (API).
-  const gallery = [
-    site.image ? { src: site.image, alt: site.imageAlt, caption: site.imageCaption, credit: site.imageCredit } : null,
-    ...site.gallery.map((photo) => (typeof photo === 'string' ? { src: photo } : photo)),
-  ].filter((photo) => photo?.src)
+  const galleryPhotos = site.gallery
+    .map((photo) => (typeof photo === 'string' ? { src: photo } : photo))
+    .filter((photo) => photo?.src)
+  // Con fotos de «Carrusel» la ficha muestra el carrusel (sin la portada); si no,
+  // la portada o, a falta de ella, la primera foto de la galería.
+  const hasCarousel = (site.eras?.length ?? 0) > 0
+  const mainPhoto = site.image
+    ? { src: site.image, alt: site.imageAlt, caption: site.imageCaption, credit: site.imageCredit }
+    : (galleryPhotos[0] ?? null)
+  // La cuadrícula solo lleva las fotos de «Galería»: la portada ya se ve arriba
+  // y repetirla la mostraba dos veces.
+  const gallery = galleryPhotos.filter((photo) => photo.src !== mainPhoto?.src)
 
   return (
     <>
@@ -97,15 +105,17 @@ export default function HistoriaPatrimonioFicha() {
 
             <div className="his-ficha__aside">
               <Reveal className="his-ficha__media" delay={120}>
-                {site.eras?.length > 1 ? (
+                {hasCarousel ? (
                   <EraCarousel photos={site.eras} name={site.name} />
                 ) : (
-                  <div className="his-photo-frame">
-                    <img src={site.image} alt={site.imageAlt ?? site.name} />
-                    <PhotoBadge text={site.imageCaption} />
-                  </div>
+                  mainPhoto ? (
+                    <div className="his-photo-frame">
+                      <img src={mainPhoto.src} alt={mainPhoto.alt ?? site.name} />
+                      <PhotoBadge text={mainPhoto.caption} />
+                    </div>
+                  ) : null
                 )}
-                {site.eras?.length > 1 ? null : <PhotoNote credit={site.imageCredit} />}
+                {hasCarousel ? null : <PhotoNote credit={mainPhoto?.credit} />}
               </Reveal>
 
               {site.visit ? (
@@ -149,7 +159,7 @@ export default function HistoriaPatrimonioFicha() {
             </div>
           </div>
 
-          {gallery.length > 1 ? (
+          {gallery.length > 0 ? (
             <div className="his-ficha__gallery">
               {gallery.map((photo) => (
                 <figure key={photo.src} className="his-ficha__photo">

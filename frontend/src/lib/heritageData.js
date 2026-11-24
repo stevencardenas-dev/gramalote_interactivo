@@ -36,7 +36,8 @@ function fromRemote(remote, base, index) {
     coords: remote.coords ?? base?.coords,
     coordsApprox: remote.coordsApprox,
     mapZone: undefined,
-    image: remote.image ?? base?.image ?? null,
+    // La foto fija del código solo se usa si la ficha no tiene fotos en el panel.
+    image: hasImages ? (remote.image ?? null) : (remote.image ?? base?.image ?? null),
     imageAlt: hasImages ? (remote.imageAlt ?? undefined) : base?.imageAlt,
     imageCaption: hasImages ? (remote.imageCaption ?? undefined) : base?.imageCaption,
     imageCredit: hasImages ? (remote.imageCredit ?? undefined) : base?.imageCredit,
