@@ -4,6 +4,7 @@ import Navbar from './Navbar.jsx'
 import Footer from './Footer.jsx'
 import AdminNav from '../admin/AdminNav.jsx'
 import SessionKeeper from '../admin/SessionKeeper.jsx'
+import AdminToastHost from '../admin/AdminToastHost.jsx'
 import WhatsAppHelp from '../ui/WhatsAppHelp.jsx'
 import OutboxNotice from '../ui/OutboxNotice.jsx'
 import ScrollTopButton from '../ui/ScrollTopButton.jsx'
@@ -111,6 +112,7 @@ export default function Layout() {
           <Outlet />
         </main>
         <SessionKeeper />
+        <AdminToastHost />
       </div>
     )
   }

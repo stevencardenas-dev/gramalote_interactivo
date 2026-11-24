@@ -41,6 +41,31 @@ function number(value, label, min, max) {
   return Math.round(parsed * 100) / 100
 }
 
+const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', avif: 'image/avif', svg: 'image/svg+xml' }
+
+// Las fotos del diseño del sitio (/img/…) y las subidas desde Páginas pueden no tener fila en
+// media (solo la tienen las de las fichas). Para poder guardar su encuadre se registra una
+// fila mínima con su ruta; no se copia ni se toca el archivo.
+async function registerMedia(url) {
+  const path = String(url).split(/[?#]/)[0]
+  const extension = path.split('.').pop()?.toLowerCase()
+  if (!path.startsWith('/') || path.includes('..') || !MIME[extension]) {
+    throw new ApiError(404, 'NOT_FOUND', 'Foto no encontrada')
+  }
+  const local = path.startsWith('/media/')
+  const result = await query(
+    `INSERT INTO media (storage_disk, storage_path, public_url, mime_type, source)
+     VALUES (?, ?, ?, ?, 'external')
+     ON DUPLICATE KEY UPDATE public_url = VALUES(public_url)`,
+    [local ? 'local' : 'public', local ? path.slice('/media/'.length) : path, path, MIME[extension]],
+  )
+  const row = await queryOne('SELECT id, crop_frames FROM media WHERE storage_disk = ? AND storage_path = ?', [
+    local ? 'local' : 'public',
+    local ? path.slice('/media/'.length) : path,
+  ])
+  return row ?? { id: result.insertId, crop_frames: null }
+}
+
 router.get(
   '/media-crops',
   asyncHandler(async (_req, res) => {
@@ -70,11 +95,11 @@ router.put(
     const key = cropKey(url)
     const media = await queryOne(
       `SELECT id, crop_frames FROM media WHERE public_url = ? OR public_url LIKE ? LIMIT 1`,
-      [url, `%/${key.split('/').pop()}.%`],
+      [url, `${key}.%`],
     )
-    if (!media) throw new ApiError(404, 'NOT_FOUND', 'Foto no encontrada')
+    const mediaRow = media ?? (await registerMedia(url))
 
-    const frames = parseFrames(media.crop_frames)
+    const frames = parseFrames(mediaRow.crop_frames)
     const crop = req.body?.crop
     if (crop === null) delete frames[frame]
     else {
@@ -85,7 +110,7 @@ router.put(
       }
     }
     const value = Object.keys(frames).length > 0 ? JSON.stringify(frames) : null
-    await query('UPDATE media SET crop_frames = ? WHERE id = ?', [value, media.id])
+    await query('UPDATE media SET crop_frames = ? WHERE id = ?', [value, mediaRow.id])
     res.json({ data: { key, frames } })
   }),
 )

@@ -170,6 +170,7 @@ export default function AdminPatrimonio() {
         body: { published: !item.published },
       })
       setItems((current) => (current ?? []).map((entry) => (entry.id === updated.id ? { ...updated, coverUrl: entry.coverUrl } : entry)))
+      notify('ok', updated.published ? 'Publicado' : 'Despublicado', `${updated.name} ${updated.published ? 'ya se ve' : 'dejó de verse'} en el mapa.`)
     } catch (err) {
       notify('error', 'No se pudo publicar', err.message)
     } finally {

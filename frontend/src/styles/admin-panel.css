@@ -2217,6 +2217,95 @@ a.admin-tile:hover .admin-tile__chev {
   flex-wrap: wrap;
 }
 
+/* Aspecto de la ventana de encuadre con la identidad de la marca (azul noche y crema, dorado):
+   oscuro por defecto y crema en el tema claro. Solo colores, bordes y tipografía. */
+.admin-dialog__panel.admin-framing {
+  --fr-bg: #00324f;
+  --fr-bd: #0a587f;
+  --fr-tx: #fff2e3;
+  --fr-mu: #9fc0d6;
+  --fr-sf: #00426b;
+  --fr-ln: #0a587f;
+  --fr-ac: #eaa41e;
+  --fr-acx: #2a1a02;
+  --fr-wrap: #001e31;
+  --fr-frame: #fff2e3;
+  border-color: var(--fr-bd);
+  border-radius: 16px;
+  background: var(--fr-bg);
+  color: var(--fr-tx);
+  box-shadow: 0 26px 70px rgba(0, 10, 20, 0.6);
+}
+
+html[data-admin-theme='light'] .admin-dialog__panel.admin-framing {
+  --fr-bg: #fff2e3;
+  --fr-bd: #ebdccf;
+  --fr-tx: #00324f;
+  --fr-mu: #6b6158;
+  --fr-sf: #ffffff;
+  --fr-ln: #ebdccf;
+  --fr-ac: #00426b;
+  --fr-acx: #fff2e3;
+  --fr-wrap: #00324f;
+  --fr-frame: #fff2e3;
+  box-shadow: 0 24px 60px rgba(0, 50, 79, 0.2);
+}
+
+.admin-framing .admin-dialog__title {
+  color: var(--fr-tx);
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+}
+
+.admin-framing .admin-dialog__text,
+.admin-framing .admin-hint,
+.admin-framing__zoom > span:first-child {
+  color: var(--fr-mu);
+}
+
+.admin-framing .admin-btn {
+  border-color: var(--fr-ln);
+  border-radius: 10px;
+  background: var(--fr-sf);
+  color: var(--fr-tx);
+}
+
+.admin-framing .admin-btn:hover:not(:disabled) {
+  border-color: var(--fr-ac);
+  background: var(--fr-sf);
+}
+
+.admin-framing .admin-btn--primary,
+.admin-framing .admin-btn--primary:hover:not(:disabled) {
+  border-color: var(--fr-ac);
+  background: var(--fr-ac);
+  color: var(--fr-acx);
+  font-weight: 700;
+}
+
+.admin-framing .admin-framing__stage-wrap {
+  border-radius: 14px;
+  background: var(--fr-wrap);
+}
+
+.admin-framing .admin-framing__stage::after {
+  border-color: var(--fr-frame);
+}
+
+.admin-framing .admin-framing__zoom-row input[type='range'] {
+  accent-color: var(--fr-ac);
+}
+
+.admin-framing .admin-collage__cell {
+  border-color: var(--fr-ln);
+  background: var(--fr-sf);
+}
+
+.admin-framing .admin-collage__cell.is-current {
+  border-color: var(--fr-ac);
+  background: var(--fr-ac);
+}
+
 
 /* Miniatura de una foto que abre la ventana de encuadre. */
 .admin-frame-btn {
@@ -4742,6 +4831,12 @@ button.audit__hd:focus-visible {
 
   .admin-row-item__thumb {
     grid-row: 1 / span 2;
+  }
+
+  /* La miniatura de las listas de orden (Páginas) no es una fila de listado: sin esto se montaba
+     sobre el número de posición. */
+  .admin-order__item .admin-row-item__thumb {
+    grid-row: auto;
   }
 
   .admin-row-item__main {
