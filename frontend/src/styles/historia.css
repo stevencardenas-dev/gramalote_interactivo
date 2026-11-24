@@ -1608,10 +1608,17 @@
   box-shadow: var(--shadow-card);
 }
 
-.his-mapview__card img {
+.his-mapview__card-media {
   width: 104px;
   height: 104px;
   border-radius: 12px;
+  overflow: hidden;
+}
+
+.his-mapview__card-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
@@ -2435,7 +2442,7 @@
     gap: 10px 12px;
   }
 
-  .his-mapview__card img {
+  .his-mapview__card-media {
     width: 84px;
     height: 84px;
   }
@@ -3167,7 +3174,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .his-mapview__card img {
+  .his-mapview__card-media {
     width: 100%;
     height: 170px;
   }

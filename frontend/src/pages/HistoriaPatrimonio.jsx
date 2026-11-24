@@ -312,7 +312,9 @@ export default function HistoriaPatrimonio() {
               <aside className="his-mapview__panel">
                 {current ? (
                   <article className="his-mapview__card">
-                    <img src={current.image} alt="" loading="lazy" />
+                    <div className="his-mapview__card-media">
+                      <img src={current.image} alt="" loading="lazy" />
+                    </div>
                     <div className="his-mapview__card-body">
                       <span className={`his-tag his-tag--${ZONE_TONE[current.zone]}`}>{current.zoneLabel}</span>
                       <h3>{current.name}</h3>
