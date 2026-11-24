@@ -223,7 +223,6 @@
   overflow: hidden;
   border-radius: var(--radius-lg);
   aspect-ratio: 4 / 3.2;
-  background: var(--c-cream);
 }
 
 .his-card__media img {
@@ -759,7 +758,6 @@
   grid-column: 1;
   overflow: hidden;
   border-radius: 18px;
-  background: var(--c-cream);
 }
 
 .his-event__media img {
@@ -1190,7 +1188,6 @@
   overflow: hidden;
   border-radius: 14px;
   aspect-ratio: 3 / 2;
-  background: var(--c-cream);
 }
 
 .his-row__media img {
@@ -1802,6 +1799,18 @@
   aspect-ratio: 4 / 3.1;
   border-radius: 20px;
   object-fit: cover;
+}
+
+/* La forma la lleva el marco (no la foto): con un encuadre del panel la foto pasa a
+   posición absoluta y el marco, sin alto propio, la hacía desaparecer. */
+.his-ficha__aside .his-photo-frame {
+  aspect-ratio: 4 / 3.1;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.his-ficha__aside .his-photo-frame img {
+  height: 100%;
 }
 
 .his-ficha__main,
@@ -2509,7 +2518,8 @@
   }
 
   /* A todo el ancho la foto de la ficha medía 550px de alto en tablet. */
-  .his-ficha__media img {
+  .his-ficha__media img,
+  .his-ficha__aside .his-photo-frame {
     aspect-ratio: 16 / 9;
     max-height: 420px;
   }
@@ -3741,7 +3751,6 @@ kbd {
   overflow: hidden;
   aspect-ratio: 4 / 3;
   border-radius: 20px;
-  background: var(--c-cream-deep);
 }
 
 .era-carousel__stage img {
@@ -3805,9 +3814,9 @@ kbd {
 }
 
 /* Fotos verticales completas: solo las verticales (data-orient="portrait", ver
-   lib/imageOrientation.js) se ajustan dentro del marco (contain) sobre crema;
-   las horizontales siguen llenando su marco como antes. Los héroes a todo ancho
-   y las miniaturas pequeñas no cambian. */
+   lib/imageOrientation.js) se ajustan dentro del marco (contain); el hueco lo
+   rellena la misma foto difuminada (sin fondo crema). Las horizontales siguen
+   llenando su marco. Los héroes a todo ancho y las miniaturas no cambian. */
 .his-card__media img[data-orient='portrait'],
 .his-cap-hero__media img[data-orient='portrait'],
 .his-event__media img[data-orient='portrait'],
@@ -3816,7 +3825,6 @@ kbd {
 .his-ficha__gallery img[data-orient='portrait'],
 .his-story-card__cols img[data-orient='portrait'] {
   object-fit: contain;
-  background: var(--c-cream-deep);
 }
 
 /* Mapa de patrimonios con teselas de Protomaps (MapLibre) */

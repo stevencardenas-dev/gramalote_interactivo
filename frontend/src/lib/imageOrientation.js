@@ -68,8 +68,12 @@ const FRAMED = [
   '.his-card__media',
   '.his-explore__card',
   '.his-event__media',
+  '.his-cap-hero__media',
   '.his-row__media',
   '.his-ficha__media',
+  // Foto de la ficha y de su galería (con pie de foto) y carrusel de Patrimonio.
+  '.his-photo-frame',
+  '.era-carousel__stage',
   '.his-story-card__cols',
   '.his-mapview__card-media',
   '.his-tl__media',
