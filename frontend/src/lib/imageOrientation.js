@@ -71,7 +71,7 @@ const FRAMED = [
   '.his-row__media',
   '.his-ficha__media',
   '.his-story-card__cols',
-  '.his-mapview__card',
+  '.his-mapview__card-media',
   '.his-tl__media',
   '.explore-block__media',
   '.listing-card-v__media',
