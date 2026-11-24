@@ -14,7 +14,6 @@ import {
   isWebUrl,
   whatsappUrl,
 } from '../data/pages.js'
-import { componentCatalog } from '../data/componentCatalog.js'
 import BannerCarousel from '../components/home/BannerCarousel.jsx'
 import { intervalSeconds, timingSeconds, todayKey, visibleSlides } from '../lib/carousel.js'
 import SocialIcon from '../components/ui/SocialIcon.jsx'
@@ -36,7 +35,6 @@ const TABS = [
   { key: 'que-hacer', label: 'Qué hacer', pages: ['que-hacer'] },
   { key: 'donde-ir', label: 'Dónde ir', pages: ['donde-ir', 'donde-comer', 'donde-dormir', 'donde-comprar'] },
   { key: 'redes', label: 'Redes sociales', pages: ['redes'] },
-  { key: 'buscador', label: 'Buscador', pages: ['buscador'] },
 ]
 
 const PAGE_INFO = {
@@ -48,7 +46,6 @@ const PAGE_INFO = {
   'donde-comprar': { label: 'Dónde comprar', path: '/donde-comprar' },
   redes: { label: 'Redes sociales', path: '/' },
   carrusel: { label: 'Carrusel de eventos', path: '/' },
-  buscador: { label: 'Buscador', path: '/buscar' },
 }
 
 // Redes en el orden guardado; las que aún no estaban guardadas, al final.
@@ -119,7 +116,7 @@ function MoveButtons({ index, length, onMove, label }) {
 }
 
 // Miniatura con botón para abrir el selector. Con `onReset` añade el enlace
-// para volver al diseño original (lo usa el buscador).
+// para volver al diseño original.
 function ImageField({ label, photo, caption, onOpen, compact = false, onReset, resetLabel = 'Diseño original', frames }) {
   return (
     <div className={`admin-imgfield${compact ? ' admin-imgfield--compact' : ''}`}>
@@ -141,40 +138,74 @@ function ImageField({ label, photo, caption, onOpen, compact = false, onReset, r
   )
 }
 
-// Grupos de fotos para el selector a partir de las fuentes de la API.
-function useGroups(sources) {
+// Fichas entre las que se elige una foto. La galería no viaja aquí: el selector
+// la pide paginada al abrirse (ver components/admin/ImagePicker.jsx).
+function useCatalog(sources) {
   return useMemo(() => {
     const experiences = (sources?.experiences ?? []).map((item) => ({
+      kind: 'experience',
       key: `x-${item.slug}`,
+      slug: item.slug,
       label: item.title,
       note: item.published ? 'Experiencia' : 'Experiencia · no publicada',
-      from: item.title,
-      images: item.images,
+      imageCount: item.imageCount ?? 0,
+      cover: item.cover ?? null,
     }))
     const establishments = (sources?.establishments ?? []).map((item) => ({
+      kind: 'establishment',
       key: `e-${item.slug}`,
+      slug: item.slug,
       label: item.name,
       note: item.published ? item.category : `${item.category} · no publicada`,
-      from: item.name,
       category: item.category,
-      images: item.images,
+      imageCount: item.imageCount ?? 0,
+      cover: item.cover ?? null,
     }))
-    const uploads = {
-      key: 'uploads',
-      label: 'Subidas para páginas',
-      from: null,
-      images: sources?.uploads ?? [],
-    }
     const bySlug = new Map([
-      ...experiences.map((group, index) => [`experience:${sources.experiences[index].slug}`, group]),
-      ...establishments.map((group, index) => [`establishment:${sources.establishments[index].slug}`, group]),
+      ...experiences.map((place) => [`experience:${place.slug}`, place]),
+      ...establishments.map((place) => [`establishment:${place.slug}`, place]),
     ])
-    return { experiences, establishments, uploads, bySlug }
+    return {
+      places: [...experiences, ...establishments],
+      experiences,
+      establishments,
+      bySlug,
+      uploadCount: sources?.uploadCount ?? 0,
+    }
   }, [sources])
 }
 
 function itemPhoto(item, covers) {
-  return covers?.[item.slug] || item.images?.[0]?.url || null
+  return covers?.[item.slug] || item.cover || null
+}
+
+// Ficha a la que enlaza una tarjeta: la foto elegida debe salir de su galería.
+const fichaLinks = new Set(['experience', 'establishment'])
+const isFichaLink = (link) => Boolean(link?.slug) && fichaLinks.has(link?.kind)
+
+function pickerForLink(link, catalog) {
+  if (isFichaLink(link)) {
+    const place = catalog.bySlug.get(`${link.kind}:${link.slug}`)
+    return {
+      scope: { kind: link.kind, slug: link.slug },
+      places: place ? [place] : catalog.places,
+    }
+  }
+  const category = CATEGORY_OF_PAGE[link?.path]
+  if (category) {
+    return {
+      places: catalog.establishments.filter((place) => place.category === category),
+    }
+  }
+  return { places: catalog.places }
+}
+
+// Al cambiar de ficha, la foto pasa a su portada para que tarjeta y ficha
+// siempre correspondan. Devuelve undefined si el enlace no apunta a una ficha.
+function photoForLink(link, sources) {
+  if (!isFichaLink(link)) return undefined
+  const list = link.kind === 'experience' ? sources?.experiences : sources?.establishments
+  return list?.find((item) => item.slug === link.slug)?.cover ?? null
 }
 
 function StatusBadge({ published }) {
@@ -210,7 +241,7 @@ function OrderList({ items, order, covers, onOrder, onCover, kind, frames }) {
               <small>
                 {custom ? 'Portada elegida para esta página' : 'Portada de la ficha'}
                 {' · '}
-                {item.images.length} {item.images.length === 1 ? 'foto' : 'fotos'}
+                {item.imageCount} {item.imageCount === 1 ? 'foto' : 'fotos'}
               </small>
             </span>
             <StatusBadge published={item.published} />
@@ -357,33 +388,26 @@ function LinkField({ link, onChange, sources, allowPage = true, hideKind = false
 }
 
 // ---------------------------------------------------------------- Inicio
-function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
+function InicioEditor({ draft, update, sources, catalog, openPicker, signal }) {
   const defaults = PAGE_DEFAULTS.inicio
-  const allGroups = [groups.uploads, ...groups.experiences, ...groups.establishments]
-
-  // Para una tarjeta que enlaza a una ficha, su galería va primero.
-  const groupsFor = (link) => {
-    if (link?.kind === 'experience' || link?.kind === 'establishment') {
-      const own = groups.bySlug.get(`${link.kind}:${link.slug}`)
-      return own ? [own, ...allGroups.filter((group) => group !== own)] : allGroups
-    }
-    const category = CATEGORY_OF_PAGE[link?.path]
-    if (category) {
-      const mine = groups.establishments.filter((group) => group.category === category)
-      return [groups.uploads, ...mine, ...allGroups.filter((group) => group !== groups.uploads && !mine.includes(group))]
-    }
-    return allGroups
-  }
-
   const defaultPhoto = (list, id) => defaults[list].find((item) => item.id === id)?.photo
 
-  const pickFor = (list, index, title) => {
+  const setCard = (list, index, patch) =>
+    update((page) => {
+      Object.assign(page[list][index], patch)
+    })
+
+  // Si la tarjeta enlaza a una ficha, el selector ofrece solo sus fotos y el
+  // botón de restablecer vuelve a la portada de esa ficha (no a la del diseño).
+  const pickFor = (list, index, title, link) => {
     const item = draft[list][index]
+    const fichaPhoto = photoForLink(link, sources)
     openPicker({
       title,
-      groups: groupsFor(item.link),
+      ...pickerForLink(link, catalog),
       current: item.photo,
-      defaultPhoto: defaultPhoto(list, item.id),
+      defaultPhoto: fichaPhoto === undefined ? defaultPhoto(list, item.id) : fichaPhoto,
+      resetLabel: fichaPhoto === undefined ? undefined : 'Usar la portada de la ficha',
       onPick: ({ url }) =>
         update((page) => {
           page[list][index].photo = url
@@ -391,10 +415,12 @@ function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
     })
   }
 
-  const setCard = (list, index, patch) =>
-    update((page) => {
-      Object.assign(page[list][index], patch)
-    })
+  // Cambiar de ficha cambia también la foto a su portada: así la tarjeta y la
+  // ficha a la que lleva nunca se contradicen.
+  const setLink = (list, index, link) => {
+    const photo = photoForLink(link, sources)
+    setCard(list, index, photo === undefined ? { link } : { link, photo })
+  }
 
   const moveCard = (list) => (index, delta) =>
     update((page) => {
@@ -412,7 +438,9 @@ function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
               caption={item.to}
               photo={item.photo}
               frames={PAGES_FRAMES.inicioAcceso}
-              onOpen={() => pickFor('quickAccess', index, `Imagen de «${item.label}»`)}
+              onOpen={() =>
+                pickFor('quickAccess', index, `Imagen de «${item.label}»`, { kind: 'page', path: item.to })
+              }
             />
           ))}
         </div>
@@ -441,7 +469,9 @@ function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
                   label="Imagen"
                   photo={card.photo}
                   frames={PAGES_FRAMES.inicioExperiencia(index)}
-                  onOpen={() => pickFor('experiences', index, `Imagen de «${card.title}»`)}
+                  onOpen={() =>
+                    pickFor('experiences', index, `Imagen de «${card.title}»`, card.link)
+                  }
                 />
                 <div className="admin-grid">
                   <Field label="Título">
@@ -463,7 +493,7 @@ function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
                 <LinkField
                   link={card.link}
                   sources={sources}
-                  onChange={(link) => setCard('experiences', index, { link })}
+                  onChange={(link) => setLink('experiences', index, link)}
                 />
               </div>
             </article>
@@ -506,7 +536,9 @@ function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
                   photo={card.photo}
                   compact
                   frames={PAGES_FRAMES.inicioEstablecimiento}
-                  onOpen={() => pickFor('highlights', index, `Fondo de «${card.title}»`)}
+                  onOpen={() =>
+                    pickFor('highlights', index, `Fondo de «${card.title}»`, card.link)
+                  }
                 />
                 <div className="admin-grid">
                   <Field label="Título">
@@ -521,7 +553,7 @@ function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
                   link={card.link}
                   sources={sources}
                   allowPage={false}
-                  onChange={(link) => setCard('highlights', index, { link })}
+                  onChange={(link) => setLink('highlights', index, link)}
                 />
               </div>
             </article>
@@ -544,7 +576,7 @@ function InicioEditor({ draft, update, sources, groups, openPicker, signal }) {
 }
 
 // ---------------------------------------------------------------- Qué hacer
-function QueHacerEditor({ draft, update, sources, groups, openPicker, signal }) {
+function QueHacerEditor({ draft, update, sources, catalog, openPicker, signal }) {
   const experiences = sources?.experiences ?? []
 
   return (
@@ -568,7 +600,8 @@ function QueHacerEditor({ draft, update, sources, groups, openPicker, signal }) 
           openPicker({
             title: `Portada de «${item.title}» en Qué hacer`,
             hint: 'Fotos de la galería de la experiencia. No cambia la portada de su ficha.',
-            groups: [groups.bySlug.get(`experience:${item.slug}`)].filter(Boolean),
+            scope: { kind: 'experience', slug: item.slug },
+            places: [catalog.bySlug.get(`experience:${item.slug}`)].filter(Boolean),
             current: itemPhoto(item, draft.covers),
             resetLabel: 'Usar la portada de la ficha',
             noUpload: true,
@@ -615,18 +648,19 @@ function TextBlock({ block, onChange, withText = true }) {
   )
 }
 
-function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, signal }) {
+function CategoryEditor({ pageKey, draft, update, sources, catalog, openPicker, signal }) {
   const pools = useMemo(() => {
     const byCategory = (category) => (sources?.establishments ?? []).filter((item) => item.category === category)
     return { comer: byCategory('comer'), dormir: byCategory('dormir'), comprar: byCategory('comprar') }
   }, [sources])
-  const groupsOf = (category) => groups.establishments.filter((group) => group.category === category)
+  const placesOf = (category) => catalog.establishments.filter((place) => place.category === category)
 
   const coverPicker = (item, path, label) =>
     openPicker({
       title: `${label} · ${item.name}`,
       hint: 'Fotos de la galería del establecimiento. No cambia la portada de su ficha.',
-      groups: [groups.bySlug.get(`establishment:${item.slug}`)].filter(Boolean),
+      scope: { kind: 'establishment', slug: item.slug },
+      places: [catalog.bySlug.get(`establishment:${item.slug}`)].filter(Boolean),
       current: itemPhoto(item, path(draft).covers),
       resetLabel: 'Usar la portada de la ficha',
       noUpload: true,
@@ -651,7 +685,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
     openPicker({
       title,
       hint: 'Fotos de las galerías de los establecimientos de Dónde comer, agrupadas por establecimiento.',
-      groups: [...groupsOf(category), groups.uploads],
+      places: placesOf(category),
       current: list(draft)[index].photo,
       defaultPhoto: defaults?.photo,
       onPick: ({ url, alt, from }) =>
@@ -780,7 +814,7 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
                 openPicker({
                   title: 'Foto de «Encuentra dónde comer»',
                   hint: 'Fotos de los establecimientos de Dónde comer, agrupadas por establecimiento.',
-                  groups: [...groupsOf('comer'), groups.uploads],
+                  places: placesOf('comer'),
                   current: draft.mapa.photo,
                   defaultPhoto: defaults.mapa.photo,
                   onPick: ({ url, alt, from }) =>
@@ -820,60 +854,6 @@ function CategoryEditor({ pageKey, draft, update, sources, groups, openPicker, s
         />
       </AdminSection>
     </>
-  )
-}
-
-// ---------------------------------------------------------------- Buscador
-// Fotos de las tarjetas de sección de /buscar. Sin foto propia cada tarjeta
-// mantiene su diseño original (su foto, su icono o su ilustración); con foto,
-// se muestra como tarjeta con imagen.
-function BuscadorEditor({ draft, update, groups, openPicker, signal }) {
-  const allGroups = [groups.uploads, ...groups.experiences, ...groups.establishments]
-  const images = draft.images ?? {}
-  const clear = (id) =>
-    update((page) => {
-      delete page.images[id]
-    })
-
-  return (
-    <AdminSection
-      signal={signal}
-      title="Tarjetas de sección"
-      hint="Las que salen en /buscar al buscar una sección: Dónde ir, Curiosidades, Información práctica…"
-    >
-      <div className="admin-imggrid">
-        {componentCatalog.map((item) => (
-          <ImageField
-            key={item.id}
-            label={item.name}
-            caption={item.to}
-            photo={images[item.id] ?? item.photo ?? item.illustration ?? null}
-            frames={PAGES_FRAMES.buscador}
-            resetLabel="Diseño original"
-            onReset={images[item.id] ? () => clear(item.id) : undefined}
-            onOpen={() =>
-              openPicker({
-                title: `Imagen de «${item.name}» en el buscador`,
-                hint: 'Se usa tal cual en la tarjeta de la sección. Sin foto propia queda el diseño original del buscador.',
-                groups: allGroups,
-                current: images[item.id] ?? item.photo ?? null,
-                defaultPhoto: item.photo,
-                resetLabel: 'Usar el diseño original',
-                onReset: () => clear(item.id),
-                onPick: ({ url }) =>
-                  update((page) => {
-                    page.images[item.id] = url
-                  }),
-              })
-            }
-          />
-        ))}
-      </div>
-      <p className="note">
-        Información práctica, Cómo llegar, Seguridad, Contactos y Antes de salir no llevan foto: muestran su
-        icono o su ilustración. Al elegirles una imagen, su tarjeta pasa a mostrarse con foto.
-      </p>
-    </AdminSection>
   )
 }
 
@@ -1103,7 +1083,7 @@ function SecondsField({ label, hint, value, min, max, disabled, onChange }) {
   )
 }
 
-function CarruselEditor({ draft, update, sources, groups, openPicker, signal, uploadImage }) {
+function CarruselEditor({ draft, update, sources, openPicker, signal, uploadImage }) {
   const today = todayKey()
   const defaults = PAGE_DEFAULTS.carrusel
   const visible = visibleSlides(draft.slides, today)
@@ -1130,7 +1110,8 @@ function CarruselEditor({ draft, update, sources, groups, openPicker, signal, up
     openPicker({
       title: `Banner · ${slide.title || `Diapositiva ${index + 1}`}`,
       hint: BANNER_HINT,
-      groups: [groups.uploads, designGroup],
+      places: [],
+      extraGroups: [designGroup],
       current: slide.image,
       defaultPhoto: original?.image,
       onUpload: (file) => uploadImage(file, 'banner'),
@@ -1407,7 +1388,7 @@ export default function AdminPaginas() {
   // Avisa al salir con cambios sin guardar.
   const hasDirty = Object.values(dirty).some(Boolean)
   useUnsavedChanges(hasDirty)
-  const groups = useGroups(data?.sources)
+  const catalog = useCatalog(data?.sources)
 
   function select(key) {
     setParams({ pagina: key }, { replace: true })
@@ -1430,7 +1411,7 @@ export default function AdminPaginas() {
     const image = await apiRequest(`/admin/pages/media${query}`, { method: 'POST', formData: form })
     setData((current) => ({
       ...current,
-      sources: { ...current.sources, uploads: [image, ...(current.sources.uploads ?? [])] },
+      sources: { ...current.sources, uploadCount: (current.sources.uploadCount ?? 0) + 1 },
     }))
     return image
   }
@@ -1509,7 +1490,7 @@ export default function AdminPaginas() {
 
   const draft = drafts[pageKey]
   const stored = data?.pages?.[pageKey]
-  const editorProps = { draft, update, sources: data?.sources, groups, openPicker, signal, uploadImage }
+  const editorProps = { draft, update, sources: data?.sources, catalog, openPicker, signal, uploadImage }
 
   return (
     <section className="admin-page">
@@ -1641,7 +1622,6 @@ export default function AdminPaginas() {
             {pageKey === 'inicio' ? <InicioEditor {...editorProps} /> : null}
             {pageKey === 'que-hacer' ? <QueHacerEditor {...editorProps} /> : null}
             {pageKey === 'redes' ? <RedesEditor {...editorProps} /> : null}
-            {pageKey === 'buscador' ? <BuscadorEditor {...editorProps} /> : null}
             {pageKey === 'carrusel' ? <CarruselEditor {...editorProps} /> : null}
             {pageKey.startsWith('donde-') ? <CategoryEditor key={pageKey} pageKey={pageKey} {...editorProps} /> : null}
           </div>

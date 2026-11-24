@@ -245,6 +245,31 @@ export function useActivities(fallback) {
   return data
 }
 
+// Extras del mapa (puntos sin ficha) para el buscador. Se piden al mapa público,
+// que ya los entrega con su categoría, zona, resumen y foto.
+export function useMapExtras() {
+  const [data, setData] = useState([])
+  useEffect(() => {
+    const controller = new AbortController()
+    request('/map', controller.signal)
+      .then((payload) => {
+        const items = (payload.data?.extras ?? []).map((item) => ({
+          id: item.id,
+          slug: item.slug,
+          name: item.name,
+          category: item.category?.name ?? '',
+          zone: item.zone?.name ?? '',
+          summary: item.summary ?? '',
+          photo: item.cover?.url ?? null,
+        }))
+        setData(items)
+      })
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
+  return data
+}
+
 export function useActivity(slug, fallback) {
   const [state, setState] = useState({ data: fallback, loading: true })
   useEffect(() => {

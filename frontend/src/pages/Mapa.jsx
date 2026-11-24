@@ -9,6 +9,8 @@ export default function Mapa() {
   const [params] = useSearchParams()
   const categoria = params.get('categoria') ?? ''
   const tipo = params.get('tipo') ?? ''
+  // Un extra del buscador abre el mapa con ese punto ya elegido.
+  const extra = params.get('extra') ?? ''
 
   return (
     <>
@@ -23,10 +25,11 @@ export default function Mapa() {
         <div className="container">
           <Suspense fallback={<p className="note">Cargando mapa…</p>}>
             <LiveMap
-              key={`${categoria}|${tipo}`}
+              key={`${categoria}|${tipo}|${extra}`}
               explorer
               initialGroup={categoria}
               initialType={tipo}
+              initialSlug={extra}
             />
           </Suspense>
 

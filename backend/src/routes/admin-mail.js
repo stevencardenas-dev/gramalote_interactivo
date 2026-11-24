@@ -27,7 +27,6 @@ function requireAdminRole(req, _res, next) {
 
 function publicView(settings) {
   return {
-    enabled: settings.enabled,
     ready: mailReady(settings),
     fromEmail: settings.fromEmail,
     fromName: settings.fromName,
@@ -75,7 +74,6 @@ function fieldsFrom(body, current) {
     throw new ApiError(400, 'VALIDATION', 'Puerto SMTP no válido')
   }
   const fields = {
-    enabled: Boolean(body.enabled),
     from_email: optionalEmail(body.fromEmail, 'Correo remitente'),
     from_name: stringParam(body.fromName, { max: 120 }) ?? 'Turismo Gramalote',
     smtp_host: stringParam(body.host, { max: 190 }) ?? 'smtp.gmail.com',
@@ -92,12 +90,6 @@ function fieldsFrom(body, current) {
     fields.smtp_password_enc = seal(body.password.replace(/\s+/g, ''))
   } else if (body.clearPassword) {
     fields.smtp_password_enc = null
-  }
-  if (fields.enabled && (!fields.from_email || !fields.smtp_user)) {
-    throw new ApiError(400, 'VALIDATION', 'Para activar el correo falta el correo remitente')
-  }
-  if (fields.enabled && !current.hasPassword && !fields.smtp_password_enc) {
-    throw new ApiError(400, 'VALIDATION', 'Para activar el correo falta la contraseña de aplicación')
   }
   return fields
 }

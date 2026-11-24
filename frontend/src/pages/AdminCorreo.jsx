@@ -23,7 +23,6 @@ const KIND_LABEL = {
 }
 
 const EMPTY = {
-  enabled: false,
   fromEmail: '',
   fromName: 'Turismo Gramalote',
   user: '',
@@ -44,7 +43,6 @@ function formatStamp(value) {
 
 function formFrom(data) {
   return {
-    enabled: data.enabled,
     fromEmail: data.fromEmail ?? '',
     fromName: data.fromName ?? '',
     user: data.user ?? '',
@@ -111,7 +109,7 @@ export default function AdminCorreo() {
       const data = await apiRequest('/admin/mail-settings', { method: 'PUT', body: body() })
       setSaved(data)
       setForm(formFrom(data))
-      notify('ok', 'Configuración guardada', data.ready ? 'El sitio ya envía correos.' : 'El correo sigue desactivado.')
+      notify('ok', 'Configuración guardada', data.ready ? 'El sitio ya envía correos.' : 'Faltan datos para enviar correos.')
     } catch (err) {
       notify('error', 'No se pudo guardar', err.message)
     } finally {
@@ -157,17 +155,21 @@ export default function AdminCorreo() {
             Cuenta que envía los correos del sitio: restablecer contraseñas, invitaciones al panel,
             confirmación de calificaciones y avisos de sugerencias.
           </p>
-          {saved ? (
-            <span className={`admin-badge ${saved.ready ? 'admin-badge--ok' : 'admin-badge--draft'}`}>
-              {saved.ready ? 'Enviando correos' : saved.enabled ? 'Incompleto' : 'Desactivado'}
-            </span>
-          ) : null}
         </div>
 
         {!saved ? (
           <p className="note">Cargando…</p>
         ) : (
           <form className="admin-mail" onSubmit={save}>
+            <div className="admin-mail__actions admin-mail__actions--top">
+              <button type="submit" className="admin-btn admin-btn--primary" disabled={busy || !dirty}>
+                {busy ? 'Guardando…' : dirty ? 'Guardar cambios' : 'Sin cambios'}
+              </button>
+              <span className="admin-mail__state">
+                {dirty ? 'Hay cambios sin guardar.' : 'Los datos del formulario están guardados.'}
+              </span>
+            </div>
+
             {saved.passwordUnreadable ? (
               <p className="auth-error" role="alert">
                 La contraseña guardada no se puede leer (cambió la llave del servidor). Escríbela de nuevo.
@@ -175,10 +177,6 @@ export default function AdminCorreo() {
             ) : null}
 
             <AdminSection title="Cuenta de envío" hint="Remitente y acceso SMTP">
-              <label className="admin-check">
-                <input type="checkbox" checked={form.enabled} onChange={set('enabled')} />
-                Enviar correos desde esta cuenta
-              </label>
               <div className="admin-grid">
                 <label className="admin-field">
                   <span>Correo remitente</span>
@@ -270,23 +268,6 @@ export default function AdminCorreo() {
               </p>
             </AdminSection>
 
-            <div className="admin-mail__actions">
-              <button type="submit" className="admin-btn admin-btn--primary" disabled={busy || !dirty}>
-                {busy ? 'Guardando…' : dirty ? 'Guardar cambios' : 'Sin cambios'}
-              </button>
-              <span className="admin-mail__test">
-                <input
-                  type="email"
-                  value={testTo}
-                  onChange={(event) => setTestTo(event.target.value)}
-                  placeholder={me?.email ?? 'destinatario'}
-                  aria-label="Enviar la prueba a"
-                />
-                <button type="button" className="admin-btn" onClick={sendTest} disabled={busy}>
-                  Enviar prueba
-                </button>
-              </span>
-            </div>
           </form>
         )}
 
@@ -311,6 +292,27 @@ export default function AdminCorreo() {
                   </span>
                 </div>
               ))}
+            </div>
+          </AdminSection>
+        ) : null}
+
+        {saved ? (
+          <AdminSection title="Enviar prueba" hint="Comprueba la cuenta con un correo de prueba">
+            <p className="note">
+              Usa lo que hay en el formulario, aunque todavía no lo hayas guardado. Si dejas el campo
+              vacío, la prueba llega a {me?.email ?? 'tu correo de la cuenta'}.
+            </p>
+            <div className="admin-mail__test">
+              <input
+                type="email"
+                value={testTo}
+                onChange={(event) => setTestTo(event.target.value)}
+                placeholder={me?.email ?? 'destinatario'}
+                aria-label="Enviar la prueba a"
+              />
+              <button type="button" className="admin-btn" onClick={sendTest} disabled={busy}>
+                {busy ? 'Enviando…' : 'Enviar prueba'}
+              </button>
             </div>
           </AdminSection>
         ) : null}

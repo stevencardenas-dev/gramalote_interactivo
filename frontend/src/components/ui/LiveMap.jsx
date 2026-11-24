@@ -170,6 +170,7 @@ export default function LiveMap({
   explorer = false,
   initialGroup = '',
   initialType = '',
+  initialSlug = '',
 }) {
   const navigate = useNavigate()
   const containerRef = useRef(null)
@@ -214,6 +215,21 @@ export default function LiveMap({
   }, [allPlaces, activeGroup, activeType, search, onlyOpen, minRating])
 
   const selectedPlace = places.find((place) => place.id === selectedId) ?? null
+
+  // Llega desde el buscador con un lugar concreto (un extra): primero se
+  // filtra su grupo; el vuelo hasta el punto se hace después del encuadre
+  // automático de los pines (ver el efecto de abajo).
+  const focusedSlugRef = useRef('')
+  const initialSlugAppliedRef = useRef('')
+  useEffect(() => {
+    if (!initialSlug || initialSlugAppliedRef.current === initialSlug) return
+    const place = allPlaces.find((item) => item.slug === initialSlug)
+    if (!place) return
+    initialSlugAppliedRef.current = initialSlug
+    setActiveGroup(place.group)
+    setActiveType('')
+    setSelectedId(place.id)
+  }, [initialSlug, allPlaces])
   const filterCount =
     (activeGroup ? 1 : 0) + (activeType ? 1 : 0) + (minRating ? 1 : 0) + (onlyOpen ? 1 : 0)
 
@@ -365,6 +381,21 @@ export default function LiveMap({
     // showPopup solo usa refs y navigate, que no cambian entre renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readyMap, places])
+
+  // Un lugar pedido por la URL (un extra del buscador) se centra una sola vez,
+  // cuando su grupo ya está filtrado y el encuadre automático ya corrió.
+  useEffect(() => {
+    if (!initialSlug || !readyMap || focusedSlugRef.current === initialSlug) return
+    const place = allPlaces.find((item) => item.slug === initialSlug)
+    if (!place || activeGroup !== place.group) return
+    focusedSlugRef.current = initialSlug
+    setSelectedId(place.id)
+    readyMap.flyTo({
+      center: [place.longitude, place.latitude],
+      zoom: Math.max(readyMap.getZoom(), 16),
+      duration: 800,
+    })
+  }, [initialSlug, readyMap, allPlaces, activeGroup])
 
   // Resalta el pin elegido y deja su tarjeta a la vista en la lista.
   useEffect(() => {

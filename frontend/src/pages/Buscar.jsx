@@ -5,9 +5,10 @@ import IconMask from '../components/ui/IconMask.jsx'
 import Photo from '../components/ui/Photo.jsx'
 import { componentCatalog } from '../data/componentCatalog.js'
 import { activities as staticActivities } from '../data/experiences.js'
-import { useActivities, useEstablishments } from '../lib/contentApi.js'
+import { useActivities, useEstablishments, useMapExtras } from '../lib/contentApi.js'
 import { compact, score } from '../lib/searchIndex.js'
 import { usePageContent } from '../lib/pageContent.js'
+import { useHeritage } from '../lib/heritageData.js'
 
 export default function Buscar() {
   const [params, setParams] = useSearchParams()
@@ -18,6 +19,10 @@ export default function Buscar() {
   // Las experiencias muestran su portada editable, igual que su tarjeta en
   // «Qué hacer»; si la API no responde se usa la copia estática.
   const activities = useActivities(staticActivities)
+  // Patrimonio y extras también se buscan: el patrimonio lleva a su ficha y el
+  // extra al mapa, con ese punto ya seleccionado.
+  const { items: heritage } = useHeritage()
+  const extras = useMapExtras()
   // Fotos de las tarjetas de sección: las de Panel › Páginas › Buscador. Sin
   // foto guardada, cada sección conserva la imagen de su diseño.
   const pageContent = usePageContent('buscador')
@@ -50,6 +55,24 @@ export default function Buscar() {
       photo: item.photo,
       to: `/que-hacer/${item.slug}`,
     })),
+    ...heritage.map((item) => ({
+      id: item.slug,
+      title: item.name,
+      meta: 'Patrimonio',
+      type: [item.category, item.zoneLabel].filter(Boolean).join(' '),
+      text: item.summary,
+      photo: item.image,
+      to: `/historia/patrimonio/${item.slug}`,
+    })),
+    ...extras.map((item) => ({
+      id: item.slug,
+      title: item.name,
+      meta: 'Extra',
+      type: [item.category, item.zone].filter(Boolean).join(' '),
+      text: item.summary,
+      photo: item.photo,
+      to: `/mapa?extra=${encodeURIComponent(item.slug)}`,
+    })),
   ]
     .map((item) => ({ item, relevance: score(item, query) }))
     .filter(({ relevance }) => relevance > 0)
@@ -81,7 +104,7 @@ export default function Buscar() {
         intro={
           query
             ? `Resultados para “${query}”.`
-            : 'Escribe un lugar, una sección o contenido histórico en el buscador.'
+            : 'Escribe un lugar, una experiencia, un patrimonio o un extra del mapa.'
         }
       />
 
@@ -92,7 +115,7 @@ export default function Buscar() {
               className="search-tools__input"
               type="search"
               value={rawQuery}
-              placeholder="Buscar un lugar, experiencia o sección…"
+              placeholder="Buscar un lugar, experiencia, patrimonio o extra…"
               aria-label="Buscar"
               onChange={(event) => {
                 const merged = new URLSearchParams(params)
@@ -140,7 +163,7 @@ export default function Buscar() {
           {results.length > 0 ? (
             <>
               {sections.length > 0 ? (
-                <h2 className="search-group">Establecimientos y experiencias</h2>
+                <h2 className="search-group">Establecimientos, experiencias, patrimonio y extras</h2>
               ) : null}
               <div className="search-results">
                 {results.map((item) => (

@@ -104,6 +104,7 @@ app.get('/api', (_req, res) => {
       'PATCH|DELETE /api/admin/suggestions/:id',
       'GET /api/pages/:page',
       'GET /api/admin/pages',
+      'GET /api/admin/pages/images?kind=&slug=&page=',
       'PUT|DELETE /api/admin/pages/:page',
       'POST /api/admin/pages/media',
       'GET|DELETE /api/admin/:kind/:id/ratings (establishments|experiences)',

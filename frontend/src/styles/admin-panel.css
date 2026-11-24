@@ -3094,6 +3094,57 @@ html[data-admin-theme='light'] .admin-dialog__panel.admin-framing {
   font: inherit;
 }
 
+.admin-picker__filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-picker__filter span {
+  color: var(--a-mu);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.admin-picker__filter select {
+  min-height: 36px;
+  max-width: 320px;
+  padding: 0 10px;
+  border: 1px solid var(--a-ln);
+  border-radius: 10px;
+  background: var(--a-bg);
+  color: var(--a-tx);
+  font: inherit;
+}
+
+.admin-picker__filter--place {
+  flex: 1 1 260px;
+}
+
+.admin-picker__filter--place select {
+  flex: 1;
+  max-width: none;
+}
+
+.admin-picker__scope {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.admin-picker__scope small {
+  color: var(--a-mu);
+  font-size: 0.74rem;
+}
+
+.admin-picker__status {
+  margin: 0;
+  color: var(--a-mu);
+  font-size: 0.86rem;
+}
+
 .admin-picker__body {
   display: grid;
   gap: 16px;
@@ -3581,7 +3632,7 @@ html[data-admin-theme='light'] .admin-dialog__panel.admin-framing {
 
 .admin-mail__actions {
   position: sticky;
-  bottom: 12px;
+  top: 10px;
   z-index: 5;
   display: flex;
   flex-wrap: wrap;
@@ -3594,10 +3645,16 @@ html[data-admin-theme='light'] .admin-dialog__panel.admin-framing {
   background: var(--a-sf);
 }
 
+.admin-mail__state {
+  color: var(--a-mu);
+  font-size: 0.84rem;
+}
+
 .admin-mail__test {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 10px;
 }
 
 .admin-mail__test input {

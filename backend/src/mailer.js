@@ -25,7 +25,6 @@ export async function getMailSettings() {
   if (cache && cache.at > Date.now() - CACHE_MS) return cache.value
   const row = await queryOne('SELECT * FROM mail_settings WHERE id = 1')
   const value = {
-    enabled: Boolean(row?.enabled),
     fromEmail: row?.from_email ?? '',
     fromName: row?.from_name ?? 'Turismo Gramalote',
     host: row?.smtp_host ?? 'smtp.gmail.com',
@@ -45,9 +44,9 @@ export async function getMailSettings() {
   return value
 }
 
-// Listo para enviar: activado y con remitente, usuario y contraseña legibles.
+// Listo para enviar: con remitente, usuario, contraseña y servidor.
 export function mailReady(settings) {
-  return Boolean(settings.enabled && settings.fromEmail && settings.user && settings.password && settings.host)
+  return Boolean(settings.fromEmail && settings.user && settings.password && settings.host)
 }
 
 export async function isMailReady() {

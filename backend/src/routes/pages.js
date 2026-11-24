@@ -12,7 +12,7 @@ import { requireAuth } from '../auth.js'
 import { config } from '../config.js'
 import { assertFresh } from '../concurrency.js'
 import { query, queryOne, withTransaction } from '../db.js'
-import { ApiError, asyncHandler } from '../http.js'
+import { ApiError, asyncHandler, stringParam } from '../http.js'
 import { assertQuota, ensureDir, mediaRoot, storeImage } from '../media.js'
 import { parseJson, toNumber } from '../serializers.js'
 
@@ -21,6 +21,7 @@ const router = Router()
 export const PAGE_KEYS = ['inicio', 'que-hacer', 'donde-ir', 'donde-comer', 'donde-dormir', 'donde-comprar', 'redes', 'carrusel', 'buscador']
 const settingKey = (page) => `page:${page}`
 const MAX_JSON_BYTES = 64 * 1024
+const PHOTOS_PER_PAGE = 24
 const INTERNAL_PATH = /^\/[a-z0-9\-/?=&]*$/i
 const WEB_URL = /^https?:\/\/[^\s"'<>]+\.[^\s"'<>]+$/i
 
@@ -151,55 +152,42 @@ router.get(
   }),
 )
 
-// Fotos que el panel ofrece en el selector: las galerías de cada ficha (con su
-// estado de publicación) y las subidas solo para páginas. Las fichas salen en
-// el mismo orden que usa el sitio cuando la página no tiene uno guardado.
+// Fichas que el panel ofrece en el selector de fotos: solo sus datos y la
+// portada, sin la galería completa (que se pide aparte y paginada, porque
+// cargarla entera era lo que hacía lento el selector). Las fichas salen en el
+// mismo orden que usa el sitio cuando la página no tiene uno guardado.
 async function imageSources() {
-  const [experiences, experienceImages, establishments, establishmentImages, uploads] = await Promise.all([
+  const [experiences, establishments, uploads] = await Promise.all([
     query(
-      `SELECT x.id, x.slug, x.title, x.is_published, x.sort_order
+      `SELECT x.id, x.slug, x.title, x.is_published, x.sort_order,
+              (SELECT m.public_url
+               FROM experience_images i JOIN media m ON m.id = i.media_id
+               WHERE i.experience_id = x.id AND m.public_url IS NOT NULL
+               ORDER BY FIELD(i.role, 'cover', 'gallery'), i.sort_order, i.id LIMIT 1) AS cover_url,
+              (SELECT COUNT(*)
+               FROM experience_images i JOIN media m ON m.id = i.media_id
+               WHERE i.experience_id = x.id AND m.public_url IS NOT NULL) AS image_count
        FROM experiences x WHERE x.deleted_at IS NULL
        ORDER BY x.is_featured DESC, x.sort_order, x.title`,
     ),
     query(
-      `SELECT i.experience_id AS owner_id, i.role, m.public_url, m.alt_text
-       FROM experience_images i JOIN media m ON m.id = i.media_id
-       WHERE m.public_url IS NOT NULL
-       ORDER BY i.experience_id, FIELD(i.role, 'cover', 'gallery'), i.sort_order, i.id`,
-    ),
-    query(
-      `SELECT e.id, e.slug, e.name, e.is_published, c.slug AS category
+      `SELECT e.id, e.slug, e.name, e.is_published, c.slug AS category,
+              (SELECT m.public_url
+               FROM establishment_images i JOIN media m ON m.id = i.media_id
+               WHERE i.establishment_id = e.id AND m.public_url IS NOT NULL
+               ORDER BY FIELD(i.role, 'cover', 'hero', 'logo', 'gallery'), i.sort_order, i.id LIMIT 1) AS cover_url,
+              (SELECT COUNT(*)
+               FROM establishment_images i JOIN media m ON m.id = i.media_id
+               WHERE i.establishment_id = e.id AND m.public_url IS NOT NULL) AS image_count
        FROM establishments e JOIN establishment_categories c ON c.id = e.category_id
        WHERE e.deleted_at IS NULL
        ORDER BY c.sort_order, e.is_featured DESC, e.sort_order, e.name`,
     ),
-    query(
-      `SELECT i.establishment_id AS owner_id, i.role, m.public_url,
-              COALESCE(i.alt_override, m.alt_text) AS alt_text
-       FROM establishment_images i JOIN media m ON m.id = i.media_id
-       WHERE m.public_url IS NOT NULL
-       ORDER BY i.establishment_id, FIELD(i.role, 'cover', 'hero', 'logo', 'gallery'), i.sort_order, i.id`,
-    ),
-    query(
-      `SELECT m.id, m.public_url, m.alt_text
-       FROM page_images p JOIN media m ON m.id = p.media_id
-       ORDER BY p.created_at DESC`,
+    queryOne(
+      `SELECT COUNT(*) AS total FROM page_images p JOIN media m ON m.id = p.media_id
+       WHERE m.public_url IS NOT NULL`,
     ),
   ])
-
-  const group = (rows) => {
-    const map = new Map()
-    for (const row of rows) {
-      const list = map.get(Number(row.owner_id)) ?? []
-      if (!list.some((image) => image.url === row.public_url)) {
-        list.push({ url: row.public_url, alt: row.alt_text ?? '', role: row.role })
-      }
-      map.set(Number(row.owner_id), list)
-    }
-    return map
-  }
-  const byExperience = group(experienceImages)
-  const byEstablishment = group(establishmentImages)
 
   return {
     experiences: experiences.map((row) => ({
@@ -208,7 +196,8 @@ async function imageSources() {
       title: row.title,
       published: Boolean(row.is_published),
       sortOrder: toNumber(row.sort_order) ?? 0,
-      images: byExperience.get(Number(row.id)) ?? [],
+      cover: row.cover_url ?? null,
+      imageCount: toNumber(row.image_count) ?? 0,
     })),
     establishments: establishments.map((row) => ({
       id: toNumber(row.id),
@@ -216,11 +205,87 @@ async function imageSources() {
       name: row.name,
       category: row.category,
       published: Boolean(row.is_published),
-      images: byEstablishment.get(Number(row.id)) ?? [],
+      cover: row.cover_url ?? null,
+      imageCount: toNumber(row.image_count) ?? 0,
     })),
-    uploads: uploads.map((row) => ({ id: toNumber(row.id), url: row.public_url, alt: row.alt_text ?? '' })),
+    uploadCount: toNumber(uploads?.total) ?? 0,
   }
 }
+
+// Fotos de un solo lugar (o de las subidas de páginas), paginadas. Es lo que el
+// selector pide al elegir el tipo y el lugar, en vez de traer todo de golpe.
+router.get(
+  '/admin/pages/images',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const kind = stringParam(req.query.kind, { max: 20 })
+    const slug = stringParam(req.query.slug, { max: 160 })
+    const rawPage = Number.parseInt(req.query.page ?? '', 10)
+    const rawPerPage = Number.parseInt(req.query.perPage ?? '', 10)
+    const perPage = Number.isFinite(rawPerPage) ? Math.min(Math.max(rawPerPage, 1), 60) : PHOTOS_PER_PAGE
+    let page = Number.isFinite(rawPage) ? Math.max(rawPage, 1) : 1
+
+    let total = 0
+    let images = []
+
+    if (kind === 'upload') {
+      const countRow = await queryOne(
+        `SELECT COUNT(*) AS total FROM page_images p JOIN media m ON m.id = p.media_id
+         WHERE m.public_url IS NOT NULL`,
+      )
+      total = toNumber(countRow?.total) ?? 0
+      page = Math.min(page, Math.max(1, Math.ceil(total / perPage)))
+      images = await query(
+        `SELECT m.public_url, m.alt_text
+         FROM page_images p JOIN media m ON m.id = p.media_id
+         WHERE m.public_url IS NOT NULL
+         ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
+        [perPage, (page - 1) * perPage],
+      )
+    } else if (kind === 'experience' || kind === 'establishment') {
+      if (!slug) throw new ApiError(400, 'VALIDATION', 'Falta la ficha de la que pedir las fotos')
+      const table = kind === 'experience' ? 'experiences' : 'establishments'
+      const owner = await queryOne(`SELECT id FROM ${table} WHERE slug = ? AND deleted_at IS NULL`, [slug])
+      if (!owner) throw new ApiError(404, 'NOT_FOUND', 'Ficha no encontrada')
+      const id = toNumber(owner.id)
+      const imageTable = kind === 'experience' ? 'experience_images' : 'establishment_images'
+      const ownerColumn = kind === 'experience' ? 'experience_id' : 'establishment_id'
+      const roleOrder = kind === 'experience' ? "'cover', 'gallery'" : "'cover', 'hero', 'logo', 'gallery'"
+      const altColumn = kind === 'experience' ? 'm.alt_text' : 'COALESCE(i.alt_override, m.alt_text)'
+      const countRow = await queryOne(
+        `SELECT COUNT(DISTINCT m.public_url) AS total FROM ${imageTable} i JOIN media m ON m.id = i.media_id
+         WHERE i.${ownerColumn} = ? AND m.public_url IS NOT NULL`,
+        [id],
+      )
+      total = toNumber(countRow?.total) ?? 0
+      page = Math.min(page, Math.max(1, Math.ceil(total / perPage)))
+      // Una misma foto puede estar enlazada dos veces: se muestra una sola.
+      images = await query(
+        `SELECT m.public_url, MIN(${altColumn}) AS alt_text
+         FROM ${imageTable} i JOIN media m ON m.id = i.media_id
+         WHERE i.${ownerColumn} = ? AND m.public_url IS NOT NULL
+         GROUP BY m.public_url
+         ORDER BY MIN(FIELD(i.role, ${roleOrder})), MIN(i.sort_order), MIN(i.id)
+         LIMIT ? OFFSET ?`,
+        [id, perPage, (page - 1) * perPage],
+      )
+    } else {
+      throw new ApiError(400, 'VALIDATION', 'Tipo de foto no válido')
+    }
+
+    const totalPages = Math.max(1, Math.ceil(total / perPage))
+    if (page > totalPages) page = totalPages
+    res.json({
+      data: {
+        images: images.map((row) => ({ url: row.public_url, alt: row.alt_text ?? '' })),
+        total,
+        page,
+        perPage,
+        totalPages,
+      },
+    })
+  }),
+)
 
 router.get(
   '/admin/pages',
