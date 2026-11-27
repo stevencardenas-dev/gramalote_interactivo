@@ -56,6 +56,55 @@ function formFrom(data) {
   }
 }
 
+const LOG_PAGE = 5
+
+// Últimos envíos: lista propia (no plegable), de 5 en 5.
+function MailLog({ log }) {
+  const [page, setPage] = useState(1)
+  if (!log.length) return null
+  const pages = Math.ceil(log.length / LOG_PAGE)
+  const current = Math.min(page, pages)
+  const rows = log.slice((current - 1) * LOG_PAGE, current * LOG_PAGE)
+  return (
+    <section className="admin-mail__panel" aria-label="Últimos envíos">
+      <h2>Últimos envíos</h2>
+      <div className="admin-ratings__table admin-mail__log" role="table" aria-label="Últimos envíos">
+        <div className="admin-ratings__row admin-ratings__row--head" role="row">
+          <span role="columnheader">Fecha</span>
+          <span role="columnheader">Tipo</span>
+          <span role="columnheader">Para</span>
+          <span role="columnheader">Estado</span>
+        </div>
+        {rows.map((entry) => (
+          <div key={entry.id} className="admin-ratings__row" role="row" title={entry.error ?? entry.subject}>
+            <span role="cell">{formatStamp(entry.createdAt)}</span>
+            <span role="cell">{KIND_LABEL[entry.kind] ?? entry.kind}</span>
+            <span role="cell">{entry.to}</span>
+            <span role="cell">
+              <span className={`admin-badge ${entry.status === 'sent' ? 'admin-badge--ok' : 'admin-badge--draft'}`}>
+                {entry.status === 'sent' ? 'Enviado' : 'Falló'}
+              </span>
+            </span>
+          </div>
+        ))}
+      </div>
+      {pages > 1 ? (
+        <nav className="admin-pager" aria-label="Páginas de envíos">
+          <button type="button" className="admin-btn" onClick={() => setPage(current - 1)} disabled={current <= 1}>
+            ← Anterior
+          </button>
+          <span className="admin-pager__info">
+            Página {current} de {pages} · {log.length} envíos
+          </span>
+          <button type="button" className="admin-btn" onClick={() => setPage(current + 1)} disabled={current >= pages}>
+            Siguiente →
+          </button>
+        </nav>
+      ) : null}
+    </section>
+  )
+}
+
 export default function AdminCorreo() {
   const me = getUser()
   const isAdmin = me?.role === 'admin'
@@ -150,26 +199,29 @@ export default function AdminCorreo() {
     <section className="admin-page">
       <div className="admin-wrap">
         <div className="admin-bar">
-          <h1>Correo</h1>
-          <p className="admin-lead admin-bar__lead">
-            Cuenta que envía los correos del sitio: restablecer contraseñas, invitaciones al panel,
-            confirmación de calificaciones y avisos de sugerencias.
-          </p>
+          <div className="admin-bar__heading">
+            <h1>Correo</h1>
+            <p className="admin-lead admin-bar__lead">
+              Cuenta que envía los correos del sitio: restablecer contraseñas, invitaciones al panel,
+              confirmación de calificaciones y avisos de sugerencias.
+            </p>
+          </div>
+          {saved ? (
+            <button
+              type="submit"
+              form="admin-mail-form"
+              className="admin-btn admin-btn--primary"
+              disabled={busy || !dirty}
+            >
+              {busy ? 'Guardando…' : dirty ? 'Guardar cambios' : 'Sin cambios'}
+            </button>
+          ) : null}
         </div>
 
         {!saved ? (
           <p className="note">Cargando…</p>
         ) : (
-          <form className="admin-mail" onSubmit={save}>
-            <div className="admin-mail__actions admin-mail__actions--top">
-              <button type="submit" className="admin-btn admin-btn--primary" disabled={busy || !dirty}>
-                {busy ? 'Guardando…' : dirty ? 'Guardar cambios' : 'Sin cambios'}
-              </button>
-              <span className="admin-mail__state">
-                {dirty ? 'Hay cambios sin guardar.' : 'Los datos del formulario están guardados.'}
-              </span>
-            </div>
-
+          <form id="admin-mail-form" className="admin-mail" onSubmit={save}>
             {saved.passwordUnreadable ? (
               <p className="auth-error" role="alert">
                 La contraseña guardada no se puede leer (cambió la llave del servidor). Escríbela de nuevo.
@@ -271,38 +323,22 @@ export default function AdminCorreo() {
           </form>
         )}
 
-        {log.length ? (
-          <AdminSection title="Últimos envíos" hint={`${log.length} registros`}>
-            <div className="admin-ratings__table admin-mail__log" role="table" aria-label="Últimos envíos">
-              <div className="admin-ratings__row admin-ratings__row--head" role="row">
-                <span role="columnheader">Fecha</span>
-                <span role="columnheader">Tipo</span>
-                <span role="columnheader">Para</span>
-                <span role="columnheader">Estado</span>
-              </div>
-              {log.map((entry) => (
-                <div key={entry.id} className="admin-ratings__row" role="row" title={entry.error ?? entry.subject}>
-                  <span role="cell">{formatStamp(entry.createdAt)}</span>
-                  <span role="cell">{KIND_LABEL[entry.kind] ?? entry.kind}</span>
-                  <span role="cell">{entry.to}</span>
-                  <span role="cell">
-                    <span className={`admin-badge ${entry.status === 'sent' ? 'admin-badge--ok' : 'admin-badge--draft'}`}>
-                      {entry.status === 'sent' ? 'Enviado' : 'Falló'}
-                    </span>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </AdminSection>
-        ) : null}
+        <MailLog log={log} />
 
         {saved ? (
-          <AdminSection title="Enviar prueba" hint="Comprueba la cuenta con un correo de prueba">
+          <form
+            className="admin-mail__panel admin-mail__test"
+            onSubmit={(event) => {
+              event.preventDefault()
+              sendTest()
+            }}
+          >
+            <h2>Enviar prueba</h2>
             <p className="note">
-              Usa lo que hay en el formulario, aunque todavía no lo hayas guardado. Si dejas el campo
-              vacío, la prueba llega a {me?.email ?? 'tu correo de la cuenta'}.
+              Usa lo que hay en el formulario, aunque no lo hayas guardado. Sin destinatario, llega a{' '}
+              {me?.email ?? 'tu correo de la cuenta'}.
             </p>
-            <div className="admin-mail__test">
+            <div className="admin-mail__test-row">
               <input
                 type="email"
                 value={testTo}
@@ -310,11 +346,19 @@ export default function AdminCorreo() {
                 placeholder={me?.email ?? 'destinatario'}
                 aria-label="Enviar la prueba a"
               />
-              <button type="button" className="admin-btn" onClick={sendTest} disabled={busy}>
-                {busy ? 'Enviando…' : 'Enviar prueba'}
+              <button
+                type="submit"
+                className="admin-btn admin-btn--primary admin-mail__send"
+                disabled={busy}
+                aria-label={busy ? 'Enviando…' : 'Enviar prueba'}
+                title="Enviar prueba"
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor">
+                  <path d="M3.4 20.4 21.85 12 3.4 3.6 3.39 10.13 15.5 12 3.39 13.87z" />
+                </svg>
               </button>
             </div>
-          </AdminSection>
+          </form>
         ) : null}
       </div>
       {toast}

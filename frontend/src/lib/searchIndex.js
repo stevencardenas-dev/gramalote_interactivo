@@ -5,6 +5,7 @@ import { componentCatalog } from '../data/componentCatalog.js'
 import { activities } from '../data/experiences.js'
 import { getJson } from './api.js'
 import { adaptEstablishment } from './contentApi.js'
+import { load as loadHeritage } from './heritageData.js'
 
 // Ignora mayúsculas, tildes y ñ; `compact` también ignora los espacios.
 export const fold = (value) =>
@@ -54,38 +55,71 @@ const staticItems = [
 ]
 
 let loading = null
-let establishmentItems = []
+let remoteItems = []
 
-// Pide los establecimientos una vez; las llamadas siguientes reutilizan la misma promesa.
+const establishmentsIndex = () =>
+  getJson('/establishments?limit=60').then((payload) =>
+    (payload.data ?? [])
+      .map(adaptEstablishment)
+      .filter(Boolean)
+      .map((item) => ({
+        id: `establecimiento-${item.id}`,
+        title: item.name,
+        meta: 'Establecimiento',
+        type: item.type,
+        text: item.summary,
+        to: `/establecimiento/${item.slug}`,
+        rank: 1,
+      })),
+  )
+
+// Patrimonio: lleva a su ficha (mismo criterio que la página de resultados).
+const heritageIndex = () =>
+  loadHeritage().then((list) =>
+    (list ?? []).map((item) => ({
+      id: `patrimonio-${item.slug}`,
+      title: item.name,
+      meta: 'Patrimonio',
+      type: [item.category, item.zoneLabel].filter(Boolean).join(' '),
+      text: item.summary,
+      to: `/historia/patrimonio/${item.slug}`,
+      rank: 1,
+    })),
+  )
+
+// Extras del mapa: llevan al mapa con ese punto ya seleccionado.
+const extrasIndex = () =>
+  getJson('/map').then((payload) =>
+    (payload.data?.extras ?? []).map((item) => ({
+      id: `extra-${item.slug}`,
+      title: item.name,
+      meta: 'Extra',
+      type: [item.category?.name, item.zone?.name].filter(Boolean).join(' '),
+      text: item.summary ?? '',
+      to: `/mapa?extra=${encodeURIComponent(item.slug)}`,
+      rank: 1,
+    })),
+  )
+
+// Pide los lugares una vez; las llamadas siguientes reutilizan la misma promesa.
+// Cada origen falla por separado: si uno no responde, los demás siguen buscándose.
 export function loadSearchIndex() {
   if (!loading) {
-    loading = getJson('/establishments?limit=60')
-      .then((payload) => {
-        establishmentItems = (payload.data ?? [])
-          .map(adaptEstablishment)
-          .filter(Boolean)
-          .map((item) => ({
-            id: `establecimiento-${item.id}`,
-            title: item.name,
-            meta: 'Establecimiento',
-            type: item.type,
-            text: item.summary,
-            to: `/establecimiento/${item.slug}`,
-            rank: 1,
-          }))
-      })
-      .catch(() => {
-        loading = null
-      })
+    loading = Promise.allSettled([establishmentsIndex(), heritageIndex(), extrasIndex()]).then(
+      (results) => {
+        remoteItems = results.flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
+        if (results.every((result) => result.status === 'rejected')) loading = null
+      },
+    )
   }
   return loading
 }
 
 // Mejores coincidencias para lo que se está escribiendo. A igual relevancia,
-// primero las secciones, luego los establecimientos y al final las experiencias.
+// primero las secciones, luego los lugares (establecimientos, patrimonio, extras) y al final las experiencias.
 export function suggest(query, limit = 7) {
   if (compact(query).length < 2) return []
-  return [...staticItems, ...establishmentItems]
+  return [...staticItems, ...remoteItems]
     .map((item) => ({ item, relevance: score(item, query) }))
     .filter(({ relevance }) => relevance > 0)
     .sort(

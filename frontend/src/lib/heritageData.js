@@ -57,7 +57,7 @@ export function mergeHeritage(remoteList) {
 let cache = null
 let pending = null
 
-function load() {
+export function load() {
   if (!pending) {
     pending = getJson('/heritage')
       .then((response) => {
