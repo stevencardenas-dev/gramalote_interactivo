@@ -1582,8 +1582,13 @@ button.social-dot {
 
 .auth-card__logo {
   display: block;
-  height: 64px;
+  height: 76px;
+  box-sizing: border-box;
   margin: 0 auto 14px;
+  padding: 10px 16px;
+  border-radius: 16px;
+  /* El isotipo es crema: necesita fondo oscuro para verse sobre la tarjeta blanca. */
+  background: var(--c-navy);
 }
 
 .auth-card h1,
