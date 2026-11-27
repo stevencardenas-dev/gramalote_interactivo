@@ -40,7 +40,7 @@ export default function Restablecer() {
     <section className="auth-wrap">
       <div className="container">
         <div className="auth-card">
-          <Logo variant="iso" className="auth-card__logo" alt="" />
+          <Logo variant="cube" className="auth-card__logo" alt="" />
           <h1>Nueva contraseña</h1>
           {done ? (
             <>

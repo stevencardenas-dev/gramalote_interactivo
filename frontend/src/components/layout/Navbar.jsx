@@ -270,7 +270,9 @@ export default function Navbar({ over = false }) {
     <header className={headerClass} ref={headerRef}>
       <div className="site-header__inner container">
         <Link className="brand" to="/" aria-label="Turismo Gramalote, ir al inicio">
-          <Logo variant="cube" />
+          {/* Arriba (sobre el degradado) se ve el isotipo crema; con scroll, el logo a color. */}
+          <Logo variant="cube" className="brand__logo brand__logo--full" />
+          <Logo variant="iso" className="brand__logo brand__logo--top" alt="" />
         </Link>
 
         <nav className="site-nav" aria-label="Navegación principal">

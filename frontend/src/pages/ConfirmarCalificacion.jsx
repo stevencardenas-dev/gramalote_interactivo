@@ -32,7 +32,7 @@ export default function ConfirmarCalificacion() {
     <section className="auth-wrap">
       <div className="container">
         <div className="auth-card">
-          <Logo variant="iso" className="auth-card__logo" alt="" />
+          <Logo variant="cube" className="auth-card__logo" alt="" />
           {state.status === 'done' ? (
             <>
               <h1>¡Voto confirmado!</h1>

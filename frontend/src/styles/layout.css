@@ -59,8 +59,17 @@
   transition: filter 0.4s ease;
 }
 
-.site-header--over:not(.is-solid) .brand__logo {
-  filter: brightness(0) invert(1);
+.brand .brand__logo--top {
+  display: none;
+  width: auto;
+}
+
+.site-header--over:not(.is-solid) .brand__logo--top {
+  display: block;
+}
+
+.site-header--over:not(.is-solid) .brand__logo--full {
+  display: none;
 }
 
 .site-header--over .site-nav__link,

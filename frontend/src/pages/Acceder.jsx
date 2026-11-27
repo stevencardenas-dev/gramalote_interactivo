@@ -73,7 +73,7 @@ export default function Acceder() {
       <section className="auth-wrap">
         <div className="container">
           <div className="auth-card">
-            <Logo variant="iso" className="auth-card__logo" alt="" />
+            <Logo variant="cube" className="auth-card__logo" alt="" />
             <h1>Acceder</h1>
             <p>Verificando sesión…</p>
           </div>
@@ -87,7 +87,7 @@ export default function Acceder() {
       <section className="auth-wrap">
         <div className="container">
           <div className="auth-card">
-            <Logo variant="iso" className="auth-card__logo" alt="" />
+            <Logo variant="cube" className="auth-card__logo" alt="" />
             <h1>¡Hola, {user.name}!</h1>
             <p>Tu sesión está activa ({user.email}).</p>
             <Button to="/admin">Ir al panel</Button>
@@ -109,7 +109,7 @@ export default function Acceder() {
     <section className="auth-wrap">
       <div className="container">
         <div className="auth-card">
-            <Logo variant="iso" className="auth-card__logo" alt="" />
+            <Logo variant="cube" className="auth-card__logo" alt="" />
           <h1>Acceder</h1>
           <p>Bienvenido/a al área de administración. Ingresa para editar las fichas de Gramalote.</p>
 

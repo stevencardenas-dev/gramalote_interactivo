@@ -25,7 +25,7 @@ export default function ConfirmarSugerencia() {
     <section className="auth-wrap">
       <div className="container">
         <div className="auth-card">
-          <Logo variant="iso" className="auth-card__logo" alt="" />
+          <Logo variant="cube" className="auth-card__logo" alt="" />
           {state.status === 'done' ? (
             <>
               <h1>¡Correo confirmado!</h1>
